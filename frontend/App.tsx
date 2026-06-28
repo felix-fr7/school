@@ -1,0 +1,342 @@
+/**
+ * App Entry Point
+ * Main application component with navigation setup
+ * Multi-Tenant School Management System
+ */
+
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
+
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import { PostProvider } from './src/contexts/PostContext';
+
+// Auth Screens
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
+
+// Super Admin Screens
+import SuperAdminDashboardScreen from './src/screens/superadmin/DashboardScreen';
+import SchoolsListScreen from './src/screens/superadmin/SchoolsListScreen';
+import CreateSchoolScreen from './src/screens/superadmin/CreateSchoolScreen';
+import SchoolDetailScreen from './src/screens/superadmin/SchoolDetailScreen';
+
+// Admin Screens
+import AdminDashboardScreen from './src/screens/admin/DashboardScreen';
+import ClassesListScreen from './src/screens/admin/ClassesListScreen';
+import CreateClassScreen from './src/screens/admin/CreateClassScreen';
+import StudentsListScreen from './src/screens/admin/StudentsListScreen';
+import CreateStudentScreen from './src/screens/admin/CreateStudentScreen';
+import HomeworkListScreen from './src/screens/admin/HomeworkListScreen';
+import CreateHomeworkScreen from './src/screens/admin/CreateHomeworkScreen';
+import MarksListScreen from './src/screens/admin/MarksListScreen';
+import AddMarksScreen from './src/screens/admin/AddMarksScreen';
+import NewsListScreen from './src/screens/admin/NewsListScreen';
+import CreateNewsScreen from './src/screens/admin/CreateNewsScreen';
+import CircularsListScreen from './src/screens/admin/CircularsListScreen';
+import CreateCircularScreen from './src/screens/admin/CreateCircularScreen';
+import ExamSchedulesListScreen from './src/screens/admin/ExamSchedulesListScreen';
+import CreateExamScheduleScreen from './src/screens/admin/CreateExamScheduleScreen';
+
+// Student Screens
+import StudentDashboardScreen from './src/screens/student/DashboardScreen';
+import StudentHomeworkListScreen from './src/screens/student/HomeworkListScreen';
+import StudentHomeworkDetailScreen from './src/screens/student/HomeworkDetailScreen';
+import StudentMarksListScreen from './src/screens/student/MarksListScreen';
+import StudentNewsListScreen from './src/screens/student/NewsListScreen';
+import StudentCircularsListScreen from './src/screens/student/CircularsListScreen';
+import StudentExamSchedulesScreen from './src/screens/student/ExamSchedulesScreen';
+import StudentProfileScreen from './src/screens/student/ProfileScreen';
+
+// Legacy Screens (Posts)
+import HomeScreen from './src/screens/HomeScreen';
+import PostDetailScreen from './src/screens/PostDetailScreen';
+import CreatePostScreen from './src/screens/CreatePostScreen';
+import EditPostScreen from './src/screens/EditPostScreen';
+
+// Types
+import { RootStackParamList, SuperAdminStackParamList, AdminStackParamList, StudentStackParamList, MainStackParamList, AuthStackParamList } from './src/types';
+
+const SuperAdminStack = createStackNavigator<SuperAdminStackParamList>();
+const AdminStack = createStackNavigator<AdminStackParamList>();
+const StudentStack = createStackNavigator<StudentStackParamList>();
+const MainStack = createStackNavigator<MainStackParamList>();
+const AuthStack = createStackNavigator<AuthStackParamList>();
+const RootStack = createStackNavigator<RootStackParamList>();
+
+// ============================================
+// Super Admin Navigator
+// ============================================
+const SuperAdminNavigator = () => (
+  <SuperAdminStack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: '#1a237e' },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' },
+    }}
+  >
+    <SuperAdminStack.Screen
+      name="SuperAdminDashboard"
+      component={SuperAdminDashboardScreen}
+      options={{ title: 'Super Admin Dashboard' }}
+    />
+    <SuperAdminStack.Screen
+      name="SchoolsList"
+      component={SchoolsListScreen}
+      options={{ title: 'Schools' }}
+    />
+    <SuperAdminStack.Screen
+      name="CreateSchool"
+      component={CreateSchoolScreen}
+      options={{ title: 'Create New School' }}
+    />
+    <SuperAdminStack.Screen
+      name="SchoolDetail"
+      component={SchoolDetailScreen}
+      options={{ title: 'School Details' }}
+    />
+  </SuperAdminStack.Navigator>
+);
+
+// ============================================
+// Admin (School) Navigator
+// ============================================
+const AdminNavigator = () => (
+  <AdminStack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: '#2e7d32' },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' },
+    }}
+  >
+    <AdminStack.Screen
+      name="AdminDashboard"
+      component={AdminDashboardScreen}
+      options={{ title: 'School Admin Dashboard' }}
+    />
+    <AdminStack.Screen
+      name="ClassesList"
+      component={ClassesListScreen}
+      options={{ title: 'Classes' }}
+    />
+    <AdminStack.Screen
+      name="CreateClass"
+      component={CreateClassScreen}
+      options={{ title: 'Create Class' }}
+    />
+    <AdminStack.Screen
+      name="StudentsList"
+      component={StudentsListScreen}
+      options={{ title: 'Students' }}
+    />
+    <AdminStack.Screen
+      name="CreateStudent"
+      component={CreateStudentScreen}
+      options={{ title: 'Add Student' }}
+    />
+    <AdminStack.Screen
+      name="HomeworkList"
+      component={HomeworkListScreen}
+      options={{ title: 'Homework' }}
+    />
+    <AdminStack.Screen
+      name="CreateHomework"
+      component={CreateHomeworkScreen}
+      options={{ title: 'Add Homework' }}
+    />
+    <AdminStack.Screen
+      name="MarksList"
+      component={MarksListScreen}
+      options={{ title: 'Marks' }}
+    />
+    <AdminStack.Screen
+      name="AddMarks"
+      component={AddMarksScreen}
+      options={{ title: 'Add Marks' }}
+    />
+    <AdminStack.Screen
+      name="NewsList"
+      component={NewsListScreen}
+      options={{ title: 'News' }}
+    />
+    <AdminStack.Screen
+      name="CreateNews"
+      component={CreateNewsScreen}
+      options={{ title: 'Post News' }}
+    />
+    <AdminStack.Screen
+      name="CircularsList"
+      component={CircularsListScreen}
+      options={{ title: 'Circulars' }}
+    />
+    <AdminStack.Screen
+      name="CreateCircular"
+      component={CreateCircularScreen}
+      options={{ title: 'Create Circular' }}
+    />
+    <AdminStack.Screen
+      name="ExamSchedulesList"
+      component={ExamSchedulesListScreen}
+      options={{ title: 'Exam Schedules' }}
+    />
+    <AdminStack.Screen
+      name="CreateExamSchedule"
+      component={CreateExamScheduleScreen}
+      options={{ title: 'Add Exam Schedule' }}
+    />
+  </AdminStack.Navigator>
+);
+
+// ============================================
+// Student Navigator
+// ============================================
+const StudentNavigator = () => (
+  <StudentStack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: '#1565c0' },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' },
+    }}
+  >
+    <StudentStack.Screen
+      name="StudentDashboard"
+      component={StudentDashboardScreen}
+      options={{ title: 'Student Dashboard' }}
+    />
+    <StudentStack.Screen
+      name="StudentHomeworkList"
+      component={StudentHomeworkListScreen}
+      options={{ title: 'Homework' }}
+    />
+    <StudentStack.Screen
+      name="StudentHomeworkDetail"
+      component={StudentHomeworkDetailScreen}
+      options={{ title: 'Homework Details' }}
+    />
+    <StudentStack.Screen
+      name="StudentMarksList"
+      component={StudentMarksListScreen}
+      options={{ title: 'My Marks' }}
+    />
+    <StudentStack.Screen
+      name="StudentNewsList"
+      component={StudentNewsListScreen}
+      options={{ title: 'School News' }}
+    />
+    <StudentStack.Screen
+      name="StudentCircularsList"
+      component={StudentCircularsListScreen}
+      options={{ title: 'Circulars' }}
+    />
+    <StudentStack.Screen
+      name="StudentExamSchedules"
+      component={StudentExamSchedulesScreen}
+      options={{ title: 'Exam Schedule' }}
+    />
+    <StudentStack.Screen
+      name="StudentProfile"
+      component={StudentProfileScreen}
+      options={{ title: 'My Profile' }}
+    />
+  </StudentStack.Navigator>
+);
+
+// ============================================
+// Legacy Main Navigator (for backward compatibility)
+// ============================================
+const LegacyMainNavigator = () => (
+  <MainStack.Navigator>
+    <MainStack.Screen
+      name="Home"
+      component={HomeScreen}
+      options={{ title: 'Posts', headerShown: false }}
+    />
+    <MainStack.Screen
+      name="PostDetail"
+      component={PostDetailScreen}
+      options={{ title: 'Post Details' }}
+    />
+    <MainStack.Screen
+      name="CreatePost"
+      component={CreatePostScreen}
+      options={{ title: 'Create Post' }}
+    />
+    <MainStack.Screen
+      name="EditPost"
+      component={EditPostScreen}
+      options={{ title: 'Edit Post' }}
+    />
+  </MainStack.Navigator>
+);
+
+// ============================================
+// Auth Navigator
+// ============================================
+const AuthNavigator = () => (
+  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Screen name="Login" component={LoginScreen} />
+    <AuthStack.Screen name="Register" component={RegisterScreen} />
+  </AuthStack.Navigator>
+);
+
+// ============================================
+// Root Navigator
+// ============================================
+const RootNavigator = () => {
+  const { isAuthenticated, isLoading, isSuperAdmin, isAdmin, isStudent } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        <RootStack.Screen name="Auth" component={AuthNavigator} />
+      ) : isSuperAdmin ? (
+        <RootStack.Screen name="SuperAdmin" component={SuperAdminNavigator} />
+      ) : isAdmin ? (
+        <RootStack.Screen name="Admin" component={AdminNavigator} />
+      ) : isStudent ? (
+        <RootStack.Screen name="Student" component={StudentNavigator} />
+      ) : (
+        <RootStack.Screen name="Main" component={LegacyMainNavigator} />
+      )}
+    </RootStack.Navigator>
+  );
+};
+
+// Main App Component
+const App = () => {
+  return (
+    <AuthProvider>
+      <PostProvider>
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </PostProvider>
+    </AuthProvider>
+  );
+};
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+});
+
+export default App;

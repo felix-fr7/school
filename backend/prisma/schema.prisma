@@ -1,0 +1,230 @@
+// Prisma ORM Schema
+// Multi-Tenant School Management System
+// This file defines the database structure and relationships
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Enums
+// ============================================
+
+/// User role enumeration for 3-tier system
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  STUDENT
+}
+
+// ============================================
+// Core Models
+// ============================================
+
+/// Tenant (School) model - represents a school/tenant
+model Tenant {
+  id          String     @id @default(uuid())
+  name        String     // School name
+  code        String     @unique // Unique school code for identification
+  address     String?
+  phone       String?
+  email       String?
+  isActive    Boolean    @default(true)
+  users       User[]
+  classes     Class[]
+  homeworks   Homework[]
+  marks       Mark[]
+  news        News[]
+  circulars   Circular[]
+  examSchedules ExamSchedule[]
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("tenants")
+  @@index([code])
+}
+
+/// User model - stores user authentication and profile data
+model User {
+  id          String     @id @default(uuid())
+  email       String     @unique
+  password    String
+  name        String
+  role        Role       @default(STUDENT)
+  tenantId    String?    // Null for Super Admin
+  tenant      Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId   String?    @unique // For students - unique student ID within school
+  classId     String?    // For students - current class
+  class       Class?     @relation(fields: [classId], references: [id], onDelete: SetNull)
+  posts       Post[]
+  homeworks   Homework[] // Homework assigned by this admin to students
+  marks       Mark[]     // Marks entered by this admin
+  news        News[]     // News posted by this admin (relation for postedByUser)
+  circulars   Circular[] // Circulars issued by this admin (relation for issuedByUser)
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("users")
+  @@index([email])
+  @@index([tenantId])
+  @@index([role])
+  @@index([studentId])
+}
+
+/// Class/Grade model - represents a class within a school
+model Class {
+  id          String     @id @default(uuid())
+  name        String     // Class name (e.g., "10th Grade", "Class A")
+  section     String?    // Section/division (e.g., "A", "B")
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  students    User[]
+  homeworks   Homework[]
+  examSchedules ExamSchedule[]
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("classes")
+  @@index([tenantId])
+  @@index([name])
+}
+
+// ============================================
+// Content Models (Admin-controlled, Student-visible)
+// ============================================
+
+/// Homework model - assignments posted by Admin/Teachers
+model Homework {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  subject     String     // Subject name
+  classId     String
+  class       Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedBy  String     // User ID of admin/teacher who created it
+  assignedByUser User?   @relation(fields: [assignedBy], references: [id], onDelete: SetNull)
+  dueDate     DateTime?
+  isPublished Boolean    @default(true)
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("homeworks")
+  @@index([tenantId])
+  @@index([classId])
+  @@index([isPublished])
+}
+
+/// Mark model - student marks/grades posted by Admin/Teachers
+model Mark {
+  id          String     @id @default(uuid())
+  studentId   String
+  student     User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject     String     // Subject name
+  marksObtained Float    // Marks obtained
+  totalMarks  Float      // Maximum marks
+  percentage  Float?     // Calculated percentage
+  grade       String?    // Grade (A, B, C, etc.)
+  examType    String     // (e.g., "Mid Term", "Final", "Unit Test")
+  examDate    DateTime?
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  remarks     String?    // Teacher remarks
+  isPublished Boolean    @default(true)
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("marks")
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([examType])
+}
+
+/// News model - school news/announcements
+model News {
+  id          String     @id @default(uuid())
+  title       String
+  content     String
+  summary     String?
+  category    String?    // Category (e.g., "Sports", "Academic", "Event")
+  imageUrl    String?    // Optional image URL
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  postedBy    String     // User ID of admin who created it
+  postedByUser User?    @relation(fields: [postedBy], references: [id], onDelete: SetNull)
+  isPublished Boolean    @default(true)
+  publishDate DateTime?  // Date to publish (can be scheduled)
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("news")
+  @@index([tenantId])
+  @@index([isPublished])
+}
+
+/// Circular model - official circulars/notifications
+model Circular {
+  id          String     @id @default(uuid())
+  title       String
+  content     String
+  circularNo  String?    // Circular number for reference
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  issuedBy    String     // User ID of admin who created it
+  issuedByUser User?    @relation(fields: [issuedBy], references: [id], onDelete: SetNull)
+  isPublished Boolean    @default(true)
+  issueDate   DateTime   @default(now())
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("circulars")
+  @@index([tenantId])
+  @@index([isPublished])
+}
+
+/// Exam Schedule model
+model ExamSchedule {
+  id          String     @id @default(uuid())
+  title       String     // Exam name
+  subject     String
+  date        DateTime   // Exam date
+  time        String     // Exam time (e.g., "09:00 AM - 12:00 PM")
+  duration    Int?       // Duration in minutes
+  roomNo      String?    // Room number
+  classId     String
+  class       Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  isPublished Boolean    @default(true)
+  createdAt   DateTime   @default(now()) @map(name: "createdAt")
+  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+
+  @@map("exam_schedules")
+  @@index([tenantId])
+  @@index([classId])
+}
+
+// ============================================
+// Legacy Post Model (for backward compatibility)
+// ============================================
+
+/// Post model - stores user-created content
+model Post {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map(name: "createdAt")
+  updatedAt DateTime @updatedAt @map(name: "updatedAt")
+
+  @@map("posts")
+  @@index([userId])
+  @@index([createdAt])
+}
