@@ -10,96 +10,104 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { adminAPI } from '../../services/api';
 import { Class } from '../../types';
 
-const CreateStudentScreen: React.FC = () => {
+const EditTeacherScreen: React.FC = () => {
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const { teacherId } = route.params;
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [phone, setPhone] = useState('');
   const [classId, setClassId] = useState<string | undefined>(undefined);
   const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [fetchingClasses, setFetchingClasses] = useState(false);
 
   useEffect(() => {
-    fetchClasses();
-  }, []);
+    fetchData();
+  }, [teacherId]);
 
-  const fetchClasses = async () => {
-    try {
-      setFetchingClasses(true);
-      const response = await adminAPI.getClasses();
-      if (response.success && response.data) {
-        setClasses(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    } finally {
-      setFetchingClasses(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    // Validation
-    if (!name.trim()) {
-      Alert.alert('Error', 'Please enter student name');
-      return;
-    }
-    if (!email.trim()) {
-      Alert.alert('Error', 'Please enter student email');
-      return;
-    }
-    if (!password.trim()) {
-      Alert.alert('Error', 'Please enter password');
-      return;
-    }
-    if (!studentId.trim()) {
-      Alert.alert('Error', 'Please enter student ID');
-      return;
-    }
-
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await adminAPI.createStudent({
-        name: name.trim(),
-        email: email.trim(),
-        password,
-        studentId: studentId.trim(),
-        classId,
-      });
+      const [teacherRes, classesRes] = await Promise.all([
+        adminAPI.getTeacher(teacherId),
+        adminAPI.getClasses(),
+      ]);
 
-      if (response.success) {
-        Alert.alert('Success', 'Student created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              setName('');
-              setEmail('');
-              setPassword('');
-              setStudentId('');
-              setClassId(undefined);
-            },
-          },
-        ]);
-      } else {
-        Alert.alert('Error', response.error?.message || 'Failed to create student');
+      if (teacherRes.success && teacherRes.data) {
+        const teacher = teacherRes.data;
+        setName(teacher.name);
+        setEmail(teacher.email);
+        setPhone(teacher.phone || '');
+        setClassId(teacher.classId);
       }
-    } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to create student');
+
+      if (classesRes.success && classesRes.data) {
+        setClasses(classesRes.data);
+      }
+    } catch (error) {
+      console.error('Error fetching teacher data:', error);
+      Alert.alert('Error', 'Failed to load teacher data');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSave = async () => {
+    if (!name.trim()) {
+      Alert.alert('Error', 'Please enter teacher name');
+      return;
+    }
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter teacher email');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await adminAPI.updateTeacher(teacherId, {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        classId: classId,
+      });
+
+      if (response.success) {
+        Alert.alert('Success', 'Teacher updated successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        Alert.alert('Error', response.error?.message || 'Failed to update teacher');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to update teacher');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" />
+        <Text style={styles.loadingText}>Loading teacher data...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.form}>
-        <Text style={styles.label}>Student Name *</Text>
+        <Text style={styles.label}>Teacher Name *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter student name"
+          placeholder="Enter teacher name"
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
@@ -108,32 +116,23 @@ const CreateStudentScreen: React.FC = () => {
         <Text style={styles.label}>Email *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter student email"
+          placeholder="Enter teacher email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
         />
 
-        <Text style={styles.label}>Password *</Text>
+        <Text style={styles.label}>Phone Number</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
+          placeholder="Enter phone number"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
         />
 
-        <Text style={styles.label}>Student ID *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter student ID"
-          value={studentId}
-          onChangeText={setStudentId}
-          autoCapitalize="none"
-        />
-
-        <Text style={styles.label}>Class</Text>
+        <Text style={styles.label}>Assigned Class</Text>
         {fetchingClasses ? (
           <View style={styles.pickerContainer}>
             <ActivityIndicator size="small" />
@@ -145,7 +144,7 @@ const CreateStudentScreen: React.FC = () => {
               onValueChange={(itemValue: string) => setClassId(itemValue || undefined)}
               style={styles.picker}
             >
-              <Picker.Item label="Select a class (optional)" value="" />
+              <Picker.Item label="No class assigned" value="" />
               {classes.map((cls) => (
                 <Picker.Item
                   key={cls.id}
@@ -158,14 +157,14 @@ const CreateStudentScreen: React.FC = () => {
         )}
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
+          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          disabled={saving}
         >
-          {loading ? (
+          {saving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitButtonText}>Create Student</Text>
+            <Text style={styles.saveButtonText}>Save Changes</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -177,6 +176,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
   },
   form: {
     padding: 20,
@@ -206,21 +215,21 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
   },
-  submitButton: {
+  saveButton: {
     backgroundColor: '#007AFF',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 24,
   },
-  submitButtonDisabled: {
+  saveButtonDisabled: {
     opacity: 0.6,
   },
-  submitButtonText: {
+  saveButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
 });
 
-export default CreateStudentScreen;
+export default EditTeacherScreen;

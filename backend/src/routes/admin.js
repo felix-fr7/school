@@ -27,6 +27,17 @@ router.use(requireAdmin);
 router.get('/classes', adminController.getAllClasses);
 
 /**
+ * @route   GET /api/admin/classes/:id/dashboard
+ * @desc    Get class dashboard data with metrics, recent homework, exams, and announcements
+ * @access  Admin
+ */
+router.get(
+  '/classes/:id/dashboard',
+  [param('id').isUUID().withMessage('Invalid class ID format')],
+  adminController.getClassDashboard
+);
+
+/**
  * @route   GET /api/admin/classes/:id
  * @desc    Get single class with students
  * @access  Admin
@@ -567,6 +578,112 @@ router.delete(
   '/exam-schedules/:id',
   [param('id').isUUID().withMessage('Invalid exam schedule ID format')],
   adminController.deleteExamSchedule
+);
+
+// ============================================
+// Teacher Management Routes
+// ============================================
+
+/**
+ * @route   GET /api/admin/teachers
+ * @desc    Get all teachers for admin's school
+ * @access  Admin
+ * @query   classId, search, page, limit
+ */
+router.get(
+  '/teachers',
+  [
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }),
+  ],
+  adminController.getAllTeachers
+);
+
+/**
+ * @route   GET /api/admin/teachers/:id
+ * @desc    Get single teacher details
+ * @access  Admin
+ */
+router.get(
+  '/teachers/:id',
+  [param('id').isUUID().withMessage('Invalid teacher ID format')],
+  adminController.getTeacherById
+);
+
+/**
+ * @route   POST /api/admin/teachers
+ * @desc    Create a new teacher (with login credentials)
+ * @access  Admin
+ * @body    { name, email, password, phone, classId }
+ */
+router.post(
+  '/teachers',
+  [
+    body('name')
+      .trim()
+      .notEmpty()
+      .withMessage('Teacher name is required')
+      .isLength({ max: 100 })
+      .withMessage('Teacher name must be less than 100 characters'),
+    body('email')
+      .isEmail()
+      .withMessage('Please provide a valid email address')
+      .normalizeEmail(),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('Password must be at least 6 characters long')
+      .matches(/\d/)
+      .withMessage('Password must contain at least one number'),
+    body('phone')
+      .optional()
+      .trim()
+      .isLength({ max: 20 })
+      .withMessage('Phone number must be less than 20 characters'),
+    body('classId')
+      .optional()
+      .isUUID()
+      .withMessage('Invalid class ID format'),
+  ],
+  adminController.createTeacher
+);
+
+/**
+ * @route   PUT /api/admin/teachers/:id
+ * @desc    Update a teacher
+ * @access  Admin
+ */
+router.put(
+  '/teachers/:id',
+  [
+    param('id').isUUID().withMessage('Invalid teacher ID format'),
+    body('name')
+      .optional()
+      .trim()
+      .notEmpty(),
+    body('email')
+      .optional()
+      .isEmail()
+      .normalizeEmail(),
+    body('phone')
+      .optional()
+      .trim()
+      .isLength({ max: 20 }),
+    body('classId')
+      .optional()
+      .isUUID(),
+  ],
+  adminController.updateTeacher
+);
+
+/**
+ * @route   DELETE /api/admin/teachers/:id
+ * @desc    Delete a teacher
+ * @access  Admin
+ */
+router.delete(
+  '/teachers/:id',
+  [param('id').isUUID().withMessage('Invalid teacher ID format')],
+  adminController.deleteTeacher
 );
 
 module.exports = router;

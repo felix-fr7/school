@@ -26,6 +26,11 @@ import SchoolDetailScreen from './src/screens/superadmin/SchoolDetailScreen';
 import AdminDashboardScreen from './src/screens/admin/DashboardScreen';
 import ClassesListScreen from './src/screens/admin/ClassesListScreen';
 import CreateClassScreen from './src/screens/admin/CreateClassScreen';
+import ClassDashboardScreen from './src/screens/admin/ClassDashboardScreen';
+import TeachersListScreen from './src/screens/admin/TeachersListScreen';
+import TeacherDetailScreen from './src/screens/admin/TeacherDetailScreen';
+import EditTeacherScreen from './src/screens/admin/EditTeacherScreen';
+import CreateTeacherScreen from './src/screens/admin/CreateTeacherScreen';
 import StudentsListScreen from './src/screens/admin/StudentsListScreen';
 import CreateStudentScreen from './src/screens/admin/CreateStudentScreen';
 import HomeworkListScreen from './src/screens/admin/HomeworkListScreen';
@@ -124,6 +129,31 @@ const AdminNavigator = () => (
       name="CreateClass"
       component={CreateClassScreen}
       options={{ title: 'Create Class' }}
+    />
+    <AdminStack.Screen
+      name="ClassDetail"
+      component={ClassDashboardScreen}
+      options={{ title: 'Class Dashboard' }}
+    />
+    <AdminStack.Screen
+      name="TeachersList"
+      component={TeachersListScreen}
+      options={{ title: 'Teachers' }}
+    />
+    <AdminStack.Screen
+      name="TeacherDetail"
+      component={TeacherDetailScreen}
+      options={{ title: 'Teacher Details' }}
+    />
+    <AdminStack.Screen
+      name="EditTeacher"
+      component={EditTeacherScreen}
+      options={{ title: 'Edit Teacher' }}
+    />
+    <AdminStack.Screen
+      name="CreateTeacher"
+      component={CreateTeacherScreen}
+      options={{ title: 'Create Teacher' }}
     />
     <AdminStack.Screen
       name="StudentsList"

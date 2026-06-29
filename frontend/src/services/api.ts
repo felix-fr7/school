@@ -235,12 +235,29 @@ export const adminAPI = {
     return response.data;
   },
 
+  async getClassDashboard(id: string): Promise<ApiResponse<{
+    class: Class & { teacher?: { id: string; name: string; email: string; phone?: string } };
+    metrics: { totalStudents: number; attendanceRate: number };
+    recentHomework: Homework[];
+    upcomingExams: ExamSchedule[];
+    recentAnnouncements: News[];
+  }>> {
+    const response = await api.get<ApiResponse<{
+      class: Class & { teacher?: { id: string; name: string; email: string; phone?: string } };
+      metrics: { totalStudents: number; attendanceRate: number };
+      recentHomework: Homework[];
+      upcomingExams: ExamSchedule[];
+      recentAnnouncements: News[];
+    }>>(`/admin/classes/${id}/dashboard`);
+    return response.data;
+  },
+
   async getClass(id: string): Promise<ApiResponse<Class>> {
     const response = await api.get<ApiResponse<Class>>(`/admin/classes/${id}`);
     return response.data;
   },
 
-  async createClass(data: CreateClassInput): Promise<ApiResponse<Class>> {
+  async createClass(data: CreateClassInput & { teacherName?: string; teacherEmail?: string; teacherPhone?: string; teacherPassword?: string }): Promise<ApiResponse<Class>> {
     const response = await api.post<ApiResponse<Class>>('/admin/classes', data);
     return response.data;
   },
@@ -390,6 +407,34 @@ export const adminAPI = {
 
   async deleteExamSchedule(id: string): Promise<ApiResponse<void>> {
     const response = await api.delete<ApiResponse<void>>(`/admin/exam-schedules/${id}`);
+    return response.data;
+  },
+
+  // Teachers
+  async getTeachers(page = 1, limit = 10, classId = '', search = ''): Promise<ApiResponse<{ teachers: User[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ teachers: User[]; pagination: any }>>('/admin/teachers', {
+      params: { page, limit, classId, search },
+    });
+    return response.data;
+  },
+
+  async getTeacher(id: string): Promise<ApiResponse<User>> {
+    const response = await api.get<ApiResponse<User>>(`/admin/teachers/${id}`);
+    return response.data;
+  },
+
+  async createTeacher(data: { name: string; email: string; password: string; phone?: string; classId?: string }): Promise<ApiResponse<User>> {
+    const response = await api.post<ApiResponse<User>>('/admin/teachers', data);
+    return response.data;
+  },
+
+  async updateTeacher(id: string, data: { name?: string; email?: string; phone?: string; classId?: string }): Promise<ApiResponse<void>> {
+    const response = await api.put<ApiResponse<void>>(`/admin/teachers/${id}`, data);
+    return response.data;
+  },
+
+  async deleteTeacher(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/admin/teachers/${id}`);
     return response.data;
   },
 };

@@ -8,13 +8,14 @@
 // User & Role Types
 // ============================================
 
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'STUDENT';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'TEACHER' | 'STUDENT';
 
 // User types
 export interface User {
   id: string;
   email: string;
   name: string;
+  phone?: string;
   role: UserRole;
   tenantId?: string;
   studentId?: string;
@@ -330,10 +331,14 @@ export type AdminStackParamList = {
   ClassesList: undefined;
   CreateClass: undefined;
   ClassDetail: { classId: string };
-  StudentsList: undefined;
+  TeachersList: undefined;
+  TeacherDetail: { teacherId: string };
+  EditTeacher: { teacherId: string };
+  CreateTeacher: undefined;
+  StudentsList: { classId?: string } | undefined;
   CreateStudent: undefined;
   StudentDetail: { studentId: string };
-  HomeworkList: undefined;
+  HomeworkList: { classId?: string } | undefined;
   CreateHomework: undefined;
   MarksList: undefined;
   AddMarks: undefined;
@@ -341,7 +346,7 @@ export type AdminStackParamList = {
   CreateNews: undefined;
   CircularsList: undefined;
   CreateCircular: undefined;
-  ExamSchedulesList: undefined;
+  ExamSchedulesList: { classId?: string } | undefined;
   CreateExamSchedule: undefined;
 };
 

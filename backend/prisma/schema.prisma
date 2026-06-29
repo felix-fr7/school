@@ -15,10 +15,11 @@ datasource db {
 // Enums
 // ============================================
 
-/// User role enumeration for 3-tier system
+/// User role enumeration for 4-tier system
 enum Role {
   SUPER_ADMIN
   ADMIN
+  TEACHER
   STUDENT
 }
 
@@ -42,8 +43,8 @@ model Tenant {
   news        News[]
   circulars   Circular[]
   examSchedules ExamSchedule[]
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("tenants")
   @@index([code])
@@ -55,19 +56,21 @@ model User {
   email       String     @unique
   password    String
   name        String
+  phone       String?    // Phone number for teachers and admins
   role        Role       @default(STUDENT)
   tenantId    String?    // Null for Super Admin
   tenant      Tenant?    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   studentId   String?    @unique // For students - unique student ID within school
-  classId     String?    // For students - current class
+  classId     String?    // For students - current class; for teachers - class they teach
   class       Class?     @relation(fields: [classId], references: [id], onDelete: SetNull)
+  taughtClass Class?     @relation("ClassTeacher") // The class this teacher teaches (homeroom teacher)
   posts       Post[]
-  homeworks   Homework[] // Homework assigned by this admin to students
-  marks       Mark[]     // Marks entered by this admin
-  news        News[]     // News posted by this admin (relation for postedByUser)
-  circulars   Circular[] // Circulars issued by this admin (relation for issuedByUser)
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  homeworks   Homework[] // Homework assigned by this admin/teacher to students
+  marks       Mark[]     // Marks entered by this admin/teacher
+  news        News[]     // News posted by this admin/teacher (relation for postedByUser)
+  circulars   Circular[] // Circulars issued by this admin/teacher (relation for issuedByUser)
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("users")
   @@index([email])
@@ -81,17 +84,20 @@ model Class {
   id          String     @id @default(uuid())
   name        String     // Class name (e.g., "10th Grade", "Class A")
   section     String?    // Section/division (e.g., "A", "B")
+  teacherId   String?    @unique // Class teacher (homeroom teacher) ID - unique because one teacher per class
+  teacher     User?      @relation("ClassTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
   tenantId    String
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   students    User[]
   homeworks   Homework[]
   examSchedules ExamSchedule[]
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("classes")
   @@index([tenantId])
   @@index([name])
+  @@index([teacherId])
 }
 
 // ============================================
@@ -112,8 +118,8 @@ model Homework {
   assignedByUser User?   @relation(fields: [assignedBy], references: [id], onDelete: SetNull)
   dueDate     DateTime?
   isPublished Boolean    @default(true)
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("homeworks")
   @@index([tenantId])
@@ -137,8 +143,8 @@ model Mark {
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   remarks     String?    // Teacher remarks
   isPublished Boolean    @default(true)
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("marks")
   @@index([tenantId])
@@ -160,8 +166,8 @@ model News {
   postedByUser User?    @relation(fields: [postedBy], references: [id], onDelete: SetNull)
   isPublished Boolean    @default(true)
   publishDate DateTime?  // Date to publish (can be scheduled)
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("news")
   @@index([tenantId])
@@ -180,8 +186,8 @@ model Circular {
   issuedByUser User?    @relation(fields: [issuedBy], references: [id], onDelete: SetNull)
   isPublished Boolean    @default(true)
   issueDate   DateTime   @default(now())
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("circulars")
   @@index([tenantId])
@@ -202,8 +208,8 @@ model ExamSchedule {
   tenantId    String
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   isPublished Boolean    @default(true)
-  createdAt   DateTime   @default(now()) @map(name: "createdAt")
-  updatedAt   DateTime   @updatedAt @map(name: "updatedAt")
+  createdAt   DateTime   @default(now()) @map("createdAt")
+  updatedAt   DateTime   @updatedAt @map("updatedAt")
 
   @@map("exam_schedules")
   @@index([tenantId])
@@ -221,8 +227,8 @@ model Post {
   content   String
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now()) @map(name: "createdAt")
-  updatedAt DateTime @updatedAt @map(name: "updatedAt")
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt @map("updatedAt")
 
   @@map("posts")
   @@index([userId])

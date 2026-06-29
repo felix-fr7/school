@@ -76,6 +76,7 @@ const AdminDashboardScreen: React.FC = () => {
 
   const menuItems = [
     { id: 'ClassesList', title: 'Classes', icon: '📚', count: stats.totalClasses },
+    { id: 'TeachersList', title: 'Teachers', icon: '👨‍🏫', count: 0 },
     { id: 'StudentsList', title: 'Students', icon: '👨‍🎓', count: stats.totalStudents },
     { id: 'HomeworkList', title: 'Homework', icon: '📝', count: stats.totalHomework },
     { id: 'MarksList', title: 'Marks', icon: '📊', count: 0 },
@@ -96,23 +97,6 @@ const AdminDashboardScreen: React.FC = () => {
         <Text style={styles.roleText}>School Administrator</Text>
       </View>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <TouchableOpacity
-          style={styles.quickActionButton}
-          onPress={() => navigation.navigate('CreateStudent')}
-        >
-          <Text style={styles.quickActionIcon}>➕</Text>
-          <Text style={styles.quickActionText}>Add Student</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.quickActionButton}
-          onPress={() => navigation.navigate('CreateHomework')}
-        >
-          <Text style={styles.quickActionIcon}>📝</Text>
-          <Text style={styles.quickActionText}>Add Homework</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Menu Grid */}
       <View style={styles.menuGrid}>

@@ -40,6 +40,100 @@ const getAllClasses = async (req, res, next) => {
 };
 
 /**
+ * Get class dashboard data
+ * GET /api/admin/classes/:id/dashboard
+ */
+const getClassDashboard = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user.tenantId;
+
+    // Get class details with teacher info
+    const classData = await prisma.class.findFirst({
+      where: { id, tenantId },
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Class not found',
+        },
+      });
+    }
+
+    // Get student count for this class
+    const studentCount = await prisma.user.count({
+      where: { classId: id, role: 'STUDENT' },
+    });
+
+    // Get recent homework for this class
+    const recentHomework = await prisma.homework.findMany({
+      where: { classId: id, isPublished: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: {
+        assignedByUser: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    // Get upcoming exam schedules for this class
+    const upcomingExams = await prisma.examSchedule.findMany({
+      where: { 
+        classId: id, 
+        isPublished: true,
+        date: { gte: new Date() }
+      },
+      orderBy: { date: 'asc' },
+      take: 5,
+    });
+
+    // Get recent news/announcements from the tenant
+    const recentAnnouncements = await prisma.news.findMany({
+      where: { tenantId, isPublished: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: {
+        postedByUser: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    // Calculate attendance rate (mock data for now - can be enhanced with actual attendance tracking)
+    const attendanceRate = Math.floor(Math.random() * 20) + 80; // Mock: 80-100%
+
+    res.status(200).json({
+      success: true,
+      data: {
+        class: classData,
+        metrics: {
+          totalStudents: studentCount,
+          attendanceRate,
+        },
+        recentHomework,
+        upcomingExams,
+        recentAnnouncements,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Get single class with students
  * GET /api/admin/classes/:id
  */
@@ -95,14 +189,41 @@ const getClassById = async (req, res, next) => {
  */
 const createClass = async (req, res, next) => {
   try {
-    const { name, section } = req.body;
+    const { name, section, teacherId } = req.body;
     const tenantId = req.user.tenantId;
 
+    // If teacherId is provided, verify the teacher exists and belongs to this tenant
+    if (teacherId) {
+      const teacher = await prisma.user.findFirst({
+        where: { id: teacherId, tenantId, role: 'TEACHER' },
+      });
+
+      if (!teacher) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            message: 'Teacher not found',
+          },
+        });
+      }
+    }
+
+    // Create class with optional teacher reference
     const classData = await prisma.class.create({
       data: {
         name,
         section,
         tenantId,
+        teacherId: teacherId || null,
+      },
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -1260,9 +1381,290 @@ const deleteExamSchedule = async (req, res, next) => {
   }
 };
 
+// ============================================
+// Teacher Management
+// ============================================
+
+/**
+ * Get all teachers for admin's school
+ * GET /api/admin/teachers
+ */
+const getAllTeachers = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { classId, search, page = 1, limit = 10 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    const where = { tenantId, role: 'TEACHER' };
+
+    if (classId) {
+      where.classId = classId;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { email: { contains: search } },
+      ];
+    }
+
+    const total = await prisma.user.count({ where });
+
+    const teachers = await prisma.user.findMany({
+      where,
+      skip,
+      take,
+      include: {
+        class: {
+          select: {
+            id: true,
+            name: true,
+            section: true,
+          }
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        teachers,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('GetAllTeachers Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Get single teacher details
+ * GET /api/admin/teachers/:id
+ */
+const getTeacherById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user.tenantId;
+
+    const teacher = await prisma.user.findFirst({
+      where: { id, tenantId, role: 'TEACHER' },
+      include: {
+        class: {
+          include: {
+            students: {
+              select: {
+                id: true,
+                name: true,
+                studentId: true,
+              }
+            },
+          }
+        },
+        homeworks: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+        marks: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+      },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Teacher not found',
+        },
+      });
+    }
+
+    // Remove password
+    const { password, ...teacherWithoutPassword } = teacher;
+
+    res.status(200).json({
+      success: true,
+      data: teacherWithoutPassword,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create a new teacher
+ * POST /api/admin/teachers
+ */
+const createTeacher = async (req, res, next) => {
+  try {
+    const { name, email, password, phone, classId } = req.body;
+    const tenantId = req.user.tenantId;
+
+    // Check if email already exists
+    const existingEmail = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingEmail) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          message: 'A user with this email already exists',
+        },
+      });
+    }
+
+    // Hash password
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const teacher = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        role: 'TEACHER',
+        tenantId,
+        phone,
+        classId,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        role: true,
+        classId: true,
+        createdAt: true,
+      },
+    });
+
+    // If assigned to a class, update class teacher reference
+    if (classId) {
+      await prisma.class.update({
+        where: { id: classId },
+        data: { teacherId: teacher.id },
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      data: teacher,
+      message: 'Teacher created successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update a teacher
+ * PUT /api/admin/teachers/:id
+ */
+const updateTeacher = async (req, res, next) => {
+  try {
+    const teacherId = req.params.id;
+    const { name, email, phone, classId } = req.body;
+    const tenantId = req.user.tenantId;
+
+    // First verify the teacher exists and belongs to this tenant
+    const existingTeacher = await prisma.user.findFirst({
+      where: { id: teacherId, tenantId, role: 'TEACHER' },
+    });
+
+    if (!existingTeacher) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Teacher not found',
+        },
+      });
+    }
+
+    // Hardcode ONLY the allowed fields into a completely clean dictionary object
+    const strictUpdateData = {};
+    if (name !== undefined) strictUpdateData.name = name;
+    if (email !== undefined) strictUpdateData.email = email;
+    if (phone !== undefined) strictUpdateData.phone = phone;
+    if (classId !== undefined) strictUpdateData.classId = classId;
+
+    // Now execute the update using ONLY this verified data object
+    await prisma.user.update({
+      where: { id: teacherId },
+      data: strictUpdateData,
+    });
+
+    // Update class teacher reference if classId was provided
+    if (classId !== undefined) {
+      // Remove teacher reference from old class
+      await prisma.class.updateMany({
+        where: { teacherId: teacherId },
+        data: { teacherId: null },
+      });
+
+      // Set teacher reference on new class
+      if (classId) {
+        await prisma.class.update({
+          where: { id: classId },
+          data: { teacherId: teacherId },
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Teacher updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete a teacher
+ * DELETE /api/admin/teachers/:id
+ */
+const deleteTeacher = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user.tenantId;
+
+    const teacher = await prisma.user.deleteMany({
+      where: { id, tenantId, role: 'TEACHER' },
+    });
+
+    if (teacher.count === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Teacher not found',
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Teacher deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   // Class
   getAllClasses,
+  getClassDashboard,
   getClassById,
   createClass,
   updateClass,
@@ -1297,4 +1699,10 @@ module.exports = {
   getAllExamSchedules,
   createExamSchedule,
   deleteExamSchedule,
+  // Teacher
+  getAllTeachers,
+  getTeacherById,
+  createTeacher,
+  updateTeacher,
+  deleteTeacher,
 };

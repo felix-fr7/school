@@ -13,11 +13,11 @@ import { Picker } from '@react-native-picker/picker';
 import { adminAPI } from '../../services/api';
 import { Class } from '../../types';
 
-const CreateStudentScreen: React.FC = () => {
+const CreateTeacherScreen: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [phone, setPhone] = useState('');
   const [classId, setClassId] = useState<string | undefined>(undefined);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,50 +44,50 @@ const CreateStudentScreen: React.FC = () => {
   const handleSubmit = async () => {
     // Validation
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter student name');
+      Alert.alert('Error', 'Please enter teacher name');
       return;
     }
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter student email');
+      Alert.alert('Error', 'Please enter teacher email');
       return;
     }
     if (!password.trim()) {
       Alert.alert('Error', 'Please enter password');
       return;
     }
-    if (!studentId.trim()) {
-      Alert.alert('Error', 'Please enter student ID');
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
       return;
     }
 
     try {
       setLoading(true);
-      const response = await adminAPI.createStudent({
+      const response = await adminAPI.createTeacher({
         name: name.trim(),
         email: email.trim(),
         password,
-        studentId: studentId.trim(),
+        phone: phone.trim() || undefined,
         classId,
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Student created successfully!', [
+        Alert.alert('Success', 'Teacher created successfully!', [
           {
             text: 'OK',
             onPress: () => {
               setName('');
               setEmail('');
               setPassword('');
-              setStudentId('');
+              setPhone('');
               setClassId(undefined);
             },
           },
         ]);
       } else {
-        Alert.alert('Error', response.error?.message || 'Failed to create student');
+        Alert.alert('Error', response.error?.message || 'Failed to create teacher');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to create student');
+      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to create teacher');
     } finally {
       setLoading(false);
     }
@@ -96,19 +96,23 @@ const CreateStudentScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.form}>
-        <Text style={styles.label}>Student Name *</Text>
+        <Text style={styles.description}>
+          Create a new teacher account. The teacher will be able to log in and manage their assigned class.
+        </Text>
+
+        <Text style={styles.label}>Teacher Name *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter student name"
+          placeholder="Enter teacher's full name"
           value={name}
           onChangeText={setName}
           autoCapitalize="words"
         />
 
-        <Text style={styles.label}>Email *</Text>
+        <Text style={styles.label}>Email / Login ID *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter student email"
+          placeholder="Enter teacher's email address"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -118,22 +122,22 @@ const CreateStudentScreen: React.FC = () => {
         <Text style={styles.label}>Password *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter password"
+          placeholder="Enter password (min 6 characters)"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
 
-        <Text style={styles.label}>Student ID *</Text>
+        <Text style={styles.label}>Phone Number</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter student ID"
-          value={studentId}
-          onChangeText={setStudentId}
-          autoCapitalize="none"
+          placeholder="Enter phone number"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
         />
 
-        <Text style={styles.label}>Class</Text>
+        <Text style={styles.label}>Assign to Class</Text>
         {fetchingClasses ? (
           <View style={styles.pickerContainer}>
             <ActivityIndicator size="small" />
@@ -145,7 +149,7 @@ const CreateStudentScreen: React.FC = () => {
               onValueChange={(itemValue: string) => setClassId(itemValue || undefined)}
               style={styles.picker}
             >
-              <Picker.Item label="Select a class (optional)" value="" />
+              <Picker.Item label="No class assigned (optional)" value="" />
               {classes.map((cls) => (
                 <Picker.Item
                   key={cls.id}
@@ -165,7 +169,7 @@ const CreateStudentScreen: React.FC = () => {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitButtonText}>Create Student</Text>
+            <Text style={styles.submitButtonText}>Create Teacher</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -180,6 +184,12 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: 20,
+  },
+  description: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 24,
+    lineHeight: 20,
   },
   label: {
     fontSize: 14,
@@ -223,4 +233,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateStudentScreen;
+export default CreateTeacherScreen;
