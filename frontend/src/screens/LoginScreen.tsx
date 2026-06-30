@@ -44,9 +44,47 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     try {
       await login(email.trim(), password);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      Alert.alert('Login Error', errorMessage);
+    } catch (err: any) {
+      console.log("Raw login error caught:", err);
+
+      let rawMessage: any = "Login failed. Please try again.";
+
+      // 1. Extract potentially nested string message safely
+      if (err?.response?.data?.error?.message) {
+        rawMessage = err.response.data.error.message;
+      } else if (err?.response?.data?.message) {
+        rawMessage = err.response.data.message;
+      } else if (err?.message) {
+        rawMessage = err.message;
+      } else if (err?.response?.data) {
+        rawMessage = err.response.data;
+      } else if (err) {
+        rawMessage = err;
+      }
+
+      // 2. THE NUCLEAR SAFEGUARD: Absolutely destroy any remaining object reference
+      let cleanStringMessage = "";
+
+      if (typeof rawMessage === 'string') {
+        cleanStringMessage = rawMessage;
+      } else if (typeof rawMessage === 'object' && rawMessage !== null) {
+        // If it's an object or ReadableNativeMap, force convert to standard JSON string
+        try {
+          cleanStringMessage = JSON.stringify(rawMessage);
+        } catch (e) {
+          cleanStringMessage = "Error parsing server dynamic response object.";
+        }
+      } else {
+        cleanStringMessage = String(rawMessage);
+      }
+
+      // Double check it's a pure primitive string, otherwise fallback to hardcoded text
+      if (typeof cleanStringMessage !== 'string' || cleanStringMessage.includes('[object')) {
+        cleanStringMessage = "Authentication failed. Server returned an invalid payload structure.";
+      }
+
+      // 3. Trigger native dialog safely
+      Alert.alert('Login Error', cleanStringMessage);
     } finally {
       setIsLoading(false);
     }

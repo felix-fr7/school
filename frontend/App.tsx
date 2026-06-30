@@ -24,9 +24,11 @@ import SchoolDetailScreen from './src/screens/superadmin/SchoolDetailScreen';
 
 // Admin Screens
 import AdminDashboardScreen from './src/screens/admin/DashboardScreen';
+import PlaceholderScreen from './src/screens/admin/PlaceholderScreen';
 import ClassesListScreen from './src/screens/admin/ClassesListScreen';
 import CreateClassScreen from './src/screens/admin/CreateClassScreen';
 import ClassDashboardScreen from './src/screens/admin/ClassDashboardScreen';
+import EditClassScreen from './src/screens/admin/EditClassScreen';
 import TeachersListScreen from './src/screens/admin/TeachersListScreen';
 import TeacherDetailScreen from './src/screens/admin/TeacherDetailScreen';
 import EditTeacherScreen from './src/screens/admin/EditTeacherScreen';
@@ -43,6 +45,14 @@ import CircularsListScreen from './src/screens/admin/CircularsListScreen';
 import CreateCircularScreen from './src/screens/admin/CreateCircularScreen';
 import ExamSchedulesListScreen from './src/screens/admin/ExamSchedulesListScreen';
 import CreateExamScheduleScreen from './src/screens/admin/CreateExamScheduleScreen';
+
+// Teacher Screens
+import TeacherDashboardScreen from './src/screens/teacher/TeacherDashboardScreen';
+import TeacherStudentsScreen from './src/screens/teacher/TeacherStudentsScreen';
+import TeacherHomeworkScreen from './src/screens/teacher/TeacherHomeworkScreen';
+import TeacherMarksScreen from './src/screens/teacher/TeacherMarksScreen';
+import TeacherNewsScreen from './src/screens/teacher/TeacherNewsScreen';
+import TeacherCircularsScreen from './src/screens/teacher/TeacherCircularsScreen';
 
 // Student Screens
 import StudentDashboardScreen from './src/screens/student/DashboardScreen';
@@ -61,11 +71,12 @@ import CreatePostScreen from './src/screens/CreatePostScreen';
 import EditPostScreen from './src/screens/EditPostScreen';
 
 // Types
-import { RootStackParamList, SuperAdminStackParamList, AdminStackParamList, StudentStackParamList, MainStackParamList, AuthStackParamList } from './src/types';
+import { RootStackParamList, SuperAdminStackParamList, AdminStackParamList, StudentStackParamList, TeacherStackParamList, MainStackParamList, AuthStackParamList } from './src/types';
 
 const SuperAdminStack = createStackNavigator<SuperAdminStackParamList>();
 const AdminStack = createStackNavigator<AdminStackParamList>();
 const StudentStack = createStackNavigator<StudentStackParamList>();
+const TeacherStack = createStackNavigator<TeacherStackParamList>();
 const MainStack = createStackNavigator<MainStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
 const RootStack = createStackNavigator<RootStackParamList>();
@@ -134,6 +145,11 @@ const AdminNavigator = () => (
       name="ClassDetail"
       component={ClassDashboardScreen}
       options={{ title: 'Class Dashboard' }}
+    />
+    <AdminStack.Screen
+      name="EditClass"
+      component={EditClassScreen}
+      options={{ title: 'Edit Class' }}
     />
     <AdminStack.Screen
       name="TeachersList"
@@ -273,6 +289,50 @@ const StudentNavigator = () => (
 );
 
 // ============================================
+// Teacher Navigator
+// ============================================
+const TeacherNavigator = () => (
+  <TeacherStack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: '#7b1fa2' },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' },
+    }}
+  >
+    <TeacherStack.Screen
+      name="TeacherDashboard"
+      component={TeacherDashboardScreen}
+      options={{ title: 'Teacher Dashboard' }}
+    />
+    <TeacherStack.Screen
+      name="TeacherStudents"
+      component={TeacherStudentsScreen}
+      options={{ title: 'My Students' }}
+    />
+    <TeacherStack.Screen
+      name="TeacherHomework"
+      component={TeacherHomeworkScreen}
+      options={{ title: 'Homework' }}
+    />
+    <TeacherStack.Screen
+      name="TeacherMarks"
+      component={TeacherMarksScreen}
+      options={{ title: 'Marks' }}
+    />
+    <TeacherStack.Screen
+      name="TeacherNews"
+      component={TeacherNewsScreen}
+      options={{ title: 'News' }}
+    />
+    <TeacherStack.Screen
+      name="TeacherCirculars"
+      component={TeacherCircularsScreen}
+      options={{ title: 'Circulars' }}
+    />
+  </TeacherStack.Navigator>
+);
+
+// ============================================
 // Legacy Main Navigator (for backward compatibility)
 // ============================================
 const LegacyMainNavigator = () => (
@@ -314,7 +374,7 @@ const AuthNavigator = () => (
 // Root Navigator
 // ============================================
 const RootNavigator = () => {
-  const { isAuthenticated, isLoading, isSuperAdmin, isAdmin, isStudent } = useAuth();
+  const { isAuthenticated, isLoading, isSuperAdmin, isAdmin, isStudent, isTeacher } = useAuth();
 
   if (isLoading) {
     return (
@@ -335,6 +395,8 @@ const RootNavigator = () => {
         <RootStack.Screen name="Admin" component={AdminNavigator} />
       ) : isStudent ? (
         <RootStack.Screen name="Student" component={StudentNavigator} />
+      ) : isTeacher ? (
+        <RootStack.Screen name="Teacher" component={TeacherNavigator} />
       ) : (
         <RootStack.Screen name="Main" component={LegacyMainNavigator} />
       )}

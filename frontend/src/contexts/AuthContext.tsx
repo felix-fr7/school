@@ -128,6 +128,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    */
   const isStudent = user?.role === 'STUDENT';
 
+  /**
+   * Check if user is Teacher
+   */
+  const isTeacher = user?.role === 'TEACHER';
+
   return (
     <AuthContext.Provider
       value={{
@@ -141,6 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isSuperAdmin,
         isAdmin,
         isStudent,
+        isTeacher,
       }}
     >
       {children}

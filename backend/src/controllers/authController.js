@@ -11,14 +11,28 @@ const prisma = new PrismaClient();
 
 /**
  * Generate JWT token for user
- * @param {Object} user - User object containing id and email
+ * Includes classId for teachers if they are assigned to a class
+ * @param {Object} user - User object containing id, email, role
  * @returns {string} JWT token
  */
-const generateToken = (user) => {
+const generateToken = async (user) => {
+  // For teachers, check if they are assigned to a class
+  let classId = null;
+  if (user.role === 'TEACHER') {
+    const classAssignment = await prisma.class.findFirst({
+      where: { teacherId: user.id },
+      select: { id: true },
+    });
+    classId = classAssignment?.id || null;
+  }
+
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
+      role: user.role,
+      tenantId: user.tenantId,
+      classId: classId, // Only set for teachers assigned to a class
     },
     process.env.JWT_SECRET,
     {
@@ -63,7 +77,7 @@ const register = async (req, res, next) => {
     });
 
     // Generate token
-    const token = generateToken(user);
+    const token = await generateToken(user);
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
@@ -116,7 +130,7 @@ const login = async (req, res, next) => {
     }
 
     // Generate token
-    const token = generateToken(user);
+    const token = await generateToken(user);
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;

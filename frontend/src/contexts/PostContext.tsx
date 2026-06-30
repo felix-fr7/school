@@ -71,7 +71,7 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const response = await postsAPI.createPost(data.title, data.content);
+      const response = await postsAPI.createPost(data);
 
       if (response.success && response.data) {
         setPosts([response.data, ...posts]);
@@ -96,10 +96,10 @@ export const PostProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
 
     try {
-      const response = await postsAPI.updatePost(id, data.title, data.content);
+      const response = await postsAPI.updatePost(id, data);
 
       if (response.success && response.data) {
-        setPosts(posts.map((p) => (p.id === id ? response.data : p)));
+        setPosts(posts.map((p) => p.id === id ? response.data! : p));
         return response.data;
       } else {
         throw new Error(response.error?.message || 'Failed to update post');

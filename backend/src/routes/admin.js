@@ -5,11 +5,31 @@
  */
 
 const express = require('express');
+const multer = require('multer');
 const { body, param, query } = require('express-validator');
 const adminController = require('../controllers/adminController');
 const { protect, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Configure multer for file uploads (memory storage for Excel parsing)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv',
+    ];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only Excel (.xlsx, .xls) and CSV files are allowed.'), false);
+    }
+  },
+});
 
 // All routes require Admin role
 router.use(protect);
@@ -206,6 +226,70 @@ router.delete(
   '/students/:id',
   [param('id').isUUID().withMessage('Invalid student ID format')],
   adminController.deleteStudent
+);
+
+/**
+ * @route   GET /api/admin/students/template
+ * @desc    Get student import template (column headers and sample data)
+ * @access  Admin
+ */
+router.get(
+  '/students/template',
+  adminController.getStudentTemplate
+);
+
+/**
+ * @route   POST /api/admin/students/manual
+ * @desc    Create a student manually with extended fields (rollNumber, studentName, classAndSection, parentMobile, bloodGroup, studentAddress, userId, password)
+ * @access  Admin
+ */
+router.post(
+  '/students/manual',
+  [
+    body('rollNumber')
+      .trim()
+      .notEmpty()
+      .withMessage('Roll number is required'),
+    body('studentName')
+      .trim()
+      .notEmpty()
+      .withMessage('Student name is required'),
+    body('userId')
+      .isEmail()
+      .withMessage('Please provide a valid email for userId')
+      .normalizeEmail(),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('Password must be at least 6 characters long'),
+    body('parentMobile')
+      .optional()
+      .trim(),
+    body('bloodGroup')
+      .optional()
+      .trim(),
+    body('studentAddress')
+      .optional()
+      .trim(),
+    body('classAndSection')
+      .optional()
+      .trim(),
+    body('className')
+      .optional()
+      .trim(),
+  ],
+  adminController.createStudentManual
+);
+
+/**
+ * @route   POST /api/admin/students/bulk
+ * @desc    Bulk import students from Excel file (.xlsx, .xls, .csv)
+ * @access  Admin
+ * @form    file (Excel file with columns: rollNumber, studentName, classAndSection, parentMobile, bloodGroup, studentAddress, userId, password)
+ */
+router.post(
+  '/students/bulk',
+  upload.single('file'),
+  adminController.bulkImportStudents
 );
 
 // ============================================
@@ -583,6 +667,21 @@ router.delete(
 // ============================================
 // Teacher Management Routes
 // ============================================
+
+/**
+ * @route   GET /api/admin/teachers/available
+ * @desc    Get teachers available for class assignment (unassigned or assigned to specific class)
+ * @access  Admin
+ * @query   classId, search, page, limit
+ */
+router.get(
+  '/teachers/available',
+  [
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }),
+  ],
+  adminController.getAvailableTeachers
+);
 
 /**
  * @route   GET /api/admin/teachers

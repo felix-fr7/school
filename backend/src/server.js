@@ -18,6 +18,7 @@ const postRoutes = require('./routes/posts');
 const tenantRoutes = require('./routes/tenants');
 const adminRoutes = require('./routes/admin');
 const studentRoutes = require('./routes/student');
+const teacherRoutes = require('./routes/teacher');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -84,6 +85,9 @@ app.use('/api/admin', adminRoutes);
 
 // Student routes
 app.use('/api/student', studentRoutes);
+
+// Teacher routes
+app.use('/api/teacher', teacherRoutes);
 
 // 404 handler for unknown routes
 app.use('*', (req, res) => {

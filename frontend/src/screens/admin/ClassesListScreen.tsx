@@ -93,6 +93,12 @@ const ClassesListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
         <View style={styles.actions}>
           <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => navigation.navigate('ClassDetail', { classId: item.id })}
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => handleDelete(item.id, classFullName)}
           >
@@ -216,6 +222,19 @@ const styles = StyleSheet.create({
   },
   actions: {
     marginLeft: 16,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   deleteButton: {
     backgroundColor: '#FF3B30',

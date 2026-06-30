@@ -174,6 +174,40 @@ const requireAdmin = (req, res, next) => {
 };
 
 /**
+ * Require Teacher role
+ */
+const requireTeacher = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        message: 'Authentication required',
+      },
+    });
+  }
+
+  if (req.user.role !== 'TEACHER') {
+    return res.status(403).json({
+      success: false,
+      error: {
+        message: 'Access denied. Teacher privileges required.',
+      },
+    });
+  }
+
+  if (!req.user.tenantId) {
+    return res.status(403).json({
+      success: false,
+      error: {
+        message: 'Teacher not associated with any school',
+      },
+    });
+  }
+
+  next();
+};
+
+/**
  * Require Student role
  */
 const requireStudent = (req, res, next) => {
@@ -275,6 +309,7 @@ module.exports = {
   optionalAuth, 
   requireSuperAdmin, 
   requireAdmin, 
+  requireTeacher,
   requireStudent,
   requireRole,
   checkTenantAccess

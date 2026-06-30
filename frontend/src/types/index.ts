@@ -60,6 +60,7 @@ export interface Class {
   id: string;
   name: string;
   section?: string;
+  teacherId?: string;
   tenantId: string;
   createdAt: string;
   updatedAt: string;
@@ -331,6 +332,7 @@ export type AdminStackParamList = {
   ClassesList: undefined;
   CreateClass: undefined;
   ClassDetail: { classId: string };
+  EditClass: { classId: string };
   TeachersList: undefined;
   TeacherDetail: { teacherId: string };
   EditTeacher: { teacherId: string };
@@ -362,11 +364,22 @@ export type StudentStackParamList = {
   StudentProfile: undefined;
 };
 
+// Teacher Stack
+export type TeacherStackParamList = {
+  TeacherDashboard: { title: string };
+  TeacherStudents: { title: string };
+  TeacherHomework: { title: string };
+  TeacherMarks: { title: string };
+  TeacherNews: { title: string };
+  TeacherCirculars: { title: string };
+};
+
 export type RootStackParamList = {
   Auth: AuthStackParamList;
   SuperAdmin: SuperAdminStackParamList;
   Admin: AdminStackParamList;
   Student: StudentStackParamList;
+  Teacher: TeacherStackParamList;
   Main: MainStackParamList;
 };
 
@@ -385,6 +398,7 @@ export interface AuthContextType {
   isSuperAdmin: boolean;
   isAdmin: boolean;
   isStudent: boolean;
+  isTeacher: boolean;
 }
 
 export interface PostContextType {

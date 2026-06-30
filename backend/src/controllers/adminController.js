@@ -5,6 +5,7 @@
 
 const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
+const xlsx = require('xlsx');
 
 const prisma = new PrismaClient();
 
@@ -42,11 +43,14 @@ const getAllClasses = async (req, res, next) => {
 /**
  * Get class dashboard data
  * GET /api/admin/classes/:id/dashboard
+ * Access Control: Only Admin users and the assigned Incharge Teacher can access
  */
 const getClassDashboard = async (req, res, next) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
+    const userRole = req.user.role;
+    const userId = req.user.id;
 
     // Get class details with teacher info
     const classData = await prisma.class.findFirst({
@@ -71,6 +75,21 @@ const getClassDashboard = async (req, res, next) => {
         },
       });
     }
+
+    // Access Control: Check if user has permission to view this class dashboard
+    // Admin can view all classes, Teachers can only view their assigned class
+    if (userRole === 'TEACHER') {
+      // Teacher must be the assigned incharge of this class to access it
+      if (classData.teacherId !== userId) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            message: 'Access denied. You can only view the dashboard of your assigned class.',
+          },
+        });
+      }
+    }
+    // Note: ADMIN role can view all classes (no restriction needed)
 
     // Get student count for this class
     const studentCount = await prisma.user.count({
@@ -244,15 +263,14 @@ const createClass = async (req, res, next) => {
 const updateClass = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, section } = req.body;
     const tenantId = req.user.tenantId;
 
-    const classData = await prisma.class.updateMany({
+    // First verify the class exists and belongs to this tenant
+    const existingClass = await prisma.class.findFirst({
       where: { id, tenantId },
-      data: { name, section },
     });
 
-    if (classData.count === 0) {
+    if (!existingClass) {
       return res.status(404).json({
         success: false,
         error: {
@@ -261,11 +279,114 @@ const updateClass = async (req, res, next) => {
       });
     }
 
+    // Strict whitelisting - only allow these specific fields to be updated
+    const strictUpdateData = {};
+    
+    if (req.body.name !== undefined) {
+      // Validate name
+      const trimmedName = req.body.name.trim();
+      if (!trimmedName) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'Class name cannot be empty',
+          },
+        });
+      }
+      if (trimmedName.length > 100) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'Class name must be less than 100 characters',
+          },
+        });
+      }
+      strictUpdateData.name = trimmedName;
+    }
+
+    if (req.body.section !== undefined) {
+      const trimmedSection = req.body.section?.trim() || '';
+      if (trimmedSection.length > 10) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'Section must be less than 10 characters',
+          },
+        });
+      }
+      strictUpdateData.section = trimmedSection || null;
+    }
+
+    // Handle teacherId if provided
+    if (req.body.teacherId !== undefined) {
+      const newTeacherId = req.body.teacherId;
+      
+      if (newTeacherId) {
+        // Verify the new teacher exists and belongs to this tenant
+        const teacher = await prisma.user.findFirst({
+          where: { id: newTeacherId, tenantId, role: 'TEACHER' },
+        });
+
+        if (!teacher) {
+          return res.status(404).json({
+            success: false,
+            error: {
+              message: 'Teacher not found',
+            },
+          });
+        }
+
+        // Check if this teacher is already assigned to another class
+        const existingTeacherAssignment = await prisma.class.findFirst({
+          where: { teacherId: newTeacherId, id: { not: id } },
+        });
+
+        if (existingTeacherAssignment) {
+          return res.status(409).json({
+            success: false,
+            error: {
+              message: 'This teacher is already assigned to another class',
+            },
+          });
+        }
+
+        // Remove teacher reference from old class if there was one
+        if (existingClass.teacherId) {
+          await prisma.class.update({
+            where: { id: existingClass.teacherId === existingClass.teacherId ? id : existingClass.id },
+            data: { teacherId: null },
+          });
+        }
+
+        strictUpdateData.teacherId = newTeacherId;
+      } else {
+        // If teacherId is set to null, just remove the reference
+        strictUpdateData.teacherId = null;
+      }
+    }
+
+    // Execute the update using ONLY the verified data object
+    const updatedClass = await prisma.class.update({
+      where: { id },
+      data: strictUpdateData,
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
     res.status(200).json({
       success: true,
+      data: updatedClass,
       message: 'Class updated successfully',
     });
   } catch (error) {
+    console.error('UpdateClass Error:', error);
     next(error);
   }
 };
@@ -273,17 +394,38 @@ const updateClass = async (req, res, next) => {
 /**
  * Delete a class
  * DELETE /api/admin/classes/:id
+ * 
+ * Safety notes:
+ * - Students and teacher assigned to this class will have their classId set to null (SetNull)
+ * - Homework and Exam Schedules will be cascade deleted
+ * - Returns info about affected records for transparency
  */
 const deleteClass = async (req, res, next) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const classData = await prisma.class.deleteMany({
+    // First, verify the class exists and belongs to this tenant
+    const existingClass = await prisma.class.findFirst({
       where: { id, tenantId },
+      include: {
+        _count: {
+          select: {
+            students: true,
+            homeworks: true,
+            examSchedules: true,
+          }
+        },
+        teacher: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
     });
 
-    if (classData.count === 0) {
+    if (!existingClass) {
       return res.status(404).json({
         success: false,
         error: {
@@ -292,11 +434,86 @@ const deleteClass = async (req, res, next) => {
       });
     }
 
+    // Gather dependency info for the response
+    const dependencyInfo = {
+      studentCount: existingClass._count.students,
+      homeworkCount: existingClass._count.homeworks,
+      examScheduleCount: existingClass._count.examSchedules,
+      hasTeacher: !!existingClass.teacherId,
+    };
+
+    // Perform the deletion in a transaction for safety
+    await prisma.$transaction(async (tx) => {
+      // Step 1: Detach students from this class (set their classId to null)
+      if (dependencyInfo.studentCount > 0) {
+        await tx.user.updateMany({
+          where: { classId: id, role: 'STUDENT' },
+          data: { classId: null },
+        });
+      }
+
+      // Step 2: Remove teacher reference from this class (if exists)
+      // This is handled by SetNull cascade, but we do it explicitly for clarity
+      if (dependencyInfo.hasTeacher) {
+        await tx.class.update({
+          where: { id },
+          data: { teacherId: null },
+        });
+      }
+
+      // Step 3: Delete associated homework (cascade will handle this, but being explicit)
+      if (dependencyInfo.homeworkCount > 0) {
+        await tx.homework.deleteMany({
+          where: { classId: id },
+        });
+      }
+
+      // Step 4: Delete associated exam schedules (cascade will handle this, but being explicit)
+      if (dependencyInfo.examScheduleCount > 0) {
+        await tx.examSchedule.deleteMany({
+          where: { classId: id },
+        });
+      }
+
+      // Step 5: Finally, delete the class itself
+      await tx.class.delete({
+        where: { id },
+      });
+    });
+
     res.status(200).json({
       success: true,
       message: 'Class deleted successfully',
+      data: {
+        deletedClassId: id,
+        className: existingClass.name,
+        section: existingClass.section,
+        dependenciesHandled: dependencyInfo,
+      },
     });
   } catch (error) {
+    console.error('DeleteClass Error:', error);
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P2003') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Cannot delete class: It has related records. Please remove dependencies first.',
+          code: 'FOREIGN_KEY_CONSTRAINT',
+        },
+      });
+    }
+    
+    if (error.code === 'P2025') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Class not found',
+        },
+      });
+    }
+
     next(error);
   }
 };
@@ -1386,6 +1603,86 @@ const deleteExamSchedule = async (req, res, next) => {
 // ============================================
 
 /**
+ * Get available teachers for class assignment
+ * GET /api/admin/teachers/available
+ * Returns teachers who are either unassigned or assigned to the specified class
+ */
+const getAvailableTeachers = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { classId, search, page = 1, limit = 100 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Build where clause: teachers who are either unassigned OR assigned to the specific class
+    const where = { tenantId, role: 'TEACHER' };
+
+    if (classId) {
+      // Include teachers who have no class OR are assigned to this specific class
+      where.OR = [
+        { classId: null },
+        { classId: classId }
+      ];
+    } else {
+      // If no classId provided, only show unassigned teachers
+      where.classId = null;
+    }
+
+    if (search) {
+      // Add search to the existing where conditions
+      const searchFilter = {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+        ]
+      };
+      
+      // Combine with existing conditions
+      if (classId) {
+        where.AND = searchFilter;
+      } else {
+        Object.assign(where, searchFilter);
+      }
+    }
+
+    const total = await prisma.user.count({ where });
+
+    const teachers = await prisma.user.findMany({
+      where,
+      skip,
+      take,
+      include: {
+        class: {
+          select: {
+            id: true,
+            name: true,
+            section: true,
+          }
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        teachers,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('GetAvailableTeachers Error:', error);
+    next(error);
+  }
+};
+
+/**
  * Get all teachers for admin's school
  * GET /api/admin/teachers
  */
@@ -1593,10 +1890,27 @@ const updateTeacher = async (req, res, next) => {
 
     // Hardcode ONLY the allowed fields into a completely clean dictionary object
     const strictUpdateData = {};
-    if (name !== undefined) strictUpdateData.name = name;
-    if (email !== undefined) strictUpdateData.email = email;
-    if (phone !== undefined) strictUpdateData.phone = phone;
-    if (classId !== undefined) strictUpdateData.classId = classId;
+    if (name !== undefined && name !== null && name.trim() !== '') {
+      strictUpdateData.name = name.trim();
+    }
+    if (email !== undefined && email !== null && email.trim() !== '') {
+      strictUpdateData.email = email.trim();
+    }
+    if (phone !== undefined && phone !== null && phone.trim() !== '') {
+      strictUpdateData.phone = phone.trim();
+    }
+    // Only include classId if it's a valid non-empty string
+    if (classId !== undefined && classId !== null && typeof classId === 'string' && classId.trim() !== '') {
+      strictUpdateData.classId = classId.trim();
+    }
+
+    // SAFETY: Explicitly remove any invalid keys that don't exist in the User schema
+    // This prevents Prisma runtime errors from unexpected fields
+    // Use bracket notation for 'new' since it's a reserved keyword
+    if (strictUpdateData && typeof strictUpdateData === 'object') {
+      delete strictUpdateData['new'];
+      delete strictUpdateData['password']; // Password updates should go through dedicated endpoint
+    }
 
     // Now execute the update using ONLY this verified data object
     await prisma.user.update({
@@ -1604,18 +1918,18 @@ const updateTeacher = async (req, res, next) => {
       data: strictUpdateData,
     });
 
-    // Update class teacher reference if classId was provided
-    if (classId !== undefined) {
+    // Update class teacher reference if classId was explicitly provided (including null/empty to clear assignment)
+    if (req.body.classId !== undefined) {
       // Remove teacher reference from old class
       await prisma.class.updateMany({
         where: { teacherId: teacherId },
         data: { teacherId: null },
       });
 
-      // Set teacher reference on new class
-      if (classId) {
+      // Set teacher reference on new class only if a valid classId was provided
+      if (classId !== undefined && classId !== null && typeof classId === 'string' && classId.trim() !== '') {
         await prisma.class.update({
-          where: { id: classId },
+          where: { id: classId.trim() },
           data: { teacherId: teacherId },
         });
       }
@@ -1661,6 +1975,290 @@ const deleteTeacher = async (req, res, next) => {
   }
 };
 
+// ============================================
+// Student Bulk Import (Excel)
+// ============================================
+
+/**
+ * Get student import template
+ * GET /api/admin/students/template
+ */
+const getStudentTemplate = (req, res) => {
+  const template = {
+    columns: ['rollNumber', 'studentName', 'classAndSection', 'parentMobile', 'bloodGroup', 'studentAddress', 'userId', 'password'],
+    sampleData: [
+      { rollNumber: 'STU001', studentName: 'John Doe', classAndSection: '10-A', parentMobile: '9876543210', bloodGroup: 'A+', studentAddress: '123 Main St', userId: 'john@school.com', password: 'Password@123' },
+      { rollNumber: 'STU002', studentName: 'Jane Smith', classAndSection: '10-A', parentMobile: '9876543211', bloodGroup: 'B+', studentAddress: '456 Oak Ave', userId: 'jane@school.com', password: 'Password@123' },
+    ]
+  };
+  
+  res.status(200).json({
+    success: true,
+    data: template,
+    message: 'Use these column headers for Excel import. All fields are required.'
+  });
+};
+
+/**
+ * Create student manually with extended fields
+ * POST /api/admin/students/manual
+ */
+const createStudentManual = async (req, res, next) => {
+  try {
+    const { rollNumber, studentName, classAndSection, parentMobile, bloodGroup, studentAddress, userId, password, className } = req.body;
+    const tenantId = req.user.tenantId;
+
+    // Validation
+    if (!rollNumber || !studentName || !userId || !password) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'rollNumber, studentName, userId, and password are required' },
+      });
+    }
+
+    // Check for existing rollNumber (studentId)
+    const existingRollNumber = await prisma.user.findUnique({
+      where: { studentId: rollNumber },
+    });
+
+    if (existingRollNumber) {
+      return res.status(409).json({
+        success: false,
+        error: { message: `Student with roll number "${rollNumber}" already exists` },
+      });
+    }
+
+    // Check for existing userId (email)
+    const existingUserId = await prisma.user.findUnique({
+      where: { email: userId },
+    });
+
+    if (existingUserId) {
+      return res.status(409).json({
+        success: false,
+        error: { message: `User ID "${userId}" already exists` },
+      });
+    }
+
+    // Hash password
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Parse classAndSection (e.g., "10-A" -> name: "10", section: "A")
+    let classId = null;
+    if (classAndSection && className) {
+      const [class_name, section] = classAndSection.split('-');
+      const classRecord = await prisma.class.findFirst({
+        where: { name: class_name.trim(), section: section?.trim() || null, tenantId },
+      });
+      classId = classRecord?.id || null;
+    }
+
+    // Create student in transaction
+    const student = await prisma.$transaction(async (tx) => {
+      return tx.user.create({
+        data: {
+          email: userId,
+          password: hashedPassword,
+          name: studentName,
+          role: 'STUDENT',
+          tenantId,
+          studentId: rollNumber,
+          classId,
+          phone: parentMobile || null,
+          // Additional metadata stored in a profile table or JSON if schema supports
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          studentId: true,
+          classId: true,
+          createdAt: true,
+        },
+      });
+    });
+
+    res.status(201).json({
+      success: true,
+      data: student,
+      message: 'Student created successfully',
+    });
+  } catch (error) {
+    console.error('CreateStudentManual Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Bulk import students from Excel
+ * POST /api/admin/students/bulk
+ */
+const bulkImportStudents = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No file uploaded. Please upload an Excel file (.xlsx or .csv)' },
+      });
+    }
+
+    // Parse Excel file
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const jsonData = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+
+    // Required columns
+    const requiredColumns = ['rollNumber', 'studentName', 'classAndSection', 'parentMobile', 'bloodGroup', 'studentAddress', 'userId', 'password'];
+    
+    // Get headers from first row
+    const headers = jsonData[0]?.map(h => String(h).trim().toLowerCase()) || [];
+    
+    // Validate headers
+    const missingColumns = requiredColumns.filter(col => !headers.includes(col.toLowerCase()));
+    if (missingColumns.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: { 
+          message: `Missing required columns: ${missingColumns.join(', ')}. Required columns are: ${requiredColumns.join(', ')}` 
+        },
+      });
+    }
+
+    // Map headers to indices
+    const headerIndex = {};
+    headers.forEach((header, index) => {
+      headerIndex[header] = index;
+    });
+
+    // Process rows (skip header row)
+    const studentsToCreate = [];
+    const errors = [];
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
+
+    for (let i = 1; i < jsonData.length; i++) {
+      const row = jsonData[i];
+      
+      // Skip empty rows
+      if (!row || row.length === 0) continue;
+
+      const rollNumber = row[headerIndex.rollnumber];
+      const studentName = row[headerIndex.studentname];
+      const classAndSection = row[headerIndex.classandsection];
+      const parentMobile = row[headerIndex.parentmobile];
+      const bloodGroup = row[headerIndex.bloodgroup];
+      const studentAddress = row[headerIndex.studentaddress];
+      const userId = row[headerIndex.userid];
+      const password = row[headerIndex.password];
+
+      // Validate required fields
+      if (!rollNumber || !studentName || !userId || !password) {
+        errors.push({ row: i + 1, error: 'Missing required fields (rollNumber, studentName, userId, password)' });
+        continue;
+      }
+
+      studentsToCreate.push({
+        rollNumber: String(rollNumber).trim(),
+        studentName: String(studentName).trim(),
+        classAndSection: classAndSection ? String(classAndSection).trim() : null,
+        parentMobile: parentMobile ? String(parentMobile).trim() : null,
+        bloodGroup: bloodGroup ? String(bloodGroup).trim() : null,
+        studentAddress: studentAddress ? String(studentAddress).trim() : null,
+        userId: String(userId).trim(),
+        password: String(password).trim(),
+      });
+    }
+
+    if (studentsToCreate.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No valid student records found in the file' },
+      });
+    }
+
+    // Check for duplicates in database
+    const existingRollNumbers = await prisma.user.findMany({
+      where: {
+        studentId: { in: studentsToCreate.map(s => s.rollNumber) },
+      },
+      select: { studentId: true },
+    });
+
+    const existingUserIds = await prisma.user.findMany({
+      where: {
+        email: { in: studentsToCreate.map(s => s.userId) },
+      },
+      select: { email: true },
+    });
+
+    // Filter out duplicates
+    const duplicateRollNumbers = new Set(existingRollNumbers.map(r => r.studentId));
+    const duplicateUserIds = new Set(existingUserIds.map(u => u.email));
+
+    const validStudents = studentsToCreate.filter(s => {
+      if (duplicateRollNumbers.has(s.rollNumber)) {
+        errors.push({ row: s.rollNumber, error: `Duplicate roll number: ${s.rollNumber}` });
+        return false;
+      }
+      if (duplicateUserIds.has(s.userId)) {
+        errors.push({ row: s.userId, error: `Duplicate user ID: ${s.userId}` });
+        return false;
+      }
+      return true;
+    });
+
+    if (validStudents.length === 0) {
+      return res.status(409).json({
+        success: false,
+        error: { message: 'All students in the file already exist', errors },
+      });
+    }
+
+    // Create students in batch using transaction
+    const createdStudents = await prisma.$transaction(
+      validStudents.map(student => 
+        prisma.user.create({
+          data: {
+            email: student.userId,
+            password: bcrypt.hashSync(student.password, saltRounds),
+            name: student.studentName,
+            role: 'STUDENT',
+            tenantId,
+            studentId: student.rollNumber,
+            phone: student.parentMobile,
+            classId: null, // Can be assigned later
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            studentId: true,
+            createdAt: true,
+          },
+        })
+      )
+    );
+
+    res.status(201).json({
+      success: true,
+      data: {
+        totalProcessed: studentsToCreate.length,
+        successfullyCreated: createdStudents.length,
+        duplicates: errors.length,
+        students: createdStudents,
+      },
+      errors: errors.length > 0 ? errors : undefined,
+      message: `Successfully imported ${createdStudents.length} students. ${errors.length} duplicates skipped.`,
+    });
+  } catch (error) {
+    console.error('BulkImportStudents Error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   // Class
   getAllClasses,
@@ -1673,6 +2271,9 @@ module.exports = {
   getAllStudents,
   getStudentById,
   createStudent,
+  createStudentManual,
+  bulkImportStudents,
+  getStudentTemplate,
   updateStudent,
   deleteStudent,
   // Homework
@@ -1700,6 +2301,7 @@ module.exports = {
   createExamSchedule,
   deleteExamSchedule,
   // Teacher
+  getAvailableTeachers,
   getAllTeachers,
   getTeacherById,
   createTeacher,

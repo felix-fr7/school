@@ -35,6 +35,46 @@ import {
 // API Base URL - configure based on environment
 const API_BASE_URL = process.env.API_URL || 'https://unadvised-tribunal-mutate.ngrok-free.dev/api';
 
+// ============================================
+// Storage Service
+// ============================================
+
+export const storage = {
+  async getToken(): Promise<string | null> {
+    const token = await AsyncStorage.getItem('authToken');
+    // Handle ReadableNativeMap on Android - convert to string if needed
+    if (token === null) return null;
+    if (typeof token === 'string') return token;
+    // Convert ReadableNativeMap or other objects to string
+    return String(token);
+  },
+
+  async saveToken(token: string): Promise<void> {
+    await AsyncStorage.setItem('authToken', String(token));
+  },
+
+  async getUser(): Promise<User | null> {
+    const userData = await AsyncStorage.getItem('user');
+    // Handle ReadableNativeMap on Android
+    if (userData === null) return null;
+    const userStr = typeof userData === 'string' ? userData : String(userData);
+    try {
+      return JSON.parse(userStr);
+    } catch (e) {
+      console.error('Error parsing user data from storage:', e);
+      return null;
+    }
+  },
+
+  async saveUser(user: User): Promise<void> {
+    await AsyncStorage.setItem('user', JSON.stringify(user));
+  },
+
+  async clearAuth(): Promise<void> {
+    await AsyncStorage.multiRemove(['authToken', 'user']);
+  },
+};
+
 // Create Axios instance
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -48,8 +88,9 @@ const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await AsyncStorage.getItem('authToken');
-      if (token) {
+      // Use storage.getToken() which handles ReadableNativeMap on Android
+      const token = await storage.getToken();
+      if (token && typeof token === 'string' && token.trim()) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
@@ -77,33 +118,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// ============================================
-// Storage Service
-// ============================================
-
-export const storage = {
-  async getToken(): Promise<string | null> {
-    return await AsyncStorage.getItem('authToken');
-  },
-
-  async saveToken(token: string): Promise<void> {
-    await AsyncStorage.setItem('authToken', token);
-  },
-
-  async getUser(): Promise<User | null> {
-    const userData = await AsyncStorage.getItem('user');
-    return userData ? JSON.parse(userData) : null;
-  },
-
-  async saveUser(user: User): Promise<void> {
-    await AsyncStorage.setItem('user', JSON.stringify(user));
-  },
-
-  async clearAuth(): Promise<void> {
-    await AsyncStorage.multiRemove(['authToken', 'user']);
-  },
-};
 
 // ============================================
 // Auth API
@@ -300,6 +314,38 @@ export const adminAPI = {
     return response.data;
   },
 
+  // Student Import
+  async getStudentTemplate(): Promise<ApiResponse<{ columns: string[]; sampleData: any[] }>> {
+    const response = await api.get<ApiResponse<{ columns: string[]; sampleData: any[] }>>('/admin/students/template');
+    return response.data;
+  },
+
+  async createStudentManual(data: {
+    rollNumber: string;
+    studentName: string;
+    classAndSection?: string;
+    parentMobile?: string;
+    bloodGroup?: string;
+    studentAddress?: string;
+    userId: string;
+    password: string;
+    className?: string;
+  }): Promise<ApiResponse<User>> {
+    const response = await api.post<ApiResponse<User>>('/admin/students/manual', data);
+    return response.data;
+  },
+
+  async bulkImportStudents(file: File): Promise<ApiResponse<{ totalProcessed: number; successfullyCreated: number; duplicates: number; students: User[] }>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post<ApiResponse<{ totalProcessed: number; successfullyCreated: number; duplicates: number; students: User[] }>>('/admin/students/bulk', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
   // Homework
   async getHomework(page = 1, limit = 10, classId = '', isPublished = ''): Promise<ApiResponse<{ homeworks: Homework[]; pagination: any }>> {
     const response = await api.get<ApiResponse<{ homeworks: Homework[]; pagination: any }>>('/admin/homework', {
@@ -411,6 +457,13 @@ export const adminAPI = {
   },
 
   // Teachers
+  async getAvailableTeachers(classId?: string, search = '', page = 1, limit = 100): Promise<ApiResponse<{ teachers: User[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ teachers: User[]; pagination: any }>>('/admin/teachers/available', {
+      params: { page, limit, classId, search },
+    });
+    return response.data;
+  },
+
   async getTeachers(page = 1, limit = 10, classId = '', search = ''): Promise<ApiResponse<{ teachers: User[]; pagination: any }>> {
     const response = await api.get<ApiResponse<{ teachers: User[]; pagination: any }>>('/admin/teachers', {
       params: { page, limit, classId, search },
@@ -518,6 +571,76 @@ export const studentAPI = {
   // Profile
   async getProfile(): Promise<ApiResponse<User>> {
     const response = await api.get<ApiResponse<User>>('/student/profile');
+    return response.data;
+  },
+};
+
+// ============================================
+// Teacher API
+// ============================================
+
+export const teacherAPI = {
+  // Dashboard - Get teacher's assigned class
+  async getMyClass(): Promise<ApiResponse<{
+    id: string;
+    name: string;
+    section?: string;
+    students: User[];
+    homeworks: Homework[];
+    examSchedules: ExamSchedule[];
+    _count: { students: number; homeworks: number; examSchedules: number };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      id: string;
+      name: string;
+      section?: string;
+      students: User[];
+      homeworks: Homework[];
+      examSchedules: ExamSchedule[];
+      _count: { students: number; homeworks: number; examSchedules: number };
+    }>>('/teacher/my-class');
+    return response.data;
+  },
+
+  // Students
+  async getMyStudents(page = 1, limit = 10, search = ''): Promise<ApiResponse<{ students: User[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ students: User[]; pagination: any }>>('/teacher/students', {
+      params: { page, limit, search },
+    });
+    return response.data;
+  },
+
+  // Homework
+  async getHomework(page = 1, limit = 10): Promise<ApiResponse<{ homeworks: Homework[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ homeworks: Homework[]; pagination: any }>>('/teacher/homework', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async createHomework(data: Omit<CreateHomeworkInput, 'classId'>): Promise<ApiResponse<Homework>> {
+    const response = await api.post<ApiResponse<Homework>>('/teacher/homework', data);
+    return response.data;
+  },
+
+  // Marks
+  async getMarks(page = 1, limit = 10, studentId = '', examType = ''): Promise<ApiResponse<{ marks: Mark[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ marks: Mark[]; pagination: any }>>('/teacher/marks', {
+      params: { page, limit, studentId, examType },
+    });
+    return response.data;
+  },
+
+  async createMarks(marksData: Array<{
+    studentId: string;
+    subject: string;
+    marksObtained: number;
+    totalMarks: number;
+    examType: string;
+    examDate?: string;
+    remarks?: string;
+  }>): Promise<ApiResponse<Mark[]>> {
+    const response = await api.post<ApiResponse<Mark[]>>('/teacher/marks', { marksData });
     return response.data;
   },
 };
