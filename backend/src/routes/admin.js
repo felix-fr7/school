@@ -8,6 +8,7 @@ const express = require('express');
 const multer = require('multer');
 const { body, param, query } = require('express-validator');
 const adminController = require('../controllers/adminController');
+const feeController = require('../controllers/feeController');
 const { protect, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -783,6 +784,76 @@ router.delete(
   '/teachers/:id',
   [param('id').isUUID().withMessage('Invalid teacher ID format')],
   adminController.deleteTeacher
+);
+
+// ============================================
+// Student Bulk Upload Routes
+// ============================================
+
+/**
+ * @route   POST /api/admin/students/bulk-upload
+ * @desc    Bulk upload students from CSV file to a specific class
+ * @access  Admin
+ * @body    multipart/form-data with 'file' (CSV) and 'classId'
+ */
+router.post(
+  '/students/bulk-upload',
+  upload.single('file'),
+  [
+    body('classId')
+      .notEmpty()
+      .withMessage('Class ID is required')
+      .isUUID()
+      .withMessage('Invalid class ID format'),
+  ],
+  adminController.bulkUploadStudentsCSV
+);
+
+// ============================================
+// Fee Management Routes
+// ============================================
+
+/**
+ * @route   GET /api/admin/fees
+ * @desc    Get all fees for admin's school with pagination
+ * @access  Admin
+ * @query   status, page, limit, classId
+ */
+router.get(
+  '/fees',
+  [
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }),
+    query('status').optional().isIn(['PAID', 'PARTIAL', 'UNPAID', 'WAIVED']),
+    query('classId').optional().isUUID(),
+  ],
+  feeController.getAllFees
+);
+
+/**
+ * @route   GET /api/admin/fees/stats
+ * @desc    Get fee statistics for dashboard
+ * @access  Admin
+ */
+router.get('/fees/stats', feeController.getFeeStats);
+
+/**
+ * @route   PUT /api/admin/fees/:studentId
+ * @desc    Update student fee record (admin only)
+ * @access  Admin
+ * @body    { totalAmount?, paidAmount?, status?, dueDate?, remarks? }
+ */
+router.put(
+  '/fees/:studentId',
+  [
+    param('studentId').isUUID().withMessage('Invalid student ID format'),
+    body('totalAmount').optional().isFloat({ min: 0 }),
+    body('paidAmount').optional().isFloat({ min: 0 }),
+    body('status').optional().isIn(['PAID', 'PARTIAL', 'UNPAID', 'WAIVED']),
+    body('dueDate').optional().isISO8601(),
+    body('remarks').optional().trim(),
+  ],
+  feeController.updateStudentFee
 );
 
 module.exports = router;

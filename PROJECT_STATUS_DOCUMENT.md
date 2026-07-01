@@ -103,15 +103,16 @@
 
 ---
 
-## 2. 3-Tier Multi-Tenant Role-Based Architecture
+## 2. 4-Tier Multi-Tenant Role-Based Architecture
 
 ### Role Hierarchy
 
 | Role | Created By | Can Create | Access Scope |
 |------|------------|------------|--------------|
 | **Super Admin** | System (seeded) | Admin accounts (School Tenants) | All schools/tenants |
-| **Admin** | Super Admin | Students, Classes, Homework, Marks, News, Circulars, Exam Schedules | Own school tenant only |
-| **Student** | Admin | None (view-only) | Own data within school tenant |
+| **Admin** | Super Admin | Students, Classes, Homework, Marks, News, Circulars, Exam Schedules, Teachers | Own school tenant only |
+| **Teacher** | Admin | None (manages own class only) | Own assigned class within school tenant |
+| **Student** | Admin/Admin/Teacher | None (view-only) | Own data within class/school tenant |
 
 ### Tenant Isolation
 
@@ -130,6 +131,7 @@
 enum Role {
   SUPER_ADMIN
   ADMIN
+  TEACHER
   STUDENT
 }
 
@@ -140,30 +142,33 @@ model Tenant {
 
 model User {
   id, email (unique), password, name, role, tenantId, studentId (unique), 
-  classId, posts, homeworks, marks, timestamps
+  classId, class (relation to Class for students), taughtClass (relation for teachers),
+  posts, homeworks, marks, news, circulars, timestamps
 }
 
 model Class {
-  id, name, section, tenantId, students, homeworks, examSchedules, timestamps
+  id, name, section, teacherId (unique, relation to User/Teacher), tenantId,
+  students (User[]), homeworks, examSchedules, timestamps
 }
 
 model Homework {
-  id, title, description, subject, classId, tenantId, assignedBy, dueDate, 
-  isPublished, timestamps
+  id, title, description, subject, classId, tenantId, assignedBy, assignedByUser,
+  dueDate, isPublished, timestamps
 }
 
 model Mark {
-  id, studentId, subject, marksObtained, totalMarks, percentage, grade, 
-  examType, examDate, tenantId, remarks, isPublished, timestamps
+  id, studentId, student (relation to User), subject, marksObtained, totalMarks, 
+  percentage, grade, examType, examDate, tenantId, remarks, isPublished, timestamps
 }
 
 model News {
-  id, title, content, summary, category, imageUrl, tenantId, postedBy, 
-  isPublished, timestamps
+  id, title, content, summary, category, imageUrl, tenantId, postedBy, postedByUser,
+  isPublished, publishDate, timestamps
 }
 
 model Circular {
-  id, title, content, circularNo, tenantId, issuedBy, isPublished, timestamps
+  id, title, content, circularNo, tenantId, issuedBy, issuedByUser,
+  isPublished, issueDate, timestamps
 }
 
 model ExamSchedule {
@@ -171,6 +176,17 @@ model ExamSchedule {
   isPublished, timestamps
 }
 ```
+
+### Key Relationships
+
+| Relationship | Description |
+|-------------|-------------|
+| `User.taughtClass` → `Class.teacher` | Teacher is assigned as the in-charge of a Class |
+| `User.classId` → `Class.id` | Student belongs to a Class |
+| `Class.teacherId` → `User.id` | Class has one Teacher (unique, one-to-one) |
+| `Class.students` → `User[]` | Class has many Students (one-to-many) |
+| `Homework.classId` → `Class.id` | Homework belongs to a Class |
+| `Mark.studentId` → `User.id` | Mark belongs to a Student |
 
 ### Middleware
 
@@ -209,6 +225,22 @@ model ExamSchedule {
 - **News:** GET, POST, PUT, DELETE `/api/admin/news`
 - **Circulars:** GET, POST, DELETE `/api/admin/circulars`
 - **Exam Schedules:** GET, POST, DELETE `/api/admin/exam-schedules`
+
+#### Teacher Operations (`/api/teacher`) - Teacher Only
+- `GET /api/teacher/my-class` - Get teacher's assigned class with students, homework, exams
+- **Students:** 
+  - `GET /api/teacher/students` - List students in teacher's class
+  - `PUT /api/teacher/students/:id` - Update student info (name, email, studentId)
+- **Homework:**
+  - `GET /api/teacher/homework` - List homework for teacher's class
+  - `POST /api/teacher/homework` - Create homework (classId auto-assigned)
+  - `PUT /api/teacher/homework/:id` - Update homework (validates class ownership)
+  - `DELETE /api/teacher/homework/:id` - Delete homework (validates class ownership)
+- **Marks:**
+  - `GET /api/teacher/marks` - List marks for students in teacher's class
+  - `POST /api/teacher/marks` - Create marks (batch, validates students belong to class)
+  - `PUT /api/teacher/marks/:id` - Update mark (validates student belongs to class)
+  - `DELETE /api/teacher/marks/:id` - Delete mark (validates student belongs to class)
 
 #### Student Operations (`/api/student`) - Student Only
 - `GET /api/student/dashboard` - Dashboard stats + recent data

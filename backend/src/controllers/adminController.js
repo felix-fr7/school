@@ -2259,6 +2259,196 @@ const bulkImportStudents = async (req, res, next) => {
   }
 };
 
+/**
+ * Bulk upload students from CSV file
+ * POST /api/admin/students/bulk-upload
+ * Accepts CSV file and classId
+ */
+const bulkUploadStudentsCSV = async (req, res, next) => {
+  try {
+    const { classId } = req.body;
+    const tenantId = req.user.tenantId;
+    
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No file uploaded. Please upload a CSV file.' },
+      });
+    }
+
+    if (!classId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Class ID is required' },
+      });
+    }
+
+    // Verify class exists and belongs to this tenant
+    const classExists = await prisma.class.findFirst({
+      where: { id: classId, tenantId },
+    });
+
+    if (!classExists) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Class not found in your school' },
+      });
+    }
+
+    // Parse CSV file using xlsx
+    const XLSX = require('xlsx');
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(sheet);
+
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'CSV file is empty or invalid' },
+      });
+    }
+
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
+    const errors = [];
+    const studentsToCreate = [];
+
+    // Process each row
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      const rowNumber = i + 2; // Excel row numbers start at 1, +1 for header
+
+      // Validate required fields
+      if (!row.name || !row.name.trim()) {
+        errors.push({ row: rowNumber, error: 'Missing student name' });
+        continue;
+      }
+
+      if (!row.studentId && !row.rollNo && !row.rollNumber) {
+        errors.push({ row: rowNumber, error: 'Missing student ID/roll number' });
+        continue;
+      }
+
+      const studentId = row.studentId || row.rollNo || row.rollNumber;
+      const email = row.email || `${studentId}@school.local`;
+      const phone = row.phone || row.parentPhone || row.contact || null;
+      const password = row.password || 'Student@123';
+
+      studentsToCreate.push({
+        name: row.name.trim(),
+        email: email.trim().toLowerCase(),
+        studentId: String(studentId).trim(),
+        phone: phone ? String(phone).trim() : null,
+        password: password,
+      });
+    }
+
+    // Check for existing emails and studentIds
+    const emails = studentsToCreate.map(s => s.email);
+    const studentIds = studentsToCreate.map(s => s.studentId);
+
+    const existingEmails = await prisma.user.findMany({
+      where: {
+        email: { in: emails },
+        OR: [{ tenantId }, { tenantId: null }],
+      },
+      select: { email: true },
+    });
+
+    const existingStudentIds = await prisma.user.findMany({
+      where: {
+        studentId: { in: studentIds },
+        tenantId,
+      },
+      select: { studentId: true },
+    });
+
+    const existingEmailSet = new Set(existingEmails.map(e => e.email));
+    const existingStudentIdSet = new Set(existingStudentIds.map(s => s.studentId));
+
+    // Filter out duplicates
+    const validStudents = studentsToCreate.filter(s => {
+      if (existingEmailSet.has(s.email)) {
+        errors.push({ row: s.name, error: `Email already exists: ${s.email}` });
+        return false;
+      }
+      if (existingStudentIdSet.has(s.studentId)) {
+        errors.push({ row: s.name, error: `Student ID already exists: ${s.studentId}` });
+        return false;
+      }
+      return true;
+    });
+
+    // Check for duplicates within the file
+    const fileEmails = new Set();
+    const fileStudentIds = new Set();
+    const finalStudents = validStudents.filter(s => {
+      if (fileEmails.has(s.email)) {
+        errors.push({ row: s.name, error: `Duplicate email in file: ${s.email}` });
+        return false;
+      }
+      if (fileStudentIds.has(s.studentId)) {
+        errors.push({ row: s.name, error: `Duplicate student ID in file: ${s.studentId}` });
+        return false;
+      }
+      fileEmails.add(s.email);
+      fileStudentIds.add(s.studentId);
+      return true;
+    });
+
+    if (finalStudents.length === 0) {
+      return res.status(409).json({
+        success: false,
+        error: { message: 'All students already exist or have errors', errors },
+      });
+    }
+
+    // Create students in batch
+    const createdStudents = await prisma.$transaction(
+      finalStudents.map(student =>
+        prisma.user.create({
+          data: {
+            email: student.email,
+            password: bcrypt.hashSync(student.password, saltRounds),
+            name: student.name,
+            role: 'STUDENT',
+            tenantId,
+            studentId: student.studentId,
+            phone: student.phone,
+            classId,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            studentId: true,
+            createdAt: true,
+          },
+        })
+      )
+    );
+
+    // Clean up uploaded file
+    const fs = require('fs');
+    fs.unlinkSync(req.file.path);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        totalProcessed: data.length,
+        successfullyCreated: createdStudents.length,
+        duplicates: errors.length,
+        students: createdStudents,
+      },
+      errors: errors.length > 0 ? errors : undefined,
+      message: `Successfully imported ${createdStudents.length} students to class. ${errors.length} rows had errors.`,
+    });
+  } catch (error) {
+    console.error('BulkUploadStudentsCSV Error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   // Class
   getAllClasses,
@@ -2273,6 +2463,7 @@ module.exports = {
   createStudent,
   createStudentManual,
   bulkImportStudents,
+  bulkUploadStudentsCSV,
   getStudentTemplate,
   updateStudent,
   deleteStudent,

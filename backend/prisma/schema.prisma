@@ -23,6 +23,22 @@ enum Role {
   STUDENT
 }
 
+/// Attendance status enumeration
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+/// Fee status enumeration
+enum FeeStatus {
+  PAID
+  PARTIAL
+  UNPAID
+  WAIVED
+}
+
 // ============================================
 // Core Models
 // ============================================
@@ -43,6 +59,8 @@ model Tenant {
   news        News[]
   circulars   Circular[]
   examSchedules ExamSchedule[]
+  attendances Attendance[]
+  fees        Fee[]
   createdAt   DateTime   @default(now()) @map("createdAt")
   updatedAt   DateTime   @updatedAt @map("updatedAt")
 
@@ -69,6 +87,8 @@ model User {
   marks       Mark[]     // Marks entered by this admin/teacher
   news        News[]     // News posted by this admin/teacher (relation for postedByUser)
   circulars   Circular[] // Circulars issued by this admin/teacher (relation for issuedByUser)
+  attendances Attendance[] // Attendance records for students
+  fee         Fee?     // Fee record for student (one-to-one)
   createdAt   DateTime   @default(now()) @map("createdAt")
   updatedAt   DateTime   @updatedAt @map("updatedAt")
 
@@ -91,6 +111,7 @@ model Class {
   students    User[]
   homeworks   Homework[]
   examSchedules ExamSchedule[]
+  attendances Attendance[] // Attendance records for this class
   createdAt   DateTime   @default(now()) @map("createdAt")
   updatedAt   DateTime   @updatedAt @map("updatedAt")
 
@@ -233,4 +254,55 @@ model Post {
   @@map("posts")
   @@index([userId])
   @@index([createdAt])
+}
+
+// ============================================
+// Attendance & Fee Models (Production Additions)
+// ============================================
+
+/// Attendance model - daily attendance tracking for students
+model Attendance {
+  id          String            @id @default(uuid())
+  date        DateTime          // Date of attendance
+  status      AttendanceStatus  @default(PRESENT) // PRESENT, ABSENT, LATE, EXCUSED
+  studentId   String
+  student     User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId     String
+  class       Class             @relation(fields: [classId], references: [id], onDelete: Cascade)
+  tenantId    String
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  remarks     String?           // Optional remarks (e.g., reason for absence)
+  markedBy    String?           // User ID who marked attendance (teacher/admin)
+  createdAt   DateTime          @default(now()) @map("createdAt")
+  updatedAt   DateTime          @updatedAt @map("updatedAt")
+
+  @@map("attendance")
+  @@unique([date, studentId]) // Prevent duplicate attendance entries per student per day
+  @@index([tenantId])
+  @@index([classId])
+  @@index([studentId])
+  @@index([date])
+}
+
+/// Fee model - student fee management and tracking
+model Fee {
+  id            String      @id @default(uuid())
+  studentId     String      @unique // One-to-one relation with student
+  student       User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tenantId      String
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  totalAmount   Float       // Total fee amount for the term/year
+  paidAmount    Float       @default(0) // Amount paid so far
+  balanceAmount Float       // Remaining amount (calculated)
+  status        FeeStatus   @default(UNPAID) // PAID, PARTIAL, UNPAID, WAIVED
+  dueDate       DateTime?   // Fee due date
+  paymentDate   DateTime?   // Date when fee was fully paid
+  remarks       String?     // Optional remarks
+  createdAt     DateTime    @default(now()) @map("createdAt")
+  updatedAt     DateTime    @updatedAt @map("updatedAt")
+
+  @@map("fees")
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([status])
 }

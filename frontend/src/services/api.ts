@@ -346,6 +346,28 @@ export const adminAPI = {
     return response.data;
   },
 
+  async bulkUploadStudentsCSV(file: File, classId: string): Promise<ApiResponse<{
+    totalProcessed: number;
+    successfullyCreated: number;
+    duplicates: number;
+    students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
+  }>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('classId', classId);
+    const response = await api.post<ApiResponse<{
+      totalProcessed: number;
+      successfullyCreated: number;
+      duplicates: number;
+      students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
+    }>>('/admin/students/bulk-upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
   // Homework
   async getHomework(page = 1, limit = 10, classId = '', isPublished = ''): Promise<ApiResponse<{ homeworks: Homework[]; pagination: any }>> {
     const response = await api.get<ApiResponse<{ homeworks: Homework[]; pagination: any }>>('/admin/homework', {
@@ -641,6 +663,212 @@ export const teacherAPI = {
     remarks?: string;
   }>): Promise<ApiResponse<Mark[]>> {
     const response = await api.post<ApiResponse<Mark[]>>('/teacher/marks', { marksData });
+    return response.data;
+  },
+
+  async updateMark(id: string, data: Partial<CreateMarkInput> & { isPublished?: boolean }): Promise<ApiResponse<Mark>> {
+    const response = await api.put<ApiResponse<Mark>>(`/teacher/marks/${id}`, data);
+    return response.data;
+  },
+
+  async deleteMark(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/teacher/marks/${id}`);
+    return response.data;
+  },
+
+  async updateHomework(id: string, data: Partial<CreateHomeworkInput> & { isPublished?: boolean }): Promise<ApiResponse<Homework>> {
+    const response = await api.put<ApiResponse<Homework>>(`/teacher/homework/${id}`, data);
+    return response.data;
+  },
+
+  async deleteHomework(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/teacher/homework/${id}`);
+    return response.data;
+  },
+
+  async updateStudent(id: string, data: { name?: string; email?: string; studentId?: string }): Promise<ApiResponse<void>> {
+    const response = await api.put<ApiResponse<void>>(`/teacher/students/${id}`, data);
+    return response.data;
+  },
+
+  async createStudentManual(data: {
+    name: string;
+    email: string;
+    studentId: string;
+    phone?: string;
+    password?: string;
+  }): Promise<ApiResponse<{
+    id: string;
+    email: string;
+    name: string;
+    studentId: string;
+    phone?: string;
+    createdAt: string;
+  }>> {
+    const response = await api.post<ApiResponse<{
+      id: string;
+      email: string;
+      name: string;
+      studentId: string;
+      phone?: string;
+      createdAt: string;
+    }>>('/teacher/students/manual', data);
+    return response.data;
+  },
+
+  async bulkUploadStudents(file: File): Promise<ApiResponse<{
+    totalProcessed: number;
+    successfullyCreated: number;
+    duplicates: number;
+    students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
+  }>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post<ApiResponse<{
+      totalProcessed: number;
+      successfullyCreated: number;
+      duplicates: number;
+      students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
+    }>>('/teacher/students/bulk-upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  async markAttendance(date: string, attendanceData: Array<{ studentId: string; status: string; remarks?: string }>): Promise<ApiResponse<{ marked: number; date: string; className: string }>> {
+    const response = await api.post<ApiResponse<{ marked: number; date: string; className: string }>>('/teacher/attendance', {
+      date,
+      attendanceData,
+    });
+    return response.data;
+  },
+
+  async getClassAttendance(date?: string): Promise<ApiResponse<{
+    date: string;
+    className: string;
+    attendance: Array<{ studentId: string; name: string; email: string; studentCode: string; status: string | null; remarks?: string }>;
+    summary: { total: number; marked: number; unmarked: number };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      date: string;
+      className: string;
+      attendance: Array<{ studentId: string; name: string; email: string; studentCode: string; status: string | null; remarks?: string }>;
+      summary: { total: number; marked: number; unmarked: number };
+    }>>('/teacher/attendance', { params: { date } });
+    return response.data;
+  },
+};
+
+// ============================================
+// Student API (Extended)
+// ============================================
+
+export const studentAPIExtended = {
+  async getAttendanceStats(): Promise<ApiResponse<{
+    overall: { totalDays: number; presentDays: number; absentDays: number; excusedDays: number; percentage: number };
+    last30Days: { totalDays: number; presentDays: number; percentage: number };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      overall: { totalDays: number; presentDays: number; absentDays: number; excusedDays: number; percentage: number };
+      last30Days: { totalDays: number; presentDays: number; percentage: number };
+    }>>('/student/attendance/stats');
+    return response.data;
+  },
+
+  async getFees(): Promise<ApiResponse<{
+    id: string;
+    studentId: string;
+    tenantId: string;
+    totalAmount: number;
+    paidAmount: number;
+    balanceAmount: number;
+    status: string;
+    dueDate?: string;
+    paymentDate?: string;
+    remarks?: string;
+    student: { id: string; name: string; studentId: string; class: { name: string; section: string | null } };
+  } | null>> {
+    const response = await api.get<ApiResponse<{
+      id: string;
+      studentId: string;
+      tenantId: string;
+      totalAmount: number;
+      paidAmount: number;
+      balanceAmount: number;
+      status: string;
+      dueDate?: string;
+      paymentDate?: string;
+      remarks?: string;
+      student: { id: string; name: string; studentId: string; class: { name: string; section: string | null } };
+    } | null>>('/student/fees');
+    return response.data;
+  },
+
+  async getDashboardExtended(): Promise<ApiResponse<{
+    stats: { totalHomework: number; totalMarks: number; totalNews: number; totalCirculars: number; upcomingExams: number };
+    attendance: { totalDays: number; presentDays: number; percentage: number };
+    fee: { totalAmount: number; paidAmount: number; balanceAmount: number; status: string; dueDate?: string } | null;
+    recentHomework: any[];
+    recentNews: any[];
+    upcomingExams: any[];
+  }>> {
+    const response = await api.get<ApiResponse<{
+      stats: { totalHomework: number; totalMarks: number; totalNews: number; totalCirculars: number; upcomingExams: number };
+      attendance: { totalDays: number; presentDays: number; percentage: number };
+      fee: { totalAmount: number; paidAmount: number; balanceAmount: number; status: string; dueDate?: string } | null;
+      recentHomework: any[];
+      recentNews: any[];
+      upcomingExams: any[];
+    }>>('/student/dashboard-extended');
+    return response.data;
+  },
+};
+
+// ============================================
+// Admin API (Extended)
+// ============================================
+
+export const adminAPIExtended = {
+  async getFeeStats(): Promise<ApiResponse<{
+    students: { total: number; paid: number; partial: number; unpaid: number };
+    amounts: { total: number; paid: number; balance: number; collectionRate: string };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      students: { total: number; paid: number; partial: number; unpaid: number };
+      amounts: { total: number; paid: number; balance: number; collectionRate: string };
+    }>>('/admin/fees/stats');
+    return response.data;
+  },
+
+  async updateStudentFee(studentId: string, data: { totalAmount?: number; paidAmount?: number; status?: string; dueDate?: string; remarks?: string }): Promise<ApiResponse<any>> {
+    const response = await api.put<ApiResponse<any>>(`/admin/fees/${studentId}`, data);
+    return response.data;
+  },
+};
+
+// ============================================
+// Utils API (Shared Utilities)
+// ============================================
+
+export const utilsAPI = {
+  /**
+   * Get the URL for downloading the sample CSV template
+   * This can be used with Linking.openUrl() or expo-file-system
+   */
+  getSampleCSVUrl(): string {
+    return `${API_BASE_URL}/utils/download-sample-csv`;
+  },
+
+  /**
+   * Download the sample CSV template as a blob
+   * Useful for saving to device storage
+   */
+  async downloadSampleCSV(): Promise<Blob> {
+    const response = await api.get('/utils/download-sample-csv', {
+      responseType: 'blob',
+    });
     return response.data;
   },
 };

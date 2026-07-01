@@ -612,8 +612,154 @@ const getProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Get extended dashboard with attendance and fee data
+ * GET /api/student/dashboard-extended
+ */
+const getDashboardExtended = async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+    const tenantId = req.user.tenantId;
+    const classId = req.user.classId;
+
+    // Get basic dashboard stats
+    const [
+      totalHomework,
+      totalMarks,
+      totalNews,
+      totalCirculars,
+      upcomingExams,
+    ] = await Promise.all([
+      classId 
+        ? prisma.homework.count({ where: { classId, isPublished: true } })
+        : 0,
+      prisma.mark.count({ where: { studentId, isPublished: true } }),
+      prisma.news.count({ where: { tenantId, isPublished: true } }),
+      prisma.circular.count({ where: { tenantId, isPublished: true } }),
+      classId
+        ? prisma.examSchedule.count({ 
+            where: { 
+              classId, 
+              isPublished: true,
+              date: { gte: new Date() }
+            } 
+          })
+        : 0,
+    ]);
+
+    // Get attendance stats
+    const attendance = await prisma.attendance.findMany({
+      where: { studentId, tenantId },
+      select: { status: true },
+    });
+
+    const totalDays = attendance.length;
+    const presentDays = attendance.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length;
+    const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+
+    // Get fee data
+    const fee = await prisma.fee.findFirst({
+      where: { studentId, tenantId },
+      select: {
+        totalAmount: true,
+        paidAmount: true,
+        balanceAmount: true,
+        status: true,
+        dueDate: true,
+      },
+    });
+
+    // Get recent homework
+    const recentHomework = classId
+      ? await prisma.homework.findMany({
+          where: { classId, isPublished: true },
+          orderBy: { createdAt: 'desc' },
+          take: 3,
+        })
+      : [];
+
+    // Get recent news
+    const recentNews = await prisma.news.findMany({
+      where: { tenantId, isPublished: true },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+    });
+
+    // Get upcoming exams
+    const upcomingExamList = classId
+      ? await prisma.examSchedule.findMany({
+          where: { classId, isPublished: true, date: { gte: new Date() } },
+          orderBy: { date: 'asc' },
+          take: 3,
+        })
+      : [];
+
+    res.status(200).json({
+      success: true,
+      data: {
+        stats: {
+          totalHomework,
+          totalMarks,
+          totalNews,
+          totalCirculars,
+          upcomingExams,
+        },
+        attendance: {
+          totalDays,
+          presentDays,
+          percentage: Math.round(attendancePercentage * 100) / 100,
+        },
+        fee: fee || null,
+        recentHomework,
+        recentNews,
+        upcomingExams: upcomingExamList,
+      },
+    });
+  } catch (error) {
+    console.error('GetDashboardExtended Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Update student profile
+ * PUT /api/student/profile
+ */
+const updateProfile = async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+    const { name, phone } = req.body;
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone;
+
+    const updatedStudent = await prisma.user.update({
+      where: { id: studentId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        studentId: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: updatedStudent,
+      message: 'Profile updated successfully',
+    });
+  } catch (error) {
+    console.error('UpdateProfile Error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboardStats,
+  getDashboardExtended,
   getHomework,
   getHomeworkById,
   getMarks,
@@ -625,4 +771,5 @@ module.exports = {
   getExamSchedules,
   getExamScheduleById,
   getProfile,
+  updateProfile,
 };
