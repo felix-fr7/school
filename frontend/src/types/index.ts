@@ -391,7 +391,12 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  /**
+   * Login with dual support: email OR studentId (roll number)
+   * @param usernameOrEmailOrId - Email address or Student ID/Roll Number
+   * @param password - User password
+   */
+  login: (usernameOrEmailOrId: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;

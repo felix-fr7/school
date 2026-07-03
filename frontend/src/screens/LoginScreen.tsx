@@ -1,6 +1,6 @@
 /**
  * Login Screen
- * User authentication form with email and password
+ * User authentication form with dual support: email OR student ID (roll number)
  */
 
 import React, { useState } from 'react';
@@ -24,26 +24,33 @@ type LoginScreenProps = StackScreenProps<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [usernameOrEmailOrId, setUsernameOrEmailOrId] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Check if input is email format
+  const isEmailFormat = (value: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  };
+
   const handleLogin = async () => {
     // Basic validation
-    if (!email.trim() || !password.trim()) {
+    if (!usernameOrEmailOrId.trim() || !password.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    if (!email.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email address');
+    // Validate email format if it contains @
+    if (usernameOrEmailOrId.includes('@') && !isEmailFormat(usernameOrEmailOrId)) {
+      Alert.alert('Error', 'Please enter a valid email address or Student ID');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await login(email.trim(), password);
+      // Use the dual-login API - pass as usernameOrEmailOrId
+      await login(usernameOrEmailOrId.trim(), password);
     } catch (err: any) {
       console.log("Raw login error caught:", err);
 
@@ -97,23 +104,30 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.title}>FullStack App</Text>
+          <Text style={styles.title}>School App</Text>
           <Text style={styles.subtitle}>Sign in to continue</Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Email or Student ID</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
+              placeholder="Enter your email or Roll Number"
+              value={usernameOrEmailOrId}
+              onChangeText={setUsernameOrEmailOrId}
+              keyboardType="default"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!isLoading}
             />
+            <Text style={styles.hintText}>
+              {usernameOrEmailOrId.includes('@') 
+                ? 'Logging in with Email' 
+                : usernameOrEmailOrId.length > 0 
+                  ? 'Logging in with Student ID / Roll Number' 
+                  : 'Use your Roll Number (Students) or Email (Staff)'}
+            </Text>
           </View>
 
           <View style={styles.inputContainer}>
@@ -141,10 +155,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
 
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.registerLink}>Sign Up</Text>
-            </TouchableOpacity>
+            <Text style={styles.registerText}>Default password for students: </Text>
+            <Text style={styles.passwordHint}>Student@123</Text>
           </View>
         </View>
       </ScrollView>
@@ -197,6 +209,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  hintText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
   button: {
     backgroundColor: '#007AFF',
     borderRadius: 8,
@@ -216,13 +234,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 24,
+    alignItems: 'center',
   },
   registerText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: '#999',
   },
-  registerLink: {
-    fontSize: 14,
+  passwordHint: {
+    fontSize: 13,
     color: '#007AFF',
     fontWeight: '600',
   },

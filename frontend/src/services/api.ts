@@ -124,9 +124,14 @@ api.interceptors.response.use(
 // ============================================
 
 export const authAPI = {
-  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+  /**
+   * Login user with dual support: email OR studentId (roll number)
+   * @param usernameOrEmailOrId - Can be email address or student ID/roll number
+   * @param password - User password
+   */
+  async login(usernameOrEmailOrId: string, password: string): Promise<ApiResponse<AuthResponse>> {
     const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', {
-      email,
+      usernameOrEmailOrId,
       password,
     });
     return response.data;

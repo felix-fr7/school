@@ -17,6 +17,15 @@ const getAllClasses = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
 
+    // If admin has no tenantId, return empty array (development/testing mode)
+    if (!tenantId) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: 'Admin not associated with a school. Please assign a school to this admin.'
+      });
+    }
+
     const classes = await prisma.class.findMany({
       where: { tenantId },
       include: {
@@ -705,12 +714,12 @@ const updateStudent = async (req, res, next) => {
     const { name, email, classId } = req.body;
     const tenantId = req.user.tenantId;
 
-    const student = await prisma.user.updateMany({
+    // First verify the student exists and belongs to this tenant
+    const existingStudent = await prisma.user.findFirst({
       where: { id, tenantId, role: 'STUDENT' },
-      data: { name, email, classId },
     });
 
-    if (student.count === 0) {
+    if (!existingStudent) {
       return res.status(404).json({
         success: false,
         error: {
@@ -719,8 +728,72 @@ const updateStudent = async (req, res, next) => {
       });
     }
 
+    // Build strict update data with validation
+    const updateData = {};
+    
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Student name cannot be empty' },
+        });
+      }
+      updateData.name = trimmedName;
+    }
+
+    if (email !== undefined) {
+      const trimmedEmail = email.trim();
+      // Check if email is already taken by another user
+      if (trimmedEmail !== existingStudent.email) {
+        const emailExists = await prisma.user.findUnique({
+          where: { email: trimmedEmail },
+        });
+        if (emailExists) {
+          return res.status(409).json({
+            success: false,
+            error: { message: 'Email already exists' },
+          });
+        }
+      }
+      updateData.email = trimmedEmail;
+    }
+
+    // If classId is provided, verify it belongs to this tenant
+    if (classId !== undefined) {
+      if (classId) {
+        const classExists = await prisma.class.findFirst({
+          where: { id: classId, tenantId },
+        });
+        if (!classExists) {
+          return res.status(404).json({
+            success: false,
+            error: { message: 'Class not found in your school' },
+          });
+        }
+        updateData.classId = classId;
+      } else {
+        updateData.classId = null;
+      }
+    }
+
+    // Execute the update
+    const updatedStudent = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        studentId: true,
+        classId: true,
+        updatedAt: true,
+      },
+    });
+
     res.status(200).json({
       success: true,
+      data: updatedStudent,
       message: 'Student updated successfully',
     });
   } catch (error) {
@@ -737,11 +810,12 @@ const deleteStudent = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const student = await prisma.user.deleteMany({
+    // First verify the student exists and belongs to this tenant
+    const existingStudent = await prisma.user.findFirst({
       where: { id, tenantId, role: 'STUDENT' },
     });
 
-    if (student.count === 0) {
+    if (!existingStudent) {
       return res.status(404).json({
         success: false,
         error: {
@@ -750,11 +824,30 @@ const deleteStudent = async (req, res, next) => {
       });
     }
 
+    // Delete the student (cascade will handle related records like attendance, marks, fee)
+    await prisma.user.delete({
+      where: { id },
+    });
+
     res.status(200).json({
       success: true,
       message: 'Student deleted successfully',
+      data: {
+        deletedStudentId: id,
+        studentName: existingStudent.name,
+        studentEmail: existingStudent.email,
+      },
     });
   } catch (error) {
+    // Handle specific Prisma errors
+    if (error.code === 'P2025') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Student not found',
+        },
+      });
+    }
     next(error);
   }
 };
@@ -770,6 +863,16 @@ const deleteStudent = async (req, res, next) => {
 const getAllHomework = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
+
+    // If admin has no tenantId, return empty array (development/testing mode)
+    if (!tenantId) {
+      return res.status(200).json({
+        success: true,
+        data: { homeworks: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } },
+        message: 'Admin not associated with a school. Please assign a school to this admin.'
+      });
+    }
+
     const { classId, isPublished, page = 1, limit = 10 } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -1193,6 +1296,16 @@ const deleteMark = async (req, res, next) => {
 const getAllNews = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
+
+    // If admin has no tenantId, return empty array (development/testing mode)
+    if (!tenantId) {
+      return res.status(200).json({
+        success: true,
+        data: { news: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } },
+        message: 'Admin not associated with a school. Please assign a school to this admin.'
+      });
+    }
+
     const { category, isPublished, page = 1, limit = 10 } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);

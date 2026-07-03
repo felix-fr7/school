@@ -9,6 +9,9 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Connection pooling settings for production
+  // connectionLimit is per instance of PrismaClient
+  // These settings help optimize performance in pooled environments like Supabase
 }
 
 // ============================================

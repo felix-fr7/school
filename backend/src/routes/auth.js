@@ -40,17 +40,17 @@ router.post(
 
 /**
  * @route   POST /api/auth/login
- * @desc    Login user
+ * @desc    Login user with email OR student ID (roll number)
  * @access  Public
- * @body    { email, password }
+ * @body    { usernameOrEmailOrId, password }
  */
 router.post(
   '/login',
   [
-    body('email')
-      .isEmail()
-      .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
+    body('usernameOrEmailOrId')
+      .trim()
+      .notEmpty()
+      .withMessage('Email or Student ID is required'),
     body('password').notEmpty().withMessage('Password is required'),
   ],
   authController.login

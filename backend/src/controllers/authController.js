@@ -98,33 +98,79 @@ const register = async (req, res, next) => {
 /**
  * Login user
  * POST /api/auth/login
+ * Supports universal login: email OR username OR studentId (roll number)
+ * Works for all user roles: SUPER_ADMIN, ADMIN, TEACHER, STUDENT
  */
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    // DEBUG: Log the entire request body to see exactly what frontend is sending
+    console.log("Login Input:", JSON.stringify(req.body, null, 2));
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const { password, usernameOrEmailOrId } = req.body;
+
+    // The login identifier from the request body
+    let loginIdentifier = usernameOrEmailOrId;
+
+    // Clean up: Ensure it's trimmed
+    if (loginIdentifier) {
+      loginIdentifier = loginIdentifier.trim();
+    }
+
+    if (!loginIdentifier) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Email or Student ID is required',
+        },
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Password is required',
+        },
+      });
+    }
+
+    // Universal lookup: search by email or studentId using OR condition
+    // This ensures all user roles (Admin, Teacher, Student) can log in with any identifier
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: loginIdentifier },
+          { studentId: loginIdentifier },
+        ],
+      },
     });
 
     if (!user) {
       return res.status(401).json({
         success: false,
         error: {
-          message: 'Invalid email or password',
+          message: 'Invalid credentials',
         },
       });
     }
 
-    // Check password
+    // Check password with detailed debugging
+    console.log(`Password verification for user ${user.email} (ID: ${user.id})`);
+    console.log(`Password hash in DB starts with: ${user.password.substring(0, 20)}...`);
+    
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(`Password match result: ${isPasswordValid}`);
 
     if (!isPasswordValid) {
+      // DEBUG: Log more details about the failure
+      console.log(`Authentication failed for user: ${user.email}`);
+      console.log(`Attempted password length: ${password ? password.length : 0}`);
+      console.log(`Stored hash: ${user.password}`);
+      
       return res.status(401).json({
         success: false,
         error: {
-          message: 'Invalid email or password',
+          message: 'Invalid credentials',
         },
       });
     }

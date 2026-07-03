@@ -41,11 +41,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Login user
+   * Login user with dual support: email OR studentId (roll number)
+   * @param usernameOrEmailOrId - Email address or Student ID/Roll Number
+   * @param password - User password
    */
-  const login = async (email: string, password: string) => {
+  const login = async (usernameOrEmailOrId: string, password: string) => {
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(usernameOrEmailOrId, password);
 
       if (response.success && response.data) {
         const { user: userData, token: authToken } = response.data;
