@@ -47,7 +47,7 @@ const CreateSchoolScreen: React.FC = () => {
       const response = await tenantsAPI.createTenant(formData);
       if (response.success) {
         Alert.alert('Success', 'School created successfully', [
-          { text: 'OK', onPress: () => navigation.navigate('SchoolsList') }
+          { text: 'OK', onPress: () => navigation.navigate('SuperAdminDashboard') }
         ]);
       } else {
         Alert.alert('Error', response.error?.message || 'Failed to create school');

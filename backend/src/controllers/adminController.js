@@ -1,13 +1,11 @@
 /**
  * Admin Controller
- * Handles all school admin operations
+ * Handles all school admin operations using raw SQL queries
  */
 
 const bcrypt = require('bcrypt');
-const { PrismaClient } = require('@prisma/client');
 const xlsx = require('xlsx');
-
-const prisma = new PrismaClient();
+const db = require('../config/db');
 
 /**
  * Get all classes for admin's school
@@ -26,19 +24,27 @@ const getAllClasses = async (req, res, next) => {
       });
     }
 
-    const classes = await prisma.class.findMany({
-      where: { tenantId },
-      include: {
-        _count: {
-          select: {
-            students: true,
-            homeworks: true,
-            examSchedules: true,
-          }
-        }
-      },
-      orderBy: { name: 'asc' },
-    });
+    const classesQuery = `
+      SELECT 
+        c.*,
+        (SELECT COUNT(*) FROM "User" u WHERE u."classId" = c.id AND u.role = 'STUDENT') as "studentCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."classId" = c.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "ExamSchedule" es WHERE es."classId" = c.id) as "examScheduleCount"
+      FROM "Class" c
+      WHERE c."tenantId" = $1
+      ORDER BY c.name ASC
+    `;
+
+    const classesResult = await db.query(classesQuery, [tenantId]);
+
+    const classes = classesResult.rows.map(classItem => ({
+      ...classItem,
+      _count: {
+        students: parseInt(classItem.studentCount),
+        homeworks: parseInt(classItem.homeworkCount),
+        examSchedules: parseInt(classItem.examScheduleCount),
+      }
+    }));
 
     res.status(200).json({
       success: true,
@@ -62,21 +68,21 @@ const getClassDashboard = async (req, res, next) => {
     const userId = req.user.id;
 
     // Get class details with teacher info
-    const classData = await prisma.class.findFirst({
-      where: { id, tenantId },
-      include: {
-        teacher: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-    });
+    const classQuery = `
+      SELECT 
+        c.*,
+        t.id as "teacherId",
+        t.name as "teacherName",
+        t.email as "teacherEmail",
+        t.phone as "teacherPhone"
+      FROM "Class" c
+      LEFT JOIN "User" t ON c."teacherId" = t.id
+      WHERE c.id = $1 AND c."tenantId" = $2
+    `;
 
-    if (!classData) {
+    const classResult = await db.query(classQuery, [id, tenantId]);
+
+    if (classResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -85,10 +91,10 @@ const getClassDashboard = async (req, res, next) => {
       });
     }
 
+    const classData = classResult.rows[0];
+
     // Access Control: Check if user has permission to view this class dashboard
-    // Admin can view all classes, Teachers can only view their assigned class
     if (userRole === 'TEACHER') {
-      // Teacher must be the assigned incharge of this class to access it
       if (classData.teacherId !== userId) {
         return res.status(403).json({
           success: false,
@@ -98,62 +104,71 @@ const getClassDashboard = async (req, res, next) => {
         });
       }
     }
-    // Note: ADMIN role can view all classes (no restriction needed)
 
     // Get student count for this class
-    const studentCount = await prisma.user.count({
-      where: { classId: id, role: 'STUDENT' },
-    });
+    const studentCountQuery = `
+      SELECT COUNT(*) as count FROM "User" WHERE "classId" = $1 AND role = 'STUDENT'
+    `;
+    const studentCountResult = await db.query(studentCountQuery, [id]);
+    const studentCount = parseInt(studentCountResult.rows[0].count);
 
     // Get recent homework for this class
-    const recentHomework = await prisma.homework.findMany({
-      where: { classId: id, isPublished: true },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: {
-        assignedByUser: {
-          select: { id: true, name: true },
-        },
-      },
-    });
+    const recentHomeworkQuery = `
+      SELECT h.*, u.id as "assignedById", u.name as "assignedByName"
+      FROM "Homework" h
+      LEFT JOIN "User" u ON h."assignedBy" = u.id
+      WHERE h."classId" = $1 AND h."isPublished" = true
+      ORDER BY h."createdAt" DESC
+      LIMIT 5
+    `;
+    const recentHomeworkResult = await db.query(recentHomeworkQuery, [id]);
 
     // Get upcoming exam schedules for this class
-    const upcomingExams = await prisma.examSchedule.findMany({
-      where: { 
-        classId: id, 
-        isPublished: true,
-        date: { gte: new Date() }
-      },
-      orderBy: { date: 'asc' },
-      take: 5,
-    });
+    const upcomingExamsQuery = `
+      SELECT * FROM "ExamSchedule"
+      WHERE "classId" = $1 AND "isPublished" = true AND date >= NOW()
+      ORDER BY date ASC
+      LIMIT 5
+    `;
+    const upcomingExamsResult = await db.query(upcomingExamsQuery, [id]);
 
     // Get recent news/announcements from the tenant
-    const recentAnnouncements = await prisma.news.findMany({
-      where: { tenantId, isPublished: true },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      include: {
-        postedByUser: {
-          select: { id: true, name: true },
-        },
-      },
-    });
+    const recentAnnouncementsQuery = `
+      SELECT n.*, u.id as "postedById", u.name as "postedByName"
+      FROM "News" n
+      LEFT JOIN "User" u ON n."postedBy" = u.id
+      WHERE n."tenantId" = $1 AND n."isPublished" = true
+      ORDER BY n."createdAt" DESC
+      LIMIT 5
+    `;
+    const recentAnnouncementsResult = await db.query(recentAnnouncementsQuery, [tenantId]);
 
-    // Calculate attendance rate (mock data for now - can be enhanced with actual attendance tracking)
-    const attendanceRate = Math.floor(Math.random() * 20) + 80; // Mock: 80-100%
+    // Calculate attendance rate (mock data for now)
+    const attendanceRate = Math.floor(Math.random() * 20) + 80;
 
     res.status(200).json({
       success: true,
       data: {
-        class: classData,
+        class: {
+          id: classData.id,
+          name: classData.name,
+          section: classData.section,
+          tenantId: classData.tenantId,
+          teacherId: classData.teacherId,
+          teacher: classData.teacherId ? {
+            id: classData.teacherId,
+            name: classData.teacherName,
+            email: classData.teacherEmail,
+            phone: classData.teacherPhone,
+          } : null,
+        },
         metrics: {
           totalStudents: studentCount,
           attendanceRate,
         },
-        recentHomework,
-        upcomingExams,
-        recentAnnouncements,
+        recentHomework: recentHomeworkResult.rows,
+        upcomingExams: upcomingExamsResult.rows,
+        recentAnnouncements: recentAnnouncementsResult.rows,
       },
     });
   } catch (error) {
@@ -170,30 +185,12 @@ const getClassById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const classData = await prisma.class.findFirst({
-      where: { id, tenantId },
-      include: {
-        students: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            studentId: true,
-            createdAt: true,
-          }
-        },
-        homeworks: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-        examSchedules: {
-          where: { date: { gte: new Date() } },
-          orderBy: { date: 'asc' },
-        },
-      },
-    });
+    const classQuery = `
+      SELECT * FROM "Class" WHERE id = $1 AND "tenantId" = $2
+    `;
+    const classResult = await db.query(classQuery, [id, tenantId]);
 
-    if (!classData) {
+    if (classResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -202,9 +199,41 @@ const getClassById = async (req, res, next) => {
       });
     }
 
+    const classData = classResult.rows[0];
+
+    // Get students
+    const studentsQuery = `
+      SELECT id, name, email, "studentId", "createdAt"
+      FROM "User"
+      WHERE "classId" = $1 AND role = 'STUDENT'
+    `;
+    const studentsResult = await db.query(studentsQuery, [id]);
+
+    // Get recent homework
+    const homeworksQuery = `
+      SELECT * FROM "Homework"
+      WHERE "classId" = $1
+      ORDER BY "createdAt" DESC
+      LIMIT 10
+    `;
+    const homeworksResult = await db.query(homeworksQuery, [id]);
+
+    // Get upcoming exam schedules
+    const examSchedulesQuery = `
+      SELECT * FROM "ExamSchedule"
+      WHERE "classId" = $1 AND date >= NOW()
+      ORDER BY date ASC
+    `;
+    const examSchedulesResult = await db.query(examSchedulesQuery, [id]);
+
     res.status(200).json({
       success: true,
-      data: classData,
+      data: {
+        ...classData,
+        students: studentsResult.rows,
+        homeworks: homeworksResult.rows,
+        examSchedules: examSchedulesResult.rows,
+      },
     });
   } catch (error) {
     next(error);
@@ -220,13 +249,23 @@ const createClass = async (req, res, next) => {
     const { name, section, teacherId } = req.body;
     const tenantId = req.user.tenantId;
 
+    if (!tenantId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Tenant ID is required to create a class. SUPER_ADMIN users must impersonate a tenant first.',
+        },
+      });
+    }
+
     // If teacherId is provided, verify the teacher exists and belongs to this tenant
     if (teacherId) {
-      const teacher = await prisma.user.findFirst({
-        where: { id: teacherId, tenantId, role: 'TEACHER' },
-      });
+      const teacherCheckQuery = `
+        SELECT id FROM "User" WHERE id = $1 AND "tenantId" = $2 AND role = 'TEACHER'
+      `;
+      const teacherCheckResult = await db.query(teacherCheckQuery, [teacherId, tenantId]);
 
-      if (!teacher) {
+      if (teacherCheckResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
           error: {
@@ -236,28 +275,34 @@ const createClass = async (req, res, next) => {
       }
     }
 
-    // Create class with optional teacher reference
-    const classData = await prisma.class.create({
-      data: {
-        name,
-        section,
-        tenantId,
-        teacherId: teacherId || null,
-      },
-      include: {
-        teacher: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    // Create class
+    const createQuery = `
+      INSERT INTO "Class" (name, section, "tenantId", "teacherId", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, NOW(), NOW())
+      RETURNING *
+    `;
+    const createResult = await db.query(createQuery, [name, section || null, tenantId, teacherId || null]);
+
+    const classData = createResult.rows[0];
+
+    // Get teacher info if exists
+    let teacher = null;
+    if (teacherId) {
+      const teacherQuery = `
+        SELECT id, name, email FROM "User" WHERE id = $1
+      `;
+      const teacherResult = await db.query(teacherQuery, [teacherId]);
+      if (teacherResult.rows.length > 0) {
+        teacher = teacherResult.rows[0];
+      }
+    }
 
     res.status(201).json({
       success: true,
-      data: classData,
+      data: {
+        ...classData,
+        teacher,
+      },
       message: 'Class created successfully',
     });
   } catch (error) {
@@ -275,11 +320,10 @@ const updateClass = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // First verify the class exists and belongs to this tenant
-    const existingClass = await prisma.class.findFirst({
-      where: { id, tenantId },
-    });
+    const checkQuery = `SELECT * FROM "Class" WHERE id = $1 AND "tenantId" = $2`;
+    const checkResult = await db.query(checkQuery, [id, tenantId]);
 
-    if (!existingClass) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -288,11 +332,14 @@ const updateClass = async (req, res, next) => {
       });
     }
 
-    // Strict whitelisting - only allow these specific fields to be updated
-    const strictUpdateData = {};
-    
+    const existingClass = checkResult.rows[0];
+
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
+
     if (req.body.name !== undefined) {
-      // Validate name
       const trimmedName = req.body.name.trim();
       if (!trimmedName) {
         return res.status(400).json({
@@ -310,7 +357,9 @@ const updateClass = async (req, res, next) => {
           },
         });
       }
-      strictUpdateData.name = trimmedName;
+      updateFields.push(`name = $${paramIndex}`);
+      updateParams.push(trimmedName);
+      paramIndex++;
     }
 
     if (req.body.section !== undefined) {
@@ -323,20 +372,23 @@ const updateClass = async (req, res, next) => {
           },
         });
       }
-      strictUpdateData.section = trimmedSection || null;
+      updateFields.push(`section = $${paramIndex}`);
+      updateParams.push(trimmedSection || null);
+      paramIndex++;
     }
 
     // Handle teacherId if provided
     if (req.body.teacherId !== undefined) {
       const newTeacherId = req.body.teacherId;
-      
+
       if (newTeacherId) {
         // Verify the new teacher exists and belongs to this tenant
-        const teacher = await prisma.user.findFirst({
-          where: { id: newTeacherId, tenantId, role: 'TEACHER' },
-        });
+        const teacherCheckQuery = `
+          SELECT id FROM "User" WHERE id = $1 AND "tenantId" = $2 AND role = 'TEACHER'
+        `;
+        const teacherCheckResult = await db.query(teacherCheckQuery, [newTeacherId, tenantId]);
 
-        if (!teacher) {
+        if (teacherCheckResult.rows.length === 0) {
           return res.status(404).json({
             success: false,
             error: {
@@ -346,11 +398,12 @@ const updateClass = async (req, res, next) => {
         }
 
         // Check if this teacher is already assigned to another class
-        const existingTeacherAssignment = await prisma.class.findFirst({
-          where: { teacherId: newTeacherId, id: { not: id } },
-        });
+        const existingAssignmentQuery = `
+          SELECT id FROM "Class" WHERE "teacherId" = $1 AND id != $2
+        `;
+        const existingAssignmentResult = await db.query(existingAssignmentQuery, [newTeacherId, id]);
 
-        if (existingTeacherAssignment) {
+        if (existingAssignmentResult.rows.length > 0) {
           return res.status(409).json({
             success: false,
             error: {
@@ -359,39 +412,55 @@ const updateClass = async (req, res, next) => {
           });
         }
 
-        // Remove teacher reference from old class if there was one
-        if (existingClass.teacherId) {
-          await prisma.class.update({
-            where: { id: existingClass.teacherId === existingClass.teacherId ? id : existingClass.id },
-            data: { teacherId: null },
-          });
-        }
-
-        strictUpdateData.teacherId = newTeacherId;
+        updateFields.push(`"teacherId" = $${paramIndex}`);
+        updateParams.push(newTeacherId);
+        paramIndex++;
       } else {
-        // If teacherId is set to null, just remove the reference
-        strictUpdateData.teacherId = null;
+        updateFields.push(`"teacherId" = $${paramIndex}`);
+        updateParams.push(null);
+        paramIndex++;
       }
     }
 
-    // Execute the update using ONLY the verified data object
-    const updatedClass = await prisma.class.update({
-      where: { id },
-      data: strictUpdateData,
-      include: {
-        teacher: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    if (updateFields.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: existingClass,
+        message: 'No changes to update',
+      });
+    }
+
+    updateFields.push(`"updatedAt" = NOW()`);
+    updateParams.push(id);
+
+    const updateQuery = `
+      UPDATE "Class"
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const updateResult = await db.query(updateQuery, updateParams);
+    const updatedClass = updateResult.rows[0];
+
+    // Get teacher info if exists
+    let teacher = null;
+    if (updatedClass.teacherId) {
+      const teacherQuery = `
+        SELECT id, name, email FROM "User" WHERE id = $1
+      `;
+      const teacherResult = await db.query(teacherQuery, [updatedClass.teacherId]);
+      if (teacherResult.rows.length > 0) {
+        teacher = teacherResult.rows[0];
+      }
+    }
 
     res.status(200).json({
       success: true,
-      data: updatedClass,
+      data: {
+        ...updatedClass,
+        teacher,
+      },
       message: 'Class updated successfully',
     });
   } catch (error) {
@@ -403,11 +472,6 @@ const updateClass = async (req, res, next) => {
 /**
  * Delete a class
  * DELETE /api/admin/classes/:id
- * 
- * Safety notes:
- * - Students and teacher assigned to this class will have their classId set to null (SetNull)
- * - Homework and Exam Schedules will be cascade deleted
- * - Returns info about affected records for transparency
  */
 const deleteClass = async (req, res, next) => {
   try {
@@ -415,26 +479,21 @@ const deleteClass = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // First, verify the class exists and belongs to this tenant
-    const existingClass = await prisma.class.findFirst({
-      where: { id, tenantId },
-      include: {
-        _count: {
-          select: {
-            students: true,
-            homeworks: true,
-            examSchedules: true,
-          }
-        },
-        teacher: {
-          select: {
-            id: true,
-            name: true,
-          }
-        }
-      }
-    });
+    const checkQuery = `
+      SELECT 
+        c.*,
+        (SELECT COUNT(*) FROM "User" u WHERE u."classId" = c.id AND u.role = 'STUDENT') as "studentCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."classId" = c.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "ExamSchedule" es WHERE es."classId" = c.id) as "examScheduleCount",
+        t.name as "teacherName"
+      FROM "Class" c
+      LEFT JOIN "User" t ON c."teacherId" = t.id
+      WHERE c.id = $1 AND c."tenantId" = $2
+    `;
 
-    if (!existingClass) {
+    const checkResult = await db.query(checkQuery, [id, tenantId]);
+
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -443,51 +502,34 @@ const deleteClass = async (req, res, next) => {
       });
     }
 
-    // Gather dependency info for the response
+    const existingClass = checkResult.rows[0];
+
     const dependencyInfo = {
-      studentCount: existingClass._count.students,
-      homeworkCount: existingClass._count.homeworks,
-      examScheduleCount: existingClass._count.examSchedules,
+      studentCount: parseInt(existingClass.studentCount),
+      homeworkCount: parseInt(existingClass.homeworkCount),
+      examScheduleCount: parseInt(existingClass.examScheduleCount),
       hasTeacher: !!existingClass.teacherId,
     };
 
-    // Perform the deletion in a transaction for safety
-    await prisma.$transaction(async (tx) => {
-      // Step 1: Detach students from this class (set their classId to null)
+    // Perform the deletion in a transaction
+    await db.transaction(async (query) => {
+      // Step 1: Detach students from this class
       if (dependencyInfo.studentCount > 0) {
-        await tx.user.updateMany({
-          where: { classId: id, role: 'STUDENT' },
-          data: { classId: null },
-        });
+        await query('UPDATE "User" SET "classId" = NULL WHERE "classId" = $1 AND role = $2', [id, 'STUDENT']);
       }
 
-      // Step 2: Remove teacher reference from this class (if exists)
-      // This is handled by SetNull cascade, but we do it explicitly for clarity
-      if (dependencyInfo.hasTeacher) {
-        await tx.class.update({
-          where: { id },
-          data: { teacherId: null },
-        });
-      }
-
-      // Step 3: Delete associated homework (cascade will handle this, but being explicit)
+      // Step 2: Delete associated homework
       if (dependencyInfo.homeworkCount > 0) {
-        await tx.homework.deleteMany({
-          where: { classId: id },
-        });
+        await query('DELETE FROM "Homework" WHERE "classId" = $1', [id]);
       }
 
-      // Step 4: Delete associated exam schedules (cascade will handle this, but being explicit)
+      // Step 3: Delete associated exam schedules
       if (dependencyInfo.examScheduleCount > 0) {
-        await tx.examSchedule.deleteMany({
-          where: { classId: id },
-        });
+        await query('DELETE FROM "ExamSchedule" WHERE "classId" = $1', [id]);
       }
 
-      // Step 5: Finally, delete the class itself
-      await tx.class.delete({
-        where: { id },
-      });
+      // Step 4: Delete the class itself
+      await query('DELETE FROM "Class" WHERE id = $1', [id]);
     });
 
     res.status(200).json({
@@ -502,23 +544,14 @@ const deleteClass = async (req, res, next) => {
     });
   } catch (error) {
     console.error('DeleteClass Error:', error);
-    
-    // Handle specific Prisma errors
-    if (error.code === 'P2003') {
+
+    // Handle foreign key constraint errors
+    if (error.code === '23503') {
       return res.status(400).json({
         success: false,
         error: {
           message: 'Cannot delete class: It has related records. Please remove dependencies first.',
           code: 'FOREIGN_KEY_CONSTRAINT',
-        },
-      });
-    }
-    
-    if (error.code === 'P2025') {
-      return res.status(404).json({
-        success: false,
-        error: {
-          message: 'Class not found',
         },
       });
     }
@@ -543,37 +576,51 @@ const getAllStudents = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId, role: 'STUDENT' };
+    // Build where clause
+    let whereClause = 'u."tenantId" = $1 AND u.role = $2';
+    let params = [tenantId, 'STUDENT'];
+    let paramIndex = 3;
 
     if (classId) {
-      where.classId = classId;
+      params.push(classId);
+      whereClause += ` AND u."classId" = $${paramIndex}`;
+      paramIndex++;
     }
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { studentId: { contains: search, mode: 'insensitive' } },
-      ];
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex} OR u."studentId" ILIKE $${paramIndex})`;
+      paramIndex++;
     }
 
-    const total = await prisma.user.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "User" u WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const students = await prisma.user.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            section: true,
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get students
+    const studentsQuery = `
+      SELECT 
+        u.id, u.name, u.email, u."studentId", u."createdAt",
+        c.id as "classId", c.name as "className", c.section as "classSection"
+      FROM "User" u
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      WHERE ${whereClause}
+      ORDER BY u."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const studentsParams = [...params, take, skip];
+    const studentsResult = await db.query(studentsQuery, studentsParams);
+
+    const students = studentsResult.rows.map(student => ({
+      ...student,
+      class: student.classId ? {
+        id: student.classId,
+        name: student.className,
+        section: student.classSection,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -601,18 +648,20 @@ const getStudentById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const student = await prisma.user.findFirst({
-      where: { id, tenantId, role: 'STUDENT' },
-      include: {
-        class: true,
-        marks: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-      },
-    });
+    const studentQuery = `
+      SELECT 
+        u.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "User" u
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      WHERE u.id = $1 AND u."tenantId" = $2 AND u.role = $3
+    `;
 
-    if (!student) {
+    const studentResult = await db.query(studentQuery, [id, tenantId, 'STUDENT']);
+
+    if (studentResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -621,12 +670,28 @@ const getStudentById = async (req, res, next) => {
       });
     }
 
-    // Remove password
-    const { password, ...studentWithoutPassword } = student;
+    const { password, ...studentWithoutPassword } = studentResult.rows[0];
+
+    // Get recent marks
+    const marksQuery = `
+      SELECT * FROM "Mark"
+      WHERE "studentId" = $1
+      ORDER BY "createdAt" DESC
+      LIMIT 10
+    `;
+    const marksResult = await db.query(marksQuery, [id]);
 
     res.status(200).json({
       success: true,
-      data: studentWithoutPassword,
+      data: {
+        ...studentWithoutPassword,
+        class: studentWithoutPassword.classId ? {
+          id: studentWithoutPassword.classId,
+          name: studentWithoutPassword.className,
+          section: studentWithoutPassword.classSection,
+        } : null,
+        marks: marksResult.rows,
+      },
     });
   } catch (error) {
     next(error);
@@ -643,11 +708,10 @@ const createStudent = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // Check if email already exists
-    const existingEmail = await prisma.user.findUnique({
-      where: { email },
-    });
+    const emailCheckQuery = 'SELECT id FROM "User" WHERE email = $1';
+    const emailCheckResult = await db.query(emailCheckQuery, [email]);
 
-    if (existingEmail) {
+    if (emailCheckResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: {
@@ -657,11 +721,10 @@ const createStudent = async (req, res, next) => {
     }
 
     // Check if studentId already exists
-    const existingStudentId = await prisma.user.findUnique({
-      where: { studentId },
-    });
+    const studentIdCheckQuery = 'SELECT id FROM "User" WHERE "studentId" = $1';
+    const studentIdCheckResult = await db.query(studentIdCheckQuery, [studentId]);
 
-    if (existingStudentId) {
+    if (studentIdCheckResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: {
@@ -674,25 +737,15 @@ const createStudent = async (req, res, next) => {
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const student = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role: 'STUDENT',
-        tenantId,
-        studentId,
-        classId,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        studentId: true,
-        classId: true,
-        createdAt: true,
-      },
-    });
+    // Create student
+    const createQuery = `
+      INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", "classId", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+      RETURNING id, email, name, "studentId", "classId", "createdAt"
+    `;
+
+    const createResult = await db.query(createQuery, [email, hashedPassword, name, 'STUDENT', tenantId, studentId, classId || null]);
+    const student = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -715,11 +768,10 @@ const updateStudent = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // First verify the student exists and belongs to this tenant
-    const existingStudent = await prisma.user.findFirst({
-      where: { id, tenantId, role: 'STUDENT' },
-    });
+    const checkQuery = 'SELECT * FROM "User" WHERE id = $1 AND "tenantId" = $2 AND role = $3';
+    const checkResult = await db.query(checkQuery, [id, tenantId, 'STUDENT']);
 
-    if (!existingStudent) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -728,9 +780,13 @@ const updateStudent = async (req, res, next) => {
       });
     }
 
-    // Build strict update data with validation
-    const updateData = {};
-    
+    const existingStudent = checkResult.rows[0];
+
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
+
     if (name !== undefined) {
       const trimmedName = name.trim();
       if (!trimmedName) {
@@ -739,57 +795,68 @@ const updateStudent = async (req, res, next) => {
           error: { message: 'Student name cannot be empty' },
         });
       }
-      updateData.name = trimmedName;
+      updateFields.push(`name = $${paramIndex}`);
+      updateParams.push(trimmedName);
+      paramIndex++;
     }
 
     if (email !== undefined) {
       const trimmedEmail = email.trim();
-      // Check if email is already taken by another user
       if (trimmedEmail !== existingStudent.email) {
-        const emailExists = await prisma.user.findUnique({
-          where: { email: trimmedEmail },
-        });
-        if (emailExists) {
+        const emailExistsQuery = 'SELECT id FROM "User" WHERE email = $1 AND id != $2';
+        const emailExistsResult = await db.query(emailExistsQuery, [trimmedEmail, id]);
+        if (emailExistsResult.rows.length > 0) {
           return res.status(409).json({
             success: false,
             error: { message: 'Email already exists' },
           });
         }
       }
-      updateData.email = trimmedEmail;
+      updateFields.push(`email = $${paramIndex}`);
+      updateParams.push(trimmedEmail);
+      paramIndex++;
     }
 
-    // If classId is provided, verify it belongs to this tenant
     if (classId !== undefined) {
       if (classId) {
-        const classExists = await prisma.class.findFirst({
-          where: { id: classId, tenantId },
-        });
-        if (!classExists) {
+        const classExistsQuery = 'SELECT id FROM "Class" WHERE id = $1 AND "tenantId" = $2';
+        const classExistsResult = await db.query(classExistsQuery, [classId, tenantId]);
+        if (classExistsResult.rows.length === 0) {
           return res.status(404).json({
             success: false,
             error: { message: 'Class not found in your school' },
           });
         }
-        updateData.classId = classId;
+        updateFields.push(`"classId" = $${paramIndex}`);
+        updateParams.push(classId);
+        paramIndex++;
       } else {
-        updateData.classId = null;
+        updateFields.push(`"classId" = $${paramIndex}`);
+        updateParams.push(null);
+        paramIndex++;
       }
     }
 
-    // Execute the update
-    const updatedStudent = await prisma.user.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        studentId: true,
-        classId: true,
-        updatedAt: true,
-      },
-    });
+    if (updateFields.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: existingStudent,
+        message: 'No changes to update',
+      });
+    }
+
+    updateFields.push(`"updatedAt" = NOW()`);
+    updateParams.push(id);
+
+    const updateQuery = `
+      UPDATE "User"
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING id, name, email, "studentId", "classId", "updatedAt"
+    `;
+
+    const updateResult = await db.query(updateQuery, updateParams);
+    const updatedStudent = updateResult.rows[0];
 
     res.status(200).json({
       success: true,
@@ -811,11 +878,10 @@ const deleteStudent = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // First verify the student exists and belongs to this tenant
-    const existingStudent = await prisma.user.findFirst({
-      where: { id, tenantId, role: 'STUDENT' },
-    });
+    const checkQuery = 'SELECT * FROM "User" WHERE id = $1 AND "tenantId" = $2 AND role = $3';
+    const checkResult = await db.query(checkQuery, [id, tenantId, 'STUDENT']);
 
-    if (!existingStudent) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -824,10 +890,11 @@ const deleteStudent = async (req, res, next) => {
       });
     }
 
-    // Delete the student (cascade will handle related records like attendance, marks, fee)
-    await prisma.user.delete({
-      where: { id },
-    });
+    const existingStudent = checkResult.rows[0];
+
+    // Delete the student
+    const deleteQuery = 'DELETE FROM "User" WHERE id = $1';
+    await db.query(deleteQuery, [id]);
 
     res.status(200).json({
       success: true,
@@ -839,12 +906,13 @@ const deleteStudent = async (req, res, next) => {
       },
     });
   } catch (error) {
-    // Handle specific Prisma errors
-    if (error.code === 'P2025') {
-      return res.status(404).json({
+    // Handle foreign key constraint errors
+    if (error.code === '23503') {
+      return res.status(400).json({
         success: false,
         error: {
-          message: 'Student not found',
+          message: 'Cannot delete student: It has related records. Please remove dependencies first.',
+          code: 'FOREIGN_KEY_CONSTRAINT',
         },
       });
     }
@@ -864,7 +932,6 @@ const getAllHomework = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
 
-    // If admin has no tenantId, return empty array (development/testing mode)
     if (!tenantId) {
       return res.status(200).json({
         success: true,
@@ -878,39 +945,60 @@ const getAllHomework = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId };
+    // Build where clause
+    let whereClause = 'h."tenantId" = $1';
+    let params = [tenantId];
+    let paramIndex = 2;
 
     if (classId) {
-      where.classId = classId;
+      params.push(classId);
+      whereClause += ` AND h."classId" = $${paramIndex}`;
+      paramIndex++;
     }
 
     if (isPublished !== undefined) {
-      where.isPublished = isPublished === 'true';
+      params.push(isPublished === 'true');
+      whereClause += ` AND h."isPublished" = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.homework.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "Homework" h WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const homeworks = await prisma.homework.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            section: true,
-          }
-        },
-        assignedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get homework
+    const homeworksQuery = `
+      SELECT 
+        h.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection",
+        u.id as "assignedById",
+        u.name as "assignedByName"
+      FROM "Homework" h
+      LEFT JOIN "Class" c ON h."classId" = c.id
+      LEFT JOIN "User" u ON h."assignedBy" = u.id
+      WHERE ${whereClause}
+      ORDER BY h."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const homeworksParams = [...params, take, skip];
+    const homeworksResult = await db.query(homeworksQuery, homeworksParams);
+
+    const homeworks = homeworksResult.rows.map(hw => ({
+      ...hw,
+      class: hw.classId ? {
+        id: hw.classId,
+        name: hw.className,
+        section: hw.classSection,
+      } : null,
+      assignedByUser: hw.assignedById ? {
+        id: hw.assignedById,
+        name: hw.assignedByName,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -938,20 +1026,23 @@ const getHomeworkById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const homework = await prisma.homework.findFirst({
-      where: { id, tenantId },
-      include: {
-        class: true,
-        assignedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-    });
+    const homeworkQuery = `
+      SELECT 
+        h.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection",
+        u.id as "assignedById",
+        u.name as "assignedByName"
+      FROM "Homework" h
+      LEFT JOIN "Class" c ON h."classId" = c.id
+      LEFT JOIN "User" u ON h."assignedBy" = u.id
+      WHERE h.id = $1 AND h."tenantId" = $2
+    `;
 
-    if (!homework) {
+    const homeworkResult = await db.query(homeworkQuery, [id, tenantId]);
+
+    if (homeworkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -960,9 +1051,22 @@ const getHomeworkById = async (req, res, next) => {
       });
     }
 
+    const hw = homeworkResult.rows[0];
+
     res.status(200).json({
       success: true,
-      data: homework,
+      data: {
+        ...hw,
+        class: hw.classId ? {
+          id: hw.classId,
+          name: hw.className,
+          section: hw.classSection,
+        } : null,
+        assignedByUser: hw.assignedById ? {
+          id: hw.assignedById,
+          name: hw.assignedByName,
+        } : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -979,20 +1083,17 @@ const createHomework = async (req, res, next) => {
     const tenantId = req.user.tenantId;
     const assignedBy = req.user.id;
 
-    const homework = await prisma.homework.create({
-      data: {
-        title,
-        description,
-        subject,
-        classId,
-        tenantId,
-        assignedBy,
-        dueDate: dueDate ? new Date(dueDate) : null,
-      },
-      include: {
-        class: true,
-      },
-    });
+    const createQuery = `
+      INSERT INTO "Homework" (title, description, subject, "classId", "tenantId", "assignedBy", "dueDate", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const createResult = await db.query(createQuery, [
+      title, description, subject, classId, tenantId, assignedBy, dueDate ? new Date(dueDate) : null
+    ]);
+
+    const homework = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -1014,19 +1115,61 @@ const updateHomework = async (req, res, next) => {
     const { title, description, subject, classId, dueDate, isPublished } = req.body;
     const tenantId = req.user.tenantId;
 
-    const homework = await prisma.homework.updateMany({
-      where: { id, tenantId },
-      data: {
-        title,
-        description,
-        subject,
-        classId,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-        isPublished,
-      },
-    });
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
 
-    if (homework.count === 0) {
+    if (title !== undefined) {
+      updateFields.push(`title = $${paramIndex}`);
+      updateParams.push(title);
+      paramIndex++;
+    }
+    if (description !== undefined) {
+      updateFields.push(`description = $${paramIndex}`);
+      updateParams.push(description);
+      paramIndex++;
+    }
+    if (subject !== undefined) {
+      updateFields.push(`subject = $${paramIndex}`);
+      updateParams.push(subject);
+      paramIndex++;
+    }
+    if (classId !== undefined) {
+      updateFields.push(`"classId" = $${paramIndex}`);
+      updateParams.push(classId);
+      paramIndex++;
+    }
+    if (dueDate !== undefined) {
+      updateFields.push(`"dueDate" = $${paramIndex}`);
+      updateParams.push(dueDate ? new Date(dueDate) : null);
+      paramIndex++;
+    }
+    if (isPublished !== undefined) {
+      updateFields.push(`"isPublished" = $${paramIndex}`);
+      updateParams.push(isPublished);
+      paramIndex++;
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No fields to update' },
+      });
+    }
+
+    updateParams.push(id);
+    updateParams.push(tenantId);
+
+    const updateQuery = `
+      UPDATE "Homework"
+      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
+      WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
+    `;
+
+    const updateResult = await db.query(updateQuery, updateParams);
+
+    if (updateResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1053,11 +1196,10 @@ const deleteHomework = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const homework = await prisma.homework.deleteMany({
-      where: { id, tenantId },
-    });
+    const deleteQuery = 'DELETE FROM "Homework" WHERE id = $1 AND "tenantId" = $2';
+    const deleteResult = await db.query(deleteQuery, [id, tenantId]);
 
-    if (homework.count === 0) {
+    if (deleteResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1091,39 +1233,62 @@ const getAllMarks = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId };
+    // Build where clause
+    let whereClause = 'm."tenantId" = $1';
+    let params = [tenantId];
+    let paramIndex = 2;
 
     if (studentId) {
-      where.studentId = studentId;
+      params.push(studentId);
+      whereClause += ` AND m."studentId" = $${paramIndex}`;
+      paramIndex++;
     }
 
     if (examType) {
-      where.examType = examType;
+      params.push(examType);
+      whereClause += ` AND m."examType" = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.mark.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "Mark" m WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const marks = await prisma.mark.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        student: {
-          select: {
-            id: true,
-            name: true,
-            studentId: true,
-            class: {
-              select: {
-                name: true,
-                section: true,
-              }
-            },
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get marks
+    const marksQuery = `
+      SELECT 
+        m.*,
+        u.id as "studentUserId",
+        u.name as "studentName",
+        u."studentId" as "studentRollNumber",
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "Mark" m
+      LEFT JOIN "User" u ON m."studentId" = u.id
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      WHERE ${whereClause}
+      ORDER BY m."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const marksParams = [...params, take, skip];
+    const marksResult = await db.query(marksQuery, marksParams);
+
+    const marks = marksResult.rows.map(mark => ({
+      ...mark,
+      student: mark.studentUserId ? {
+        id: mark.studentUserId,
+        name: mark.studentName,
+        studentId: mark.studentRollNumber,
+        class: mark.classId ? {
+          id: mark.classId,
+          name: mark.className,
+          section: mark.classSection,
+        } : null,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -1163,29 +1328,17 @@ const createMark = async (req, res, next) => {
     else if (percentage >= 50) grade = 'C';
     else if (percentage >= 40) grade = 'D';
 
-    const mark = await prisma.mark.create({
-      data: {
-        studentId,
-        subject,
-        marksObtained,
-        totalMarks,
-        percentage,
-        grade,
-        examType,
-        examDate: examDate ? new Date(examDate) : null,
-        tenantId,
-        remarks,
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            name: true,
-            studentId: true,
-          }
-        },
-      },
-    });
+    const createQuery = `
+      INSERT INTO "Mark" ("studentId", subject, "marksObtained", "totalMarks", percentage, grade, "examType", "examDate", "tenantId", remarks, "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const createResult = await db.query(createQuery, [
+      studentId, subject, marksObtained, totalMarks, percentage, grade, examType, examDate ? new Date(examDate) : null, tenantId, remarks || null
+    ]);
+
+    const mark = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -1207,36 +1360,74 @@ const updateMark = async (req, res, next) => {
     const { marksObtained, totalMarks, grade, remarks, isPublished } = req.body;
     const tenantId = req.user.tenantId;
 
-    const updateData = {};
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
 
     if (marksObtained !== undefined && totalMarks !== undefined) {
-      updateData.marksObtained = marksObtained;
-      updateData.totalMarks = totalMarks;
-      updateData.percentage = (marksObtained / totalMarks) * 100;
+      const percentage = (marksObtained / totalMarks) * 100;
+      let calculatedGrade = 'F';
+      if (percentage >= 90) calculatedGrade = 'A+';
+      else if (percentage >= 80) calculatedGrade = 'A';
+      else if (percentage >= 70) calculatedGrade = 'B+';
+      else if (percentage >= 60) calculatedGrade = 'B';
+      else if (percentage >= 50) calculatedGrade = 'C';
+      else if (percentage >= 40) calculatedGrade = 'D';
 
-      // Auto-calculate grade
-      const percentage = updateData.percentage;
-      if (percentage >= 90) updateData.grade = 'A+';
-      else if (percentage >= 80) updateData.grade = 'A';
-      else if (percentage >= 70) updateData.grade = 'B+';
-      else if (percentage >= 60) updateData.grade = 'B';
-      else if (percentage >= 50) updateData.grade = 'C';
-      else if (percentage >= 40) updateData.grade = 'D';
-      else updateData.grade = 'F';
+      updateFields.push(`"marksObtained" = $${paramIndex}`);
+      updateParams.push(marksObtained);
+      paramIndex++;
+      updateFields.push(`"totalMarks" = $${paramIndex}`);
+      updateParams.push(totalMarks);
+      paramIndex++;
+      updateFields.push(`percentage = $${paramIndex}`);
+      updateParams.push(percentage);
+      paramIndex++;
+      updateFields.push(`grade = $${paramIndex}`);
+      updateParams.push(calculatedGrade);
+      paramIndex++;
     } else if (marksObtained !== undefined) {
-      updateData.marksObtained = marksObtained;
+      updateFields.push(`"marksObtained" = $${paramIndex}`);
+      updateParams.push(marksObtained);
+      paramIndex++;
     }
 
-    if (grade) updateData.grade = grade;
-    if (remarks !== undefined) updateData.remarks = remarks;
-    if (isPublished !== undefined) updateData.isPublished = isPublished;
+    if (grade !== undefined) {
+      updateFields.push(`grade = $${paramIndex}`);
+      updateParams.push(grade);
+      paramIndex++;
+    }
+    if (remarks !== undefined) {
+      updateFields.push(`remarks = $${paramIndex}`);
+      updateParams.push(remarks);
+      paramIndex++;
+    }
+    if (isPublished !== undefined) {
+      updateFields.push(`"isPublished" = $${paramIndex}`);
+      updateParams.push(isPublished);
+      paramIndex++;
+    }
 
-    const mark = await prisma.mark.updateMany({
-      where: { id, tenantId },
-      data: updateData,
-    });
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No fields to update' },
+      });
+    }
 
-    if (mark.count === 0) {
+    updateParams.push(id);
+    updateParams.push(tenantId);
+
+    const updateQuery = `
+      UPDATE "Mark"
+      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
+      WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
+    `;
+
+    const updateResult = await db.query(updateQuery, updateParams);
+
+    if (updateResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1263,11 +1454,10 @@ const deleteMark = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const mark = await prisma.mark.deleteMany({
-      where: { id, tenantId },
-    });
+    const deleteQuery = 'DELETE FROM "Mark" WHERE id = $1 AND "tenantId" = $2';
+    const deleteResult = await db.query(deleteQuery, [id, tenantId]);
 
-    if (mark.count === 0) {
+    if (deleteResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1297,7 +1487,6 @@ const getAllNews = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
 
-    // If admin has no tenantId, return empty array (development/testing mode)
     if (!tenantId) {
       return res.status(200).json({
         success: true,
@@ -1311,32 +1500,51 @@ const getAllNews = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId };
+    // Build where clause
+    let whereClause = 'n."tenantId" = $1';
+    let params = [tenantId];
+    let paramIndex = 2;
 
     if (category) {
-      where.category = category;
+      params.push(category);
+      whereClause += ` AND n.category = $${paramIndex}`;
+      paramIndex++;
     }
 
     if (isPublished !== undefined) {
-      where.isPublished = isPublished === 'true';
+      params.push(isPublished === 'true');
+      whereClause += ` AND n."isPublished" = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.news.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "News" n WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const news = await prisma.news.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        postedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get news
+    const newsQuery = `
+      SELECT 
+        n.*,
+        u.id as "postedById",
+        u.name as "postedByName"
+      FROM "News" n
+      LEFT JOIN "User" u ON n."postedBy" = u.id
+      WHERE ${whereClause}
+      ORDER BY n."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const newsParams = [...params, take, skip];
+    const newsResult = await db.query(newsQuery, newsParams);
+
+    const news = newsResult.rows.map(item => ({
+      ...item,
+      postedByUser: item.postedById ? {
+        id: item.postedById,
+        name: item.postedByName,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -1365,25 +1573,17 @@ const createNews = async (req, res, next) => {
     const tenantId = req.user.tenantId;
     const postedBy = req.user.id;
 
-    const news = await prisma.news.create({
-      data: {
-        title,
-        content,
-        summary,
-        category,
-        imageUrl,
-        tenantId,
-        postedBy,
-      },
-      include: {
-        postedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-    });
+    const createQuery = `
+      INSERT INTO "News" (title, content, summary, category, "imageUrl", "tenantId", "postedBy", "isPublished", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const createResult = await db.query(createQuery, [
+      title, content, summary || null, category || null, imageUrl || null, tenantId, postedBy, true
+    ]);
+
+    const news = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -1405,12 +1605,46 @@ const updateNews = async (req, res, next) => {
     const { title, content, isPublished } = req.body;
     const tenantId = req.user.tenantId;
 
-    const news = await prisma.news.updateMany({
-      where: { id, tenantId },
-      data: { title, content, isPublished },
-    });
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
 
-    if (news.count === 0) {
+    if (title !== undefined) {
+      updateFields.push(`title = $${paramIndex}`);
+      updateParams.push(title);
+      paramIndex++;
+    }
+    if (content !== undefined) {
+      updateFields.push(`content = $${paramIndex}`);
+      updateParams.push(content);
+      paramIndex++;
+    }
+    if (isPublished !== undefined) {
+      updateFields.push(`"isPublished" = $${paramIndex}`);
+      updateParams.push(isPublished);
+      paramIndex++;
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No fields to update' },
+      });
+    }
+
+    updateParams.push(id);
+    updateParams.push(tenantId);
+
+    const updateQuery = `
+      UPDATE "News"
+      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
+      WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
+    `;
+
+    const updateResult = await db.query(updateQuery, updateParams);
+
+    if (updateResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1437,11 +1671,10 @@ const deleteNews = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const news = await prisma.news.deleteMany({
-      where: { id, tenantId },
-    });
+    const deleteQuery = 'DELETE FROM "News" WHERE id = $1 AND "tenantId" = $2';
+    const deleteResult = await db.query(deleteQuery, [id, tenantId]);
 
-    if (news.count === 0) {
+    if (deleteResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1475,28 +1708,45 @@ const getAllCirculars = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId };
+    // Build where clause
+    let whereClause = 'c."tenantId" = $1';
+    let params = [tenantId];
+    let paramIndex = 2;
 
     if (isPublished !== undefined) {
-      where.isPublished = isPublished === 'true';
+      params.push(isPublished === 'true');
+      whereClause += ` AND c."isPublished" = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.circular.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "Circular" c WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const circulars = await prisma.circular.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        issuedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-      orderBy: { issueDate: 'desc' },
-    });
+    // Get circulars
+    const circularsQuery = `
+      SELECT 
+        c.*,
+        u.id as "issuedById",
+        u.name as "issuedByName"
+      FROM "Circular" c
+      LEFT JOIN "User" u ON c."issuedBy" = u.id
+      WHERE ${whereClause}
+      ORDER BY c."issueDate" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const circularsParams = [...params, take, skip];
+    const circularsResult = await db.query(circularsQuery, circularsParams);
+
+    const circulars = circularsResult.rows.map(item => ({
+      ...item,
+      issuedByUser: item.issuedById ? {
+        id: item.issuedById,
+        name: item.issuedByName,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -1525,23 +1775,15 @@ const createCircular = async (req, res, next) => {
     const tenantId = req.user.tenantId;
     const issuedBy = req.user.id;
 
-    const circular = await prisma.circular.create({
-      data: {
-        title,
-        content,
-        circularNo,
-        tenantId,
-        issuedBy,
-      },
-      include: {
-        issuedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-    });
+    const createQuery = `
+      INSERT INTO "Circular" (title, content, "circularNo", "tenantId", "issuedBy", "issueDate", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), NOW())
+      RETURNING *
+    `;
+
+    const createResult = await db.query(createQuery, [title, content, circularNo || null, tenantId, issuedBy]);
+
+    const circular = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -1562,11 +1804,10 @@ const deleteCircular = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const circular = await prisma.circular.deleteMany({
-      where: { id, tenantId },
-    });
+    const deleteQuery = 'DELETE FROM "Circular" WHERE id = $1 AND "tenantId" = $2';
+    const deleteResult = await db.query(deleteQuery, [id, tenantId]);
 
-    if (circular.count === 0) {
+    if (deleteResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1600,33 +1841,53 @@ const getAllExamSchedules = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId };
+    // Build where clause
+    let whereClause = 'es."tenantId" = $1';
+    let params = [tenantId];
+    let paramIndex = 2;
 
     if (classId) {
-      where.classId = classId;
+      params.push(classId);
+      whereClause += ` AND es."classId" = $${paramIndex}`;
+      paramIndex++;
     }
 
     if (isPublished !== undefined) {
-      where.isPublished = isPublished === 'true';
+      params.push(isPublished === 'true');
+      whereClause += ` AND es."isPublished" = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.examSchedule.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "ExamSchedule" es WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const examSchedules = await prisma.examSchedule.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            section: true,
-          }
-        },
-      },
-      orderBy: { date: 'asc' },
-    });
+    // Get exam schedules
+    const examSchedulesQuery = `
+      SELECT 
+        es.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "ExamSchedule" es
+      LEFT JOIN "Class" c ON es."classId" = c.id
+      WHERE ${whereClause}
+      ORDER BY es.date ASC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const examSchedulesParams = [...params, take, skip];
+    const examSchedulesResult = await db.query(examSchedulesQuery, examSchedulesParams);
+
+    const examSchedules = examSchedulesResult.rows.map(item => ({
+      ...item,
+      class: item.classId ? {
+        id: item.classId,
+        name: item.className,
+        section: item.classSection,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -1654,21 +1915,17 @@ const createExamSchedule = async (req, res, next) => {
     const { title, subject, date, time, classId, duration, roomNo } = req.body;
     const tenantId = req.user.tenantId;
 
-    const examSchedule = await prisma.examSchedule.create({
-      data: {
-        title,
-        subject,
-        date: new Date(date),
-        time,
-        classId,
-        tenantId,
-        duration,
-        roomNo,
-      },
-      include: {
-        class: true,
-      },
-    });
+    const createQuery = `
+      INSERT INTO "ExamSchedule" (title, subject, date, time, "classId", "tenantId", duration, "roomNo", "isPublished", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const createResult = await db.query(createQuery, [
+      title, subject, new Date(date), time, classId, tenantId, duration || null, roomNo || null, true
+    ]);
+
+    const examSchedule = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -1689,11 +1946,10 @@ const deleteExamSchedule = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const examSchedule = await prisma.examSchedule.deleteMany({
-      where: { id, tenantId },
-    });
+    const deleteQuery = 'DELETE FROM "ExamSchedule" WHERE id = $1 AND "tenantId" = $2';
+    const deleteResult = await db.query(deleteQuery, [id, tenantId]);
 
-    if (examSchedule.count === 0) {
+    if (deleteResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1718,7 +1974,6 @@ const deleteExamSchedule = async (req, res, next) => {
 /**
  * Get available teachers for class assignment
  * GET /api/admin/teachers/available
- * Returns teachers who are either unassigned or assigned to the specified class
  */
 const getAvailableTeachers = async (req, res, next) => {
   try {
@@ -1728,54 +1983,59 @@ const getAvailableTeachers = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build where clause: teachers who are either unassigned OR assigned to the specific class
-    const where = { tenantId, role: 'TEACHER' };
+    // Build where clause
+    let whereClause = 'u."tenantId" = $1 AND u.role = $2';
+    let params = [tenantId, 'TEACHER'];
+    let paramIndex = 3;
 
     if (classId) {
       // Include teachers who have no class OR are assigned to this specific class
-      where.OR = [
-        { classId: null },
-        { classId: classId }
-      ];
+      whereClause += ` AND (u."classId" IS NULL OR u."classId" = $${paramIndex})`;
+      params.push(classId);
+      paramIndex++;
     } else {
       // If no classId provided, only show unassigned teachers
-      where.classId = null;
+      whereClause += ` AND u."classId" IS NULL`;
     }
 
     if (search) {
-      // Add search to the existing where conditions
-      const searchFilter = {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-        ]
-      };
-      
-      // Combine with existing conditions
-      if (classId) {
-        where.AND = searchFilter;
-      } else {
-        Object.assign(where, searchFilter);
-      }
+      params.push(`%${search}%`, `%${search}%`);
+      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
+      paramIndex++;
     }
 
-    const total = await prisma.user.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "User" u WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const teachers = await prisma.user.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            section: true,
-          }
-        },
-      },
-      orderBy: { name: 'asc' },
-    });
+    // Get teachers
+    const teachersQuery = `
+      SELECT 
+        u.id, u.name, u.email, u.phone, u."classId", u."createdAt",
+        c.id as "cId", c.name as "cName", c.section as "cSection"
+      FROM "User" u
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      WHERE ${whereClause}
+      ORDER BY u.name ASC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const teachersParams = [...params, take, skip];
+    const teachersResult = await db.query(teachersQuery, teachersParams);
+
+    const teachers = teachersResult.rows.map(teacher => ({
+      ...teacher,
+      class: teacher.cId ? {
+        id: teacher.cId,
+        name: teacher.cName,
+        section: teacher.cSection,
+      } : null,
+      // Remove redundant fields
+      cId: undefined,
+      cName: undefined,
+      cSection: undefined,
+    }));
 
     res.status(200).json({
       success: true,
@@ -1807,36 +2067,54 @@ const getAllTeachers = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId, role: 'TEACHER' };
+    // Build where clause
+    let whereClause = 'u."tenantId" = $1 AND u.role = $2';
+    let params = [tenantId, 'TEACHER'];
+    let paramIndex = 3;
 
     if (classId) {
-      where.classId = classId;
+      params.push(classId);
+      whereClause += ` AND u."classId" = $${paramIndex}`;
+      paramIndex++;
     }
 
     if (search) {
-      where.OR = [
-        { name: { contains: search } },
-        { email: { contains: search } },
-      ];
+      params.push(`%${search}%`, `%${search}%`);
+      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex})`;
+      paramIndex++;
     }
 
-    const total = await prisma.user.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "User" u WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const teachers = await prisma.user.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            section: true,
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get teachers
+    const teachersQuery = `
+      SELECT 
+        u.id, u.name, u.email, u.phone, u."classId", u."createdAt",
+        c.id as "cId", c.name as "cName", c.section as "cSection"
+      FROM "User" u
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      WHERE ${whereClause}
+      ORDER BY u."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const teachersParams = [...params, take, skip];
+    const teachersResult = await db.query(teachersQuery, teachersParams);
+
+    const teachers = teachersResult.rows.map(teacher => ({
+      ...teacher,
+      class: teacher.cId ? {
+        id: teacher.cId,
+        name: teacher.cName,
+        section: teacher.cSection,
+      } : null,
+      cId: undefined,
+      cName: undefined,
+      cSection: undefined,
+    }));
 
     res.status(200).json({
       success: true,
@@ -1865,32 +2143,20 @@ const getTeacherById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const teacher = await prisma.user.findFirst({
-      where: { id, tenantId, role: 'TEACHER' },
-      include: {
-        class: {
-          include: {
-            students: {
-              select: {
-                id: true,
-                name: true,
-                studentId: true,
-              }
-            },
-          }
-        },
-        homeworks: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-        marks: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-      },
-    });
+    const teacherQuery = `
+      SELECT 
+        u.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "User" u
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      WHERE u.id = $1 AND u."tenantId" = $2 AND u.role = $3
+    `;
 
-    if (!teacher) {
+    const teacherResult = await db.query(teacherQuery, [id, tenantId, 'TEACHER']);
+
+    if (teacherResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -1899,12 +2165,50 @@ const getTeacherById = async (req, res, next) => {
       });
     }
 
-    // Remove password
-    const { password, ...teacherWithoutPassword } = teacher;
+    const { password, ...teacherWithoutPassword } = teacherResult.rows[0];
+
+    // Get class students
+    if (teacherWithoutPassword.classId) {
+      const studentsQuery = `
+        SELECT id, name, "studentId" FROM "User"
+        WHERE "classId" = $1 AND role = 'STUDENT'
+      `;
+      const studentsResult = await db.query(studentsQuery, [teacherWithoutPassword.classId]);
+      teacherWithoutPassword.class = {
+        ...teacherWithoutPassword.class,
+        students: studentsResult.rows,
+      };
+    }
+
+    // Get recent homework
+    const homeworksQuery = `
+      SELECT * FROM "Homework"
+      WHERE "assignedBy" = $1
+      ORDER BY "createdAt" DESC
+      LIMIT 10
+    `;
+    const homeworksResult = await db.query(homeworksQuery, [id]);
+
+    // Get recent marks
+    const marksQuery = `
+      SELECT * FROM "Mark"
+      WHERE "studentId" IN (
+        SELECT id FROM "User" WHERE "classId" = (
+          SELECT "classId" FROM "User" WHERE id = $1
+        ) AND role = 'STUDENT'
+      )
+      ORDER BY "createdAt" DESC
+      LIMIT 10
+    `;
+    const marksResult = await db.query(marksQuery, [id]);
 
     res.status(200).json({
       success: true,
-      data: teacherWithoutPassword,
+      data: {
+        ...teacherWithoutPassword,
+        homeworks: homeworksResult.rows,
+        marks: marksResult.rows,
+      },
     });
   } catch (error) {
     next(error);
@@ -1921,11 +2225,10 @@ const createTeacher = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // Check if email already exists
-    const existingEmail = await prisma.user.findUnique({
-      where: { email },
-    });
+    const emailCheckQuery = 'SELECT id FROM "User" WHERE email = $1';
+    const emailCheckResult = await db.query(emailCheckQuery, [email]);
 
-    if (existingEmail) {
+    if (emailCheckResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: {
@@ -1938,33 +2241,22 @@ const createTeacher = async (req, res, next) => {
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const teacher = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role: 'TEACHER',
-        tenantId,
-        phone,
-        classId,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phone: true,
-        role: true,
-        classId: true,
-        createdAt: true,
-      },
-    });
+    // Create teacher
+    const createQuery = `
+      INSERT INTO "User" (email, password, name, role, "tenantId", phone, "classId", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+      RETURNING id, email, name, phone, role, "classId", "createdAt"
+    `;
+
+    const createResult = await db.query(createQuery, [email, hashedPassword, name, 'TEACHER', tenantId, phone || null, classId || null]);
+    const teacher = createResult.rows[0];
 
     // If assigned to a class, update class teacher reference
     if (classId) {
-      await prisma.class.update({
-        where: { id: classId },
-        data: { teacherId: teacher.id },
-      });
+      const updateClassQuery = `
+        UPDATE "Class" SET "teacherId" = $1, "updatedAt" = NOW() WHERE id = $2
+      `;
+      await db.query(updateClassQuery, [teacher.id, classId]);
     }
 
     res.status(201).json({
@@ -1988,11 +2280,10 @@ const updateTeacher = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // First verify the teacher exists and belongs to this tenant
-    const existingTeacher = await prisma.user.findFirst({
-      where: { id: teacherId, tenantId, role: 'TEACHER' },
-    });
+    const checkQuery = 'SELECT * FROM "User" WHERE id = $1 AND "tenantId" = $2 AND role = $3';
+    const checkResult = await db.query(checkQuery, [teacherId, tenantId, 'TEACHER']);
 
-    if (!existingTeacher) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -2001,50 +2292,64 @@ const updateTeacher = async (req, res, next) => {
       });
     }
 
-    // Hardcode ONLY the allowed fields into a completely clean dictionary object
-    const strictUpdateData = {};
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
+
     if (name !== undefined && name !== null && name.trim() !== '') {
-      strictUpdateData.name = name.trim();
+      updateFields.push(`name = $${paramIndex}`);
+      updateParams.push(name.trim());
+      paramIndex++;
     }
     if (email !== undefined && email !== null && email.trim() !== '') {
-      strictUpdateData.email = email.trim();
+      updateFields.push(`email = $${paramIndex}`);
+      updateParams.push(email.trim());
+      paramIndex++;
     }
     if (phone !== undefined && phone !== null && phone.trim() !== '') {
-      strictUpdateData.phone = phone.trim();
+      updateFields.push(`phone = $${paramIndex}`);
+      updateParams.push(phone.trim());
+      paramIndex++;
     }
-    // Only include classId if it's a valid non-empty string
-    if (classId !== undefined && classId !== null && typeof classId === 'string' && classId.trim() !== '') {
-      strictUpdateData.classId = classId.trim();
+    if (classId !== undefined) {
+      if (classId !== null && classId !== '' && typeof classId === 'string') {
+        updateFields.push(`"classId" = $${paramIndex}`);
+        updateParams.push(classId.trim());
+        paramIndex++;
+      } else {
+        updateFields.push(`"classId" = $${paramIndex}`);
+        updateParams.push(null);
+        paramIndex++;
+      }
     }
 
-    // SAFETY: Explicitly remove any invalid keys that don't exist in the User schema
-    // This prevents Prisma runtime errors from unexpected fields
-    // Use bracket notation for 'new' since it's a reserved keyword
-    if (strictUpdateData && typeof strictUpdateData === 'object') {
-      delete strictUpdateData['new'];
-      delete strictUpdateData['password']; // Password updates should go through dedicated endpoint
+    if (updateFields.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No changes to update',
+      });
     }
 
-    // Now execute the update using ONLY this verified data object
-    await prisma.user.update({
-      where: { id: teacherId },
-      data: strictUpdateData,
-    });
+    updateFields.push(`"updatedAt" = NOW()`);
+    updateParams.push(teacherId);
 
-    // Update class teacher reference if classId was explicitly provided (including null/empty to clear assignment)
+    const updateQuery = `
+      UPDATE "User"
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+    `;
+
+    await db.query(updateQuery, updateParams);
+
+    // Update class teacher reference if classId was explicitly provided
     if (req.body.classId !== undefined) {
       // Remove teacher reference from old class
-      await prisma.class.updateMany({
-        where: { teacherId: teacherId },
-        data: { teacherId: null },
-      });
+      await db.query('UPDATE "Class" SET "teacherId" = NULL, "updatedAt" = NOW() WHERE "teacherId" = $1', [teacherId]);
 
       // Set teacher reference on new class only if a valid classId was provided
       if (classId !== undefined && classId !== null && typeof classId === 'string' && classId.trim() !== '') {
-        await prisma.class.update({
-          where: { id: classId.trim() },
-          data: { teacherId: teacherId },
-        });
+        await db.query('UPDATE "Class" SET "teacherId" = $1, "updatedAt" = NOW() WHERE id = $2', [classId.trim(), teacherId]);
       }
     }
 
@@ -2066,11 +2371,10 @@ const deleteTeacher = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const teacher = await prisma.user.deleteMany({
-      where: { id, tenantId, role: 'TEACHER' },
-    });
+    const deleteQuery = 'DELETE FROM "User" WHERE id = $1 AND "tenantId" = $2 AND role = $3';
+    const deleteResult = await db.query(deleteQuery, [id, tenantId, 'TEACHER']);
 
-    if (teacher.count === 0) {
+    if (deleteResult.rowCount === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -2130,11 +2434,10 @@ const createStudentManual = async (req, res, next) => {
     }
 
     // Check for existing rollNumber (studentId)
-    const existingRollNumber = await prisma.user.findUnique({
-      where: { studentId: rollNumber },
-    });
+    const existingRollNumberQuery = 'SELECT id FROM "User" WHERE "studentId" = $1';
+    const existingRollNumberResult = await db.query(existingRollNumberQuery, [rollNumber]);
 
-    if (existingRollNumber) {
+    if (existingRollNumberResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: { message: `Student with roll number "${rollNumber}" already exists` },
@@ -2142,11 +2445,10 @@ const createStudentManual = async (req, res, next) => {
     }
 
     // Check for existing userId (email)
-    const existingUserId = await prisma.user.findUnique({
-      where: { email: userId },
-    });
+    const existingUserIdQuery = 'SELECT id FROM "User" WHERE email = $1';
+    const existingUserIdResult = await db.query(existingUserIdQuery, [userId]);
 
-    if (existingUserId) {
+    if (existingUserIdResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: { message: `User ID "${userId}" already exists` },
@@ -2157,40 +2459,33 @@ const createStudentManual = async (req, res, next) => {
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Parse classAndSection (e.g., "10-A" -> name: "10", section: "A")
+    // Parse classAndSection and find class
     let classId = null;
     if (classAndSection && className) {
       const [class_name, section] = classAndSection.split('-');
-      const classRecord = await prisma.class.findFirst({
-        where: { name: class_name.trim(), section: section?.trim() || null, tenantId },
-      });
-      classId = classRecord?.id || null;
+      const classQuery = `
+        SELECT id FROM "Class"
+        WHERE name = $1 AND (section = $2 OR section IS NULL) AND "tenantId" = $3
+        LIMIT 1
+      `;
+      const classResult = await db.query(classQuery, [class_name.trim(), section?.trim() || null, tenantId]);
+      if (classResult.rows.length > 0) {
+        classId = classResult.rows[0].id;
+      }
     }
 
-    // Create student in transaction
-    const student = await prisma.$transaction(async (tx) => {
-      return tx.user.create({
-        data: {
-          email: userId,
-          password: hashedPassword,
-          name: studentName,
-          role: 'STUDENT',
-          tenantId,
-          studentId: rollNumber,
-          classId,
-          phone: parentMobile || null,
-          // Additional metadata stored in a profile table or JSON if schema supports
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          studentId: true,
-          classId: true,
-          createdAt: true,
-        },
-      });
-    });
+    // Create student
+    const createQuery = `
+      INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", "classId", phone, "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      RETURNING id, email, name, "studentId", "classId", "createdAt"
+    `;
+
+    const createResult = await db.query(createQuery, [
+      userId, hashedPassword, studentName, 'STUDENT', tenantId, rollNumber, classId, parentMobile || null
+    ]);
+
+    const student = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -2255,7 +2550,6 @@ const bulkImportStudents = async (req, res, next) => {
     for (let i = 1; i < jsonData.length; i++) {
       const row = jsonData[i];
       
-      // Skip empty rows
       if (!row || row.length === 0) continue;
 
       const rollNumber = row[headerIndex.rollnumber];
@@ -2293,30 +2587,25 @@ const bulkImportStudents = async (req, res, next) => {
     }
 
     // Check for duplicates in database
-    const existingRollNumbers = await prisma.user.findMany({
-      where: {
-        studentId: { in: studentsToCreate.map(s => s.rollNumber) },
-      },
-      select: { studentId: true },
-    });
+    const existingRollNumbersQuery = `
+      SELECT "studentId" FROM "User" WHERE "studentId" = ANY($1)
+    `;
+    const existingRollNumbersResult = await db.query(existingRollNumbersQuery, [studentsToCreate.map(s => s.rollNumber)]);
+    const existingRollNumbers = new Set(existingRollNumbersResult.rows.map(r => r.studentId));
 
-    const existingUserIds = await prisma.user.findMany({
-      where: {
-        email: { in: studentsToCreate.map(s => s.userId) },
-      },
-      select: { email: true },
-    });
+    const existingUserIdsQuery = `
+      SELECT email FROM "User" WHERE email = ANY($1)
+    `;
+    const existingUserIdsResult = await db.query(existingUserIdsQuery, [studentsToCreate.map(s => s.userId)]);
+    const existingUserIds = new Set(existingUserIdsResult.rows.map(u => u.email));
 
     // Filter out duplicates
-    const duplicateRollNumbers = new Set(existingRollNumbers.map(r => r.studentId));
-    const duplicateUserIds = new Set(existingUserIds.map(u => u.email));
-
     const validStudents = studentsToCreate.filter(s => {
-      if (duplicateRollNumbers.has(s.rollNumber)) {
+      if (existingRollNumbers.has(s.rollNumber)) {
         errors.push({ row: s.rollNumber, error: `Duplicate roll number: ${s.rollNumber}` });
         return false;
       }
-      if (duplicateUserIds.has(s.userId)) {
+      if (existingUserIds.has(s.userId)) {
         errors.push({ row: s.userId, error: `Duplicate user ID: ${s.userId}` });
         return false;
       }
@@ -2330,30 +2619,20 @@ const bulkImportStudents = async (req, res, next) => {
       });
     }
 
-    // Create students in batch using transaction
-    const createdStudents = await prisma.$transaction(
-      validStudents.map(student => 
-        prisma.user.create({
-          data: {
-            email: student.userId,
-            password: bcrypt.hashSync(student.password, saltRounds),
-            name: student.studentName,
-            role: 'STUDENT',
-            tenantId,
-            studentId: student.rollNumber,
-            phone: student.parentMobile,
-            classId: null, // Can be assigned later
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            studentId: true,
-            createdAt: true,
-          },
-        })
-      )
-    );
+    // Create students in batch
+    const createdStudents = [];
+    for (const student of validStudents) {
+      const hashedPassword = await bcrypt.hash(student.password, saltRounds);
+      const createQuery = `
+        INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", phone, "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        RETURNING id, email, name, "studentId", "createdAt"
+      `;
+      const result = await db.query(createQuery, [
+        student.userId, hashedPassword, student.studentName, 'STUDENT', tenantId, student.rollNumber, student.parentMobile
+      ]);
+      createdStudents.push(result.rows[0]);
+    }
 
     res.status(201).json({
       success: true,
@@ -2375,7 +2654,6 @@ const bulkImportStudents = async (req, res, next) => {
 /**
  * Bulk upload students from CSV file
  * POST /api/admin/students/bulk-upload
- * Accepts CSV file and classId
  */
 const bulkUploadStudentsCSV = async (req, res, next) => {
   try {
@@ -2397,11 +2675,10 @@ const bulkUploadStudentsCSV = async (req, res, next) => {
     }
 
     // Verify class exists and belongs to this tenant
-    const classExists = await prisma.class.findFirst({
-      where: { id: classId, tenantId },
-    });
+    const classExistsQuery = 'SELECT id FROM "Class" WHERE id = $1 AND "tenantId" = $2';
+    const classExistsResult = await db.query(classExistsQuery, [classId, tenantId]);
 
-    if (!classExists) {
+    if (classExistsResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: { message: 'Class not found in your school' },
@@ -2429,9 +2706,8 @@ const bulkUploadStudentsCSV = async (req, res, next) => {
     // Process each row
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
-      const rowNumber = i + 2; // Excel row numbers start at 1, +1 for header
+      const rowNumber = i + 2;
 
-      // Validate required fields
       if (!row.name || !row.name.trim()) {
         errors.push({ row: rowNumber, error: 'Missing student name' });
         continue;
@@ -2456,28 +2732,28 @@ const bulkUploadStudentsCSV = async (req, res, next) => {
       });
     }
 
+    if (studentsToCreate.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No valid student records found' },
+      });
+    }
+
     // Check for existing emails and studentIds
     const emails = studentsToCreate.map(s => s.email);
     const studentIds = studentsToCreate.map(s => s.studentId);
 
-    const existingEmails = await prisma.user.findMany({
-      where: {
-        email: { in: emails },
-        OR: [{ tenantId }, { tenantId: null }],
-      },
-      select: { email: true },
-    });
+    const existingEmailsQuery = `
+      SELECT email FROM "User" WHERE email = ANY($1)
+    `;
+    const existingEmailsResult = await db.query(existingEmailsQuery, [emails]);
+    const existingEmailSet = new Set(existingEmailsResult.rows.map(e => e.email));
 
-    const existingStudentIds = await prisma.user.findMany({
-      where: {
-        studentId: { in: studentIds },
-        tenantId,
-      },
-      select: { studentId: true },
-    });
-
-    const existingEmailSet = new Set(existingEmails.map(e => e.email));
-    const existingStudentIdSet = new Set(existingStudentIds.map(s => s.studentId));
+    const existingStudentIdsQuery = `
+      SELECT "studentId" FROM "User" WHERE "studentId" = ANY($1) AND "tenantId" = $2
+    `;
+    const existingStudentIdsResult = await db.query(existingStudentIdsQuery, [studentIds, tenantId]);
+    const existingStudentIdSet = new Set(existingStudentIdsResult.rows.map(s => s.studentId));
 
     // Filter out duplicates
     const validStudents = studentsToCreate.filter(s => {
@@ -2517,29 +2793,19 @@ const bulkUploadStudentsCSV = async (req, res, next) => {
     }
 
     // Create students in batch
-    const createdStudents = await prisma.$transaction(
-      finalStudents.map(student =>
-        prisma.user.create({
-          data: {
-            email: student.email,
-            password: bcrypt.hashSync(student.password, saltRounds),
-            name: student.name,
-            role: 'STUDENT',
-            tenantId,
-            studentId: student.studentId,
-            phone: student.phone,
-            classId,
-          },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            studentId: true,
-            createdAt: true,
-          },
-        })
-      )
-    );
+    const createdStudents = [];
+    for (const student of finalStudents) {
+      const hashedPassword = await bcrypt.hash(student.password, saltRounds);
+      const createQuery = `
+        INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", phone, "classId", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+        RETURNING id, email, name, "studentId", "createdAt"
+      `;
+      const result = await db.query(createQuery, [
+        student.email, hashedPassword, student.name, 'STUDENT', tenantId, student.studentId, student.phone, classId
+      ]);
+      createdStudents.push(result.rows[0]);
+    }
 
     // Clean up uploaded file
     const fs = require('fs');
@@ -2558,6 +2824,122 @@ const bulkUploadStudentsCSV = async (req, res, next) => {
     });
   } catch (error) {
     console.error('BulkUploadStudentsCSV Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Get current admin's school/tenant details
+ * GET /api/admin/school
+ */
+const getMySchool = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+
+    if (!tenantId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Admin not associated with any school',
+        },
+      });
+    }
+
+    const tenantQuery = `
+      SELECT 
+        t.*,
+        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "totalUsers",
+        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id AND u.role = 'STUDENT') as "totalStudents",
+        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id AND u.role = 'TEACHER') as "totalTeachers",
+        (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "totalClasses"
+      FROM "Tenant" t
+      WHERE t.id = $1
+    `;
+
+    const tenantResult = await db.query(tenantQuery, [tenantId]);
+
+    if (tenantResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'School not found',
+        },
+      });
+    }
+
+    const tenant = tenantResult.rows[0];
+
+    res.status(200).json({
+      success: true,
+      data: {
+        ...tenant,
+        stats: {
+          totalUsers: parseInt(tenant.totalUsers),
+          totalStudents: parseInt(tenant.totalStudents),
+          totalTeachers: parseInt(tenant.totalTeachers),
+          totalClasses: parseInt(tenant.totalClasses),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('GetMySchool Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Get current admin's school statistics
+ * GET /api/admin/school/stats
+ */
+const getMySchoolStats = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+
+    if (!tenantId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Admin not associated with any school',
+        },
+      });
+    }
+
+    const statsQuery = `
+      SELECT 
+        (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'STUDENT') as "totalStudents",
+        (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'TEACHER') as "totalTeachers",
+        (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'ADMIN') as "totalAdmins",
+        (SELECT COUNT(*) FROM "Class" WHERE "tenantId" = $1) as "totalClasses",
+        (SELECT COUNT(*) FROM "Homework" WHERE "tenantId" = $1) as "totalHomeworks",
+        (SELECT COUNT(*) FROM "Mark" WHERE "tenantId" = $1) as "totalMarks",
+        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $1) as "totalNews",
+        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $1) as "totalCirculars",
+        (SELECT COUNT(*) FROM "ExamSchedule" WHERE "tenantId" = $1) as "totalExamSchedules",
+        (SELECT COUNT(*) FROM "Attendance" WHERE "tenantId" = $1) as "totalAttendance",
+        (SELECT COUNT(*) FROM "Fee" WHERE "tenantId" = $1) as "totalFees"
+    `;
+
+    const statsResult = await db.query(statsQuery, [tenantId]);
+    const stats = statsResult.rows[0];
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalStudents: parseInt(stats.totalStudents),
+        totalTeachers: parseInt(stats.totalTeachers),
+        totalAdmins: parseInt(stats.totalAdmins),
+        totalClasses: parseInt(stats.totalClasses),
+        totalHomeworks: parseInt(stats.totalHomeworks),
+        totalMarks: parseInt(stats.totalMarks),
+        totalNews: parseInt(stats.totalNews),
+        totalCirculars: parseInt(stats.totalCirculars),
+        totalExamSchedules: parseInt(stats.totalExamSchedules),
+        totalAttendance: parseInt(stats.totalAttendance),
+        totalFees: parseInt(stats.totalFees),
+      },
+    });
+  } catch (error) {
+    console.error('GetMySchoolStats Error:', error);
     next(error);
   }
 };
@@ -2611,4 +2993,7 @@ module.exports = {
   createTeacher,
   updateTeacher,
   deleteTeacher,
+  // School/Tenant Info
+  getMySchool,
+  getMySchoolStats,
 };

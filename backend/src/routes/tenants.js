@@ -18,7 +18,7 @@ router.use(requireSuperAdmin);
  * @route   GET /api/tenants
  * @desc    Get all tenants (schools)
  * @access  Super Admin
- * @query   page, limit, search, isActive
+ * @query   page, limit, search
  */
 router.get('/', tenantController.getAllTenants);
 
@@ -90,7 +90,7 @@ router.post(
  * @desc    Update tenant information
  * @access  Super Admin
  * @params  id (UUID)
- * @body    { name, address, phone, email, isActive }
+ * @body    { name, address, phone, email }
  */
 router.put(
   '/:id',
@@ -118,7 +118,7 @@ router.put(
 
 /**
  * @route   DELETE /api/tenants/:id
- * @desc    Delete a tenant (soft delete by setting isActive = false)
+ * @desc    Delete a tenant (hard delete with cascade)
  * @access  Super Admin
  * @params  id (UUID)
  */

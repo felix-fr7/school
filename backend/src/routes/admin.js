@@ -810,6 +810,24 @@ router.post(
 );
 
 // ============================================
+// School/Tenant Info Routes (for Admin to view their school)
+// ============================================
+
+/**
+ * @route   GET /api/admin/school
+ * @desc    Get current admin's school/tenant details
+ * @access  Admin
+ */
+router.get('/school', adminController.getMySchool);
+
+/**
+ * @route   GET /api/admin/school/stats
+ * @desc    Get current admin's school statistics
+ * @access  Admin
+ */
+router.get('/school/stats', adminController.getMySchoolStats);
+
+// ============================================
 // Fee Management Routes
 // ============================================
 

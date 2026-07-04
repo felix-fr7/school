@@ -10,7 +10,9 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-const { PrismaClient } = require('@prisma/client');
+
+// Import database configuration
+const db = require('./config/db');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -27,11 +29,6 @@ const errorHandler = require('./middleware/errorHandler');
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Initialize Prisma Client
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-});
 
 // ============================================
 // Middleware Setup
@@ -112,7 +109,7 @@ app.use(errorHandler);
 async function startServer() {
   try {
     // Test database connection
-    await prisma.$connect();
+    await db.query('SELECT 1');
     console.log('✅ Connected to database successfully');
 
     // Seed Super Admin if not exists
@@ -141,11 +138,12 @@ async function seedSuperAdmin() {
     const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'superadmin@school.com';
     
     // Check if super admin exists
-    const existingSuperAdmin = await prisma.user.findUnique({
-      where: { email: superAdminEmail },
-    });
+    const existingResult = await db.query(
+      'SELECT id FROM "User" WHERE email = $1',
+      [superAdminEmail]
+    );
 
-    if (existingSuperAdmin) {
+    if (existingResult.rows.length > 0) {
       console.log('✅ Super Admin already exists');
       return;
     }
@@ -157,14 +155,11 @@ async function seedSuperAdmin() {
       saltRounds
     );
 
-    await prisma.user.create({
-      data: {
-        email: superAdminEmail,
-        password: hashedPassword,
-        name: process.env.SUPER_ADMIN_NAME || 'Super Admin',
-        role: 'SUPER_ADMIN',
-      },
-    });
+    await db.query(
+      `INSERT INTO "User" (email, password, name, role, "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+      [superAdminEmail, hashedPassword, process.env.SUPER_ADMIN_NAME || 'Super Admin', 'SUPER_ADMIN']
+    );
 
     console.log('✅ Super Admin seeded successfully');
     console.log(`   Email: ${superAdminEmail}`);
@@ -180,7 +175,7 @@ async function seedSuperAdmin() {
 const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Shutting down gracefully...`);
   try {
-    await prisma.$disconnect();
+    await db.close();
     console.log('✅ Database connection closed');
     process.exit(0);
   } catch (error) {
@@ -202,4 +197,4 @@ process.on('unhandledRejection', (reason, promise) => {
 startServer();
 
 // Export for testing
-module.exports = { app, prisma };
+module.exports = { app, db };

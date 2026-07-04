@@ -1,17 +1,15 @@
 /**
  * Tenant (School) Controller
- * Handles CRUD operations for schools/tenants
+ * Handles CRUD operations for schools/tenants using raw SQL queries
  */
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const db = require('../config/db');
 
 /**
  * Generate JWT token for user
- * @param {Object} user - User object containing id and email
+ * @param {Object} user - User object containing id, email, role, and tenantId
  * @returns {string} JWT token
  */
 const generateToken = (user) => {
@@ -19,6 +17,8 @@ const generateToken = (user) => {
     {
       id: user.id,
       email: user.email,
+      role: user.role,
+      tenantId: user.tenantId,
     },
     process.env.JWT_SECRET,
     {
@@ -36,48 +36,62 @@ const getAllTenants = async (req, res, next) => {
     const { 
       page = 1, 
       limit = 10, 
-      search, 
-      isActive 
+      search
     } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build where clause
-    const where = {};
+    // Build where clause dynamically
+    let whereClause = '1=1';
+    let params = [];
+    let paramIndex = 1;
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { code: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (isActive !== undefined) {
-      where.isActive = isActive === 'true';
+      params.push(`%${search}%`);
+      whereClause += ` AND (name ILIKE $${paramIndex} OR code ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`;
+      paramIndex++;
     }
 
     // Get total count
-    const total = await prisma.tenant.count({ where });
+    const countQuery = `SELECT COUNT(*) as total FROM "Tenant" WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    // Get tenants with stats
-    const tenants = await prisma.tenant.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        _count: {
-          select: {
-            users: true,
-            classes: true,
-            homeworks: true,
-            news: true,
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get tenants with stats using subqueries
+    const tenantsQuery = `
+      SELECT 
+        t.*,
+        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
+        (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenantId" = t.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "News" n WHERE n."tenantId" = t.id) as "newsCount"
+      FROM "Tenant" t
+      WHERE ${whereClause}
+      ORDER BY t."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    
+    const tenantsParams = [...params, take, skip];
+    const tenantsResult = await db.query(tenantsQuery, tenantsParams);
+
+    // Format the response to match the expected structure
+    const tenants = tenantsResult.rows.map(tenant => ({
+      id: tenant.id,
+      name: tenant.name,
+      code: tenant.code,
+      address: tenant.address,
+      phone: tenant.phone,
+      email: tenant.email,
+      createdAt: tenant.createdAt,
+      updatedAt: tenant.updatedAt,
+      _count: {
+        users: parseInt(tenant.userCount),
+        classes: parseInt(tenant.classCount),
+        homeworks: parseInt(tenant.homeworkCount),
+        news: parseInt(tenant.newsCount),
+      }
+    }));
 
     res.status(200).json({
       success: true,
@@ -104,31 +118,22 @@ const getTenantById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: {
-            users: true,
-            classes: true,
-            homeworks: true,
-            news: true,
-            circulars: true,
-          }
-        },
-        users: {
-          where: { role: 'ADMIN' },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            createdAt: true,
-          }
-        },
-      },
-    });
-
-    if (!tenant) {
+    // Get tenant with stats and admin users
+    const tenantQuery = `
+      SELECT 
+        t.*,
+        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
+        (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenantId" = t.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "News" n WHERE n."tenantId" = t.id) as "newsCount",
+        (SELECT COUNT(*) FROM "Circular" cir WHERE cir."tenantId" = t.id) as "circularCount"
+      FROM "Tenant" t
+      WHERE t.id = $1
+    `;
+    
+    const tenantResult = await db.query(tenantQuery, [id]);
+    
+    if (tenantResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -137,9 +142,29 @@ const getTenantById = async (req, res, next) => {
       });
     }
 
+    const tenant = tenantResult.rows[0];
+
+    // Get admin users for this tenant
+    const adminsQuery = `
+      SELECT id, email, name, "createdAt"
+      FROM "User"
+      WHERE "tenantId" = $1 AND role = 'ADMIN'
+    `;
+    const adminsResult = await db.query(adminsQuery, [id]);
+
     res.status(200).json({
       success: true,
-      data: tenant,
+      data: {
+        ...tenant,
+        _count: {
+          users: parseInt(tenant.userCount),
+          classes: parseInt(tenant.classCount),
+          homeworks: parseInt(tenant.homeworkCount),
+          news: parseInt(tenant.newsCount),
+          circulars: parseInt(tenant.circularCount),
+        },
+        users: adminsResult.rows,
+      },
     });
   } catch (error) {
     next(error);
@@ -164,11 +189,10 @@ const createTenant = async (req, res, next) => {
     } = req.body;
 
     // Check if code already exists
-    const existingCode = await prisma.tenant.findUnique({
-      where: { code },
-    });
+    const codeCheckQuery = 'SELECT id FROM "Tenant" WHERE code = $1';
+    const codeCheckResult = await db.query(codeCheckQuery, [code]);
 
-    if (existingCode) {
+    if (codeCheckResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: {
@@ -178,11 +202,13 @@ const createTenant = async (req, res, next) => {
     }
 
     // Check if admin email already exists
-    const existingAdmin = await prisma.user.findUnique({
-      where: { email: adminEmail },
-    });
+    // Note: adminEmail has been normalized (lowercased) by express-validator's normalizeEmail()
+    console.log(`CreateTenant: Checking if admin email exists: "${adminEmail}"`);
+    const emailCheckQuery = 'SELECT id FROM "User" WHERE email = $1';
+    const emailCheckResult = await db.query(emailCheckQuery, [adminEmail]);
 
-    if (existingAdmin) {
+    if (emailCheckResult.rows.length > 0) {
+      console.log(`CreateTenant: Admin email already exists: "${adminEmail}"`);
       return res.status(409).json({
         success: false,
         error: {
@@ -194,40 +220,73 @@ const createTenant = async (req, res, next) => {
     // Hash admin password
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
+    console.log(`CreateTenant: Password hashed successfully. Hash starts with: ${hashedPassword.substring(0, 20)}...`);
 
     // Create tenant and admin in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create tenant
-      const tenant = await tx.tenant.create({
-        data: {
+    console.log('CreateTenant: Starting database transaction');
+    const result = await db.transaction(async (query) => {
+      try {
+        console.log('CreateTenant: Transaction BEGIN executed');
+        
+        // Create tenant
+        console.log('CreateTenant: Inserting tenant with data:', {
           name,
           code,
           address,
           phone,
-          email,
-        },
-      });
+          email
+        });
+        const tenantQuery = `
+          INSERT INTO "Tenant" (name, code, address, phone, email, "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+          RETURNING *
+        `;
+        const tenantParams = [name, code, address, phone, email];
+        console.log('CreateTenant: Executing tenant INSERT query with params:', tenantParams);
+        const tenantResult = await query(tenantQuery, tenantParams);
+        console.log('CreateTenant: Tenant INSERT result:', {
+          rowCount: tenantResult.rowCount,
+          rows: tenantResult.rows,
+          fields: tenantResult.fields
+        });
+        const tenant = tenantResult.rows[0];
+        console.log('CreateTenant: Tenant created successfully with id:', tenant.id);
 
-      // Create admin user
-      const admin = await tx.user.create({
-        data: {
-          email: adminEmail,
-          password: hashedPassword,
-          name: adminName,
-          role: 'ADMIN',
-          tenantId: tenant.id,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          tenantId: true,
-          createdAt: true,
-        },
-      });
+        // Create admin user
+        console.log(`CreateTenant: Creating admin user with email="${adminEmail}", name="${adminName}", tenantId="${tenant.id}"`);
+        const adminQuery = `
+          INSERT INTO "User" (email, password, name, role, "tenantId", "createdAt", "updatedAt")
+          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+          RETURNING id, email, name, role, "tenantId", "createdAt"
+        `;
+        const adminParams = [adminEmail, hashedPassword, adminName, 'ADMIN', tenant.id];
+        console.log('CreateTenant: Executing admin INSERT query with params:', adminParams);
+        const adminResult = await query(adminQuery, adminParams);
+        console.log('CreateTenant: Admin INSERT result:', {
+          rowCount: adminResult.rowCount,
+          rows: adminResult.rows,
+          fields: adminResult.fields
+        });
+        const admin = adminResult.rows[0];
+        console.log(`CreateTenant: Admin user created successfully with id="${admin.id}", email="${admin.email}"`);
 
-      return { tenant, admin };
+        console.log('CreateTenant: Transaction about to COMMIT');
+        return { tenant, admin };
+      } catch (transactionError) {
+        console.error('CreateTenant: ERROR inside transaction:', {
+          message: transactionError.message,
+          code: transactionError.code,
+          detail: transactionError.detail,
+          constraint: transactionError.constraint,
+          stack: transactionError.stack
+        });
+        throw transactionError; // Re-throw to trigger ROLLBACK
+      }
+    });
+    console.log('CreateTenant: Transaction COMMIT successful, result:', {
+      tenantId: result.tenant.id,
+      adminId: result.admin.id,
+      adminEmail: result.admin.email
     });
 
     // Generate token for admin
@@ -256,14 +315,13 @@ const createTenant = async (req, res, next) => {
 const updateTenant = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, address, phone, email, isActive } = req.body;
+    const { name, address, phone, email } = req.body;
 
     // Check if tenant exists
-    const existingTenant = await prisma.tenant.findUnique({
-      where: { id },
-    });
+    const checkQuery = 'SELECT * FROM "Tenant" WHERE id = $1';
+    const checkResult = await db.query(checkQuery, [id]);
 
-    if (!existingTenant) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -272,13 +330,53 @@ const updateTenant = async (req, res, next) => {
       });
     }
 
-    // Check if code is being changed and if it's unique
-    if (req.body.code && req.body.code !== existingTenant.code) {
-      const codeExists = await prisma.tenant.findUnique({
-        where: { code: req.body.code },
-      });
+    const existingTenant = checkResult.rows[0];
 
-      if (codeExists) {
+    // Build update fields dynamically
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
+
+    // Trim and validate name if provided
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'School name cannot be empty',
+          },
+        });
+      }
+      if (trimmedName.length > 200) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'School name must be less than 200 characters',
+          },
+        });
+      }
+      updateFields.push(`name = $${paramIndex}`);
+      updateParams.push(trimmedName);
+      paramIndex++;
+    }
+
+    // Check if code is being changed and if it's unique
+    if (req.body.code !== undefined && req.body.code !== existingTenant.code) {
+      const trimmedCode = req.body.code.trim();
+      if (!trimmedCode) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'School code cannot be empty',
+          },
+        });
+      }
+      
+      const codeCheckQuery = 'SELECT id FROM "Tenant" WHERE code = $1 AND id != $2';
+      const codeCheckResult = await db.query(codeCheckQuery, [trimmedCode, id]);
+      
+      if (codeCheckResult.rows.length > 0) {
         return res.status(409).json({
           success: false,
           error: {
@@ -286,20 +384,65 @@ const updateTenant = async (req, res, next) => {
           },
         });
       }
+      
+      updateFields.push(`code = $${paramIndex}`);
+      updateParams.push(trimmedCode);
+      paramIndex++;
     }
 
-    // Update tenant
-    const tenant = await prisma.tenant.update({
-      where: { id },
-      data: {
-        name,
-        code: req.body.code,
-        address,
-        phone,
-        email,
-        isActive,
-      },
-    });
+    // Trim and validate address if provided
+    if (address !== undefined) {
+      updateFields.push(`address = $${paramIndex}`);
+      updateParams.push(address.trim() || null);
+      paramIndex++;
+    }
+
+    // Trim and validate phone if provided
+    if (phone !== undefined) {
+      updateFields.push(`phone = $${paramIndex}`);
+      updateParams.push(phone.trim() || null);
+      paramIndex++;
+    }
+
+    // Trim and validate email if provided
+    if (email !== undefined) {
+      const trimmedEmail = email.trim();
+      if (trimmedEmail && !trimmedEmail.includes('@')) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            message: 'Please provide a valid email address',
+          },
+        });
+      }
+      updateFields.push(`email = $${paramIndex}`);
+      updateParams.push(trimmedEmail || null);
+      paramIndex++;
+    }
+
+    // If no fields to update, return existing tenant
+    if (updateFields.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: existingTenant,
+        message: 'No changes to update',
+      });
+    }
+
+    // Add id parameter and updated_at
+    updateFields.push(`"updatedAt" = NOW()`);
+    updateParams.push(id);
+
+    // Execute update
+    const updateQuery = `
+      UPDATE "Tenant"
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const updateResult = await db.query(updateQuery, updateParams);
+    const tenant = updateResult.rows[0];
 
     res.status(200).json({
       success: true,
@@ -307,24 +450,42 @@ const updateTenant = async (req, res, next) => {
       message: 'School updated successfully',
     });
   } catch (error) {
+    console.error('UpdateTenant Error:', error);
     next(error);
   }
 };
 
 /**
- * Delete a tenant (soft delete by setting isActive = false)
+ * Delete a tenant (hard delete with cascade)
  * DELETE /api/tenants/:id
+ * 
+ * This performs a hard delete of the tenant and all associated data.
+ * Cascade delete relationships should be configured in Supabase SQL Editor.
  */
 const deleteTenant = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Check if tenant exists
-    const existingTenant = await prisma.tenant.findUnique({
-      where: { id },
-    });
+    // Check if tenant exists and get stats
+    const checkQuery = `
+      SELECT 
+        t.*,
+        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
+        (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenantId" = t.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "Mark" m WHERE m."tenantId" = t.id) as "markCount",
+        (SELECT COUNT(*) FROM "News" n WHERE n."tenantId" = t.id) as "newsCount",
+        (SELECT COUNT(*) FROM "Circular" cir WHERE cir."tenantId" = t.id) as "circularCount",
+        (SELECT COUNT(*) FROM "ExamSchedule" es WHERE es."tenantId" = t.id) as "examScheduleCount",
+        (SELECT COUNT(*) FROM "Attendance" a WHERE a."tenantId" = t.id) as "attendanceCount",
+        (SELECT COUNT(*) FROM "Fee" f WHERE f."tenantId" = t.id) as "feeCount"
+      FROM "Tenant" t
+      WHERE t.id = $1
+    `;
+    
+    const checkResult = await db.query(checkQuery, [id]);
 
-    if (!existingTenant) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -333,17 +494,50 @@ const deleteTenant = async (req, res, next) => {
       });
     }
 
-    // Soft delete by setting isActive = false
-    await prisma.tenant.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    const existingTenant = checkResult.rows[0];
+
+    // Gather dependency info for the response
+    const dependencyInfo = {
+      userCount: parseInt(existingTenant.userCount),
+      classCount: parseInt(existingTenant.classCount),
+      homeworkCount: parseInt(existingTenant.homeworkCount),
+      markCount: parseInt(existingTenant.markCount),
+      newsCount: parseInt(existingTenant.newsCount),
+      circularCount: parseInt(existingTenant.circularCount),
+      examScheduleCount: parseInt(existingTenant.examScheduleCount),
+      attendanceCount: parseInt(existingTenant.attendanceCount),
+      feeCount: parseInt(existingTenant.feeCount),
+    };
+
+    // Delete the tenant - cascade will handle all related records
+    // (Assuming cascade constraints are set up in Supabase)
+    const deleteQuery = 'DELETE FROM "Tenant" WHERE id = $1';
+    await db.query(deleteQuery, [id]);
 
     res.status(200).json({
       success: true,
-      message: 'School deactivated successfully',
+      message: 'School and all associated data deleted successfully',
+      data: {
+        deletedTenantId: id,
+        tenantName: existingTenant.name,
+        tenantCode: existingTenant.code,
+        dependenciesHandled: dependencyInfo,
+      },
     });
   } catch (error) {
+    console.error('DeleteTenant Error:', error);
+    
+    // Handle foreign key constraint errors
+    if (error.code === '23503') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Cannot delete school: It has related records. Please remove dependencies first.',
+          code: 'FOREIGN_KEY_CONSTRAINT',
+        },
+      });
+    }
+
     next(error);
   }
 };
@@ -357,11 +551,10 @@ const getTenantStats = async (req, res, next) => {
     const { id } = req.params;
 
     // Check if tenant exists
-    const tenant = await prisma.tenant.findUnique({
-      where: { id },
-    });
+    const checkQuery = 'SELECT id, name, code FROM "Tenant" WHERE id = $1';
+    const checkResult = await db.query(checkQuery, [id]);
 
-    if (!tenant) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -370,26 +563,23 @@ const getTenantStats = async (req, res, next) => {
       });
     }
 
-    // Get counts
-    const [
-      totalStudents,
-      totalAdmins,
-      totalClasses,
-      totalHomeworks,
-      totalMarks,
-      totalNews,
-      totalCirculars,
-      totalExamSchedules,
-    ] = await Promise.all([
-      prisma.user.count({ where: { tenantId: id, role: 'STUDENT' } }),
-      prisma.user.count({ where: { tenantId: id, role: 'ADMIN' } }),
-      prisma.class.count({ where: { tenantId: id } }),
-      prisma.homework.count({ where: { tenantId: id } }),
-      prisma.mark.count({ where: { tenantId: id } }),
-      prisma.news.count({ where: { tenantId: id } }),
-      prisma.circular.count({ where: { tenantId: id } }),
-      prisma.examSchedule.count({ where: { tenantId: id } }),
-    ]);
+    const tenant = checkResult.rows[0];
+
+    // Get counts using a single query with multiple subqueries
+    const statsQuery = `
+      SELECT 
+        (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'STUDENT') as "totalStudents",
+        (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'ADMIN') as "totalAdmins",
+        (SELECT COUNT(*) FROM "Class" WHERE "tenantId" = $1) as "totalClasses",
+        (SELECT COUNT(*) FROM "Homework" WHERE "tenantId" = $1) as "totalHomeworks",
+        (SELECT COUNT(*) FROM "Mark" WHERE "tenantId" = $1) as "totalMarks",
+        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $1) as "totalNews",
+        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $1) as "totalCirculars",
+        (SELECT COUNT(*) FROM "ExamSchedule" WHERE "tenantId" = $1) as "totalExamSchedules"
+    `;
+
+    const statsResult = await db.query(statsQuery, [id]);
+    const stats = statsResult.rows[0];
 
     res.status(200).json({
       success: true,
@@ -400,14 +590,14 @@ const getTenantStats = async (req, res, next) => {
           code: tenant.code,
         },
         stats: {
-          totalStudents,
-          totalAdmins,
-          totalClasses,
-          totalHomeworks,
-          totalMarks,
-          totalNews,
-          totalCirculars,
-          totalExamSchedules,
+          totalStudents: parseInt(stats.totalStudents),
+          totalAdmins: parseInt(stats.totalAdmins),
+          totalClasses: parseInt(stats.totalClasses),
+          totalHomeworks: parseInt(stats.totalHomeworks),
+          totalMarks: parseInt(stats.totalMarks),
+          totalNews: parseInt(stats.totalNews),
+          totalCirculars: parseInt(stats.totalCirculars),
+          totalExamSchedules: parseInt(stats.totalExamSchedules),
         },
       },
     });

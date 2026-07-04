@@ -3,49 +3,56 @@
  * Handles CRUD operations for posts
  */
 
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const db = require('../config/db');
 
 /**
  * Get all posts with optional filtering and pagination
  * GET /api/posts
- * Query parameters: page, limit, search
  */
 const getAllPosts = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, search } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Build where clause for search
-    const where = search
-      ? {
-          OR: [
-            { title: { contains: search, mode: 'insensitive' } },
-            { content: { contains: search, mode: 'insensitive' } },
-          ],
-        }
-      : {};
+    // Build where clause
+    let whereClause = '1=1';
+    let params = [];
+    let paramIndex = 1;
 
-    // Get total count for pagination
-    const total = await prisma.post.count({ where });
+    if (search) {
+      params.push(`%${search}%`, `%${search}%`);
+      whereClause += ` AND (p.title ILIKE $${paramIndex} OR p.content ILIKE $${paramIndex})`;
+      paramIndex++;
+    }
 
-    // Get posts with user information
-    const posts = await prisma.post.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: parseInt(limit),
-    });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "Post" p WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get posts
+    const postsQuery = `
+      SELECT 
+        p.*,
+        u.id as "userId", u.name as "userName", u.email as "userEmail"
+      FROM "Post" p
+      LEFT JOIN "User" u ON p."userId" = u.id
+      WHERE ${whereClause}
+      ORDER BY p."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const postsParams = [...params, parseInt(limit), skip];
+    const postsResult = await db.query(postsQuery, postsParams);
+
+    const posts = postsResult.rows.map(post => ({
+      ...post,
+      user: post.userId ? {
+        id: post.userId,
+        name: post.userName,
+        email: post.userEmail,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -72,20 +79,18 @@ const getPostById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const post = await prisma.post.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const postQuery = `
+      SELECT 
+        p.*,
+        u.id as "userId", u.name as "userName", u.email as "userEmail"
+      FROM "Post" p
+      LEFT JOIN "User" u ON p."userId" = u.id
+      WHERE p.id = $1
+    `;
 
-    if (!post) {
+    const postResult = await db.query(postQuery, [id]);
+
+    if (postResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -94,9 +99,18 @@ const getPostById = async (req, res, next) => {
       });
     }
 
+    const post = postResult.rows[0];
+
     res.status(200).json({
       success: true,
-      data: post,
+      data: {
+        ...post,
+        user: post.userId ? {
+          id: post.userId,
+          name: post.userName,
+          email: post.userEmail,
+        } : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -106,32 +120,31 @@ const getPostById = async (req, res, next) => {
 /**
  * Get posts by current user
  * GET /api/posts/my-posts
- * Protected route - requires valid JWT
  */
 const getMyPosts = async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    const where = {
-      userId: req.user.id,
-    };
-
     // Get total count
-    const total = await prisma.post.count({ where });
+    const countQuery = `SELECT COUNT(*) as total FROM "Post" WHERE "userId" = $1`;
+    const countResult = await db.query(countQuery, [req.user.id]);
+    const total = parseInt(countResult.rows[0].total);
 
     // Get posts
-    const posts = await prisma.post.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: parseInt(limit),
-    });
+    const postsQuery = `
+      SELECT * FROM "Post"
+      WHERE "userId" = $1
+      ORDER BY "createdAt" DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const postsResult = await db.query(postsQuery, [req.user.id, parseInt(limit), skip]);
 
     res.status(200).json({
       success: true,
       data: {
-        posts,
+        posts: postsResult.rows,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -148,29 +161,20 @@ const getMyPosts = async (req, res, next) => {
 /**
  * Create new post
  * POST /api/posts
- * Protected route - requires valid JWT
  */
 const createPost = async (req, res, next) => {
   try {
     const { title, content } = req.body;
     const userId = req.user.id;
 
-    const post = await prisma.post.create({
-      data: {
-        title,
-        content,
-        userId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const createQuery = `
+      INSERT INTO "Post" (title, content, "userId", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const createResult = await db.query(createQuery, [title, content, userId]);
+    const post = createResult.rows[0];
 
     res.status(201).json({
       success: true,
@@ -185,8 +189,6 @@ const createPost = async (req, res, next) => {
 /**
  * Update post
  * PUT /api/posts/:id
- * Protected route - requires valid JWT
- * Only the post owner can update
  */
 const updatePost = async (req, res, next) => {
   try {
@@ -195,11 +197,10 @@ const updatePost = async (req, res, next) => {
     const userId = req.user.id;
 
     // Check if post exists and user is the owner
-    const existingPost = await prisma.post.findUnique({
-      where: { id },
-    });
+    const checkQuery = `SELECT * FROM "Post" WHERE id = $1`;
+    const checkResult = await db.query(checkQuery, [id]);
 
-    if (!existingPost) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -208,7 +209,7 @@ const updatePost = async (req, res, next) => {
       });
     }
 
-    if (existingPost.userId !== userId) {
+    if (checkResult.rows[0].userId !== userId) {
       return res.status(403).json({
         success: false,
         error: {
@@ -218,26 +219,18 @@ const updatePost = async (req, res, next) => {
     }
 
     // Update post
-    const post = await prisma.post.update({
-      where: { id },
-      data: {
-        title,
-        content,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const updateQuery = `
+      UPDATE "Post"
+      SET title = $1, content = $2, "updatedAt" = NOW()
+      WHERE id = $3
+      RETURNING *
+    `;
+
+    const updateResult = await db.query(updateQuery, [title, content, id]);
 
     res.status(200).json({
       success: true,
-      data: post,
+      data: updateResult.rows[0],
       message: 'Post updated successfully',
     });
   } catch (error) {
@@ -248,8 +241,6 @@ const updatePost = async (req, res, next) => {
 /**
  * Delete post
  * DELETE /api/posts/:id
- * Protected route - requires valid JWT
- * Only the post owner can delete
  */
 const deletePost = async (req, res, next) => {
   try {
@@ -257,11 +248,10 @@ const deletePost = async (req, res, next) => {
     const userId = req.user.id;
 
     // Check if post exists and user is the owner
-    const existingPost = await prisma.post.findUnique({
-      where: { id },
-    });
+    const checkQuery = `SELECT * FROM "Post" WHERE id = $1`;
+    const checkResult = await db.query(checkQuery, [id]);
 
-    if (!existingPost) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -270,7 +260,7 @@ const deletePost = async (req, res, next) => {
       });
     }
 
-    if (existingPost.userId !== userId) {
+    if (checkResult.rows[0].userId !== userId) {
       return res.status(403).json({
         success: false,
         error: {
@@ -280,9 +270,7 @@ const deletePost = async (req, res, next) => {
     }
 
     // Delete post
-    await prisma.post.delete({
-      where: { id },
-    });
+    await db.query('DELETE FROM "Post" WHERE id = $1', [id]);
 
     res.status(200).json({
       success: true,

@@ -4,9 +4,7 @@
  */
 
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const db = require('../config/db');
 
 /**
  * Protect routes - verify JWT token
@@ -42,12 +40,35 @@ const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Fetch full user from database to get role and tenant info
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      include: { tenant: true, class: true },
-    });
+    // Note: Using aliases for joined table columns to avoid overwriting User table columns
+    const userQuery = `
+      SELECT 
+        u.id,
+        u.email,
+        u.password,
+        u.name,
+        u.phone,
+        u.role,
+        u."tenantId",
+        u."classId",
+        u."studentId",
+        u."createdAt",
+        u."updatedAt",
+        t.id as "tenant_table_id",
+        t.name as "tenantName",
+        t.code as "tenantCode",
+        c.id as "class_table_id",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "User" u
+      LEFT JOIN "Tenant" t ON u."tenantId" = t.id
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      WHERE u.id = $1
+    `;
 
-    if (!user) {
+    const userResult = await db.query(userQuery, [decoded.id]);
+
+    if (userResult.rows.length === 0) {
       return res.status(401).json({
         success: false,
         error: {
@@ -56,8 +77,28 @@ const protect = async (req, res, next) => {
       });
     }
 
+    const user = userResult.rows[0];
+
     // Attach user to request (exclude password)
     const { password, ...userWithoutPassword } = user;
+    
+    // Add tenant and class objects if they exist
+    // Use the User table's tenantId (not the joined table's id which could be NULL)
+    if (user.tenantId) {
+      userWithoutPassword.tenant = {
+        id: user.tenantId,
+        name: user.tenantName,
+        code: user.tenantCode,
+      };
+    }
+    if (user.classId) {
+      userWithoutPassword.class = {
+        id: user.classId,
+        name: user.className,
+        section: user.classSection,
+      };
+    }
+    
     req.user = userWithoutPassword;
 
     next();
@@ -96,13 +137,53 @@ const optionalAuth = async (req, res, next) => {
       const token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        include: { tenant: true, class: true },
-      });
+      // Fixed: Using explicit column list with aliases to avoid column name collision
+      const userQuery = `
+        SELECT 
+          u.id,
+          u.email,
+          u.password,
+          u.name,
+          u.phone,
+          u.role,
+          u."tenantId",
+          u."classId",
+          u."studentId",
+          u."createdAt",
+          u."updatedAt",
+          t.id as "tenant_table_id",
+          t.name as "tenantName",
+          t.code as "tenantCode",
+          c.id as "class_table_id",
+          c.name as "className",
+          c.section as "classSection"
+        FROM "User" u
+        LEFT JOIN "Tenant" t ON u."tenantId" = t.id
+        LEFT JOIN "Class" c ON u."classId" = c.id
+        WHERE u.id = $1
+      `;
+      
+      const userResult = await db.query(userQuery, [decoded.id]);
 
-      if (user) {
+      if (userResult.rows.length > 0) {
+        const user = userResult.rows[0];
         const { password, ...userWithoutPassword } = user;
+        
+        if (user.tenantId) {
+          userWithoutPassword.tenant = {
+            id: user.tenantId,
+            name: user.tenantName,
+            code: user.tenantCode,
+          };
+        }
+        if (user.classId) {
+          userWithoutPassword.class = {
+            id: user.classId,
+            name: user.className,
+            section: user.classSection,
+          };
+        }
+        
         req.user = userWithoutPassword;
       }
     }

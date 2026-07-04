@@ -5,9 +5,7 @@
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const db = require('../config/db');
 
 /**
  * Generate JWT token for user
@@ -19,11 +17,11 @@ const generateToken = async (user) => {
   // For teachers, check if they are assigned to a class
   let classId = null;
   if (user.role === 'TEACHER') {
-    const classAssignment = await prisma.class.findFirst({
-      where: { teacherId: user.id },
-      select: { id: true },
-    });
-    classId = classAssignment?.id || null;
+    const classQuery = `
+      SELECT id FROM "Class" WHERE "teacherId" = $1 LIMIT 1
+    `;
+    const classResult = await db.query(classQuery, [user.id]);
+    classId = classResult.rows.length > 0 ? classResult.rows[0].id : null;
   }
 
   return jwt.sign(
@@ -50,11 +48,10 @@ const register = async (req, res, next) => {
     const { email, password, name } = req.body;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingQuery = 'SELECT id FROM "User" WHERE email = $1';
+    const existingResult = await db.query(existingQuery, [email]);
 
-    if (existingUser) {
+    if (existingResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: {
@@ -68,24 +65,21 @@ const register = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-      },
-    });
+    const createQuery = `
+      INSERT INTO "User" (email, password, name, "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, NOW(), NOW())
+      RETURNING id, email, name, role, "tenantId", "createdAt"
+    `;
+    const createResult = await db.query(createQuery, [email, hashedPassword, name]);
+    const user = createResult.rows[0];
 
     // Generate token
     const token = await generateToken(user);
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
-
     res.status(201).json({
       success: true,
       data: {
-        user: userWithoutPassword,
+        user,
         token,
       },
       message: 'User registered successfully',
@@ -135,17 +129,18 @@ const login = async (req, res, next) => {
     }
 
     // Universal lookup: search by email or studentId using OR condition
-    // This ensures all user roles (Admin, Teacher, Student) can log in with any identifier
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: loginIdentifier },
-          { studentId: loginIdentifier },
-        ],
-      },
-    });
+    // IMPORTANT: Lowercase the email for case-insensitive matching
+    // This ensures login works regardless of email case used during registration
+    const normalizedIdentifier = loginIdentifier.toLowerCase();
+    const userQuery = `
+      SELECT * FROM "User"
+      WHERE LOWER(email) = $1 OR "studentId" = $1
+      LIMIT 1
+    `;
+    const userResult = await db.query(userQuery, [normalizedIdentifier]);
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
+      console.log(`Login failed: No user found with identifier "${loginIdentifier}" (normalized: "${normalizedIdentifier}")`);
       return res.status(401).json({
         success: false,
         error: {
@@ -154,9 +149,22 @@ const login = async (req, res, next) => {
       });
     }
 
+    const user = userResult.rows[0];
+
     // Check password with detailed debugging
     console.log(`Password verification for user ${user.email} (ID: ${user.id})`);
     console.log(`Password hash in DB starts with: ${user.password.substring(0, 20)}...`);
+    console.log(`Full stored hash: ${user.password}`);
+    console.log(`Incoming password: "${password}"`);
+    console.log(`Incoming password length: ${password ? password.length : 0}`);
+    console.log(`Incoming password type: ${typeof password}`);
+    console.log(`Stored hash type: ${typeof user.password}`);
+    console.log(`Stored hash length: ${user.password.length}`);
+    
+    // Generate a test hash to verify bcrypt is working
+    const testHash = await bcrypt.hash(password, 10);
+    console.log(`Test hash of incoming password: ${testHash}`);
+    console.log(`Does test hash start same as stored? ${testHash.startsWith(user.password.substring(0, 7))}`);
     
     const isPasswordValid = await bcrypt.compare(password, user.password);
     console.log(`Password match result: ${isPasswordValid}`);
@@ -179,7 +187,7 @@ const login = async (req, res, next) => {
     const token = await generateToken(user);
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: userPassword, ...userWithoutPassword } = user;
 
     res.status(200).json({
       success: true,
@@ -202,17 +210,12 @@ const login = async (req, res, next) => {
 const getMe = async (req, res, next) => {
   try {
     // User is attached to request by protect middleware
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      include: {
-        posts: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-      },
-    });
+    const userQuery = `
+      SELECT * FROM "User" WHERE id = $1
+    `;
+    const userResult = await db.query(userQuery, [req.user.id]);
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -221,12 +224,26 @@ const getMe = async (req, res, next) => {
       });
     }
 
+    const user = userResult.rows[0];
+
+    // Get user's posts
+    const postsQuery = `
+      SELECT * FROM "Post"
+      WHERE "userId" = $1
+      ORDER BY "createdAt" DESC
+      LIMIT 10
+    `;
+    const postsResult = await db.query(postsQuery, [req.user.id]);
+
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user;
 
     res.status(200).json({
       success: true,
-      data: userWithoutPassword,
+      data: {
+        ...userWithoutPassword,
+        posts: postsResult.rows,
+      },
     });
   } catch (error) {
     next(error);
@@ -242,17 +259,28 @@ const updateProfile = async (req, res, next) => {
   try {
     const { name } = req.body;
 
-    const user = await prisma.user.update({
-      where: { id: req.user.id },
-      data: { name },
-    });
+    const updateQuery = `
+      UPDATE "User"
+      SET name = $1, "updatedAt" = NOW()
+      WHERE id = $2
+      RETURNING id, email, name, role, "tenantId", "createdAt", "updatedAt"
+    `;
+    const updateResult = await db.query(updateQuery, [name, req.user.id]);
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'User not found',
+        },
+      });
+    }
+
+    const user = updateResult.rows[0];
 
     res.status(200).json({
       success: true,
-      data: userWithoutPassword,
+      data: user,
       message: 'Profile updated successfully',
     });
   } catch (error) {
@@ -270,11 +298,10 @@ const updatePassword = async (req, res, next) => {
     const { currentPassword, newPassword } = req.body;
 
     // Get user with password
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-    });
+    const userQuery = 'SELECT password FROM "User" WHERE id = $1';
+    const userResult = await db.query(userQuery, [req.user.id]);
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -282,6 +309,8 @@ const updatePassword = async (req, res, next) => {
         },
       });
     }
+
+    const user = userResult.rows[0];
 
     // Verify current password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
@@ -300,10 +329,12 @@ const updatePassword = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     // Update password
-    await prisma.user.update({
-      where: { id: req.user.id },
-      data: { password: hashedPassword },
-    });
+    const updateQuery = `
+      UPDATE "User"
+      SET password = $1, "updatedAt" = NOW()
+      WHERE id = $2
+    `;
+    await db.query(updateQuery, [hashedPassword, req.user.id]);
 
     res.status(200).json({
       success: true,

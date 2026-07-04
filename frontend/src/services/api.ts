@@ -210,9 +210,9 @@ export const postsAPI = {
 // ============================================
 
 export const tenantsAPI = {
-  async getAllTenants(page = 1, limit = 10, search = '', isActive = true): Promise<ApiResponse<{ tenants: Tenant[]; pagination: any }>> {
+  async getAllTenants(page = 1, limit = 10, search = ''): Promise<ApiResponse<{ tenants: Tenant[]; pagination: any }>> {
     const response = await api.get<ApiResponse<{ tenants: Tenant[]; pagination: any }>>('/tenants', {
-      params: { page, limit, search, isActive },
+      params: { page, limit, search },
     });
     return response.data;
   },

@@ -39,7 +39,6 @@ export interface Tenant {
   address?: string;
   phone?: string;
   email?: string;
-  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }

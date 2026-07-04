@@ -3,9 +3,7 @@
  * Handles all student-specific operations
  */
 
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const db = require('../config/db');
 
 /**
  * Get student dashboard statistics
@@ -17,79 +15,68 @@ const getDashboardStats = async (req, res, next) => {
     const tenantId = req.user.tenantId;
     const classId = req.user.classId;
 
-    // Get counts for various items
-    const [
-      totalHomework,
-      totalMarks,
-      totalNews,
-      totalCirculars,
-      upcomingExams,
-    ] = await Promise.all([
-      classId 
-        ? prisma.homework.count({ where: { classId, isPublished: true } })
-        : 0,
-      prisma.mark.count({ where: { studentId, isPublished: true } }),
-      prisma.news.count({ where: { tenantId, isPublished: true } }),
-      prisma.circular.count({ where: { tenantId, isPublished: true } }),
-      classId
-        ? prisma.examSchedule.count({ 
-            where: { 
-              classId, 
-              isPublished: true,
-              date: { gte: new Date() }
-            } 
-          })
-        : 0,
-    ]);
+    // Get counts using subqueries
+    const statsQuery = `
+      SELECT 
+        (SELECT COUNT(*) FROM "Homework" WHERE "classId" = $1 AND "isPublished" = true) as "totalHomework",
+        (SELECT COUNT(*) FROM "Mark" WHERE "studentId" = $2 AND "isPublished" = true) as "totalMarks",
+        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $3 AND "isPublished" = true) as "totalNews",
+        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $4 AND "isPublished" = true) as "totalCirculars",
+        (SELECT COUNT(*) FROM "ExamSchedule" WHERE "classId" = $5 AND "isPublished" = true AND date >= NOW()) as "upcomingExams"
+    `;
+
+    const statsResult = await db.query(statsQuery, [classId, studentId, tenantId, tenantId, classId]);
+    const stats = statsResult.rows[0];
 
     // Get recent homework
-    const recentHomework = classId
-      ? await prisma.homework.findMany({
-          where: { classId, isPublished: true },
-          orderBy: { createdAt: 'desc' },
-          take: 3,
-          include: {
-            class: {
-              select: { name: true, section: true }
-            }
-          }
-        })
-      : [];
+    let recentHomework = [];
+    if (classId) {
+      const homeworkQuery = `
+        SELECT h.*, c.name as "className", c.section as "classSection"
+        FROM "Homework" h
+        LEFT JOIN "Class" c ON h."classId" = c.id
+        WHERE h."classId" = $1 AND h."isPublished" = true
+        ORDER BY h."createdAt" DESC
+        LIMIT 3
+      `;
+      const homeworkResult = await db.query(homeworkQuery, [classId]);
+      recentHomework = homeworkResult.rows;
+    }
 
     // Get recent news
-    const recentNews = await prisma.news.findMany({
-      where: { tenantId, isPublished: true },
-      orderBy: { createdAt: 'desc' },
-      take: 3,
-    });
+    const newsQuery = `
+      SELECT * FROM "News"
+      WHERE "tenantId" = $1 AND "isPublished" = true
+      ORDER BY "createdAt" DESC
+      LIMIT 3
+    `;
+    const newsResult = await db.query(newsQuery, [tenantId]);
+    const recentNews = newsResult.rows;
 
     // Get upcoming exams
-    const upcomingExamList = classId
-      ? await prisma.examSchedule.findMany({
-          where: { 
-            classId, 
-            isPublished: true,
-            date: { gte: new Date() }
-          },
-          orderBy: { date: 'asc' },
-          take: 3,
-          include: {
-            class: {
-              select: { name: true, section: true }
-            }
-          }
-        })
-      : [];
+    let upcomingExamList = [];
+    if (classId) {
+      const examsQuery = `
+        SELECT es.*, c.name as "className", c.section as "classSection"
+        FROM "ExamSchedule" es
+        LEFT JOIN "Class" c ON es."classId" = c.id
+        WHERE es."classId" = $1 AND es."isPublished" = true AND es.date >= NOW()
+        ORDER BY es.date ASC
+        LIMIT 3
+      `;
+      const examsResult = await db.query(examsQuery, [classId]);
+      upcomingExamList = examsResult.rows;
+    }
 
     res.status(200).json({
       success: true,
       data: {
         stats: {
-          totalHomework,
-          totalMarks,
-          totalNews,
-          totalCirculars,
-          upcomingExams,
+          totalHomework: parseInt(stats.totalHomework),
+          totalMarks: parseInt(stats.totalMarks),
+          totalNews: parseInt(stats.totalNews),
+          totalCirculars: parseInt(stats.totalCirculars),
+          upcomingExams: parseInt(stats.upcomingExams),
         },
         recentHomework,
         recentNews,
@@ -122,35 +109,51 @@ const getHomework = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { classId, isPublished: true };
+    // Build where clause
+    let whereClause = 'h."classId" = $1 AND h."isPublished" = true';
+    let params = [classId];
+    let paramIndex = 2;
 
     if (subject) {
-      where.subject = subject;
+      params.push(subject);
+      whereClause += ` AND h.subject = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.homework.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "Homework" h WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const homeworks = await prisma.homework.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            section: true,
-          }
-        },
-        assignedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
+    // Get homework
+    const homeworkQuery = `
+      SELECT 
+        h.*,
+        c.id as "classId", c.name as "className", c.section as "classSection",
+        u.id as "assignedById", u.name as "assignedByName"
+      FROM "Homework" h
+      LEFT JOIN "Class" c ON h."classId" = c.id
+      LEFT JOIN "User" u ON h."assignedBy" = u.id
+      WHERE ${whereClause}
+      ORDER BY h."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const homeworkParams = [...params, take, skip];
+    const homeworkResult = await db.query(homeworkQuery, homeworkParams);
+
+    const homeworks = homeworkResult.rows.map(hw => ({
+      ...hw,
+      class: {
+        id: hw.classId,
+        name: hw.className,
+        section: hw.classSection,
       },
-      orderBy: { createdAt: 'desc' },
-    });
+      assignedByUser: hw.assignedById ? {
+        id: hw.assignedById,
+        name: hw.assignedByName,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -178,20 +181,20 @@ const getHomeworkById = async (req, res, next) => {
     const { id } = req.params;
     const classId = req.user.classId;
 
-    const homework = await prisma.homework.findFirst({
-      where: { id, classId, isPublished: true },
-      include: {
-        class: true,
-        assignedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-    });
+    const homeworkQuery = `
+      SELECT 
+        h.*,
+        c.id as "classId", c.name as "className", c.section as "classSection",
+        u.id as "assignedById", u.name as "assignedByName"
+      FROM "Homework" h
+      LEFT JOIN "Class" c ON h."classId" = c.id
+      LEFT JOIN "User" u ON h."assignedBy" = u.id
+      WHERE h.id = $1 AND h."classId" = $2 AND h."isPublished" = true
+    `;
 
-    if (!homework) {
+    const homeworkResult = await db.query(homeworkQuery, [id, classId]);
+
+    if (homeworkResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -200,9 +203,22 @@ const getHomeworkById = async (req, res, next) => {
       });
     }
 
+    const hw = homeworkResult.rows[0];
+
     res.status(200).json({
       success: true,
-      data: homework,
+      data: {
+        ...hw,
+        class: {
+          id: hw.classId,
+          name: hw.className,
+          section: hw.classSection,
+        },
+        assignedByUser: hw.assignedById ? {
+          id: hw.assignedById,
+          name: hw.assignedByName,
+        } : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -221,28 +237,43 @@ const getMarks = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { studentId, isPublished: true };
+    // Build where clause
+    let whereClause = 'm."studentId" = $1 AND m."isPublished" = true';
+    let params = [studentId];
+    let paramIndex = 2;
 
     if (subject) {
-      where.subject = subject;
+      params.push(subject);
+      whereClause += ` AND m.subject = $${paramIndex}`;
+      paramIndex++;
     }
 
     if (examType) {
-      where.examType = examType;
+      params.push(examType);
+      whereClause += ` AND m."examType" = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.mark.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "Mark" m WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const marks = await prisma.mark.findMany({
-      where,
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get marks
+    const marksQuery = `
+      SELECT * FROM "Mark"
+      WHERE ${whereClause}
+      ORDER BY "createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const marksParams = [...params, take, skip];
+    const marksResult = await db.query(marksQuery, marksParams);
+    const marks = marksResult.rows;
 
     // Calculate overall statistics
-    const totalMarksObtained = marks.reduce((sum, m) => sum + m.marksObtained, 0);
-    const totalMaxMarks = marks.reduce((sum, m) => sum + m.totalMarks, 0);
+    const totalMarksObtained = marks.reduce((sum, m) => sum + parseFloat(m.marksObtained), 0);
+    const totalMaxMarks = marks.reduce((sum, m) => sum + parseFloat(m.totalMarks), 0);
     const overallPercentage = totalMaxMarks > 0 ? (totalMarksObtained / totalMaxMarks) * 100 : 0;
 
     res.status(200).json({
@@ -277,11 +308,14 @@ const getMarkById = async (req, res, next) => {
     const { id } = req.params;
     const studentId = req.user.id;
 
-    const mark = await prisma.mark.findFirst({
-      where: { id, studentId, isPublished: true },
-    });
+    const markQuery = `
+      SELECT * FROM "Mark"
+      WHERE id = $1 AND "studentId" = $2 AND "isPublished" = true
+    `;
 
-    if (!mark) {
+    const markResult = await db.query(markQuery, [id, studentId]);
+
+    if (markResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -292,7 +326,7 @@ const getMarkById = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: mark,
+      data: markResult.rows[0],
     });
   } catch (error) {
     next(error);
@@ -311,28 +345,42 @@ const getNews = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId, isPublished: true };
+    // Build where clause
+    let whereClause = 'n."tenantId" = $1 AND n."isPublished" = true';
+    let params = [tenantId];
+    let paramIndex = 2;
 
     if (category) {
-      where.category = category;
+      params.push(category);
+      whereClause += ` AND n.category = $${paramIndex}`;
+      paramIndex++;
     }
 
-    const total = await prisma.news.count({ where });
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM "News" n WHERE ${whereClause}`;
+    const countResult = await db.query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
 
-    const news = await prisma.news.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        postedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    // Get news
+    const newsQuery = `
+      SELECT n.*, u.id as "postedById", u.name as "postedByName"
+      FROM "News" n
+      LEFT JOIN "User" u ON n."postedBy" = u.id
+      WHERE ${whereClause}
+      ORDER BY n."createdAt" DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+    const newsParams = [...params, take, skip];
+    const newsResult = await db.query(newsQuery, newsParams);
+
+    const news = newsResult.rows.map(item => ({
+      ...item,
+      postedByUser: item.postedById ? {
+        id: item.postedById,
+        name: item.postedByName,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -360,19 +408,16 @@ const getNewsById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const news = await prisma.news.findFirst({
-      where: { id, tenantId, isPublished: true },
-      include: {
-        postedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-    });
+    const newsQuery = `
+      SELECT n.*, u.id as "postedById", u.name as "postedByName"
+      FROM "News" n
+      LEFT JOIN "User" u ON n."postedBy" = u.id
+      WHERE n.id = $1 AND n."tenantId" = $2 AND n."isPublished" = true
+    `;
 
-    if (!news) {
+    const newsResult = await db.query(newsQuery, [id, tenantId]);
+
+    if (newsResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -381,9 +426,17 @@ const getNewsById = async (req, res, next) => {
       });
     }
 
+    const news = newsResult.rows[0];
+
     res.status(200).json({
       success: true,
-      data: news,
+      data: {
+        ...news,
+        postedByUser: news.postedById ? {
+          id: news.postedById,
+          name: news.postedByName,
+        } : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -402,24 +455,33 @@ const getCirculars = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { tenantId, isPublished: true };
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total FROM "Circular"
+      WHERE "tenantId" = $1 AND "isPublished" = true
+    `;
+    const countResult = await db.query(countQuery, [tenantId]);
+    const total = parseInt(countResult.rows[0].total);
 
-    const total = await prisma.circular.count({ where });
+    // Get circulars
+    const circularsQuery = `
+      SELECT c.*, u.id as "issuedById", u.name as "issuedByName"
+      FROM "Circular" c
+      LEFT JOIN "User" u ON c."issuedBy" = u.id
+      WHERE c."tenantId" = $1 AND c."isPublished" = true
+      ORDER BY c."issueDate" DESC
+      LIMIT $2 OFFSET $3
+    `;
 
-    const circulars = await prisma.circular.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        issuedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-      orderBy: { issueDate: 'desc' },
-    });
+    const circularsResult = await db.query(circularsQuery, [tenantId, take, skip]);
+
+    const circulars = circularsResult.rows.map(item => ({
+      ...item,
+      issuedByUser: item.issuedById ? {
+        id: item.issuedById,
+        name: item.issuedByName,
+      } : null,
+    }));
 
     res.status(200).json({
       success: true,
@@ -447,19 +509,16 @@ const getCircularById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const circular = await prisma.circular.findFirst({
-      where: { id, tenantId, isPublished: true },
-      include: {
-        issuedByUser: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-      },
-    });
+    const circularQuery = `
+      SELECT c.*, u.id as "issuedById", u.name as "issuedByName"
+      FROM "Circular" c
+      LEFT JOIN "User" u ON c."issuedBy" = u.id
+      WHERE c.id = $1 AND c."tenantId" = $2 AND c."isPublished" = true
+    `;
 
-    if (!circular) {
+    const circularResult = await db.query(circularQuery, [id, tenantId]);
+
+    if (circularResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -468,9 +527,17 @@ const getCircularById = async (req, res, next) => {
       });
     }
 
+    const circular = circularResult.rows[0];
+
     res.status(200).json({
       success: true,
-      data: circular,
+      data: {
+        ...circular,
+        issuedByUser: circular.issuedById ? {
+          id: circular.issuedById,
+          name: circular.issuedByName,
+        } : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -498,25 +565,34 @@ const getExamSchedules = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    const where = { classId, isPublished: true };
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total FROM "ExamSchedule"
+      WHERE "classId" = $1 AND "isPublished" = true
+    `;
+    const countResult = await db.query(countQuery, [classId]);
+    const total = parseInt(countResult.rows[0].total);
 
-    const total = await prisma.examSchedule.count({ where });
+    // Get exam schedules
+    const examsQuery = `
+      SELECT es.*, c.id as "classId", c.name as "className", c.section as "classSection"
+      FROM "ExamSchedule" es
+      LEFT JOIN "Class" c ON es."classId" = c.id
+      WHERE es."classId" = $1 AND es."isPublished" = true
+      ORDER BY es.date ASC
+      LIMIT $2 OFFSET $3
+    `;
 
-    const examSchedules = await prisma.examSchedule.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        class: {
-          select: {
-            id: true,
-            name: true,
-            section: true,
-          }
-        },
+    const examsResult = await db.query(examsQuery, [classId, take, skip]);
+
+    const examSchedules = examsResult.rows.map(item => ({
+      ...item,
+      class: {
+        id: item.classId,
+        name: item.className,
+        section: item.classSection,
       },
-      orderBy: { date: 'asc' },
-    });
+    }));
 
     res.status(200).json({
       success: true,
@@ -544,14 +620,16 @@ const getExamScheduleById = async (req, res, next) => {
     const { id } = req.params;
     const classId = req.user.classId;
 
-    const examSchedule = await prisma.examSchedule.findFirst({
-      where: { id, classId, isPublished: true },
-      include: {
-        class: true,
-      },
-    });
+    const examQuery = `
+      SELECT es.*, c.id as "classId", c.name as "className", c.section as "classSection"
+      FROM "ExamSchedule" es
+      LEFT JOIN "Class" c ON es."classId" = c.id
+      WHERE es.id = $1 AND es."classId" = $2 AND es."isPublished" = true
+    `;
 
-    if (!examSchedule) {
+    const examResult = await db.query(examQuery, [id, classId]);
+
+    if (examResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -560,9 +638,18 @@ const getExamScheduleById = async (req, res, next) => {
       });
     }
 
+    const exam = examResult.rows[0];
+
     res.status(200).json({
       success: true,
-      data: examSchedule,
+      data: {
+        ...exam,
+        class: exam.classId ? {
+          id: exam.classId,
+          name: exam.className,
+          section: exam.classSection,
+        } : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -577,21 +664,20 @@ const getProfile = async (req, res, next) => {
   try {
     const studentId = req.user.id;
 
-    const student = await prisma.user.findUnique({
-      where: { id: studentId },
-      include: {
-        class: true,
-        tenant: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          }
-        },
-      },
-    });
+    const studentQuery = `
+      SELECT 
+        u.*,
+        c.id as "classId", c.name as "className", c.section as "classSection",
+        t.id as "tenantId", t.name as "tenantName", t.code as "tenantCode"
+      FROM "User" u
+      LEFT JOIN "Class" c ON u."classId" = c.id
+      LEFT JOIN "Tenant" t ON u."tenantId" = t.id
+      WHERE u.id = $1
+    `;
 
-    if (!student) {
+    const studentResult = await db.query(studentQuery, [studentId]);
+
+    if (studentResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -600,12 +686,24 @@ const getProfile = async (req, res, next) => {
       });
     }
 
-    // Remove sensitive data
+    const student = studentResult.rows[0];
     const { password, ...studentWithoutPassword } = student;
 
     res.status(200).json({
       success: true,
-      data: studentWithoutPassword,
+      data: {
+        ...studentWithoutPassword,
+        class: student.classId ? {
+          id: student.classId,
+          name: student.className,
+          section: student.classSection,
+        } : null,
+        tenant: student.tenantId ? {
+          id: student.tenantId,
+          name: student.tenantName,
+          code: student.tenantCode,
+        } : null,
+      },
     });
   } catch (error) {
     next(error);
@@ -622,87 +720,86 @@ const getDashboardExtended = async (req, res, next) => {
     const tenantId = req.user.tenantId;
     const classId = req.user.classId;
 
-    // Get basic dashboard stats
-    const [
-      totalHomework,
-      totalMarks,
-      totalNews,
-      totalCirculars,
-      upcomingExams,
-    ] = await Promise.all([
-      classId 
-        ? prisma.homework.count({ where: { classId, isPublished: true } })
-        : 0,
-      prisma.mark.count({ where: { studentId, isPublished: true } }),
-      prisma.news.count({ where: { tenantId, isPublished: true } }),
-      prisma.circular.count({ where: { tenantId, isPublished: true } }),
-      classId
-        ? prisma.examSchedule.count({ 
-            where: { 
-              classId, 
-              isPublished: true,
-              date: { gte: new Date() }
-            } 
-          })
-        : 0,
-    ]);
+    // Get basic stats
+    const statsQuery = `
+      SELECT 
+        (SELECT COUNT(*) FROM "Homework" WHERE "classId" = $1 AND "isPublished" = true) as "totalHomework",
+        (SELECT COUNT(*) FROM "Mark" WHERE "studentId" = $2 AND "isPublished" = true) as "totalMarks",
+        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $3 AND "isPublished" = true) as "totalNews",
+        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $4 AND "isPublished" = true) as "totalCirculars",
+        (SELECT COUNT(*) FROM "ExamSchedule" WHERE "classId" = $5 AND "isPublished" = true AND date >= NOW()) as "upcomingExams"
+    `;
+
+    const statsResult = await db.query(statsQuery, [classId, studentId, tenantId, tenantId, classId]);
+    const stats = statsResult.rows[0];
 
     // Get attendance stats
-    const attendance = await prisma.attendance.findMany({
-      where: { studentId, tenantId },
-      select: { status: true },
-    });
+    const attendanceQuery = `
+      SELECT status FROM "Attendance"
+      WHERE "studentId" = $1 AND "tenantId" = $2
+    `;
+    const attendanceResult = await db.query(attendanceQuery, [studentId, tenantId]);
+    const attendance = attendanceResult.rows;
 
     const totalDays = attendance.length;
     const presentDays = attendance.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length;
     const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
     // Get fee data
-    const fee = await prisma.fee.findFirst({
-      where: { studentId, tenantId },
-      select: {
-        totalAmount: true,
-        paidAmount: true,
-        balanceAmount: true,
-        status: true,
-        dueDate: true,
-      },
-    });
+    const feeQuery = `
+      SELECT "totalAmount", "paidAmount", "balanceAmount", status, "dueDate"
+      FROM "Fee"
+      WHERE "studentId" = $1 AND "tenantId" = $2
+      LIMIT 1
+    `;
+    const feeResult = await db.query(feeQuery, [studentId, tenantId]);
+    const fee = feeResult.rows.length > 0 ? feeResult.rows[0] : null;
 
     // Get recent homework
-    const recentHomework = classId
-      ? await prisma.homework.findMany({
-          where: { classId, isPublished: true },
-          orderBy: { createdAt: 'desc' },
-          take: 3,
-        })
-      : [];
+    let recentHomework = [];
+    if (classId) {
+      const homeworkQuery = `
+        SELECT * FROM "Homework"
+        WHERE "classId" = $1 AND "isPublished" = true
+        ORDER BY "createdAt" DESC
+        LIMIT 3
+      `;
+      const homeworkResult = await db.query(homeworkQuery, [classId]);
+      recentHomework = homeworkResult.rows;
+    }
 
     // Get recent news
-    const recentNews = await prisma.news.findMany({
-      where: { tenantId, isPublished: true },
-      orderBy: { createdAt: 'desc' },
-      take: 3,
-    });
+    const newsQuery = `
+      SELECT * FROM "News"
+      WHERE "tenantId" = $1 AND "isPublished" = true
+      ORDER BY "createdAt" DESC
+      LIMIT 3
+    `;
+    const newsResult = await db.query(newsQuery, [tenantId]);
+    const recentNews = newsResult.rows;
 
     // Get upcoming exams
-    const upcomingExamList = classId
-      ? await prisma.examSchedule.findMany({
-          where: { classId, isPublished: true, date: { gte: new Date() } },
-          orderBy: { date: 'asc' },
-          take: 3,
-        })
-      : [];
+    let upcomingExamList = [];
+    if (classId) {
+      const examsQuery = `
+        SELECT * FROM "ExamSchedule"
+        WHERE "classId" = $1 AND "isPublished" = true AND date >= NOW()
+        ORDER BY date ASC
+        LIMIT 3
+      `;
+      const examsResult = await db.query(examsQuery, [classId]);
+      upcomingExamList = examsResult.rows;
+    }
 
     res.status(200).json({
       success: true,
       data: {
         stats: {
-          totalHomework,
-          totalMarks,
-          totalNews,
-          totalCirculars,
-          upcomingExams,
+          totalHomework: parseInt(stats.totalHomework),
+          totalMarks: parseInt(stats.totalMarks),
+          totalNews: parseInt(stats.totalNews),
+          totalCirculars: parseInt(stats.totalCirculars),
+          upcomingExams: parseInt(stats.upcomingExams),
         },
         attendance: {
           totalDays,
@@ -730,25 +827,51 @@ const updateProfile = async (req, res, next) => {
     const studentId = req.user.id;
     const { name, phone } = req.body;
 
-    const updateData = {};
-    if (name !== undefined) updateData.name = name;
-    if (phone !== undefined) updateData.phone = phone;
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
 
-    const updatedStudent = await prisma.user.update({
-      where: { id: studentId },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        studentId: true,
-      },
-    });
+    if (name !== undefined) {
+      updateFields.push(`name = $${paramIndex}`);
+      updateParams.push(name);
+      paramIndex++;
+    }
+    if (phone !== undefined) {
+      updateFields.push(`phone = $${paramIndex}`);
+      updateParams.push(phone);
+      paramIndex++;
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No fields to update' },
+      });
+    }
+
+    updateFields.push(`"updatedAt" = NOW()`);
+    updateParams.push(studentId);
+
+    const updateQuery = `
+      UPDATE "User"
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING id, name, email, phone, "studentId", "createdAt", "updatedAt"
+    `;
+
+    const updateResult = await db.query(updateQuery, updateParams);
+
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Student not found' },
+      });
+    }
 
     res.status(200).json({
       success: true,
-      data: updatedStudent,
+      data: updateResult.rows[0],
       message: 'Profile updated successfully',
     });
   } catch (error) {
