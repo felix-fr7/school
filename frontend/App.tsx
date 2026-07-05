@@ -53,6 +53,7 @@ import TeacherHomeworkScreen from './src/screens/teacher/TeacherHomeworkScreen';
 import TeacherMarksScreen from './src/screens/teacher/TeacherMarksScreen';
 import TeacherNewsScreen from './src/screens/teacher/TeacherNewsScreen';
 import TeacherCircularsScreen from './src/screens/teacher/TeacherCircularsScreen';
+import WeeklyLessonGridScreen from './src/screens/teacher/WeeklyLessonGridScreen';
 
 // Student Screens
 import StudentDashboardScreen from './src/screens/student/DashboardScreen';
@@ -63,6 +64,7 @@ import StudentNewsListScreen from './src/screens/student/NewsListScreen';
 import StudentCircularsListScreen from './src/screens/student/CircularsListScreen';
 import StudentExamSchedulesScreen from './src/screens/student/ExamSchedulesScreen';
 import StudentProfileScreen from './src/screens/student/ProfileScreen';
+import WeeklyLessonViewScreen from './src/screens/student/WeeklyLessonViewScreen';
 
 // Legacy Screens (Posts)
 import HomeScreen from './src/screens/HomeScreen';
@@ -285,6 +287,11 @@ const StudentNavigator = () => (
       component={StudentProfileScreen}
       options={{ title: 'My Profile' }}
     />
+    <StudentStack.Screen
+      name="WeeklyLessonView"
+      component={WeeklyLessonViewScreen}
+      options={{ title: 'Homework & Classwork' }}
+    />
   </StudentStack.Navigator>
 );
 
@@ -328,6 +335,11 @@ const TeacherNavigator = () => (
       name="TeacherCirculars"
       component={TeacherCircularsScreen}
       options={{ title: 'Circulars' }}
+    />
+    <TeacherStack.Screen
+      name="WeeklyLessonGrid"
+      component={WeeklyLessonGridScreen}
+      options={{ title: 'Weekly Timetable' }}
     />
   </TeacherStack.Navigator>
 );

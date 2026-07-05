@@ -361,6 +361,7 @@ export type StudentStackParamList = {
   StudentCircularsList: undefined;
   StudentExamSchedules: undefined;
   StudentProfile: undefined;
+  WeeklyLessonView: undefined;
 };
 
 // Teacher Stack
@@ -371,6 +372,7 @@ export type TeacherStackParamList = {
   TeacherMarks: { title: string };
   TeacherNews: { title: string };
   TeacherCirculars: { title: string };
+  WeeklyLessonGrid: undefined;
 };
 
 export type RootStackParamList = {
@@ -415,3 +417,67 @@ export interface PostContextType {
   updatePost: (id: string, data: UpdatePostInput) => Promise<Post | null>;
   deletePost: (id: string) => Promise<boolean>;
 }
+
+// ============================================
+// Weekly Lesson Types (Homework & Classwork Grid)
+// ============================================
+
+export interface LessonAttachment {
+  path: string;
+  url: string;
+  name: string;
+  type: string;
+  size: number;
+  uploadedAt: string;
+}
+
+export interface WeeklyLesson {
+  id: string;
+  subject: string;
+  weekday: number;  // 1-6 for Monday-Saturday
+  classworkText?: string | null;
+  homeworkText?: string | null;
+  attachments: LessonAttachment[];
+  createdBy?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WeekdayGridEntry {
+  name: string;
+  lessons: WeeklyLesson[];
+}
+
+export interface WeekdayGrid {
+  1: WeekdayGridEntry;  // Monday
+  2: WeekdayGridEntry;  // Tuesday
+  3: WeekdayGridEntry;  // Wednesday
+  4: WeekdayGridEntry;  // Thursday
+  5: WeekdayGridEntry;  // Friday
+  6: WeekdayGridEntry;  // Saturday
+}
+
+export interface WeeklyLessonGridResponse {
+  classId: string;
+  className?: string;
+  grid: WeekdayGrid;
+}
+
+export interface CreateUpdateLessonInput {
+  weekday: 1 | 2 | 3 | 4 | 5 | 6;
+  subject: string;
+  classworkText?: string;
+  homeworkText?: string;
+}
+
+// Weekday constants
+export const WEEKDAYS = [
+  { id: 1 as const, name: 'Monday', short: 'Mon' },
+  { id: 2 as const, name: 'Tuesday', short: 'Tue' },
+  { id: 3 as const, name: 'Wednesday', short: 'Wed' },
+  { id: 4 as const, name: 'Thursday', short: 'Thu' },
+  { id: 5 as const, name: 'Friday', short: 'Fri' },
+  { id: 6 as const, name: 'Saturday', short: 'Sat' },
+] as const;
+
+export type WeekdayId = typeof WEEKDAYS[number]['id'];

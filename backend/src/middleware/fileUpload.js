@@ -1,6 +1,6 @@
 /**
  * File Upload Middleware
- * Configures multer for handling CSV file uploads
+ * Configures multer for handling file uploads (CSV, Excel, and lesson attachments)
  */
 
 const multer = require('multer');
@@ -24,8 +24,8 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter - only allow CSV and Excel files
-const fileFilter = (req, file, cb) => {
+// File filter - only allow CSV and Excel files (for student import)
+const csvFileFilter = (req, file, cb) => {
   const allowedMimes = [
     'text/csv',
     'application/vnd.ms-excel',
@@ -39,12 +39,45 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer
+// File filter - allow lesson attachments (PDF, Images, Documents)
+const lessonFileFilter = (req, file, cb) => {
+  const allowedMimes = [
+    // Documents
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // Images
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
+
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('File type not allowed. Allowed types: PDF, Images (JPG, PNG, GIF, WebP), Documents (DOC, DOCX, XLS, XLSX)'), false);
+  }
+};
+
+// Configure multer for CSV uploads (existing)
 const upload = multer({
   storage,
-  fileFilter,
+  fileFilter: csvFileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1,
+  },
+});
+
+// Configure multer for lesson attachments (new)
+const uploadLesson = multer({
+  storage,
+  fileFilter: lessonFileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for lesson attachments
     files: 1,
   },
 });
@@ -78,4 +111,4 @@ const handleFileUploadError = (err, req, res, next) => {
   next();
 };
 
-module.exports = { upload, handleFileUploadError };
+module.exports = { upload, uploadLesson, handleFileUploadError };

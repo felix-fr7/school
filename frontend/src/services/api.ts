@@ -30,6 +30,10 @@ import {
   CreateStudentInput,
   DashboardStats,
   StudentStatistics,
+  WeeklyLessonGridResponse,
+  WeeklyLesson,
+  LessonAttachment,
+  CreateUpdateLessonInput,
 } from '../types';
 
 // API Base URL Configuration
@@ -881,6 +885,108 @@ export const utilsAPI = {
     const response = await api.get('/utils/download-sample-csv', {
       responseType: 'blob',
     });
+    return response.data;
+  },
+};
+
+// ============================================
+// Weekly Lessons API (New - Homework & Classwork Grid)
+// ============================================
+
+export const weeklyLessonsAPI = {
+  // ==========================================
+  // Teacher Endpoints
+  // ==========================================
+
+  /**
+   * Get weekly lesson grid for teacher's assigned class
+   * GET /api/teacher/weekly-lessons
+   */
+  async getTeacherWeeklyLessons(): Promise<ApiResponse<WeeklyLessonGridResponse>> {
+    const response = await api.get<ApiResponse<WeeklyLessonGridResponse>>('/teacher/weekly-lessons');
+    return response.data;
+  },
+
+  /**
+   * Create or update a weekly lesson entry (UPSERT)
+   * POST /api/teacher/weekly-lessons
+   */
+  async upsertWeeklyLesson(data: CreateUpdateLessonInput): Promise<ApiResponse<WeeklyLesson>> {
+    const response = await api.post<ApiResponse<WeeklyLesson>>('/teacher/weekly-lessons', data);
+    return response.data;
+  },
+
+  /**
+   * Delete a weekly lesson entry
+   * DELETE /api/teacher/weekly-lessons/:id
+   */
+  async deleteWeeklyLesson(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/teacher/weekly-lessons/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Upload attachment to a lesson entry
+   * POST /api/teacher/weekly-lessons/:id/attachments
+   * @param id - Lesson UUID
+   * @param file - File to upload (from document picker)
+   */
+  async uploadLessonAttachment(id: string, file: { uri: string; name: string; type: string }): Promise<ApiResponse<{ lesson: WeeklyLesson; attachment: LessonAttachment }>> {
+    const formData = new FormData();
+    
+    // Create file object for FormData
+    const fileToUpload = {
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
+    } as any;
+
+    formData.append('file', fileToUpload);
+
+    const response = await api.post<ApiResponse<{ lesson: WeeklyLesson; attachment: LessonAttachment }>>(
+      `/teacher/weekly-lessons/${id}/attachments`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Delete an attachment from a lesson entry
+   * DELETE /api/teacher/weekly-lessons/:id/attachments/:index
+   */
+  async deleteLessonAttachment(id: string, attachmentIndex: number): Promise<ApiResponse<WeeklyLesson>> {
+    const response = await api.delete<ApiResponse<WeeklyLesson>>(
+      `/teacher/weekly-lessons/${id}/attachments/${attachmentIndex}`
+    );
+    return response.data;
+  },
+
+  // ==========================================
+  // Student Endpoints
+  // ==========================================
+
+  /**
+   * Get weekly lesson grid for student's assigned class (READ-ONLY)
+   * GET /api/student/weekly-lessons
+   */
+  async getStudentWeeklyLessons(): Promise<ApiResponse<WeeklyLessonGridResponse>> {
+    const response = await api.get<ApiResponse<WeeklyLessonGridResponse>>('/student/weekly-lessons');
+    return response.data;
+  },
+
+  /**
+   * Get lessons for a specific weekday (READ-ONLY)
+   * GET /api/student/weekly-lessons/:weekday
+   */
+  async getLessonsByWeekday(weekday: number): Promise<ApiResponse<{ weekday: string; weekdayNumber: number; lessons: WeeklyLesson[] }>> {
+    const response = await api.get<ApiResponse<{ weekday: string; weekdayNumber: number; lessons: WeeklyLesson[] }>>(
+      `/student/weekly-lessons/${weekday}`
+    );
     return response.data;
   },
 };

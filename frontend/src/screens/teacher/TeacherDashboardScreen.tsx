@@ -113,6 +113,7 @@ const TeacherDashboardScreen: React.FC = () => {
   const actionButtons = [
     { id: 'TeacherStudents', label: 'STUDENTS', icon: '👥', count: classData._count.students, color: '#4CAF50' },
     { id: 'TeacherHomework', label: 'HOMEWORK', icon: '📚', count: classData._count.homeworks, color: '#2196F3' },
+    { id: 'WeeklyLessonGrid', label: 'WEEKLY DIARY', icon: '📅', count: 0, color: '#E91E63' },
     { id: 'TeacherMarks', label: 'MARKS', icon: '📊', count: 0, color: '#FF9800' },
     { id: 'TeacherCirculars', label: 'CIRCULARS', icon: '📋', count: 0, color: '#9C27B0' },
   ];

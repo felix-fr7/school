@@ -21,6 +21,7 @@ const tenantRoutes = require('./routes/tenants');
 const adminRoutes = require('./routes/admin');
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
+const weeklyLessonsRoutes = require('./routes/weeklyLessons');
 const utilsRoutes = require('./routes/utils');
 
 // Import middleware
@@ -86,6 +87,9 @@ app.use('/api/student', studentRoutes);
 
 // Teacher routes
 app.use('/api/teacher', teacherRoutes);
+
+// Weekly Lessons routes (must be after teacher/student routes to avoid conflicts)
+app.use('/api', weeklyLessonsRoutes);
 
 // Utils routes (shared utilities)
 app.use('/api/utils', utilsRoutes);
