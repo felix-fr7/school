@@ -32,8 +32,15 @@ import {
   StudentStatistics,
 } from '../types';
 
-// API Base URL - configure based on environment
-const API_BASE_URL = process.env.API_URL || 'https://unadvised-tribunal-mutate.ngrok-free.dev/api';
+// API Base URL Configuration
+// Uses EXPO_PUBLIC_API_URL environment variable for Expo compatibility
+// Fallback to 10.0.2.2 (Android emulator special address) for development if env var is not set
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3000/api';
+
+// Log the API URL in development mode (will be stripped in production builds)
+if (__DEV__) {
+  console.log('[API] Using base URL:', API_BASE_URL);
+}
 
 // ============================================
 // Storage Service

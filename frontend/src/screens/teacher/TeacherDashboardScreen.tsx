@@ -43,10 +43,19 @@ const TeacherDashboardScreen: React.FC = () => {
     try {
       const response = await teacherAPI.getMyClass();
       if (response.success && response.data) {
-        setClassData(response.data);
+        // Check if the teacher actually has a class assigned
+        // The backend returns id: null when no class is assigned
+        if (response.data.id !== null && response.data.id !== 'No Class Assigned') {
+          setClassData(response.data);
+        } else {
+          // No class assigned - keep classData as null to show the "No Class" screen
+          setClassData(null);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching class data:', error);
+      // If it's a 404 or other error, keep classData as null
+      setClassData(null);
     } finally {
       setLoading(false);
       setRefreshing(false);

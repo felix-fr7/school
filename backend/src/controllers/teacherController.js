@@ -31,11 +31,25 @@ const getMyClass = async (req, res, next) => {
     const classResult = await db.query(classQuery, [teacherId, tenantId]);
 
     if (classResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          message: 'No class assigned. Please contact your administrator.',
+      // Return 200 OK with empty data instead of 404
+      // This indicates the route exists and teacher is authenticated,
+      // but simply doesn't have a class assigned yet
+      return res.status(200).json({
+        success: true,
+        data: {
+          id: null,
+          name: 'No Class Assigned',
+          section: null,
+          students: [],
+          homeworks: [],
+          examSchedules: [],
+          _count: {
+            students: 0,
+            homeworks: 0,
+            examSchedules: 0,
+          },
         },
+        message: 'No class assigned. Please contact your administrator.',
       });
     }
 
