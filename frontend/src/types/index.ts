@@ -373,6 +373,7 @@ export type TeacherStackParamList = {
   TeacherNews: { title: string };
   TeacherCirculars: { title: string };
   WeeklyLessonGrid: undefined;
+  WeeklyTimetable: undefined;
 };
 
 export type RootStackParamList = {
@@ -434,7 +435,7 @@ export interface LessonAttachment {
 export interface WeeklyLesson {
   id: string;
   subject: string;
-  weekday: number;  // 1-6 for Monday-Saturday
+  lessonDate: string;  // YYYY-MM-DD format
   classworkText?: string | null;
   homeworkText?: string | null;
   attachments: LessonAttachment[];
@@ -443,28 +444,14 @@ export interface WeeklyLesson {
   updatedAt: string;
 }
 
-export interface WeekdayGridEntry {
-  name: string;
-  lessons: WeeklyLesson[];
-}
-
-export interface WeekdayGrid {
-  1: WeekdayGridEntry;  // Monday
-  2: WeekdayGridEntry;  // Tuesday
-  3: WeekdayGridEntry;  // Wednesday
-  4: WeekdayGridEntry;  // Thursday
-  5: WeekdayGridEntry;  // Friday
-  6: WeekdayGridEntry;  // Saturday
-}
-
 export interface WeeklyLessonGridResponse {
   classId: string;
   className?: string;
-  grid: WeekdayGrid;
+  lessons: WeeklyLesson[];
 }
 
 export interface CreateUpdateLessonInput {
-  weekday: 1 | 2 | 3 | 4 | 5 | 6;
+  lessonDate: string;  // YYYY-MM-DD format
   subject: string;
   classworkText?: string;
   homeworkText?: string;

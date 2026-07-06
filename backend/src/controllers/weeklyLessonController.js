@@ -1,15 +1,12 @@
 /**
  * Weekly Lesson Controller
- * Handles Homework & Classwork management organized by weekly timetable
+ * Handles Homework & Classwork management organized by date-based timetable
  * All operations are scoped to tenantId and classId for multi-tenant isolation
  */
 
 const db = require('../config/db');
 const storageService = require('../services/storageService');
 const fs = require('fs');
-
-// Weekday names mapping
-const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // ============================================
 // TEACHER ENDPOINTS
@@ -18,7 +15,7 @@ const WEEKDAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', '
 /**
  * Get weekly lesson grid for teacher's assigned class
  * GET /api/teacher/weekly-lessons
- * Returns all entries organized by weekday and subject
+ * Returns all entries organized by date and subject
  */
 const getWeeklyLessons = async (req, res, next) => {
   try {
@@ -44,13 +41,13 @@ const getWeeklyLessons = async (req, res, next) => {
       ? `${classResult.rows[0].name} - ${classResult.rows[0].section}`
       : classResult.rows[0].name;
 
-    // Get all lesson logs for this class
+    // Get all lesson logs for this class, ordered by date (newest first)
     const lessonsQuery = `
       SELECT 
         wll.id,
         wll."classworkText",
         wll."homeworkText",
-        wll."weekday",
+        wll."lessonDate",
         wll."subject",
         wll."attachments",
         wll."createdBy",
@@ -60,41 +57,17 @@ const getWeeklyLessons = async (req, res, next) => {
       FROM "WeeklyLessonLog" wll
       LEFT JOIN "User" u ON wll."createdBy" = u.id
       WHERE wll."classId" = $1 AND wll."tenantId" = $2
-      ORDER BY wll."weekday" ASC, wll."subject" ASC
+      ORDER BY wll."lessonDate" DESC, wll."subject" ASC
     `;
     const lessonsResult = await db.query(lessonsQuery, [classId, tenantId]);
 
-    // Organize into grid structure
-    const grid = {};
-    WEEKDAY_NAMES.forEach((day, index) => {
-      grid[index + 1] = {
-        name: day,
-        lessons: [],
-      };
-    });
-
-    lessonsResult.rows.forEach(lesson => {
-      const weekday = lesson.weekday;
-      if (grid[weekday]) {
-        grid[weekday].lessons.push({
-          id: lesson.id,
-          subject: lesson.subject,
-          classworkText: lesson.classworkText,
-          homeworkText: lesson.homeworkText,
-          attachments: lesson.attachments || [],
-          createdBy: lesson.creatorName,
-          createdAt: lesson.createdAt,
-          updatedAt: lesson.updatedAt,
-        });
-      }
-    });
-
+    // Return lessons as a flat array (date-based, not weekday grid)
     res.status(200).json({
       success: true,
       data: {
         classId,
         className,
-        grid,
+        lessons: lessonsResult.rows,
       },
     });
   } catch (error) {
@@ -106,20 +79,29 @@ const getWeeklyLessons = async (req, res, next) => {
 /**
  * Create or update a weekly lesson entry (UPSERT)
  * POST /api/teacher/weekly-lessons
- * Body: { weekday, subject, classworkText?, homeworkText? }
- * Uses ON CONFLICT to update existing entries for the same class/subject/weekday
+ * Body: { lessonDate, subject, classworkText?, homeworkText? }
+ * Uses ON CONFLICT to update existing entries for the same class/subject/date
  */
 const upsertWeeklyLesson = async (req, res, next) => {
   try {
     const teacherId = req.user.id;
     const tenantId = req.user.tenantId;
-    const { weekday, subject, classworkText, homeworkText } = req.body;
+    const { lessonDate, subject, classworkText, homeworkText } = req.body;
 
-    // Validate weekday (1-6 for Monday-Saturday)
-    if (!weekday || weekday < 1 || weekday > 6) {
+    // Validate lessonDate
+    if (!lessonDate) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Invalid weekday. Must be 1-6 (Monday-Saturday).' },
+        error: { message: 'Lesson date is required.' },
+      });
+    }
+
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(lessonDate)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid date format. Use YYYY-MM-DD.' },
       });
     }
 
@@ -148,11 +130,12 @@ const upsertWeeklyLesson = async (req, res, next) => {
     const classId = classResult.rows[0].id;
 
     // Upsert the lesson entry using ON CONFLICT
+    // Parameter order: tenantId, classId, subject, lessonDate, classworkText, homeworkText, createdBy, updatedBy
     const upsertQuery = `
       INSERT INTO "WeeklyLessonLog" 
-        ("weekday", "subject", "classworkText", "homeworkText", "classId", "tenantId", "createdBy", "updatedBy")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
-      ON CONFLICT ("classId", "subject", "weekday") 
+        ("tenantId", "classId", "subject", "lessonDate", "classworkText", "homeworkText", "createdBy", "updatedBy")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT ("tenantId", "classId", "subject", "lessonDate") 
       DO UPDATE SET 
         "classworkText" = EXCLUDED."classworkText",
         "homeworkText" = EXCLUDED."homeworkText",
@@ -162,12 +145,13 @@ const upsertWeeklyLesson = async (req, res, next) => {
     `;
 
     const result = await db.query(upsertQuery, [
-      weekday,
+      tenantId,
+      classId,
       subject.trim(),
+      lessonDate,
       classworkText || null,
       homeworkText || null,
-      classId,
-      tenantId,
+      teacherId,
       teacherId,
     ]);
 
@@ -433,52 +417,28 @@ const getStudentLessons = async (req, res, next) => {
 
     const classId = studentResult.rows[0].classId;
 
-    // Get all lesson logs for this class
+    // Get all lesson logs for this class, ordered by date
     const lessonsQuery = `
       SELECT 
         wll.id,
         wll."classworkText",
         wll."homeworkText",
-        wll."weekday",
+        wll."lessonDate",
         wll."subject",
         wll."attachments",
         wll."createdAt",
         wll."updatedAt"
       FROM "WeeklyLessonLog" wll
       WHERE wll."classId" = $1 AND wll."tenantId" = $2
-      ORDER BY wll."weekday" ASC, wll."subject" ASC
+      ORDER BY wll."lessonDate" DESC, wll."subject" ASC
     `;
     const lessonsResult = await db.query(lessonsQuery, [classId, tenantId]);
-
-    // Organize into grid structure
-    const grid = {};
-    WEEKDAY_NAMES.forEach((day, index) => {
-      grid[index + 1] = {
-        name: day,
-        lessons: [],
-      };
-    });
-
-    lessonsResult.rows.forEach(lesson => {
-      const weekday = lesson.weekday;
-      if (grid[weekday]) {
-        grid[weekday].lessons.push({
-          id: lesson.id,
-          subject: lesson.subject,
-          classworkText: lesson.classworkText,
-          homeworkText: lesson.homeworkText,
-          attachments: lesson.attachments || [],
-          createdAt: lesson.createdAt,
-          updatedAt: lesson.updatedAt,
-        });
-      }
-    });
 
     res.status(200).json({
       success: true,
       data: {
         classId,
-        grid,
+        lessons: lessonsResult.rows,
       },
     });
   } catch (error) {
@@ -488,21 +448,20 @@ const getStudentLessons = async (req, res, next) => {
 };
 
 /**
- * Get lessons for a specific weekday
- * GET /api/student/weekly-lessons/:weekday
+ * Get lessons for a specific date
+ * GET /api/student/weekly-lessons/by-date?date=2026-07-06
  */
-const getLessonsByWeekday = async (req, res, next) => {
+const getLessonsByDate = async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const tenantId = req.user.tenantId;
-    const { weekday } = req.params;
-    const weekdayNum = parseInt(weekday, 10);
+    const { date } = req.query;
 
-    // Validate weekday
-    if (isNaN(weekdayNum) || weekdayNum < 1 || weekdayNum > 6) {
+    // Validate date format
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Invalid weekday. Must be 1-6 (Monday-Saturday).' },
+        error: { message: 'Invalid date format. Use YYYY-MM-DD.' },
       });
     }
 
@@ -522,33 +481,32 @@ const getLessonsByWeekday = async (req, res, next) => {
 
     const classId = studentResult.rows[0].classId;
 
-    // Get lessons for specific weekday
+    // Get lessons for specific date
     const lessonsQuery = `
       SELECT 
         wll.id,
         wll."classworkText",
         wll."homeworkText",
-        wll."weekday",
+        wll."lessonDate",
         wll."subject",
         wll."attachments",
         wll."createdAt",
         wll."updatedAt"
       FROM "WeeklyLessonLog" wll
-      WHERE wll."classId" = $1 AND wll."tenantId" = $2 AND wll."weekday" = $3
+      WHERE wll."classId" = $1 AND wll."tenantId" = $2 AND wll."lessonDate" = $3
       ORDER BY wll."subject" ASC
     `;
-    const lessonsResult = await db.query(lessonsQuery, [classId, tenantId, weekdayNum]);
+    const lessonsResult = await db.query(lessonsQuery, [classId, tenantId, date]);
 
     res.status(200).json({
       success: true,
       data: {
-        weekday: WEEKDAY_NAMES[weekdayNum - 1],
-        weekdayNumber: weekdayNum,
+        date,
         lessons: lessonsResult.rows,
       },
     });
   } catch (error) {
-    console.error('GetLessonsByWeekday Error:', error);
+    console.error('GetLessonsByDate Error:', error);
     next(error);
   }
 };
@@ -562,5 +520,5 @@ module.exports = {
   deleteAttachment,
   // Student endpoints
   getStudentLessons,
-  getLessonsByWeekday,
+  getLessonsByDate,
 };

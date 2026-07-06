@@ -24,11 +24,11 @@ import { TeacherStackParamList, WeeklyLesson } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { weeklyLessonsAPI } from '../../services/api';
 
-type NavigationProp = StackNavigationProp<TeacherStackParamList, 'WeeklyLessonGrid'>;
+type NavigationProp = StackNavigationProp<TeacherStackParamList, 'WeeklyTimetable'>;
 
 // Helper to format date as "DD Month YYYY" (e.g., "06 July 2026")
 const formatDisplayDate = (dateStr: string): string => {
-  const date = new Date(dateStr + 'T00:00:00'); // Append time to avoid timezone issues
+  const date = new Date(dateStr + 'T00:00:00');
   if (isNaN(date.getTime())) return dateStr;
   
   const options: Intl.DateTimeFormatOptions = { 
@@ -36,7 +36,7 @@ const formatDisplayDate = (dateStr: string): string => {
     month: 'long', 
     year: 'numeric' 
   };
-  return date.toLocaleDateString('en-GB', options); // e.g., "06 July 2026"
+  return date.toLocaleDateString('en-GB', options);
 };
 
 // Helper to get today's date in YYYY-MM-DD format
@@ -48,15 +48,7 @@ const getTodayDate = (): string => {
   return `${year}-${month}-${day}`;
 };
 
-// Helper to format date for input (YYYY-MM-DD)
-const formatDateForInput = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const WeeklyLessonGridScreen: React.FC = () => {
+const WeeklyTimetableScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
 
@@ -530,7 +522,7 @@ const WeeklyLessonGridScreen: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Date Picker Modal - Using native date input via platform-specific approach */}
+      {/* Date Picker Modal */}
       <Modal
         visible={showDatePickerModal}
         animationType="slide"
@@ -542,7 +534,6 @@ const WeeklyLessonGridScreen: React.FC = () => {
             <Text style={styles.modalTitle}>Select Date</Text>
             
             {Platform.OS === 'web' ? (
-              // Web: Use native HTML date input
               <input
                 type="date"
                 value={tempDate}
@@ -550,8 +541,6 @@ const WeeklyLessonGridScreen: React.FC = () => {
                 style={styles.webDateInput}
               />
             ) : (
-              // React Native: Use a simple text input with YYYY-MM-DD format
-              // In production, you'd use @react-native-community/datetimepicker
               <View style={styles.datePickerContainer}>
                 <Text style={styles.datePickerHint}>
                   Enter date in YYYY-MM-DD format
@@ -962,4 +951,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WeeklyLessonGridScreen;
+export default WeeklyTimetableScreen;

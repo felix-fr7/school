@@ -92,6 +92,8 @@ const api: AxiosInstance = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
+    // Ngrok free tier bypass header - prevents browser warning page interception
+    'ngrok-skip-browser-warning': 'true',
   },
 });
 
@@ -980,12 +982,13 @@ export const weeklyLessonsAPI = {
   },
 
   /**
-   * Get lessons for a specific weekday (READ-ONLY)
-   * GET /api/student/weekly-lessons/:weekday
+   * Get lessons for a specific date (READ-ONLY)
+   * GET /api/student/weekly-lessons/by-date?date=2026-07-06
    */
-  async getLessonsByWeekday(weekday: number): Promise<ApiResponse<{ weekday: string; weekdayNumber: number; lessons: WeeklyLesson[] }>> {
-    const response = await api.get<ApiResponse<{ weekday: string; weekdayNumber: number; lessons: WeeklyLesson[] }>>(
-      `/student/weekly-lessons/${weekday}`
+  async getLessonsByDate(date: string): Promise<ApiResponse<{ date: string; lessons: WeeklyLesson[] }>> {
+    const response = await api.get<ApiResponse<{ date: string; lessons: WeeklyLesson[] }>>(
+      `/student/weekly-lessons/by-date`,
+      { params: { date } }
     );
     return response.data;
   },

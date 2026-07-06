@@ -53,7 +53,25 @@ const TeacherDashboardScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
-      console.error('Error fetching class data:', error);
+      // Detailed error logging for debugging network issues
+      console.error('===== TEACHER DASHBOARD API ERROR =====');
+      console.error('Error Type:', error.constructor?.name || typeof error);
+      console.error('Error Message:', error.message);
+      console.error('Error Code:', error.code);
+      console.error('Error Status:', error.response?.status);
+      console.error('Error Status Text:', error.response?.statusText);
+      console.error('Error Headers:', JSON.stringify(error.response?.headers));
+      console.error('Error Data (raw):', error.response?.data);
+      console.error('Error Config URL:', error.config?.url);
+      console.error('Error Config BaseURL:', error.config?.baseURL);
+      console.error('Full Error Object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.error('=======================================');
+      
+      // Check if we're getting HTML instead of JSON (ngrok warning page)
+      if (error.response?.data && typeof error.response.data === 'string') {
+        console.error('⚠️ RESPONSE IS STRING (possible HTML from ngrok):', error.response.data.substring(0, 500));
+      }
+      
       // If it's a 404 or other error, keep classData as null
       setClassData(null);
     } finally {

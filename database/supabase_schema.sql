@@ -208,6 +208,25 @@ CREATE TABLE IF NOT EXISTS "Post" (
 );
 
 -- ============================================================================
+-- 12. WEEKLY LESSON LOG TABLE (Weekly timetable lessons)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS "WeeklyLessonLog" (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  "classId" UUID NOT NULL REFERENCES "Class"(id) ON DELETE CASCADE,
+  "tenantId" UUID NOT NULL REFERENCES "Tenant"(id) ON DELETE CASCADE,
+  "weekday" INTEGER NOT NULL CHECK ("weekday" >= 1 AND "weekday" <= 6), -- 1=Monday, 6=Saturday
+  "subject" VARCHAR(100) NOT NULL,
+  "classworkText" TEXT,
+  "homeworkText" TEXT,
+  "attachments" JSONB DEFAULT '[]'::jsonb, -- Array of file attachment objects
+  "createdBy" UUID REFERENCES "User"(id) ON DELETE SET NULL,
+  "updatedBy" UUID REFERENCES "User"(id) ON DELETE SET NULL,
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE("classId", "subject", "weekday") -- Prevent duplicate entries for same class/subject/day
+);
+
+-- ============================================================================
 -- PERFORMANCE INDEXES
 -- ============================================================================
 
@@ -272,6 +291,14 @@ CREATE INDEX IF NOT EXISTS "idx_exam_schedule_published" ON "ExamSchedule"("isPu
 CREATE INDEX IF NOT EXISTS "idx_post_user" ON "Post"("userId");
 CREATE INDEX IF NOT EXISTS "idx_post_created_at" ON "Post"("createdAt" DESC);
 
+-- WeeklyLessonLog indexes
+CREATE INDEX IF NOT EXISTS "idx_weeklylessonlog_class" ON "WeeklyLessonLog"("classId");
+CREATE INDEX IF NOT EXISTS "idx_weeklylessonlog_tenant" ON "WeeklyLessonLog"("tenantId");
+CREATE INDEX IF NOT EXISTS "idx_weeklylessonlog_weekday" ON "WeeklyLessonLog"("weekday");
+CREATE INDEX IF NOT EXISTS "idx_weeklylessonlog_subject" ON "WeeklyLessonLog"("subject");
+CREATE INDEX IF NOT EXISTS "idx_weeklylessonlog_created_by" ON "WeeklyLessonLog"("createdBy");
+CREATE INDEX IF NOT EXISTS "idx_weeklylessonlog_class_weekday" ON "WeeklyLessonLog"("classId", "weekday");
+
 -- Tenant indexes
 CREATE INDEX IF NOT EXISTS "idx_tenant_code" ON "Tenant"(code);
 CREATE INDEX IF NOT EXISTS "idx_tenant_email" ON "Tenant"(email);
@@ -301,6 +328,7 @@ CREATE TRIGGER update_circular_updated_at BEFORE UPDATE ON "Circular" FOR EACH R
 CREATE TRIGGER update_exam_schedule_updated_at BEFORE UPDATE ON "ExamSchedule" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_post_updated_at BEFORE UPDATE ON "Post" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_tenant_updated_at BEFORE UPDATE ON "Tenant" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_weeklylessonlog_updated_at BEFORE UPDATE ON "WeeklyLessonLog" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
 -- INITIAL DATA (Optional - Remove if not needed)
@@ -327,6 +355,7 @@ ALTER TABLE "News" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Circular" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "ExamSchedule" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Post" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "WeeklyLessonLog" ENABLE ROW LEVEL SECURITY;
 
 -- Note: RLS policies should be configured based on your authentication setup
 -- The following are example policies that can be customized

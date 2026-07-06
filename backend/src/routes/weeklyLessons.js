@@ -1,6 +1,6 @@
 /**
  * Weekly Lesson Routes
- * Handles Homework & Classwork management organized by weekly timetable
+ * Handles Homework & Classwork management organized by date-based timetable
  * All routes require authentication and appropriate role-based access
  */
 
@@ -16,30 +16,27 @@ const router = express.Router();
 // TEACHER ROUTES
 // ============================================
 
-// All teacher routes require authentication and Teacher role
-router.use('/teacher', protect, requireTeacher);
-
 /**
  * @route   GET /api/teacher/weekly-lessons
  * @desc    Get weekly lesson grid for teacher's assigned class
  * @access  Teacher
- * @response  { classId, className, grid: { 1: { name: 'Monday', lessons: [...] }, ... } }
+ * @response  { classId, className, lessons: [{ id, subject, lessonDate, classworkText, homeworkText, ... }] }
  */
-router.get('/weekly-lessons', weeklyLessonController.getWeeklyLessons);
+router.get('/teacher/weekly-lessons', protect, requireTeacher, weeklyLessonController.getWeeklyLessons);
 
 /**
  * @route   POST /api/teacher/weekly-lessons
  * @desc    Create or update a weekly lesson entry (UPSERT)
  * @access  Teacher
- * @body    { weekday: 1-6, subject: string, classworkText?: string, homeworkText?: string }
- * @note    Uses ON CONFLICT to update existing entries for same class/subject/weekday
+ * @body    { lessonDate: 'YYYY-MM-DD', subject: string, classworkText?: string, homeworkText?: string }
+ * @note    Uses ON CONFLICT to update existing entries for same class/subject/date
  */
 router.post(
-  '/weekly-lessons',
+  '/teacher/weekly-lessons',
   [
-    body('weekday')
-      .isInt({ min: 1, max: 6 })
-      .withMessage('Weekday must be an integer between 1 and 6 (Monday-Saturday)'),
+    body('lessonDate')
+      .matches(/^\d{4}-\d{2}-\d{2}$/)
+      .withMessage('Lesson date must be in YYYY-MM-DD format'),
     body('subject')
       .trim()
       .notEmpty()
@@ -57,6 +54,8 @@ router.post(
       .isLength({ max: 10000 })
       .withMessage('Homework text must be less than 10000 characters'),
   ],
+  protect,
+  requireTeacher,
   weeklyLessonController.upsertWeeklyLesson
 );
 
@@ -67,12 +66,14 @@ router.post(
  * @param   id - Lesson UUID
  */
 router.delete(
-  '/weekly-lessons/:id',
+  '/teacher/weekly-lessons/:id',
   [
     param('id')
       .isUUID()
       .withMessage('Valid lesson ID is required'),
   ],
+  protect,
+  requireTeacher,
   weeklyLessonController.deleteWeeklyLesson
 );
 
@@ -86,12 +87,14 @@ router.delete(
  * @note    Max file size: 10MB
  */
 router.post(
-  '/weekly-lessons/:id/attachments',
+  '/teacher/weekly-lessons/:id/attachments',
   [
     param('id')
       .isUUID()
       .withMessage('Valid lesson ID is required'),
   ],
+  protect,
+  requireTeacher,
   uploadLesson.single('file'),
   handleFileUploadError,
   weeklyLessonController.uploadAttachment
@@ -105,7 +108,7 @@ router.post(
  * @param   attachmentIndex - Index of attachment in the array
  */
 router.delete(
-  '/weekly-lessons/:id/attachments/:attachmentIndex',
+  '/teacher/weekly-lessons/:id/attachments/:attachmentIndex',
   [
     param('id')
       .isUUID()
@@ -114,6 +117,8 @@ router.delete(
       .isInt({ min: 0 })
       .withMessage('Attachment index must be a non-negative integer'),
   ],
+  protect,
+  requireTeacher,
   weeklyLessonController.deleteAttachment
 );
 
@@ -121,33 +126,32 @@ router.delete(
 // STUDENT ROUTES
 // ============================================
 
-// All student routes require authentication and Student role
-router.use('/student', protect, requireStudent);
-
 /**
  * @route   GET /api/student/weekly-lessons
  * @desc    Get weekly lesson grid for student's assigned class (READ-ONLY)
  * @access  Student
- * @response  { classId, grid: { 1: { name: 'Monday', lessons: [...] }, ... } }
+ * @response  { classId, lessons: [{ id, subject, lessonDate, classworkText, homeworkText, ... }] }
  * @note    Students can only see lessons for their own class
  */
-router.get('/weekly-lessons', weeklyLessonController.getStudentLessons);
+router.get('/student/weekly-lessons', protect, requireStudent, weeklyLessonController.getStudentLessons);
 
 /**
- * @route   GET /api/student/weekly-lessons/:weekday
- * @desc    Get lessons for a specific weekday (READ-ONLY)
+ * @route   GET /api/student/weekly-lessons/by-date
+ * @desc    Get lessons for a specific date (READ-ONLY)
  * @access  Student
- * @param   weekday - 1-6 (Monday-Saturday)
+ * @query   date - YYYY-MM-DD format
  * @note    Students can only see lessons for their own class
  */
 router.get(
-  '/weekly-lessons/:weekday',
+  '/student/weekly-lessons/by-date',
   [
-    param('weekday')
-      .isInt({ min: 1, max: 6 })
-      .withMessage('Weekday must be an integer between 1 and 6 (Monday-Saturday)'),
+    query('date')
+      .matches(/^\d{4}-\d{2}-\d{2}$/)
+      .withMessage('Date must be in YYYY-MM-DD format'),
   ],
-  weeklyLessonController.getLessonsByWeekday
+  protect,
+  requireStudent,
+  weeklyLessonController.getLessonsByDate
 );
 
 module.exports = router;

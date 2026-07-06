@@ -82,14 +82,15 @@ app.use('/api/tenants', tenantRoutes);
 // Admin routes (School Admin)
 app.use('/api/admin', adminRoutes);
 
+// Weekly Lessons routes (MUST be before teacher/student routes to avoid conflicts)
+// The weeklyLessonsRoutes handles /api/teacher/weekly-lessons and /api/student/weekly-lessons
+app.use('/api', weeklyLessonsRoutes);
+
 // Student routes
 app.use('/api/student', studentRoutes);
 
 // Teacher routes
 app.use('/api/teacher', teacherRoutes);
-
-// Weekly Lessons routes (must be after teacher/student routes to avoid conflicts)
-app.use('/api', weeklyLessonsRoutes);
 
 // Utils routes (shared utilities)
 app.use('/api/utils', utilsRoutes);

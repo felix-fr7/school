@@ -1,6 +1,6 @@
 /**
  * Weekly Lesson View Screen (Student)
- * Read-only view of weekly timetable with classwork, homework, and attachments
+ * Read-only view of date-based timetable with classwork, homework, and attachments
  */
 
 import React, { useEffect, useState } from 'react';
@@ -18,10 +18,24 @@ import {
   Alert,
 } from 'react-native';
 import { weeklyLessonsAPI } from '../../services/api';
-import { WEEKDAYS, WeeklyLesson, WeekdayGrid, LessonAttachment } from '../../types';
+import { WeeklyLesson, LessonAttachment } from '../../types';
+
+// Helper to format date as "DD Month YYYY" (e.g., "06 July 2026")
+const formatDisplayDate = (dateStr: string): string => {
+  const date = new Date(dateStr + 'T00:00:00');
+  if (isNaN(date.getTime())) return dateStr;
+  
+  const options: Intl.DateTimeFormatOptions = { 
+    day: '2-digit', 
+    month: 'long', 
+    year: 'numeric' 
+  };
+  return date.toLocaleDateString('en-GB', options);
+};
 
 const WeeklyLessonViewScreen: React.FC = () => {
-  const [grid, setGrid] = useState<WeekdayGrid | null>(null);
+  const [lessons, setLessons] = useState<WeeklyLesson[]>([]);
+  const [groupedLessons, setGroupedLessons] = useState<{ [date: string]: WeeklyLesson[] }>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<WeeklyLesson | null>(null);
@@ -30,7 +44,31 @@ const WeeklyLessonViewScreen: React.FC = () => {
     try {
       const response = await weeklyLessonsAPI.getStudentWeeklyLessons();
       if (response.success && response.data) {
-        setGrid(response.data.grid);
+        const lessonsList: WeeklyLesson[] = response.data.lessons || [];
+        setLessons(lessonsList);
+        
+        // Group lessons by date
+        const grouped: { [date: string]: WeeklyLesson[] } = {};
+        lessonsList.forEach(lesson => {
+          const date = lesson.lessonDate;
+          if (!date) return;
+          if (!grouped[date]) {
+            grouped[date] = [];
+          }
+          grouped[date].push(lesson);
+        });
+        
+        // Sort dates descending
+        const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+        const sortedGrouped: { [date: string]: WeeklyLesson[] } = {};
+        sortedDates.forEach(date => {
+          const lessonsForDate = grouped[date];
+          if (lessonsForDate) {
+            sortedGrouped[date] = lessonsForDate.sort((a, b) => a.subject.localeCompare(b.subject));
+          }
+        });
+        
+        setGroupedLessons(sortedGrouped);
       }
     } catch (error: any) {
       console.error('Error:', error);
@@ -112,16 +150,16 @@ const WeeklyLessonViewScreen: React.FC = () => {
         </Text>
       </View>
 
-      {/* Weekday Sections */}
-      {WEEKDAYS.map((day) => (
-        <View key={day.id} style={styles.daySection}>
+      {/* Date Sections */}
+      {Object.entries(groupedLessons).map(([date, dateLessons]) => (
+        <View key={date} style={styles.daySection}>
           <View style={styles.dayHeader}>
-            <Text style={styles.dayTitle}>{day.name}</Text>
+            <Text style={styles.dayTitle}>{formatDisplayDate(date)}</Text>
           </View>
           
           <View style={styles.lessonsContainer}>
-            {grid && grid[day.id] && grid[day.id].lessons.length > 0 ? (
-              grid[day.id].lessons.map(renderLessonCard)
+            {dateLessons.length > 0 ? (
+              dateLessons.map(renderLessonCard)
             ) : (
               <View style={styles.emptyDay}>
                 <Text style={styles.emptyDayText}>No homework assigned</Text>
@@ -130,6 +168,13 @@ const WeeklyLessonViewScreen: React.FC = () => {
           </View>
         </View>
       ))}
+
+      {Object.keys(groupedLessons).length === 0 && (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyIcon}>📅</Text>
+          <Text style={styles.emptyText}>No homework assigned yet</Text>
+        </View>
+      )}
 
       {/* Lesson Detail Modal */}
       <Modal
@@ -142,7 +187,7 @@ const WeeklyLessonViewScreen: React.FC = () => {
             <View style={styles.modalHeaderContent}>
               <Text style={styles.modalTitle}>{selectedLesson?.subject}</Text>
               <Text style={styles.modalSubtitle}>
-                {selectedLesson && WEEKDAYS.find(d => d.id === selectedLesson.weekday)?.name}
+                {selectedLesson ? formatDisplayDate(selectedLesson.lessonDate) : ''}
               </Text>
             </View>
             <TouchableOpacity
@@ -218,6 +263,9 @@ const styles = StyleSheet.create({
   lessonEmpty: { fontSize: 13, color: '#999', fontStyle: 'italic' },
   emptyDay: { padding: 24, alignItems: 'center' },
   emptyDayText: { color: '#999', fontSize: 14 },
+  emptyState: { padding: 40, alignItems: 'center' },
+  emptyIcon: { fontSize: 48, marginBottom: 12 },
+  emptyText: { fontSize: 16, fontWeight: '600', color: '#333' },
   modalContainer: { flex: 1, backgroundColor: '#fff' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#2196F3', padding: 20, paddingTop: Platform.OS === 'android' ? 40 : 30 },
   modalHeaderContent: { flex: 1 },
