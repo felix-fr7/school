@@ -39,6 +39,7 @@ export interface Tenant {
   address?: string;
   phone?: string;
   email?: string;
+  schoolLogoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

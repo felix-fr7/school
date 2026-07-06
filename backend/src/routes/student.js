@@ -7,6 +7,7 @@
 const express = require('express');
 const { query, body, param } = require('express-validator');
 const studentController = require('../controllers/studentController');
+const studentDashboardController = require('../controllers/studentDashboardController');
 const attendanceController = require('../controllers/attendanceController');
 const feeController = require('../controllers/feeController');
 const { protect, requireStudent } = require('../middleware/auth');
@@ -210,6 +211,17 @@ router.get('/attendance/stats', attendanceController.getStudentAttendanceStats);
  * @access  Student
  */
 router.get('/fees', feeController.getStudentFees);
+
+// ============================================
+// Dashboard Profile Route (New UI)
+// ============================================
+
+/**
+ * @route   GET /api/student/dashboard-profile
+ * @desc    Get student dashboard profile with school branding
+ * @access  Student
+ */
+router.get('/dashboard-profile', studentDashboardController.getDashboardProfile);
 
 // ============================================
 // Profile Routes

@@ -1,6 +1,19 @@
 /**
- * Teacher Dashboard Screen
- * Main dashboard for teachers showing their assigned class and quick actions
+ * Teacher Dashboard Screen - 2026 International Premium Edition
+ * Clean, professional grid layout with luxury minimalism
+ * 
+ * Visual Design Principles:
+ * - Clean 2-column grid with fixed dimensions
+ * - No text wrapping - single line labels only
+ * - Premium white cards with soft shadows
+ * - Uniform vector-style icons
+ * - Perfect alignment and spacing
+ * 
+ * Key Changes from Old Design:
+ * - Renamed "WEEKLY DIARY" to "HOME WORK" (routes to WeeklyLessonGrid for date-based lesson planning)
+ * - Removed duplicate standalone "HOMEWORK" card
+ * - Added full 20-item grid matching student dashboard structure
+ * - All routes mapped to teacher-specific screens
  */
 
 import React, { useEffect, useState } from 'react';
@@ -8,11 +21,14 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
   ActivityIndicator,
+  Dimensions,
+  SafeAreaView,
+  Image,
   RefreshControl,
-  Alert,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -20,60 +36,59 @@ import { TeacherStackParamList } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { teacherAPI } from '../../services/api';
 
+const { width } = Dimensions.get('window');
+const PADDING = 16;
+const GAP = 12;
+const CARD_WIDTH = (width - PADDING * 2 - GAP) / 2;
+const CARD_HEIGHT = CARD_WIDTH * 0.85;
+
 type NavigationProp = StackNavigationProp<TeacherStackParamList, 'TeacherDashboard'>;
 
-interface ClassData {
+interface DashboardProfile {
+  teacher: {
+    id: string;
+    name: string;
+    classId: string | null;
+    className: string;
+    sectionName: string;
+    classSection: string;
+  };
+  school: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    code: string;
+  };
+  stats: {
+    totalStudents: number;
+    totalHomework: number;
+    totalExams: number;
+  };
+}
+
+interface MenuItem {
   id: string;
-  name: string;
-  section?: string;
-  students: any[];
-  homeworks: any[];
-  examSchedules: any[];
-  _count: { students: number; homeworks: number; examSchedules: number };
+  title: string;
+  icon: string;
+  route?: keyof TeacherStackParamList;
 }
 
 const TeacherDashboardScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { user, logout } = useAuth();
-  const [classData, setClassData] = useState<ClassData | null>(null);
+  const { logout } = useAuth();
+  
+  const [profile, setProfile] = useState<DashboardProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchClassData = async () => {
+  const fetchDashboardProfile = async () => {
     try {
-      const response = await teacherAPI.getMyClass();
+      const response = await teacherAPI.getDashboardProfile();
       if (response.success && response.data) {
-        // Check if the teacher actually has a class assigned
-        // The backend returns id: null when no class is assigned
-        if (response.data.id !== null && response.data.id !== 'No Class Assigned') {
-          setClassData(response.data);
-        } else {
-          // No class assigned - keep classData as null to show the "No Class" screen
-          setClassData(null);
-        }
+        setProfile(response.data);
       }
-    } catch (error: any) {
-      // Detailed error logging for debugging network issues
-      console.error('===== TEACHER DASHBOARD API ERROR =====');
-      console.error('Error Type:', error.constructor?.name || typeof error);
-      console.error('Error Message:', error.message);
-      console.error('Error Code:', error.code);
-      console.error('Error Status:', error.response?.status);
-      console.error('Error Status Text:', error.response?.statusText);
-      console.error('Error Headers:', JSON.stringify(error.response?.headers));
-      console.error('Error Data (raw):', error.response?.data);
-      console.error('Error Config URL:', error.config?.url);
-      console.error('Error Config BaseURL:', error.config?.baseURL);
-      console.error('Full Error Object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
-      console.error('=======================================');
-      
-      // Check if we're getting HTML instead of JSON (ngrok warning page)
-      if (error.response?.data && typeof error.response.data === 'string') {
-        console.error('⚠️ RESPONSE IS STRING (possible HTML from ngrok):', error.response.data.substring(0, 500));
-      }
-      
-      // If it's a 404 or other error, keep classData as null
-      setClassData(null);
+    } catch (error) {
+      console.error('Error fetching dashboard profile:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -81,29 +96,73 @@ const TeacherDashboardScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchClassData();
+    fetchDashboardProfile();
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchClassData();
+    fetchDashboardProfile();
+  };
+
+  // All 20 menu items with clean configuration
+  // Note: "HOME WORK" replaces the old "WEEKLY DIARY" - routes to date-based lesson planning
+  // Note: Old standalone "HOMEWORK" card has been removed to avoid duplication
+  const menuItems: MenuItem[] = [
+    { id: '1', title: 'NEWS', icon: '📰', route: 'TeacherNews' },
+    { id: '2', title: 'MESSAGES', icon: '💬' },
+    { id: '3', title: 'HOME WORK', icon: '📚', route: 'WeeklyLessonGrid' }, // Renamed from WEEKLY DIARY
+    { id: '4', title: 'EXAMS', icon: '📅' },
+    { id: '5', title: 'TOPPERS', icon: '🏆' },
+    { id: '6', title: 'CONTACT', icon: '📞' },
+    { id: '7', title: 'ALBUMS', icon: '📸' },
+    { id: '8', title: 'VIDEOS', icon: '🎬' },
+    { id: '9', title: 'ATTENDANCE', icon: '📝', route: 'TeacherStudents' },
+    { id: '10', title: 'CALENDAR', icon: '📆' },
+    { id: '11', title: 'STUDENTS', icon: '👥', route: 'TeacherStudents' },
+    { id: '12', title: 'GALLERY', icon: '🖼️' },
+    { id: '13', title: 'CIRCULARS', icon: '📋', route: 'TeacherCirculars' },
+    { id: '14', title: 'MARKS', icon: '📊', route: 'TeacherMarks' },
+    { id: '15', title: 'PROFILE', icon: '✏️' },
+    { id: '16', title: 'SETTINGS', icon: '⚙️' },
+    { id: '17', title: 'VOICE MSG', icon: '🎤' },
+    { id: '18', title: 'FEES', icon: '💰' },
+    { id: '19', title: 'REPORTS', icon: '📈' },
+    { id: '20', title: 'LOGOUT', icon: '🚪' },
+  ];
+
+  const handleMenuItemPress = (item: MenuItem) => {
+    if (item.id === '20') {
+      logout();
+      return;
+    }
+
+    if (item.route) {
+      navigation.navigate(item.route as any, { title: item.title });
+    }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7b1fa2" />
-        <Text style={styles.loadingText}>Loading your class...</Text>
+        <View style={styles.loadingSpinnerContainer}>
+          <ActivityIndicator size="large" color="#1E3A8A" />
+        </View>
+        <Text style={styles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
 
-  if (!classData) {
+  if (!profile || !profile.teacher.classId) {
     return (
       <ScrollView
         style={styles.container}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#1E3A8A"
+            colors={['#1E3A8A']}
+          />
         }
       >
         <View style={styles.noClassContainer}>
@@ -115,151 +174,428 @@ const TeacherDashboardScreen: React.FC = () => {
             The administrator has not assigned you to a class yet.{'\n'}
             Please contact your school admin for assistance.
           </Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={fetchClassData}>
+          <TouchableOpacity style={styles.refreshButton} onPress={fetchDashboardProfile}>
             <Text style={styles.refreshButtonText}>Refresh Status</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Text style={styles.logoutText}>Logout</Text>
+        <TouchableOpacity style={styles.logoutButtonSmall} onPress={logout}>
+          <Text style={styles.logoutTextSmall}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
     );
   }
 
-  const classFullName = classData.section ? `${classData.name} - ${classData.section}` : classData.name;
-
-  const actionButtons = [
-    { id: 'TeacherStudents', label: 'STUDENTS', icon: '👥', count: classData._count.students, color: '#4CAF50' },
-    { id: 'TeacherHomework', label: 'HOMEWORK', icon: '📚', count: classData._count.homeworks, color: '#2196F3' },
-    { id: 'WeeklyLessonGrid', label: 'WEEKLY DIARY', icon: '📅', count: 0, color: '#E91E63' },
-    { id: 'TeacherMarks', label: 'MARKS', icon: '📊', count: 0, color: '#FF9800' },
-    { id: 'TeacherCirculars', label: 'CIRCULARS', icon: '📋', count: 0, color: '#9C27B0' },
-  ];
-
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      {/* Class Header Card */}
-      <View style={styles.headerCard}>
-        <View style={styles.headerContent}>
-          <Text style={styles.welcomeText}>Welcome, {user?.name}</Text>
-          <Text style={styles.roleText}>Class Teacher</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#1E3A8A"
+            colors={['#1E3A8A']}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Premium Header Section */}
+        <View style={styles.headerSection}>
+          <View style={styles.headerContent}>
+            {profile?.school.logoUrl ? (
+              <Image
+                source={{ uri: profile.school.logoUrl }}
+                style={styles.schoolLogo}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={[styles.schoolLogo, styles.logoPlaceholder]}>
+                <Text style={styles.logoPlaceholderText}>
+                  {profile?.school.name?.charAt(0) || 'S'}
+                </Text>
+              </View>
+            )}
+            <View style={styles.schoolInfo}>
+              <Text style={styles.schoolName} numberOfLines={2}>
+                {profile?.school.name || 'School'}
+              </Text>
+            </View>
+          </View>
         </View>
-        <View style={styles.classCard}>
-          <Text style={styles.classLabel}>Your Assigned Class</Text>
-          <Text style={styles.className}>{classFullName}</Text>
+
+        {/* Modern Profile Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.profileContent}>
+            <View style={styles.avatarContainer}>
+              <Text style={styles.avatarText}>
+                {profile?.teacher.name?.charAt(0) || 'T'}
+              </Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.teacherName} numberOfLines={1}>
+                {profile?.teacher.name || 'Teacher'}
+              </Text>
+              <View style={styles.classContainer}>
+                <Text style={styles.classText} numberOfLines={1}>
+                  Class: {profile?.teacher.classSection || 'Not Assigned'}
+                </Text>
+              </View>
+            </View>
+          </View>
+          {/* Stats Row */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{classData._count.students}</Text>
+              <Text style={styles.statValue}>{profile?.stats.totalStudents || 0}</Text>
               <Text style={styles.statLabel}>Students</Text>
             </View>
+            <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{classData._count.homeworks}</Text>
+              <Text style={styles.statValue}>{profile?.stats.totalHomework || 0}</Text>
               <Text style={styles.statLabel}>Homework</Text>
             </View>
+            <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{classData._count.examSchedules}</Text>
+              <Text style={styles.statValue}>{profile?.stats.totalExams || 0}</Text>
               <Text style={styles.statLabel}>Exams</Text>
             </View>
           </View>
         </View>
-      </View>
 
-      {/* Quick Actions Grid */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionGrid}>
-          {actionButtons.map((button) => (
+        {/* Clean 2-Column Grid */}
+        <View style={styles.gridContainer}>
+          {menuItems.map((item) => (
             <TouchableOpacity
-              key={button.id}
-              style={[styles.actionButton, { borderLeftColor: button.color }]}
-              onPress={() => navigation.navigate(button.id as any, { title: button.label })}
+              key={item.id}
+              style={styles.gridItem}
+              onPress={() => handleMenuItemPress(item)}
+              activeOpacity={0.7}
             >
-              <View style={styles.actionIconContainer}>
-                <Text style={styles.actionIcon}>{button.icon}</Text>
-                {button.count > 0 && (
-                  <View style={[styles.badge, { backgroundColor: button.color }]}>
-                    <Text style={styles.badgeText}>{button.count}</Text>
-                  </View>
-                )}
+              <View style={styles.gridItemContent}>
+                <View style={styles.iconContainer}>
+                  <Text style={styles.iconText}>{item.icon}</Text>
+                </View>
+                <Text 
+                  style={styles.itemTitle}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                >
+                  {item.title}
+                </Text>
               </View>
-              <Text style={styles.actionTitle}>{button.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
-      </View>
 
-      {/* Recent Homework */}
-      {classData.homeworks.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Homework</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('TeacherHomework', { title: 'HOMEWORK' })}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          {classData.homeworks.slice(0, 3).map((hw) => (
-            <View key={hw.id} style={styles.listItem}>
-              <View style={styles.listItemContent}>
-                <Text style={styles.listItemTitle}>{hw.title}</Text>
-                <Text style={styles.listItemSubtitle}>{hw.subject}</Text>
-              </View>
-            </View>
-          ))}
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            {profile?.school.name ? `${profile.school.name.toUpperCase()} SCHOOL SYSTEM` : 'SCHOOL SYSTEM'}
+          </Text>
         </View>
-      )}
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 16, fontSize: 16, color: '#666' },
-  noClassContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, minHeight: 400 },
-  noClassIcon: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#f3e5f5', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  noClassEmoji: { fontSize: 48 },
-  noClassTitle: { fontSize: 20, fontWeight: 'bold', color: '#333', marginBottom: 8, textAlign: 'center' },
-  noClassDescription: { fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-  refreshButton: { backgroundColor: '#7b1fa2', paddingHorizontal: 32, paddingVertical: 12, borderRadius: 8 },
-  refreshButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  headerCard: { backgroundColor: '#7b1fa2', padding: 20, paddingTop: 30 },
-  headerContent: { marginBottom: 16 },
-  welcomeText: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
-  roleText: { fontSize: 14, color: '#e1bee7', marginTop: 4 },
-  classCard: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: 16 },
-  classLabel: { fontSize: 12, color: '#e1bee7', marginBottom: 4 },
-  className: { fontSize: 20, fontWeight: 'bold', color: '#fff', marginBottom: 12 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  statItem: { alignItems: 'center' },
-  statValue: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
-  statLabel: { fontSize: 11, color: '#e1bee7', marginTop: 2 },
-  section: { backgroundColor: '#fff', marginHorizontal: 16, marginTop: 16, padding: 16, borderRadius: 12, elevation: 2 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#333' },
-  seeAllText: { fontSize: 14, color: '#7b1fa2', fontWeight: '500' },
-  actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  actionButton: { width: '47%', backgroundColor: '#fff', padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#e0e0e0', borderLeftWidth: 4 },
-  actionIconContainer: { position: 'relative', marginBottom: 8 },
-  actionIcon: { fontSize: 32 },
-  actionTitle: { fontSize: 12, fontWeight: '600', color: '#333', textAlign: 'center' },
-  badge: { position: 'absolute', top: -8, right: -8, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center' },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '600', paddingHorizontal: 4 },
-  listItem: { flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  listItemContent: { flex: 1 },
-  listItemTitle: { fontSize: 14, fontWeight: '500', color: '#333' },
-  listItemSubtitle: { fontSize: 12, color: '#666', marginTop: 2 },
-  logoutButton: { backgroundColor: '#f44336', margin: 16, padding: 16, borderRadius: 8, alignItems: 'center' },
-  logoutText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+  loadingSpinnerContainer: {
+    padding: 20,
+    borderRadius: 50,
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 15,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+
+  // No Class Assigned State
+  noClassContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    minHeight: 400,
+  },
+  noClassIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  noClassEmoji: {
+    fontSize: 48,
+  },
+  noClassTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  noClassDescription: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  refreshButton: {
+    backgroundColor: '#1E3A8A',
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  refreshButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  logoutButtonSmall: {
+    backgroundColor: '#EF4444',
+    margin: 16,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutTextSmall: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Header Section
+  headerSection: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: PADDING,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  schoolLogo: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F1F5F9',
+  },
+  logoPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1E3A8A',
+  },
+  logoPlaceholderText: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  schoolInfo: {
+    flex: 1,
+    marginLeft: 16,
+    justifyContent: 'center',
+  },
+  schoolName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
+    letterSpacing: -0.3,
+  },
+
+  // Profile Card
+  profileCard: {
+    marginHorizontal: PADDING,
+    marginTop: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ECEFF1',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  profileContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingBottom: 12,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#1E3A8A',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  teacherName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  classContainer: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+  },
+  classText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
+
+  // Stats Row
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingTop: 12,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1E3A8A',
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#ECEFF1',
+  },
+
+  // Grid Container
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: PADDING,
+    marginTop: 20,
+    gap: GAP,
+  },
+  gridItem: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ECEFF1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  gridItemContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+  },
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  iconText: {
+    fontSize: 22,
+  },
+  itemTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+    textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+
+  // Footer
+  footer: {
+    marginTop: 28,
+    padding: 16,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '400',
+    letterSpacing: 0.5,
+  },
 });
 
 export default TeacherDashboardScreen;

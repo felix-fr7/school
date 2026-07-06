@@ -7,6 +7,7 @@
 const express = require('express');
 const { query, body } = require('express-validator');
 const teacherController = require('../controllers/teacherController');
+const teacherDashboardController = require('../controllers/teacherDashboardController');
 const attendanceController = require('../controllers/attendanceController');
 const { protect, requireTeacher } = require('../middleware/auth');
 const { upload, handleFileUploadError } = require('../middleware/fileUpload');
@@ -20,6 +21,13 @@ router.use(requireTeacher);
 // ============================================
 // Class & Dashboard Routes
 // ============================================
+
+/**
+ * @route   GET /api/teacher/dashboard-profile
+ * @desc    Get teacher dashboard profile with school branding and stats
+ * @access  Teacher
+ */
+router.get('/dashboard-profile', teacherDashboardController.getDashboardProfile);
 
 /**
  * @route   GET /api/teacher/my-class

@@ -608,6 +608,42 @@ export const studentAPI = {
     return response.data;
   },
 
+  // Dashboard Profile (New UI)
+  async getDashboardProfile(): Promise<ApiResponse<{
+    student: {
+      id: string;
+      name: string;
+      rollNumber: string;
+      className: string;
+      sectionName: string;
+      classSection: string;
+    };
+    school: {
+      id: string;
+      name: string;
+      logoUrl: string | null;
+      code: string;
+    };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      student: {
+        id: string;
+        name: string;
+        rollNumber: string;
+        className: string;
+        sectionName: string;
+        classSection: string;
+      };
+      school: {
+        id: string;
+        name: string;
+        logoUrl: string | null;
+        code: string;
+      };
+    }>>('/student/dashboard-profile');
+    return response.data;
+  },
+
   // Profile
   async getProfile(): Promise<ApiResponse<User>> {
     const response = await api.get<ApiResponse<User>>('/student/profile');
@@ -620,6 +656,52 @@ export const studentAPI = {
 // ============================================
 
 export const teacherAPI = {
+  // Dashboard Profile (New UI)
+  async getDashboardProfile(): Promise<ApiResponse<{
+    teacher: {
+      id: string;
+      name: string;
+      classId: string | null;
+      className: string;
+      sectionName: string;
+      classSection: string;
+    };
+    school: {
+      id: string;
+      name: string;
+      logoUrl: string | null;
+      code: string;
+    };
+    stats: {
+      totalStudents: number;
+      totalHomework: number;
+      totalExams: number;
+    };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      teacher: {
+        id: string;
+        name: string;
+        classId: string | null;
+        className: string;
+        sectionName: string;
+        classSection: string;
+      };
+      school: {
+        id: string;
+        name: string;
+        logoUrl: string | null;
+        code: string;
+      };
+      stats: {
+        totalStudents: number;
+        totalHomework: number;
+        totalExams: number;
+      };
+    }>>('/teacher/dashboard-profile');
+    return response.data;
+  },
+
   // Dashboard - Get teacher's assigned class
   async getMyClass(): Promise<ApiResponse<{
     id: string;
