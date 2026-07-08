@@ -35,10 +35,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware Setup
 // ============================================
 
-// CORS Configuration - Allow requests from mobile app and ngrok tunnel
+// CORS Configuration - Allow requests from mobile app, local development, and ngrok tunnel
 const corsOptions = {
   origin: process.env.FRONTEND_URL 
-    ? [...process.env.FRONTEND_URL.split(','), 'https://unadvised-tribunal-mutate.ngrok-free.dev']
+    ? [...process.env.FRONTEND_URL.split(','), 'http://localhost:3000', 'https://unadvised-tribunal-mutate.ngrok-free.dev']
     : '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
