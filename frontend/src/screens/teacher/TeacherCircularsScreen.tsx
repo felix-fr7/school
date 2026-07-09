@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
-import { adminAPI } from '../../services/api';
+import { contentAPI } from '../../services/api';
 
 interface CircularItem {
   id: string;
@@ -35,7 +35,7 @@ const TeacherCircularsScreen: React.FC = () => {
     try {
       if (refresh) setRefreshing(true);
       else setLoading(true);
-      const response = await adminAPI.getCirculars(1, 20, 'true');
+      const response = await contentAPI.getCirculars(1, 20);
       if (response.success && response.data) {
         setCirculars(response.data.circulars);
       }

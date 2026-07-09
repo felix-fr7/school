@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
-import { adminAPI } from '../../services/api';
+import { contentAPI } from '../../services/api';
 
 interface NewsItem {
   id: string;
@@ -36,7 +36,7 @@ const TeacherNewsScreen: React.FC = () => {
     try {
       if (refresh) setRefreshing(true);
       else setLoading(true);
-      const response = await adminAPI.getNews(1, 20, '', 'true');
+      const response = await contentAPI.getNews(1, 20, '');
       if (response.success && response.data) {
         setNews(response.data.news);
       }

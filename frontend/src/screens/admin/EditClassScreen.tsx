@@ -1,7 +1,7 @@
 /**
  * Edit Class Screen
  * Allows admin to edit class details including name, section, assigned teacher,
- * and teacher credentials (email/password).
+ * and update class login password.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { AdminStackParamList, User } from '../../types';
+import { AdminStackParamList, User, Class } from '../../types';
 import { adminAPI } from '../../services/api';
 
 type RoutePropType = RouteProp<AdminStackParamList, 'ClassDetail'>;
@@ -31,16 +31,16 @@ const EditClassScreen: React.FC = () => {
   const { classId } = route.params;
 
   // Class fields
+  const [classData, setClassData] = useState<Class | null>(null);
   const [className, setClassName] = useState('');
   const [section, setSection] = useState('');
   const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
   const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
   const [teachers, setTeachers] = useState<User[]>([]);
 
-  // Teacher credentials fields
-  const [teacherEmail, setTeacherEmail] = useState('');
-  const [teacherPassword, setTeacherPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  // Class password management
+  const [classPassword, setClassPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -59,11 +59,12 @@ const EditClassScreen: React.FC = () => {
       setLoading(true);
       const response = await adminAPI.getClass(classId);
       if (response.success && response.data) {
-        const classData = response.data;
-        setClassName(classData.name);
-        setSection(classData.section || '');
-        if (classData.teacherId) {
-          setTeacherId(classData.teacherId);
+        const data = response.data;
+        setClassData(data);
+        setClassName(data.name);
+        setSection(data.section || '');
+        if (data.teacherId) {
+          setTeacherId(data.teacherId);
         }
       }
     } catch (error) {
@@ -95,7 +96,6 @@ const EditClassScreen: React.FC = () => {
       const teacher = teachers.find(t => t.id === teacherId);
       if (teacher) {
         setSelectedTeacher(teacher);
-        setTeacherEmail(teacher.email || '');
       }
     }
   }, [teacherId, teachers]);
@@ -109,7 +109,6 @@ const EditClassScreen: React.FC = () => {
   const handleSelectTeacher = (teacher: User) => {
     setSelectedTeacher(teacher);
     setTeacherId(teacher.id);
-    setTeacherEmail(teacher.email || '');
     setShowTeacherPicker(false);
     setSearchQuery('');
   };
@@ -117,7 +116,30 @@ const EditClassScreen: React.FC = () => {
   const handleClearTeacher = () => {
     setSelectedTeacher(null);
     setTeacherId(undefined);
-    setTeacherEmail('');
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!classPassword || classPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      setUpdatingPassword(true);
+      const response = await adminAPI.resetClassPassword(classId, classPassword);
+
+      if (response.success) {
+        Alert.alert('Success', 'Class password updated successfully!');
+        setClassPassword('');
+      } else {
+        Alert.alert('Error', response.error?.message || 'Failed to update password');
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error?.message || 'Failed to update password';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setUpdatingPassword(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -142,6 +164,8 @@ const EditClassScreen: React.FC = () => {
       const response = await adminAPI.updateClass(classId, payload);
 
       if (response.success) {
+        // Refresh class data to get latest
+        fetchClassData();
         Alert.alert('Success', 'Class updated successfully!', [
           {
             text: 'OK',
@@ -171,6 +195,51 @@ const EditClassScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.form}>
+        {/* Class ID Display */}
+        <View style={styles.classIdCard}>
+          <Text style={styles.classIdLabel}>Class Login ID</Text>
+          <Text style={styles.classIdValue}>
+            {classData?.classCode || 'Not yet generated'}
+          </Text>
+          <Text style={styles.classIdNote}>
+            Share this ID with students/parents for class login
+          </Text>
+        </View>
+
+        {/* Class Password Section */}
+        <View style={styles.passwordCard}>
+          <Text style={styles.passwordCardTitle}>Class Login Password</Text>
+          <Text style={styles.passwordCardNote}>
+            Set a password for students/parents to login to this class.
+          </Text>
+
+          <View style={styles.passwordInputRow}>
+            <TextInput
+              style={styles.passwordInputField}
+              placeholder="Enter new password (min 6 characters)"
+              value={classPassword}
+              onChangeText={setClassPassword}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={[
+                styles.updatePasswordButton,
+                (!classPassword || classPassword.length < 6 || updatingPassword) &&
+                  styles.updatePasswordButtonDisabled,
+              ]}
+              onPress={handleUpdatePassword}
+              disabled={!classPassword || classPassword.length < 6 || updatingPassword}
+            >
+              {updatingPassword ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.updatePasswordButtonText}>Update</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <Text style={styles.description}>
           Edit class details below. Changes will be saved to the database.
         </Text>
@@ -224,48 +293,6 @@ const EditClassScreen: React.FC = () => {
             <Text style={styles.teacherPickerText}>Select a teacher...</Text>
             <Text style={styles.dropdownIcon}>▼</Text>
           </TouchableOpacity>
-        )}
-
-        {/* Teacher Credentials Section */}
-        {selectedTeacher && (
-          <View style={styles.credentialsSection}>
-            <Text style={styles.credentialsTitle}>Teacher Login Credentials</Text>
-            <Text style={styles.credentialsNote}>
-              These credentials are used by the teacher to log in and access this class.
-            </Text>
-
-            <Text style={styles.label}>Email (User ID)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="teacher@school.com"
-              value={teacherEmail}
-              onChangeText={setTeacherEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              editable={false}
-            />
-
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordInputContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="••••••••"
-                value={teacherPassword}
-                onChangeText={setTeacherPassword}
-                secureTextEntry={!showPassword}
-                editable={false}
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Text style={styles.eyeIcon}>{showPassword ? '👁' : '👁‍🗨'}</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.passwordHint}>
-              Password is hidden for security. Contact the teacher directly if password reset is needed.
-            </Text>
-          </View>
         )}
 
         <View style={styles.buttonRow}>
@@ -366,6 +393,86 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+  // Class ID Card
+  classIdCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    borderStyle: 'solid',
+  },
+  classIdLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#007AFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  classIdValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#007AFF',
+    marginBottom: 4,
+  },
+  classIdNote: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  // Password Card
+  passwordCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  passwordCardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+  },
+  passwordCardNote: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 12,
+    lineHeight: 16,
+  },
+  passwordInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  passwordInputField: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  updatePasswordButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  updatePasswordButtonDisabled: {
+    opacity: 0.5,
+  },
+  updatePasswordButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   form: {
     padding: 20,
   },
@@ -441,53 +548,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
-  },
-  // Credentials section
-  credentialsSection: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 16,
-  },
-  credentialsTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 8,
-  },
-  credentialsNote: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 16,
-    lineHeight: 16,
-  },
-  passwordInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 12,
-    fontSize: 16,
-  },
-  eyeButton: {
-    padding: 12,
-    paddingRight: 16,
-  },
-  eyeIcon: {
-    fontSize: 18,
-  },
-  passwordHint: {
-    fontSize: 11,
-    color: '#999',
-    marginTop: 8,
-    fontStyle: 'italic',
   },
   buttonRow: {
     flexDirection: 'row',

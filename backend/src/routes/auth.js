@@ -1,11 +1,13 @@
 /**
  * Authentication Routes
  * Handles user registration, login, and profile management
+ * Also handles class-based login system
  */
 
 const express = require('express');
 const { body } = require('express-validator');
 const authController = require('../controllers/authController');
+const classAuthController = require('../controllers/classAuthController');
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
@@ -102,6 +104,37 @@ router.put(
       .withMessage('New password must contain at least one number'),
   ],
   authController.updatePassword
+);
+
+/**
+ * @route   POST /api/auth/class-login
+ * @desc    Login using class code and password (for Class-based dashboard access)
+ * @access  Public
+ * @body    { classCode, password }
+ */
+router.post(
+  '/class-login',
+  [
+    body('classCode')
+      .trim()
+      .notEmpty()
+      .withMessage('Class code is required'),
+    body('password')
+      .notEmpty()
+      .withMessage('Password is required'),
+  ],
+  classAuthController.classLogin
+);
+
+/**
+ * @route   GET /api/auth/class/dashboard
+ * @desc    Get dashboard data for logged-in class
+ * @access  Private (Class token required)
+ */
+router.get(
+  '/class/dashboard',
+  protect,
+  classAuthController.getClassDashboard
 );
 
 module.exports = router;

@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -39,6 +40,10 @@ const ClassDashboardScreen: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<ClassDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Class password management
+  const [classPassword, setClassPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -84,6 +89,30 @@ const ClassDashboardScreen: React.FC = () => {
     );
   }
 
+  const handleUpdatePassword = async () => {
+    if (!classPassword || classPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      setUpdatingPassword(true);
+      const response = await adminAPI.resetClassPassword(classId, classPassword);
+
+      if (response.success) {
+        Alert.alert('Success', 'Class password reset successfully!');
+        setClassPassword('');
+      } else {
+        Alert.alert('Error', response.error?.message || 'Failed to update password');
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error?.message || 'Failed to update password';
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   const { class: classData, metrics, recentHomework, upcomingExams, recentAnnouncements } = dashboardData;
   const classFullName = classData.section ? `${classData.name} - ${classData.section}` : classData.name;
 
@@ -108,6 +137,67 @@ const ClassDashboardScreen: React.FC = () => {
             </View>
           )}
         </View>
+      </View>
+
+      {/* Prominent Class ID Bento Card */}
+      <View style={styles.classIdBentoCard}>
+        <View style={styles.classIdBentoHeader}>
+          <Text style={styles.classIdBentoIcon}>🔑</Text>
+          <Text style={styles.classIdBentoTitle}>Class Login ID</Text>
+        </View>
+        <View style={styles.classIdBentoValueContainer}>
+          <Text style={styles.classIdBentoValue}>{classData.classCode || 'Not yet generated'}</Text>
+        </View>
+        <Text style={styles.classIdBentoNote}>
+          Share this ID with students/parents for class login
+        </Text>
+      </View>
+
+      {/* Class Password Management Card */}
+      <View style={styles.passwordBentoCard}>
+        <View style={styles.passwordBentoHeader}>
+          <Text style={styles.passwordBentoIcon}>🔒</Text>
+          <Text style={styles.passwordBentoTitle}>Class Password Management</Text>
+        </View>
+        <Text style={styles.passwordBentoNote}>
+          Reset the class login password if students/parents have forgotten it.
+        </Text>
+        <View style={styles.passwordInputRow}>
+          <TextInput
+            style={styles.passwordInputField}
+            placeholder="Enter new password (min 6 characters)"
+            value={classPassword}
+            onChangeText={setClassPassword}
+            secureTextEntry
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            style={[
+              styles.resetPasswordButton,
+              (!classPassword || classPassword.length < 6 || updatingPassword) &&
+                styles.resetPasswordButtonDisabled,
+            ]}
+            onPress={handleUpdatePassword}
+            disabled={!classPassword || classPassword.length < 6 || updatingPassword}
+          >
+            {updatingPassword ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.resetPasswordButtonText}>Reset Password</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Edit Class Button */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.editClassButton}
+          onPress={() => navigation.navigate('EditClass', { classId })}
+        >
+          <Text style={styles.editClassIcon}>✏️</Text>
+          <Text style={styles.editClassText}>Edit Class Details</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Quick Metrics */}
@@ -455,6 +545,146 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     textAlign: 'center',
+  },
+  // Class ID Bento Card Styles
+  classIdBentoCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    borderStyle: 'solid',
+    elevation: 4,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  classIdBentoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  classIdBentoIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  classIdBentoTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#007AFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  classIdBentoValueContainer: {
+    backgroundColor: '#F0F7FF',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  classIdBentoValue: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#007AFF',
+    letterSpacing: 2,
+  },
+  classIdBentoNote: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  // Password Bento Card Styles
+  passwordBentoCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  passwordBentoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  passwordBentoIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  passwordBentoTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+  },
+  passwordBentoNote: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 12,
+    lineHeight: 18,
+  },
+  passwordInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  passwordInputField: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  resetPasswordButton: {
+    backgroundColor: '#FF9500',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    minWidth: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetPasswordButtonDisabled: {
+    opacity: 0.5,
+  },
+  resetPasswordButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  // Edit Class Button
+  editClassButton: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  editClassIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  editClassText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#007AFF',
   },
 });
 

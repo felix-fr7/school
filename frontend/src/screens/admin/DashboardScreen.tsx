@@ -80,9 +80,9 @@ const AdminDashboardScreen: React.FC = () => {
     { id: 'StudentsList', title: 'Students', icon: '👨‍🎓', count: stats.totalStudents },
     { id: 'HomeworkList', title: 'Homework', icon: '📝', count: stats.totalHomework },
     { id: 'MarksList', title: 'Marks', icon: '📊', count: 0 },
-    { id: 'NewsList', title: 'News', icon: '📰', count: stats.totalNews },
-    { id: 'CircularsList', title: 'Circulars', icon: '📋', count: 0 },
-    { id: 'ExamSchedulesList', title: 'Exams', icon: '📅', count: 0 },
+    { id: 'AdminNews', title: 'News', icon: '📰', count: stats.totalNews },
+    { id: 'AdminCirculars', title: 'Circulars', icon: '📋', count: 0 },
+    { id: 'AdminExams', title: 'Exams', icon: '📅', count: 0 },
   ];
 
   return (

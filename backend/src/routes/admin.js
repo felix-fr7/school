@@ -126,6 +126,25 @@ router.delete(
   adminController.deleteClass
 );
 
+/**
+ * @route   POST /api/admin/classes/:id/reset-password
+ * @desc    Reset password for a class (for class-based login)
+ * @access  Admin
+ * @body    { password }
+ */
+router.post(
+  '/classes/:id/reset-password',
+  [
+    param('id').isUUID().withMessage('Invalid class ID format'),
+    body('password')
+      .isLength({ min: 6 })
+      .withMessage('Password must be at least 6 characters long')
+      .matches(/\d/)
+      .withMessage('Password must contain at least one number'),
+  ],
+  adminController.resetClassPassword
+);
+
 // ============================================
 // Student Management Routes
 // ============================================

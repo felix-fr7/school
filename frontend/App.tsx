@@ -45,6 +45,10 @@ import CircularsListScreen from './src/screens/admin/CircularsListScreen';
 import CreateCircularScreen from './src/screens/admin/CreateCircularScreen';
 import ExamSchedulesListScreen from './src/screens/admin/ExamSchedulesListScreen';
 import CreateExamScheduleScreen from './src/screens/admin/CreateExamScheduleScreen';
+// New Admin Content Screens with Visibility Control
+import AdminNewsScreen from './src/screens/admin/AdminNewsScreen';
+import AdminCircularsScreen from './src/screens/admin/AdminCircularsScreen';
+import AdminExamsScreen from './src/screens/admin/AdminExamsScreen';
 
 // Teacher Screens
 import TeacherDashboardScreen from './src/screens/teacher/TeacherDashboardScreen';
@@ -233,6 +237,22 @@ const AdminNavigator = () => (
       component={CreateExamScheduleScreen}
       options={{ title: 'Add Exam Schedule' }}
     />
+    {/* New Admin Content Screens with Visibility Control */}
+    <AdminStack.Screen
+      name="AdminNews"
+      component={AdminNewsScreen}
+      options={{ title: 'News Manager' }}
+    />
+    <AdminStack.Screen
+      name="AdminCirculars"
+      component={AdminCircularsScreen}
+      options={{ title: 'Circulars Manager' }}
+    />
+    <AdminStack.Screen
+      name="AdminExams"
+      component={AdminExamsScreen}
+      options={{ title: 'Exam Timetables' }}
+    />
   </AdminStack.Navigator>
 );
 
@@ -386,7 +406,7 @@ const AuthNavigator = () => (
 // Root Navigator
 // ============================================
 const RootNavigator = () => {
-  const { isAuthenticated, isLoading, isSuperAdmin, isAdmin, isStudent, isTeacher } = useAuth();
+  const { isAuthenticated, isLoading, isSuperAdmin, isAdmin, isStudent, isTeacher, isClass } = useAuth();
 
   if (isLoading) {
     return (
@@ -399,8 +419,11 @@ const RootNavigator = () => {
 
   return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
+      {!isAuthenticated && !isClass ? (
         <RootStack.Screen name="Auth" component={AuthNavigator} />
+      ) : isClass ? (
+        // Class-based login - route to Student navigator (same content access as students)
+        <RootStack.Screen name="Student" component={StudentNavigator} />
       ) : isSuperAdmin ? (
         <RootStack.Screen name="SuperAdmin" component={SuperAdminNavigator} />
       ) : isAdmin ? (

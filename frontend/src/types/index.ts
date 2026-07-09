@@ -58,6 +58,7 @@ export interface CreateTenantInput {
 // Class types
 export interface Class {
   id: string;
+  classCode?: string; // Auto-generated class code (e.g., CLS-1)
   name: string;
   section?: string;
   teacherId?: string;
@@ -69,6 +70,26 @@ export interface Class {
 export interface CreateClassInput {
   name: string;
   section?: string;
+  password?: string;
+  assignedTeacherId?: string;
+}
+
+// Class login response
+export interface ClassLoginResponse {
+  class: {
+    id: string;
+    classCode: string;
+    name: string;
+    section: string;
+    teacher?: {
+      name: string;
+      email: string;
+    } | null;
+    studentCount: number;
+    homeworkCount: number;
+    examCount: number;
+  };
+  token: string;
 }
 
 // ============================================
@@ -134,6 +155,8 @@ export interface News {
   summary?: string;
   category?: string;
   imageUrl?: string;
+  pdfUrl?: string;
+  visibility: 'ALL' | 'TEACHERS_ONLY';
   tenantId: string;
   postedBy: string;
   isPublished: boolean;
@@ -149,6 +172,8 @@ export interface CreateNewsInput {
   summary?: string;
   category?: string;
   imageUrl?: string;
+  pdfUrl?: string;
+  visibility?: 'ALL' | 'TEACHERS_ONLY';
 }
 
 export interface Circular {
@@ -156,6 +181,8 @@ export interface Circular {
   title: string;
   content: string;
   circularNo?: string;
+  imageUrl?: string;
+  visibility: 'ALL' | 'TEACHERS_ONLY';
   tenantId: string;
   issuedBy: string;
   isPublished: boolean;
@@ -167,8 +194,11 @@ export interface Circular {
 
 export interface CreateCircularInput {
   title: string;
-  content: string;
+  content?: string;
+  message?: string;
   circularNo?: string;
+  imageUrl?: string;
+  visibility?: 'ALL' | 'TEACHERS_ONLY';
 }
 
 export interface ExamSchedule {
@@ -195,6 +225,26 @@ export interface CreateExamScheduleInput {
   classId: string;
   duration?: number;
   roomNo?: string;
+}
+
+// New Exam type for exam timetables (PDF/Image based)
+export interface Exam {
+  id: string;
+  examName: string;
+  classId?: string;
+  pdfUrl?: string;
+  imageUrl?: string;
+  tenantId: string;
+  createdAt: string;
+  updatedAt: string;
+  class?: { id: string; name: string; section?: string };
+}
+
+export interface CreateExamInput {
+  examName: string;
+  classId?: string;
+  pdfUrl?: string;
+  imageUrl?: string;
 }
 
 // ============================================
@@ -350,6 +400,10 @@ export type AdminStackParamList = {
   CreateCircular: undefined;
   ExamSchedulesList: { classId?: string } | undefined;
   CreateExamSchedule: undefined;
+  // New Admin Content Screens with Visibility Control
+  AdminNews: undefined;
+  AdminCirculars: undefined;
+  AdminExams: undefined;
 };
 
 // Student Stack
@@ -400,6 +454,12 @@ export interface AuthContextType {
    * @param password - User password
    */
   login: (usernameOrEmailOrId: string, password: string) => Promise<void>;
+  /**
+   * Login as a class using class code and password
+   * @param classCode - Class code (e.g., CLS-1)
+   * @param password - Class password
+   */
+  classLogin: (classCode: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -407,6 +467,14 @@ export interface AuthContextType {
   isAdmin: boolean;
   isStudent: boolean;
   isTeacher: boolean;
+  /**
+   * Check if currently logged in as a class
+   */
+  isClass: boolean;
+  /**
+   * Current class data (if logged in as class)
+   */
+  currentClass: ClassLoginResponse['class'] | null;
 }
 
 export interface PostContextType {

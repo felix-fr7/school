@@ -17,6 +17,7 @@ import { User } from '../../types';
 const CreateClassScreen: React.FC = () => {
   const [className, setClassName] = useState('');
   const [section, setSection] = useState('');
+  const [password, setPassword] = useState('');
   const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
   const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
   const [teachers, setTeachers] = useState<User[]>([]);
@@ -24,6 +25,7 @@ const CreateClassScreen: React.FC = () => {
   const [fetchingTeachers, setFetchingTeachers] = useState(false);
   const [showTeacherPicker, setShowTeacherPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [generatedClassCode, setGeneratedClassCode] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeachers();
@@ -63,31 +65,50 @@ const CreateClassScreen: React.FC = () => {
       return;
     }
 
+    if (!password.trim()) {
+      Alert.alert('Error', 'Please enter a password for class login');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
     try {
       setLoading(true);
       const payload: any = {
         name: className.trim(),
         section: section.trim() || undefined,
+        password: password,
       };
 
       if (teacherId) {
-        payload.teacherId = teacherId;
+        payload.assignedTeacherId = teacherId;
       }
 
       const response = await adminAPI.createClass(payload);
 
-      if (response.success) {
-        Alert.alert('Success', 'Class created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              setClassName('');
-              setSection('');
-              setTeacherId(undefined);
-              setSelectedTeacher(null);
+      if (response.success && response.data) {
+        const classCode = response.data.classCode || 'N/A';
+        setGeneratedClassCode(classCode);
+        Alert.alert(
+          'Success',
+          `Class created successfully!\n\nClass ID: ${classCode}\n\nShare this ID with students/parents for login.`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setClassName('');
+                setSection('');
+                setPassword('');
+                setTeacherId(undefined);
+                setSelectedTeacher(null);
+                setGeneratedClassCode(null);
+              },
             },
-          },
-        ]);
+          ]
+        );
       } else {
         Alert.alert('Error', response.error?.message || 'Failed to create class');
       }
@@ -123,6 +144,19 @@ const CreateClassScreen: React.FC = () => {
           autoCapitalize="characters"
           maxLength={10}
         />
+
+        <Text style={styles.label}>Class Login Password *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Set a password for class login (min 6 characters)"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+        />
+        <Text style={styles.hintText}>
+          This password will be used by students/parents to login to this class.
+        </Text>
 
         <Text style={styles.label}>Assigned Class Teacher (Optional)</Text>
         {fetchingTeachers ? (
@@ -244,6 +278,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 6,
+    fontStyle: 'italic',
   },
   teacherPickerButton: {
     backgroundColor: '#fff',

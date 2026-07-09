@@ -17,6 +17,7 @@ import {
   CreateTenantInput,
   Class,
   CreateClassInput,
+  ClassLoginResponse,
   Homework,
   CreateHomeworkInput,
   Mark,
@@ -27,6 +28,8 @@ import {
   CreateCircularInput,
   ExamSchedule,
   CreateExamScheduleInput,
+  Exam,
+  CreateExamInput,
   CreateStudentInput,
   DashboardStats,
   StudentStatistics,
@@ -79,6 +82,31 @@ export const storage = {
 
   async saveUser(user: User): Promise<void> {
     await AsyncStorage.setItem('user', JSON.stringify(user));
+  },
+
+  async clearUser(): Promise<void> {
+    await AsyncStorage.removeItem('user');
+  },
+
+  // Class storage methods
+  async getClass(): Promise<ClassLoginResponse['class'] | null> {
+    const classData = await AsyncStorage.getItem('currentClass');
+    if (classData === null) return null;
+    const classStr = typeof classData === 'string' ? classData : String(classData);
+    try {
+      return JSON.parse(classStr);
+    } catch (e) {
+      console.error('Error parsing class data from storage:', e);
+      return null;
+    }
+  },
+
+  async saveClass(classData: ClassLoginResponse['class']): Promise<void> {
+    await AsyncStorage.setItem('currentClass', JSON.stringify(classData));
+  },
+
+  async clearClass(): Promise<void> {
+    await AsyncStorage.removeItem('currentClass');
   },
 
   async clearAuth(): Promise<void> {
@@ -174,6 +202,43 @@ export const authAPI = {
       currentPassword,
       newPassword,
     });
+    return response.data;
+  },
+
+  /**
+   * Login as a class using class code and password
+   * @param classCode - Class code (e.g., CLS-1)
+   * @param password - Class password
+   */
+  async classLogin(classCode: string, password: string): Promise<ApiResponse<ClassLoginResponse>> {
+    const response = await api.post<ApiResponse<ClassLoginResponse>>('/auth/class-login', {
+      classCode,
+      password,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get class dashboard data (for logged-in class)
+   */
+  async getClassDashboard(): Promise<ApiResponse<{
+    class: ClassLoginResponse['class'] & { teacher?: { name: string; email: string; phone?: string; qualification?: string; subjectSpecialization?: string } | null };
+    students: User[];
+    homework: Homework[];
+    exams: ExamSchedule[];
+    news: News[];
+    circulars: Circular[];
+    weeklyLessons: any[] | null;
+  }>> {
+    const response = await api.get<ApiResponse<{
+      class: ClassLoginResponse['class'] & { teacher?: { name: string; email: string; phone?: string; qualification?: string; subjectSpecialization?: string } | null };
+      students: User[];
+      homework: Homework[];
+      exams: ExamSchedule[];
+      news: News[];
+      circulars: Circular[];
+      weeklyLessons: any[] | null;
+    }>>('/auth/class/dashboard');
     return response.data;
   },
 };
@@ -301,6 +366,18 @@ export const adminAPI = {
 
   async deleteClass(id: string): Promise<ApiResponse<void>> {
     const response = await api.delete<ApiResponse<void>>(`/admin/classes/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Reset class password (for class-based login)
+   * POST /api/admin/classes/:id/reset-password
+   */
+  async resetClassPassword(id: string, password: string): Promise<ApiResponse<{ id: string; classCode: string; name: string; section: string }>> {
+    const response = await api.post<ApiResponse<{ id: string; classCode: string; name: string; section: string }>>(
+      `/admin/classes/${id}/reset-password`,
+      { password }
+    );
     return response.data;
   },
 
@@ -944,6 +1021,142 @@ export const adminAPIExtended = {
 
   async updateStudentFee(studentId: string, data: { totalAmount?: number; paidAmount?: number; status?: string; dueDate?: string; remarks?: string }): Promise<ApiResponse<any>> {
     const response = await api.put<ApiResponse<any>>(`/admin/fees/${studentId}`, data);
+    return response.data;
+  },
+};
+
+// ============================================
+// Admin Content API (News, Circulars, Exams with Visibility)
+// ============================================
+
+export const adminContentAPI = {
+  // ===== News with Visibility =====
+  async getNews(page = 1, limit = 10, visibility?: 'ALL' | 'TEACHERS_ONLY', isPublished?: boolean): Promise<ApiResponse<{ news: News[]; pagination: any }>> {
+    const params: any = { page, limit };
+    if (visibility) params.visibility = visibility;
+    if (isPublished !== undefined) params.isPublished = isPublished;
+    const response = await api.get<ApiResponse<{ news: News[]; pagination: any }>>('/admin/content/news', { params });
+    return response.data;
+  },
+
+  async createNews(data: CreateNewsInput): Promise<ApiResponse<News>> {
+    const response = await api.post<ApiResponse<News>>('/admin/content/news', data);
+    return response.data;
+  },
+
+  async updateNews(id: string, data: Partial<CreateNewsInput> & { isPublished?: boolean }): Promise<ApiResponse<News>> {
+    const response = await api.put<ApiResponse<News>>(`/admin/content/news/${id}`, data);
+    return response.data;
+  },
+
+  async deleteNews(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/admin/content/news/${id}`);
+    return response.data;
+  },
+
+  // ===== Circulars with Visibility =====
+  async getCirculars(page = 1, limit = 10, visibility?: 'ALL' | 'TEACHERS_ONLY', isPublished?: boolean): Promise<ApiResponse<{ circulars: Circular[]; pagination: any }>> {
+    const params: any = { page, limit };
+    if (visibility) params.visibility = visibility;
+    if (isPublished !== undefined) params.isPublished = isPublished;
+    const response = await api.get<ApiResponse<{ circulars: Circular[]; pagination: any }>>('/admin/content/circulars', { params });
+    return response.data;
+  },
+
+  async createCircular(data: CreateCircularInput): Promise<ApiResponse<Circular>> {
+    const response = await api.post<ApiResponse<Circular>>('/admin/content/circulars', data);
+    return response.data;
+  },
+
+  async updateCircular(id: string, data: Partial<CreateCircularInput> & { isPublished?: boolean }): Promise<ApiResponse<Circular>> {
+    const response = await api.put<ApiResponse<Circular>>(`/admin/content/circulars/${id}`, data);
+    return response.data;
+  },
+
+  async deleteCircular(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/admin/content/circulars/${id}`);
+    return response.data;
+  },
+
+  // ===== Exams (Timetables) =====
+  async getExams(page = 1, limit = 10, classId?: string): Promise<ApiResponse<{ exams: Exam[]; pagination: any }>> {
+    const params: any = { page, limit };
+    if (classId) params.classId = classId;
+    const response = await api.get<ApiResponse<{ exams: Exam[]; pagination: any }>>('/admin/content/exams', { params });
+    return response.data;
+  },
+
+  async createExam(data: CreateExamInput): Promise<ApiResponse<Exam>> {
+    const response = await api.post<ApiResponse<Exam>>('/admin/content/exams', data);
+    return response.data;
+  },
+
+  async updateExam(id: string, data: Partial<CreateExamInput>): Promise<ApiResponse<Exam>> {
+    const response = await api.put<ApiResponse<Exam>>(`/admin/content/exams/${id}`, data);
+    return response.data;
+  },
+
+  async deleteExam(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/admin/content/exams/${id}`);
+    return response.data;
+  },
+};
+
+// ============================================
+// Content API (Shared - News, Circulars, Exams)
+// Accessible by Students, Teachers, and Admins
+// ============================================
+
+export const contentAPI = {
+  // ===== News =====
+  async getNews(page = 1, limit = 10, category = ''): Promise<ApiResponse<{ news: News[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ news: News[]; pagination: any }>>('/content/news', {
+      params: { page, limit, category },
+    });
+    return response.data;
+  },
+
+  async getNewsById(id: string): Promise<ApiResponse<News>> {
+    const response = await api.get<ApiResponse<News>>(`/content/news/${id}`);
+    return response.data;
+  },
+
+  // ===== Circulars =====
+  async getCirculars(page = 1, limit = 10): Promise<ApiResponse<{ circulars: Circular[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ circulars: Circular[]; pagination: any }>>('/content/circulars', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async getCircularById(id: string): Promise<ApiResponse<Circular>> {
+    const response = await api.get<ApiResponse<Circular>>(`/content/circulars/${id}`);
+    return response.data;
+  },
+
+  // ===== Exams (New Exam Table) =====
+  async getExams(page = 1, limit = 10, classId = ''): Promise<ApiResponse<{ exams: Exam[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ exams: Exam[]; pagination: any }>>('/content/exams', {
+      params: { page, limit, classId },
+    });
+    return response.data;
+  },
+
+  async getExamById(id: string): Promise<ApiResponse<Exam>> {
+    const response = await api.get<ApiResponse<Exam>>(`/content/exams/${id}`);
+    return response.data;
+  },
+
+  // ===== Exam Schedules (Legacy ExamSchedule Table) =====
+  async getExamSchedules(page = 1, limit = 10): Promise<ApiResponse<{ examSchedules: ExamSchedule[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ examSchedules: ExamSchedule[]; pagination: any }>>('/content/exam-schedules', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async getExamScheduleById(id: string): Promise<ApiResponse<ExamSchedule>> {
+    const response = await api.get<ApiResponse<ExamSchedule>>(`/content/exam-schedules/${id}`);
     return response.data;
   },
 };

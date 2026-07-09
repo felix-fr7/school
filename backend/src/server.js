@@ -19,6 +19,8 @@ const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
 const tenantRoutes = require('./routes/tenants');
 const adminRoutes = require('./routes/admin');
+const adminContentRoutes = require('./routes/adminContent');
+const contentRoutes = require('./routes/content'); // Shared content routes for students/teachers
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
 const weeklyLessonsRoutes = require('./routes/weeklyLessons');
@@ -81,6 +83,12 @@ app.use('/api/tenants', tenantRoutes);
 
 // Admin routes (School Admin)
 app.use('/api/admin', adminRoutes);
+
+// Admin Content routes (News, Circulars, Exams with visibility)
+app.use('/api/admin/content', adminContentRoutes);
+
+// Content routes (Shared read-only access for Students and Teachers)
+app.use('/api/content', contentRoutes);
 
 // Weekly Lessons routes (MUST be before teacher/student routes to avoid conflicts)
 // The weeklyLessonsRoutes handles /api/teacher/weekly-lessons and /api/student/weekly-lessons

@@ -15,13 +15,13 @@ const getDashboardStats = async (req, res, next) => {
     const tenantId = req.user.tenantId;
     const classId = req.user.classId;
 
-    // Get counts using subqueries
+    // Get counts using subqueries (Students only see 'ALL' visibility for News/Circulars)
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM "Homework" WHERE "classId" = $1 AND "isPublished" = true) as "totalHomework",
         (SELECT COUNT(*) FROM "Mark" WHERE "studentId" = $2 AND "isPublished" = true) as "totalMarks",
-        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $3 AND "isPublished" = true) as "totalNews",
-        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $4 AND "isPublished" = true) as "totalCirculars",
+        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $3 AND "isPublished" = true AND visibility = 'ALL') as "totalNews",
+        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $4 AND "isPublished" = true AND visibility = 'ALL') as "totalCirculars",
         (SELECT COUNT(*) FROM "ExamSchedule" WHERE "classId" = $5 AND "isPublished" = true AND date >= NOW()) as "upcomingExams"
     `;
 
@@ -43,10 +43,10 @@ const getDashboardStats = async (req, res, next) => {
       recentHomework = homeworkResult.rows;
     }
 
-    // Get recent news
+    // Get recent news (Students only see 'ALL' visibility)
     const newsQuery = `
       SELECT * FROM "News"
-      WHERE "tenantId" = $1 AND "isPublished" = true
+      WHERE "tenantId" = $1 AND "isPublished" = true AND visibility = 'ALL'
       ORDER BY "createdAt" DESC
       LIMIT 3
     `;
@@ -345,10 +345,10 @@ const getNews = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build where clause
-    let whereClause = 'n."tenantId" = $1 AND n."isPublished" = true';
-    let params = [tenantId];
-    let paramIndex = 2;
+    // Build where clause (Students only see 'ALL' visibility)
+    let whereClause = 'n."tenantId" = $1 AND n."isPublished" = true AND n.visibility = $2';
+    let params = [tenantId, 'ALL'];
+    let paramIndex = 3;
 
     if (category) {
       params.push(category);
@@ -408,11 +408,12 @@ const getNewsById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
+    // Students only see 'ALL' visibility news
     const newsQuery = `
       SELECT n.*, u.id as "postedById", u.name as "postedByName"
       FROM "News" n
       LEFT JOIN "User" u ON n."postedBy" = u.id
-      WHERE n.id = $1 AND n."tenantId" = $2 AND n."isPublished" = true
+      WHERE n.id = $1 AND n."tenantId" = $2 AND n."isPublished" = true AND n.visibility = 'ALL'
     `;
 
     const newsResult = await db.query(newsQuery, [id, tenantId]);
@@ -464,11 +465,12 @@ const getCirculars = async (req, res, next) => {
     const total = parseInt(countResult.rows[0].total);
 
     // Get circulars
+    // Students only see 'ALL' visibility circulars
     const circularsQuery = `
       SELECT c.*, u.id as "issuedById", u.name as "issuedByName"
       FROM "Circular" c
       LEFT JOIN "User" u ON c."issuedBy" = u.id
-      WHERE c."tenantId" = $1 AND c."isPublished" = true
+      WHERE c."tenantId" = $1 AND c."isPublished" = true AND c.visibility = 'ALL'
       ORDER BY c."issueDate" DESC
       LIMIT $2 OFFSET $3
     `;
@@ -509,11 +511,12 @@ const getCircularById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
+    // Students only see 'ALL' visibility circulars
     const circularQuery = `
       SELECT c.*, u.id as "issuedById", u.name as "issuedByName"
       FROM "Circular" c
       LEFT JOIN "User" u ON c."issuedBy" = u.id
-      WHERE c.id = $1 AND c."tenantId" = $2 AND c."isPublished" = true
+      WHERE c.id = $1 AND c."tenantId" = $2 AND c."isPublished" = true AND c.visibility = 'ALL'
     `;
 
     const circularResult = await db.query(circularQuery, [id, tenantId]);
@@ -720,13 +723,13 @@ const getDashboardExtended = async (req, res, next) => {
     const tenantId = req.user.tenantId;
     const classId = req.user.classId;
 
-    // Get basic stats
+    // Get basic stats (Students only see 'ALL' visibility for News/Circulars)
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM "Homework" WHERE "classId" = $1 AND "isPublished" = true) as "totalHomework",
         (SELECT COUNT(*) FROM "Mark" WHERE "studentId" = $2 AND "isPublished" = true) as "totalMarks",
-        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $3 AND "isPublished" = true) as "totalNews",
-        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $4 AND "isPublished" = true) as "totalCirculars",
+        (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $3 AND "isPublished" = true AND visibility = 'ALL') as "totalNews",
+        (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $4 AND "isPublished" = true AND visibility = 'ALL') as "totalCirculars",
         (SELECT COUNT(*) FROM "ExamSchedule" WHERE "classId" = $5 AND "isPublished" = true AND date >= NOW()) as "upcomingExams"
     `;
 
@@ -768,10 +771,10 @@ const getDashboardExtended = async (req, res, next) => {
       recentHomework = homeworkResult.rows;
     }
 
-    // Get recent news
+    // Get recent news (Students only see 'ALL' visibility)
     const newsQuery = `
       SELECT * FROM "News"
-      WHERE "tenantId" = $1 AND "isPublished" = true
+      WHERE "tenantId" = $1 AND "isPublished" = true AND visibility = 'ALL'
       ORDER BY "createdAt" DESC
       LIMIT 3
     `;

@@ -2,10 +2,11 @@
  * Authentication Context
  * Provides authentication state and methods throughout the app
  * Multi-Tenant School Management System
+ * Now supports both User login and Class-based login
  */
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User, AuthContextType, UserRole } from '../types';
+import { User, ClassLoginResponse, AuthContextType } from '../types';
 import { authAPI, storage } from '../services/api';
 
 // Create context
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [currentClass, setCurrentClass] = useState<ClassLoginResponse['class'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize auth state from storage on app start
@@ -24,14 +26,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const initializeAuth = async () => {
     try {
-      const [storedToken, storedUser] = await Promise.all([
+      const [storedToken, storedUser, storedClass] = await Promise.all([
         storage.getToken(),
         storage.getUser(),
+        storage.getClass(),
       ]);
 
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(storedUser);
+      }
+      if (storedClass) {
+        setCurrentClass(storedClass);
       }
     } catch (error) {
       console.error('Error initializing auth:', error);
@@ -52,6 +58,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (response.success && response.data) {
         const { user: userData, token: authToken } = response.data;
 
+        // Clear class data if any
+        setCurrentClass(null);
+        await storage.clearClass();
+
         // Save to storage
         await Promise.all([
           storage.saveToken(authToken),
@@ -63,6 +73,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setToken(authToken);
       } else {
         throw new Error(response.error?.message || 'Login failed');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  /**
+   * Login as a class using class code and password
+   * @param classCode - Class code (e.g., CLS-1)
+   * @param password - Class password
+   */
+  const classLogin = async (classCode: string, password: string) => {
+    try {
+      const response = await authAPI.classLogin(classCode, password);
+
+      if (response.success && response.data) {
+        const { class: classData, token: authToken } = response.data;
+
+        // Clear user data if any
+        setUser(null);
+        await storage.clearUser();
+
+        // Save class data and token
+        await Promise.all([
+          storage.saveToken(authToken),
+          storage.saveClass(classData),
+        ]);
+
+        // Update state
+        setToken(authToken);
+        setCurrentClass(classData);
+      } else {
+        throw new Error(response.error?.message || 'Class login failed');
       }
     } catch (error) {
       throw error;
@@ -102,8 +145,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await storage.clearAuth();
+      await storage.clearClass();
       setUser(null);
       setToken(null);
+      setCurrentClass(null);
     } catch (error) {
       console.error('Error during logout:', error);
       throw error;
@@ -113,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Check if user is authenticated
    */
-  const isAuthenticated = !!token && !!user;
+  const isAuthenticated = !!token;
 
   /**
    * Check if user is Super Admin
@@ -135,13 +180,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    */
   const isTeacher = user?.role === 'TEACHER';
 
+  /**
+   * Check if currently logged in as a class
+   */
+  const isClass = !!currentClass;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         token,
+        currentClass,
         isLoading,
         login,
+        classLogin,
         register,
         logout,
         isAuthenticated,
@@ -149,6 +201,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin,
         isStudent,
         isTeacher,
+        isClass,
       }}
     >
       {children}

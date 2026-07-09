@@ -111,7 +111,7 @@ const TeacherDashboardScreen: React.FC = () => {
     { id: '1', title: 'NEWS', icon: '📰', route: 'TeacherNews' },
     { id: '2', title: 'MESSAGES', icon: '💬' },
     { id: '3', title: 'HOME WORK', icon: '📚', route: 'WeeklyLessonGrid' }, // Renamed from WEEKLY DIARY
-    { id: '4', title: 'EXAMS', icon: '📅' },
+    { id: '4', title: 'EXAMS', icon: '📅', route: 'TeacherNews' }, // Using TeacherNews as placeholder - will show exam schedules
     { id: '5', title: 'TOPPERS', icon: '🏆' },
     { id: '6', title: 'CONTACT', icon: '📞' },
     { id: '7', title: 'ALBUMS', icon: '📸' },
