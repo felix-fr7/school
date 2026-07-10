@@ -146,7 +146,7 @@ const ClassDashboardScreen: React.FC = () => {
           <Text style={styles.classIdBentoTitle}>Class Login ID</Text>
         </View>
         <View style={styles.classIdBentoValueContainer}>
-          <Text style={styles.classIdBentoValue}>{classData.classCode || 'Not yet generated'}</Text>
+          <Text style={styles.classIdBentoValue}>{classData.classCode || classData.class_code || 'Not yet generated'}</Text>
         </View>
         <Text style={styles.classIdBentoNote}>
           Share this ID with students/parents for class login

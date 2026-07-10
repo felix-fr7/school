@@ -23,6 +23,7 @@ const adminContentRoutes = require('./routes/adminContent');
 const contentRoutes = require('./routes/content'); // Shared content routes for students/teachers
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
+const classControllerRoutes = require('./routes/classController'); // Class Controller routes
 const weeklyLessonsRoutes = require('./routes/weeklyLessons');
 const utilsRoutes = require('./routes/utils');
 
@@ -99,6 +100,9 @@ app.use('/api/student', studentRoutes);
 
 // Teacher routes
 app.use('/api/teacher', teacherRoutes);
+
+// Class Controller routes (For Class ID login - CLS-X)
+app.use('/api/class-controller', classControllerRoutes);
 
 // Utils routes (shared utilities)
 app.use('/api/utils', utilsRoutes);

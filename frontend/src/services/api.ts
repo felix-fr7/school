@@ -152,6 +152,9 @@ api.interceptors.response.use(
       // Token expired or invalid - clear storage
       try {
         await AsyncStorage.multiRemove(['authToken', 'user']);
+        // Note: CustomEvent is not available in React Native
+        // Components should handle 401 responses directly or use navigation
+        console.warn('[API] Session expired - user should be redirected to login');
       } catch (storageError) {
         console.error('Error clearing auth storage:', storageError);
       }
@@ -1021,6 +1024,274 @@ export const adminAPIExtended = {
 
   async updateStudentFee(studentId: string, data: { totalAmount?: number; paidAmount?: number; status?: string; dueDate?: string; remarks?: string }): Promise<ApiResponse<any>> {
     const response = await api.put<ApiResponse<any>>(`/admin/fees/${studentId}`, data);
+    return response.data;
+  },
+};
+
+// ============================================
+// Class Controller API
+// For Class ID (CLS-X) login users - Management dashboard
+// ============================================
+
+export const classControllerAPI = {
+  /**
+   * Get Class Controller Dashboard Data
+   * GET /api/class-controller/dashboard
+   */
+  async getDashboard(): Promise<ApiResponse<{
+    class: {
+      id: string;
+      classCode: string;
+      name: string;
+      section: string;
+      teacher?: {
+        name: string;
+        email: string;
+      } | null;
+    };
+    stats: {
+      totalStudents: number;
+      totalHomework: number;
+      upcomingExams: number;
+      attendanceRate: number;
+    };
+    recentActivity: Array<{
+      id: string;
+      type: string;
+      title: string;
+      description: string;
+      createdAt: string;
+    }>;
+  }>> {
+    const response = await api.get<ApiResponse<{
+      class: {
+        id: string;
+        classCode: string;
+        name: string;
+        section: string;
+        teacher?: {
+          name: string;
+          email: string;
+        } | null;
+      };
+      stats: {
+        totalStudents: number;
+        totalHomework: number;
+        upcomingExams: number;
+        attendanceRate: number;
+      };
+      recentActivity: Array<{
+        id: string;
+        type: string;
+        title: string;
+        description: string;
+        createdAt: string;
+      }>;
+    }>>('/class-controller/dashboard');
+    return response.data;
+  },
+
+  /**
+   * Get students for the logged-in class
+   * GET /api/class-controller/students
+   */
+  async getStudents(page = 1, limit = 50, search = ''): Promise<ApiResponse<{ students: User[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ students: User[]; pagination: any }>>('/class-controller/students', {
+      params: { page, limit, search },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get next available student ID (auto-generated)
+   * GET /api/class-controller/students/next-id
+   */
+  async getNextStudentId(): Promise<ApiResponse<{ nextStudentId: string }>> {
+    const response = await api.get<ApiResponse<{ nextStudentId: string }>>('/class-controller/students/next-id');
+    return response.data;
+  },
+
+  /**
+   * Create a new student for the class (with auto-generated ID)
+   * POST /api/class-controller/students
+   */
+  async createStudent(data: {
+    name: string;
+    email: string;
+    password?: string;
+    studentId?: string;
+  }): Promise<ApiResponse<{
+    id: string;
+    email: string;
+    name: string;
+    studentId: string;
+    createdAt: string;
+    temporaryPassword?: string;
+  }>> {
+    const response = await api.post<ApiResponse<{
+      id: string;
+      email: string;
+      name: string;
+      studentId: string;
+      createdAt: string;
+      temporaryPassword?: string;
+    }>>('/class-controller/students', data);
+    return response.data;
+  },
+
+  /**
+   * Update a student in the class
+   * PUT /api/class-controller/students/:id
+   */
+  async updateStudent(studentId: string, data: { name?: string; email?: string; studentId?: string }): Promise<ApiResponse<void>> {
+    const response = await api.put<ApiResponse<void>>(`/class-controller/students/${studentId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Reset student password
+   * POST /api/class-controller/students/:id/reset-password
+   */
+  async resetStudentPassword(studentId: string): Promise<ApiResponse<{ temporaryPassword: string }>> {
+    const response = await api.post<ApiResponse<{ temporaryPassword: string }>>(
+      `/class-controller/students/${studentId}/reset-password`
+    );
+    return response.data;
+  },
+
+  /**
+   * Delete a student from the class
+   * DELETE /api/class-controller/students/:id
+   */
+  async deleteStudent(studentId: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/class-controller/students/${studentId}`);
+    return response.data;
+  },
+
+  /**
+   * Get homework for the class
+   * GET /api/class-controller/homework
+   */
+  async getHomework(page = 1, limit = 20): Promise<ApiResponse<{ homeworks: Homework[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ homeworks: Homework[]; pagination: any }>>('/class-controller/homework', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  /**
+   * Create homework for the class
+   * POST /api/class-controller/homework
+   */
+  async createHomework(data: CreateHomeworkInput): Promise<ApiResponse<Homework>> {
+    const response = await api.post<ApiResponse<Homework>>('/class-controller/homework', data);
+    return response.data;
+  },
+
+  /**
+   * Update homework
+   * PUT /api/class-controller/homework/:id
+   */
+  async updateHomework(id: string, data: Partial<CreateHomeworkInput> & { isPublished?: boolean }): Promise<ApiResponse<void>> {
+    const response = await api.put<ApiResponse<void>>(`/class-controller/homework/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete homework
+   * DELETE /api/class-controller/homework/:id
+   */
+  async deleteHomework(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/class-controller/homework/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Get attendance for the class
+   * GET /api/class-controller/attendance
+   */
+  async getAttendance(date?: string): Promise<ApiResponse<{
+    date: string;
+    className: string;
+    attendance: Array<{ studentId: string; name: string; email: string; status: string | null; remarks?: string }>;
+    summary: { total: number; marked: number; unmarked: number };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      date: string;
+      className: string;
+      attendance: Array<{ studentId: string; name: string; email: string; status: string | null; remarks?: string }>;
+      summary: { total: number; marked: number; unmarked: number };
+    }>>('/class-controller/attendance', { params: { date } });
+    return response.data;
+  },
+
+  /**
+   * Mark attendance for the class
+   * POST /api/class-controller/attendance
+   */
+  async markAttendance(date: string, attendanceData: Array<{ studentId: string; status: string; remarks?: string }>): Promise<ApiResponse<{ marked: number; date: string; className: string }>> {
+    const response = await api.post<ApiResponse<{ marked: number; date: string; className: string }>>(
+      '/class-controller/attendance',
+      { date, attendanceData }
+    );
+    return response.data;
+  },
+
+  /**
+   * Get exam schedules for the class
+   * GET /api/class-controller/exam-schedules
+   */
+  async getExamSchedules(page = 1, limit = 20): Promise<ApiResponse<{ examSchedules: ExamSchedule[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ examSchedules: ExamSchedule[]; pagination: any }>>('/class-controller/exam-schedules', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  /**
+   * Create exam schedule for the class
+   * POST /api/class-controller/exam-schedules
+   */
+  async createExamSchedule(data: CreateExamScheduleInput): Promise<ApiResponse<ExamSchedule>> {
+    const response = await api.post<ApiResponse<ExamSchedule>>('/class-controller/exam-schedules', data);
+    return response.data;
+  },
+
+  /**
+   * Delete exam schedule
+   * DELETE /api/class-controller/exam-schedules/:id
+   */
+  async deleteExamSchedule(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/class-controller/exam-schedules/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Get circulars for the class
+   * GET /api/class-controller/circulars
+   */
+  async getCirculars(page = 1, limit = 20): Promise<ApiResponse<{ circulars: Circular[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ circulars: Circular[]; pagination: any }>>('/class-controller/circulars', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  /**
+   * Create circular for the class
+   * POST /api/class-controller/circulars
+   */
+  async createCircular(data: CreateCircularInput): Promise<ApiResponse<Circular>> {
+    const response = await api.post<ApiResponse<Circular>>('/class-controller/circulars', data);
+    return response.data;
+  },
+
+  /**
+   * Delete circular
+   * DELETE /api/class-controller/circulars/:id
+   */
+  async deleteCircular(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/class-controller/circulars/${id}`);
     return response.data;
   },
 };

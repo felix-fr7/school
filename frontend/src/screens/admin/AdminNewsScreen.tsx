@@ -16,13 +16,15 @@ import {
   Alert,
   RefreshControl,
   Image,
+  Modal,
+  FlatList,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { News, CreateNewsInput } from '../../types';
-import { adminContentAPI } from '../../services/api';
+import { News, CreateNewsInput, Class } from '../../types';
+import { adminContentAPI, adminAPI } from '../../services/api';
 
-type VisibilityType = 'ALL' | 'TEACHERS_ONLY';
+type VisibilityType = 'ALL' | 'SPECIFIC_CLASSES';
 
 interface NewsItemProps {
   item: News;
@@ -42,10 +44,10 @@ const NewsItem: React.FC<NewsItemProps> = ({ item, onDelete, onEdit }) => (
       <View style={styles.newsMetaRow}>
         <View style={[
           styles.visibilityBadge,
-          item.visibility === 'ALL' ? styles.badgeAll : styles.badgeTeachersOnly
+          item.visibility === 'ALL' ? styles.badgeAll : styles.badgeSpecific
         ]}>
-          <Text style={item.visibility === 'ALL' ? styles.badgeAllText : styles.badgeTeachersOnlyText}>
-            {item.visibility === 'ALL' ? '👥 All' : '👨‍🏫 Teachers Only'}
+          <Text style={item.visibility === 'ALL' ? styles.badgeAllText : styles.badgeSpecificText}>
+            {item.visibility === 'ALL' ? '👥 All Classes' : '🏫 Specific Classes'}
           </Text>
         </View>
         <Text style={styles.newsDate}>
@@ -102,6 +104,9 @@ const AdminNewsScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
+  const [showClassSelector, setShowClassSelector] = useState(false);
 
   const fetchNews = async (refresh = false) => {
     try {
@@ -127,11 +132,31 @@ const AdminNewsScreen: React.FC = () => {
     }
   };
 
+  const fetchClasses = async () => {
+    try {
+      const response = await adminAPI.getClasses();
+      if (response.success && response.data) {
+        setClasses(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+    }
+  };
+
   useEffect(() => {
     fetchNews();
+    fetchClasses();
   }, []);
 
   const onRefresh = () => fetchNews(true);
+
+  const toggleClassSelection = (classId: string) => {
+    setSelectedClassIds(prev => 
+      prev.includes(classId) 
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
+    );
+  };
 
   // Request permissions
   const requestPermissions = async () => {
@@ -196,11 +221,17 @@ const AdminNewsScreen: React.FC = () => {
     setPdfUrl('');
     setPdfName('');
     setVisibility('ALL');
+    setSelectedClassIds([]);
   };
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
       Alert.alert('Validation Error', 'Title and content are required');
+      return;
+    }
+
+    if (visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length === 0) {
+      Alert.alert('Validation Error', 'Please select at least one class');
       return;
     }
 
@@ -247,6 +278,23 @@ const AdminNewsScreen: React.FC = () => {
     setPdfUrl(item.pdfUrl || '');
     setPdfName(item.pdfUrl ? 'Current PDF' : '');
     setVisibility(item.visibility);
+  };
+
+  const renderClassItem = ({ item }: { item: Class }) => {
+    const isSelected = selectedClassIds.includes(item.id);
+    return (
+      <TouchableOpacity
+        style={[styles.classItem, isSelected && styles.classItemActive]}
+        onPress={() => toggleClassSelection(item.id)}
+      >
+        <View style={styles.classItemLeft}>
+          <Text style={styles.classItemIcon}>{isSelected ? '✅' : '⬜'}</Text>
+          <Text style={[styles.classItemText, isSelected && styles.classItemTextActive]}>
+            {item.name}{item.section ? ` - ${item.section}` : ''}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   if (loading && newsList.length === 0) {
@@ -326,7 +374,7 @@ const AdminNewsScreen: React.FC = () => {
 
         {/* Visibility Selector */}
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Audience Visibility</Text>
+          <Text style={styles.inputLabel}>Target Audience</Text>
           <View style={styles.visibilityContainer}>
             <TouchableOpacity
               style={[
@@ -340,25 +388,38 @@ const AdminNewsScreen: React.FC = () => {
                 styles.visibilityOptionText,
                 visibility === 'ALL' && styles.visibilityOptionTextActive
               ]}>
-                All (Teachers + Students)
+                All Classes & Students
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.visibilityOption,
-                visibility === 'TEACHERS_ONLY' && styles.visibilityOptionActive
+                visibility === 'SPECIFIC_CLASSES' && styles.visibilityOptionActive
               ]}
-              onPress={() => setVisibility('TEACHERS_ONLY')}
+              onPress={() => {
+                setVisibility('SPECIFIC_CLASSES');
+                setShowClassSelector(true);
+              }}
             >
-              <Text style={styles.visibilityIcon}>👨‍🏫</Text>
+              <Text style={styles.visibilityIcon}>🏫</Text>
               <Text style={[
                 styles.visibilityOptionText,
-                visibility === 'TEACHERS_ONLY' && styles.visibilityOptionTextActive
+                visibility === 'SPECIFIC_CLASSES' && styles.visibilityOptionTextActive
               ]}>
-                Teachers Only
+                Specific Classes Only
               </Text>
             </TouchableOpacity>
           </View>
+          {visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length > 0 && (
+            <View style={styles.selectedClassesContainer}>
+              <Text style={styles.selectedClassesLabel}>
+                Selected: {selectedClassIds.length} class(es)
+              </Text>
+              <TouchableOpacity onPress={() => setShowClassSelector(true)}>
+                <Text style={styles.selectedClassesLink}>View / Edit</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Submit Button */}
@@ -405,6 +466,45 @@ const AdminNewsScreen: React.FC = () => {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Class Selector Modal */}
+      <Modal
+        visible={showClassSelector}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowClassSelector(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Classes</Text>
+              <TouchableOpacity onPress={() => setShowClassSelector(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>
+              Tap to select one or more classes for this news
+            </Text>
+            <FlatList
+              data={classes}
+              keyExtractor={(item) => item.id}
+              renderItem={renderClassItem}
+              style={styles.classList}
+            />
+            <View style={styles.modalFooter}>
+              <Text style={styles.selectedCount}>
+                {selectedClassIds.length} class(es) selected
+              </Text>
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={() => setShowClassSelector(false)}
+              >
+                <Text style={styles.modalConfirmText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -533,6 +633,28 @@ const styles = StyleSheet.create({
     color: '#2e7d32',
     fontWeight: '600',
   },
+  selectedClassesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2e7d32',
+  },
+  selectedClassesLabel: {
+    fontSize: 13,
+    color: '#2e7d32',
+    fontWeight: '500',
+  },
+  selectedClassesLink: {
+    fontSize: 13,
+    color: '#2e7d32',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
   submitButton: {
     backgroundColor: '#2e7d32',
     padding: 16,
@@ -608,13 +730,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#2e7d32',
   },
-  badgeTeachersOnly: {
-    backgroundColor: '#FFF3E0',
+  badgeSpecific: {
+    backgroundColor: '#E3F2FD',
   },
-  badgeTeachersOnlyText: {
+  badgeSpecificText: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#E65100',
+    color: '#1565C0',
   },
   attachmentsRow: {
     flexDirection: 'row',
@@ -652,6 +774,98 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#475569',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  modalClose: {
+    fontSize: 24,
+    color: '#94A3B8',
+    padding: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    padding: 16,
+    paddingTop: 8,
+  },
+  classList: {
+    maxHeight: 300,
+  },
+  classItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  classItemActive: {
+    backgroundColor: '#F0FDF4',
+  },
+  classItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  classItemIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  classItemText: {
+    fontSize: 15,
+    color: '#475569',
+    fontWeight: '500',
+  },
+  classItemTextActive: {
+    color: '#2e7d32',
+    fontWeight: '600',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  selectedCount: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  modalConfirmButton: {
+    backgroundColor: '#2e7d32',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  modalConfirmText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

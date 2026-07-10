@@ -28,8 +28,8 @@ const getAllClasses = async (req, res, next) => {
       SELECT 
         c.*,
         (SELECT COUNT(*) FROM "User" u WHERE u."classId" = c.id AND u.role = 'STUDENT') as "studentCount",
-        (SELECT COUNT(*) FROM "Homework" h WHERE h."classId" = c.id) as "homeworkCount",
-        (SELECT COUNT(*) FROM "ExamSchedule" es WHERE es."classId" = c.id) as "examScheduleCount"
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."class_id" = c.id) as "homeworkCount",
+        COALESCE((SELECT COUNT(*) FROM "Exam" e WHERE e."class_id" = c.id), 0) as "examCount"
       FROM "Class" c
       WHERE c."tenantId" = $1
       ORDER BY c.name ASC
@@ -42,7 +42,7 @@ const getAllClasses = async (req, res, next) => {
       _count: {
         students: parseInt(classItem.studentCount),
         homeworks: parseInt(classItem.homeworkCount),
-        examSchedules: parseInt(classItem.examScheduleCount),
+        exams: parseInt(classItem.examCount),
       }
     }));
 
@@ -51,6 +51,8 @@ const getAllClasses = async (req, res, next) => {
       data: classes,
     });
   } catch (error) {
+    console.error("CRITICAL DB ERROR IN getAllClasses:", error.message);
+    console.error("Full error details:", JSON.stringify(error, null, 2));
     next(error);
   }
 };
@@ -116,18 +118,18 @@ const getClassDashboard = async (req, res, next) => {
     const recentHomeworkQuery = `
       SELECT h.*, u.id as "assignedById", u.name as "assignedByName"
       FROM "Homework" h
-      LEFT JOIN "User" u ON h."assignedBy" = u.id
-      WHERE h."classId" = $1 AND h."isPublished" = true
-      ORDER BY h."createdAt" DESC
+      LEFT JOIN "User" u ON h."assigned_by" = u.id
+      WHERE h."class_id" = $1 AND h."is_published" = true
+      ORDER BY h."created_at" DESC
       LIMIT 5
     `;
     const recentHomeworkResult = await db.query(recentHomeworkQuery, [id]);
 
-    // Get upcoming exam schedules for this class
+    // Get upcoming exams for this class
     const upcomingExamsQuery = `
-      SELECT * FROM "ExamSchedule"
-      WHERE "classId" = $1 AND "isPublished" = true AND date >= NOW()
-      ORDER BY date ASC
+      SELECT * FROM "Exam"
+      WHERE "class_id" = $1 AND "created_at" >= NOW()
+      ORDER BY "created_at" ASC
       LIMIT 5
     `;
     const upcomingExamsResult = await db.query(upcomingExamsQuery, [id]);
@@ -172,6 +174,8 @@ const getClassDashboard = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error("CRITICAL DB ERROR IN getClassDashboard (adminController):", error.message);
+    console.error("Full error details:", JSON.stringify(error, null, 2));
     next(error);
   }
 };
@@ -212,8 +216,8 @@ const getClassById = async (req, res, next) => {
     // Get recent homework
     const homeworksQuery = `
       SELECT * FROM "Homework"
-      WHERE "classId" = $1
-      ORDER BY "createdAt" DESC
+      WHERE "class_id" = $1
+      ORDER BY "created_at" DESC
       LIMIT 10
     `;
     const homeworksResult = await db.query(homeworksQuery, [id]);
@@ -236,6 +240,7 @@ const getClassById = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error("DB Error inside getClassById:", error);
     next(error);
   }
 };
@@ -587,8 +592,8 @@ const deleteClass = async (req, res, next) => {
       SELECT 
         c.*,
         (SELECT COUNT(*) FROM "User" u WHERE u."classId" = c.id AND u.role = 'STUDENT') as "studentCount",
-        (SELECT COUNT(*) FROM "Homework" h WHERE h."classId" = c.id) as "homeworkCount",
-        (SELECT COUNT(*) FROM "ExamSchedule" es WHERE es."classId" = c.id) as "examScheduleCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."class_id" = c.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "Exam" e WHERE e."class_id" = c.id) as "examCount",
         t.name as "teacherName"
       FROM "Class" c
       LEFT JOIN "User" t ON c."teacherId" = t.id
@@ -611,7 +616,7 @@ const deleteClass = async (req, res, next) => {
     const dependencyInfo = {
       studentCount: parseInt(existingClass.studentCount),
       homeworkCount: parseInt(existingClass.homeworkCount),
-      examScheduleCount: parseInt(existingClass.examScheduleCount),
+      examCount: parseInt(existingClass.examCount),
       hasTeacher: !!existingClass.teacherId,
     };
 
@@ -624,12 +629,12 @@ const deleteClass = async (req, res, next) => {
 
       // Step 2: Delete associated homework
       if (dependencyInfo.homeworkCount > 0) {
-        await query('DELETE FROM "Homework" WHERE "classId" = $1', [id]);
+        await query('DELETE FROM "Homework" WHERE "class_id" = $1', [id]);
       }
 
-      // Step 3: Delete associated exam schedules
-      if (dependencyInfo.examScheduleCount > 0) {
-        await query('DELETE FROM "ExamSchedule" WHERE "classId" = $1', [id]);
+      // Step 3: Delete associated exams
+      if (dependencyInfo.examCount > 0) {
+        await query('DELETE FROM "Exam" WHERE "class_id" = $1', [id]);
       }
 
       // Step 4: Delete the class itself
@@ -1050,19 +1055,19 @@ const getAllHomework = async (req, res, next) => {
     const take = parseInt(limit);
 
     // Build where clause
-    let whereClause = 'h."tenantId" = $1';
+    let whereClause = 'h."tenant_id" = $1';
     let params = [tenantId];
     let paramIndex = 2;
 
     if (classId) {
       params.push(classId);
-      whereClause += ` AND h."classId" = $${paramIndex}`;
+      whereClause += ` AND h."class_id" = $${paramIndex}`;
       paramIndex++;
     }
 
     if (isPublished !== undefined) {
       params.push(isPublished === 'true');
-      whereClause += ` AND h."isPublished" = $${paramIndex}`;
+      whereClause += ` AND h."is_published" = $${paramIndex}`;
       paramIndex++;
     }
 
@@ -1081,10 +1086,10 @@ const getAllHomework = async (req, res, next) => {
         u.id as "assignedById",
         u.name as "assignedByName"
       FROM "Homework" h
-      LEFT JOIN "Class" c ON h."classId" = c.id
-      LEFT JOIN "User" u ON h."assignedBy" = u.id
+      LEFT JOIN "Class" c ON h."class_id" = c.id
+      LEFT JOIN "User" u ON h."assigned_by" = u.id
       WHERE ${whereClause}
-      ORDER BY h."createdAt" DESC
+      ORDER BY h."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -1139,9 +1144,9 @@ const getHomeworkById = async (req, res, next) => {
         u.id as "assignedById",
         u.name as "assignedByName"
       FROM "Homework" h
-      LEFT JOIN "Class" c ON h."classId" = c.id
-      LEFT JOIN "User" u ON h."assignedBy" = u.id
-      WHERE h.id = $1 AND h."tenantId" = $2
+      LEFT JOIN "Class" c ON h."class_id" = c.id
+      LEFT JOIN "User" u ON h."assigned_by" = u.id
+      WHERE h.id = $1 AND h."tenant_id" = $2
     `;
 
     const homeworkResult = await db.query(homeworkQuery, [id, tenantId]);
@@ -1188,7 +1193,7 @@ const createHomework = async (req, res, next) => {
     const assignedBy = req.user.id;
 
     const createQuery = `
-      INSERT INTO "Homework" (title, description, subject, "classId", "tenantId", "assignedBy", "dueDate", "createdAt", "updatedAt")
+      INSERT INTO "Homework" (title, description, subject, "class_id", "tenant_id", "assigned_by", "due_date", "created_at", "updated_at")
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
       RETURNING *
     `;
@@ -1240,17 +1245,17 @@ const updateHomework = async (req, res, next) => {
       paramIndex++;
     }
     if (classId !== undefined) {
-      updateFields.push(`"classId" = $${paramIndex}`);
+      updateFields.push(`"class_id" = $${paramIndex}`);
       updateParams.push(classId);
       paramIndex++;
     }
     if (dueDate !== undefined) {
-      updateFields.push(`"dueDate" = $${paramIndex}`);
+      updateFields.push(`"due_date" = $${paramIndex}`);
       updateParams.push(dueDate ? new Date(dueDate) : null);
       paramIndex++;
     }
     if (isPublished !== undefined) {
-      updateFields.push(`"isPublished" = $${paramIndex}`);
+      updateFields.push(`"is_published" = $${paramIndex}`);
       updateParams.push(isPublished);
       paramIndex++;
     }
@@ -1267,8 +1272,8 @@ const updateHomework = async (req, res, next) => {
 
     const updateQuery = `
       UPDATE "Homework"
-      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
-      WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
+      SET ${updateFields.join(', ')}, "updated_at" = NOW()
+      WHERE id = $${paramIndex} AND "tenant_id" = $${paramIndex + 1}
     `;
 
     const updateResult = await db.query(updateQuery, updateParams);
@@ -1300,7 +1305,7 @@ const deleteHomework = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const deleteQuery = 'DELETE FROM "Homework" WHERE id = $1 AND "tenantId" = $2';
+    const deleteQuery = 'DELETE FROM "Homework" WHERE id = $1 AND "tenant_id" = $2';
     const deleteResult = await db.query(deleteQuery, [id, tenantId]);
 
     if (deleteResult.rowCount === 0) {
@@ -2287,8 +2292,8 @@ const getTeacherById = async (req, res, next) => {
     // Get recent homework
     const homeworksQuery = `
       SELECT * FROM "Homework"
-      WHERE "assignedBy" = $1
-      ORDER BY "createdAt" DESC
+      WHERE "assigned_by" = $1
+      ORDER BY "created_at" DESC
       LIMIT 10
     `;
     const homeworksResult = await db.query(homeworksQuery, [id]);

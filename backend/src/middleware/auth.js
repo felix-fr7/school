@@ -371,6 +371,81 @@ const checkTenantAccess = (req, res, next) => {
   });
 };
 
+/**
+ * Protect routes for Class-based login users
+ * Verifies JWT token with type: 'CLASS' and attaches class data to request
+ */
+const protectClass = async (req, res, next) => {
+  try {
+    // Get token from header
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Not authorized to access this route',
+        },
+      });
+    }
+
+    // Extract token
+    const token = authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'No token provided',
+        },
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check if this is a class token (type: 'CLASS')
+    if (decoded.type !== 'CLASS' || !decoded.classId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Invalid token type. Class login required.',
+        },
+      });
+    }
+
+    // Attach class info to request
+    req.user = {
+      classId: decoded.classId,
+      classCode: decoded.classCode,
+      tenantId: decoded.tenantId,
+      type: 'CLASS',
+    };
+
+    next();
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Invalid token',
+        },
+      });
+    }
+
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Token expired',
+        },
+      });
+    }
+
+    next(error);
+  }
+};
+
 module.exports = { 
   protect, 
   optionalAuth, 
@@ -379,5 +454,6 @@ module.exports = {
   requireTeacher,
   requireStudent,
   requireRole,
-  checkTenantAccess
+  checkTenantAccess,
+  protectClass
 };

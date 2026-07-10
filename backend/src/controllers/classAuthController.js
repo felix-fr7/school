@@ -77,7 +77,7 @@ const classLogin = async (req, res, next) => {
     const statsQuery = `
       SELECT 
         (SELECT COUNT(*) FROM "User" WHERE "classId" = $1 AND role = 'STUDENT') as "studentCount",
-        (SELECT COUNT(*) FROM "Homework" WHERE "classId" = $1) as "homeworkCount",
+        (SELECT COUNT(*) FROM "Homework" WHERE "class_id" = $1) as "homeworkCount",
         (SELECT COUNT(*) FROM "ExamSchedule" WHERE "classId" = $1 AND "isPublished" = true) as "examCount"
     `;
     const statsResult = await db.query(statsQuery, [classData.id]);
@@ -183,9 +183,9 @@ const getClassDashboard = async (req, res, next) => {
         h.*,
         u.name as "assignedByName"
       FROM "Homework" h
-      LEFT JOIN "User" u ON h."assignedBy" = u.id
-      WHERE h."classId" = $1 AND h."isPublished" = true
-      ORDER BY h."createdAt" DESC
+      LEFT JOIN "User" u ON h."assigned_by" = u.id
+      WHERE h."class_id" = $1 AND h."is_published" = true
+      ORDER BY h."created_at" DESC
       LIMIT 10
     `;
     const homeworkResult = await db.query(homeworkQuery, [classId]);

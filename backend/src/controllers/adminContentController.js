@@ -397,7 +397,7 @@ const createCircular = async (req, res, next) => {
     const circularContent = message || content;
 
     // Validate visibility
-    const validVisibility = ['ALL', 'TEACHERS_ONLY'];
+    const validVisibility = ['ALL', 'SPECIFIC_CLASSES'];
     const circularVisibility = visibility || 'ALL';
     if (!validVisibility.includes(circularVisibility)) {
       return res.status(400).json({
@@ -470,11 +470,11 @@ const updateCircular = async (req, res, next) => {
     }
 
     if (visibility !== undefined) {
-      const validVisibility = ['ALL', 'TEACHERS_ONLY'];
+      const validVisibility = ['ALL', 'SPECIFIC_CLASSES'];
       if (!validVisibility.includes(visibility)) {
         return res.status(400).json({
           success: false,
-          error: { message: 'Visibility must be either "ALL" or "TEACHERS_ONLY"' },
+          error: { message: 'Visibility must be either "ALL" or "SPECIFIC_CLASSES"' },
         });
       }
       updateFields.push(`visibility = $${paramIndex}`);

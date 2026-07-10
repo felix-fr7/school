@@ -59,6 +59,7 @@ export interface CreateTenantInput {
 export interface Class {
   id: string;
   classCode?: string; // Auto-generated class code (e.g., CLS-1)
+  class_code?: string; // Alternative snake_case from PostgreSQL
   name: string;
   section?: string;
   teacherId?: string;
@@ -156,7 +157,7 @@ export interface News {
   category?: string;
   imageUrl?: string;
   pdfUrl?: string;
-  visibility: 'ALL' | 'TEACHERS_ONLY';
+  visibility: 'ALL' | 'SPECIFIC_CLASSES';
   tenantId: string;
   postedBy: string;
   isPublished: boolean;
@@ -173,7 +174,7 @@ export interface CreateNewsInput {
   category?: string;
   imageUrl?: string;
   pdfUrl?: string;
-  visibility?: 'ALL' | 'TEACHERS_ONLY';
+  visibility?: 'ALL' | 'SPECIFIC_CLASSES';
 }
 
 export interface Circular {
@@ -182,7 +183,7 @@ export interface Circular {
   content: string;
   circularNo?: string;
   imageUrl?: string;
-  visibility: 'ALL' | 'TEACHERS_ONLY';
+  visibility: 'ALL' | 'SPECIFIC_CLASSES';
   tenantId: string;
   issuedBy: string;
   isPublished: boolean;
@@ -198,7 +199,7 @@ export interface CreateCircularInput {
   message?: string;
   circularNo?: string;
   imageUrl?: string;
-  visibility?: 'ALL' | 'TEACHERS_ONLY';
+  visibility?: 'ALL' | 'SPECIFIC_CLASSES';
 }
 
 export interface ExamSchedule {
@@ -431,12 +432,30 @@ export type TeacherStackParamList = {
   WeeklyTimetable: undefined;
 };
 
+// Class Controller Stack (For Class ID login - CLS-X)
+export type ClassControllerStackParamList = {
+  ClassControllerDashboard: undefined;
+  ClassStudentsList: { classId: string } | undefined;
+  ClassAddStudent: { classId: string };
+  ClassEditStudent: { studentId: string; classId: string };
+  ClassHomeworkList: { classId: string } | undefined;
+  ClassCreateHomework: { classId: string };
+  ClassAttendanceList: { classId: string };
+  ClassMarkAttendance: { classId: string; date: string };
+  ClassCircularsList: { classId: string } | undefined;
+  ClassCreateCircular: { classId: string };
+  ClassExamSchedulesList: { classId: string } | undefined;
+  ClassCreateExamSchedule: { classId: string };
+  ClassProfile: undefined;
+};
+
 export type RootStackParamList = {
   Auth: AuthStackParamList;
   SuperAdmin: SuperAdminStackParamList;
   Admin: AdminStackParamList;
   Student: StudentStackParamList;
   Teacher: TeacherStackParamList;
+  ClassController: ClassControllerStackParamList;
   Main: MainStackParamList;
 };
 

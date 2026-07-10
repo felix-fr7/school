@@ -70,6 +70,21 @@ import StudentExamSchedulesScreen from './src/screens/student/ExamSchedulesScree
 import StudentProfileScreen from './src/screens/student/ProfileScreen';
 import WeeklyLessonViewScreen from './src/screens/student/WeeklyLessonViewScreen';
 
+// Class Controller Screens
+import ClassControllerDashboardScreen from './src/screens/classcontroller/ClassControllerDashboardScreen';
+import ClassStudentsListScreen from './src/screens/classcontroller/ClassStudentsListScreen';
+import ClassAddStudentScreen from './src/screens/classcontroller/ClassAddStudentScreen';
+import ClassEditStudentScreen from './src/screens/classcontroller/ClassEditStudentScreen';
+import ClassHomeworkListScreen from './src/screens/classcontroller/ClassHomeworkListScreen';
+import ClassCreateHomeworkScreen from './src/screens/classcontroller/ClassCreateHomeworkScreen';
+import ClassAttendanceListScreen from './src/screens/classcontroller/ClassAttendanceListScreen';
+import ClassMarkAttendanceScreen from './src/screens/classcontroller/ClassMarkAttendanceScreen';
+import ClassCircularsListScreen from './src/screens/classcontroller/ClassCircularsListScreen';
+import ClassCreateCircularScreen from './src/screens/classcontroller/ClassCreateCircularScreen';
+import ClassExamSchedulesListScreen from './src/screens/classcontroller/ClassExamSchedulesListScreen';
+import ClassCreateExamScheduleScreen from './src/screens/classcontroller/ClassCreateExamScheduleScreen';
+import ClassProfileScreen from './src/screens/classcontroller/ClassProfileScreen';
+
 // Legacy Screens (Posts)
 import HomeScreen from './src/screens/HomeScreen';
 import PostDetailScreen from './src/screens/PostDetailScreen';
@@ -77,12 +92,13 @@ import CreatePostScreen from './src/screens/CreatePostScreen';
 import EditPostScreen from './src/screens/EditPostScreen';
 
 // Types
-import { RootStackParamList, SuperAdminStackParamList, AdminStackParamList, StudentStackParamList, TeacherStackParamList, MainStackParamList, AuthStackParamList } from './src/types';
+import { RootStackParamList, SuperAdminStackParamList, AdminStackParamList, StudentStackParamList, TeacherStackParamList, ClassControllerStackParamList, MainStackParamList, AuthStackParamList } from './src/types';
 
 const SuperAdminStack = createStackNavigator<SuperAdminStackParamList>();
 const AdminStack = createStackNavigator<AdminStackParamList>();
 const StudentStack = createStackNavigator<StudentStackParamList>();
 const TeacherStack = createStackNavigator<TeacherStackParamList>();
+const ClassControllerStack = createStackNavigator<ClassControllerStackParamList>();
 const MainStack = createStackNavigator<MainStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
 const RootStack = createStackNavigator<RootStackParamList>();
@@ -365,6 +381,85 @@ const TeacherNavigator = () => (
 );
 
 // ============================================
+// Class Controller Navigator (For Class ID login - CLS-X)
+// ============================================
+const ClassControllerNavigator = () => (
+  <ClassControllerStack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: '#FF6B35' },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' },
+    }}
+  >
+    <ClassControllerStack.Screen
+      name="ClassControllerDashboard"
+      component={ClassControllerDashboardScreen}
+      options={{ title: 'Class Controller' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassStudentsList"
+      component={ClassStudentsListScreen}
+      options={{ title: 'Students' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassAddStudent"
+      component={ClassAddStudentScreen}
+      options={{ title: 'Add Student' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassEditStudent"
+      component={ClassEditStudentScreen}
+      options={{ title: 'Edit Student' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassHomeworkList"
+      component={ClassHomeworkListScreen}
+      options={{ title: 'Homework' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassCreateHomework"
+      component={ClassCreateHomeworkScreen}
+      options={{ title: 'Create Homework' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassAttendanceList"
+      component={ClassAttendanceListScreen}
+      options={{ title: 'Attendance' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassMarkAttendance"
+      component={ClassMarkAttendanceScreen}
+      options={{ title: 'Mark Attendance' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassCircularsList"
+      component={ClassCircularsListScreen}
+      options={{ title: 'Circulars' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassCreateCircular"
+      component={ClassCreateCircularScreen}
+      options={{ title: 'Create Circular' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassExamSchedulesList"
+      component={ClassExamSchedulesListScreen}
+      options={{ title: 'Exam Schedules' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassCreateExamSchedule"
+      component={ClassCreateExamScheduleScreen}
+      options={{ title: 'Create Exam Schedule' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassProfile"
+      component={ClassProfileScreen}
+      options={{ title: 'Class Profile' }}
+    />
+  </ClassControllerStack.Navigator>
+);
+
+// ============================================
 // Legacy Main Navigator (for backward compatibility)
 // ============================================
 const LegacyMainNavigator = () => (
@@ -422,13 +517,14 @@ const RootNavigator = () => {
       {!isAuthenticated && !isClass ? (
         <RootStack.Screen name="Auth" component={AuthNavigator} />
       ) : isClass ? (
-        // Class-based login - route to Student navigator (same content access as students)
-        <RootStack.Screen name="Student" component={StudentNavigator} />
+        // Class-based login (CLS-X) - route to Class Controller Dashboard (Management Mode)
+        <RootStack.Screen name="ClassController" component={ClassControllerNavigator} />
       ) : isSuperAdmin ? (
         <RootStack.Screen name="SuperAdmin" component={SuperAdminNavigator} />
       ) : isAdmin ? (
         <RootStack.Screen name="Admin" component={AdminNavigator} />
       ) : isStudent ? (
+        // Student ID login (STU-XXX) - route to Student Dashboard (Viewer Mode)
         <RootStack.Screen name="Student" component={StudentNavigator} />
       ) : isTeacher ? (
         <RootStack.Screen name="Teacher" component={TeacherNavigator} />

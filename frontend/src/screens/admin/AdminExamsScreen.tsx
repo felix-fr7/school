@@ -1,7 +1,7 @@
 /**
  * Admin Exams Screen (Exam Timetables)
  * Premium minimalist 2-column bento style
- * Features: Exam Name, Class selector, PDF URL OR Image URL
+ * Features: Exam Name, Class selector, File Picker for PDF/Image (no manual URL input)
  * Publicly visible to all roles upon creation
  */
 
@@ -18,6 +18,8 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AdminStackParamList, Class, Exam, CreateExamInput } from '../../types';
@@ -92,7 +94,9 @@ const AdminExamsScreen: React.FC = () => {
   const [examName, setExamName] = useState('');
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
   const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfName, setPdfName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [imageName, setImageName] = useState('');
   const [mode, setMode] = useState<ExamMode>('PDF');
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
@@ -140,6 +144,61 @@ const AdminExamsScreen: React.FC = () => {
 
   const onRefresh = () => fetchExams(true);
 
+  // Request permissions
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Please grant permission to access your photos.'
+      );
+      return false;
+    }
+    return true;
+  };
+
+  // Pick PDF document
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        if (asset) {
+          setPdfUrl(asset.uri);
+          setPdfName(asset.name || 'Selected PDF');
+        }
+      }
+    } catch (error) {
+      console.error('Error picking document:', error);
+      Alert.alert('Error', 'Failed to pick document');
+    }
+  };
+
+  // Pick image from gallery
+  const pickImage = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      if (asset) {
+        setImageUrl(asset.uri);
+        setImageName(asset.fileName || 'Selected Image');
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     if (!examName.trim()) {
       Alert.alert('Validation Error', 'Exam name is required');
@@ -147,12 +206,12 @@ const AdminExamsScreen: React.FC = () => {
     }
 
     if (mode === 'PDF' && !pdfUrl.trim()) {
-      Alert.alert('Validation Error', 'PDF URL is required');
+      Alert.alert('Validation Error', 'Please select a PDF file');
       return;
     }
 
     if (mode === 'IMAGE' && !imageUrl.trim()) {
-      Alert.alert('Validation Error', 'Image URL is required');
+      Alert.alert('Validation Error', 'Please select an image file');
       return;
     }
 
@@ -172,7 +231,9 @@ const AdminExamsScreen: React.FC = () => {
         setExamName('');
         setSelectedClassId(undefined);
         setPdfUrl('');
+        setPdfName('');
         setImageUrl('');
+        setImageName('');
         setMode('PDF');
         // Refresh list
         fetchExams(true);
@@ -202,11 +263,15 @@ const AdminExamsScreen: React.FC = () => {
     if (item.pdfUrl) {
       setMode('PDF');
       setPdfUrl(item.pdfUrl);
+      setPdfName('Current PDF');
       setImageUrl('');
+      setImageName('');
     } else if (item.imageUrl) {
       setMode('IMAGE');
       setImageUrl(item.imageUrl);
+      setImageName('Current Image');
       setPdfUrl('');
+      setPdfName('');
     }
   };
 
@@ -312,35 +377,29 @@ const AdminExamsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* URL Input based on mode */}
+        {/* File Picker based on mode */}
         {mode === 'PDF' ? (
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>PDF URL *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="https://example.com/timetable.pdf"
-              value={pdfUrl}
-              onChangeText={setPdfUrl}
-              numberOfLines={1}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <Text style={styles.inputLabel}>Select PDF File *</Text>
+            <TouchableOpacity style={styles.filePickerButton} onPress={pickDocument}>
+              <Text style={styles.filePickerIcon}>📄</Text>
+              <Text style={styles.filePickerText}>
+                {pdfName || 'Browse and select PDF file'}
+              </Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Image URL *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="https://example.com/timetable.jpg"
-              value={imageUrl}
-              onChangeText={setImageUrl}
-              numberOfLines={1}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {imageUrl ? (
+            <Text style={styles.inputLabel}>Select Image File *</Text>
+            <TouchableOpacity style={styles.filePickerButton} onPress={pickImage}>
+              <Text style={styles.filePickerIcon}>🖼️</Text>
+              <Text style={styles.filePickerText}>
+                {imageName || 'Browse and select image from gallery'}
+              </Text>
+            </TouchableOpacity>
+            {imageUrl && (
               <Image source={{ uri: imageUrl }} style={styles.imagePreview} resizeMode="cover" />
-            ) : null}
+            )}
           </View>
         )}
 
@@ -524,6 +583,26 @@ const styles = StyleSheet.create({
   modeTextActive: {
     color: '#2e7d32',
     fontWeight: '600',
+  },
+  filePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 16,
+  },
+  filePickerIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  filePickerText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
+    flex: 1,
   },
   imagePreview: {
     width: '100%',

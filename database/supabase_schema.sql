@@ -317,18 +317,30 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply trigger to all tables with updatedAt
+-- Apply trigger to all tables with updatedAt (drop first if exists for idempotency)
+DROP TRIGGER IF EXISTS update_user_updated_at ON "User";
 CREATE TRIGGER update_user_updated_at BEFORE UPDATE ON "User" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_class_updated_at ON "Class";
 CREATE TRIGGER update_class_updated_at BEFORE UPDATE ON "Class" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_homework_updated_at ON "Homework";
 CREATE TRIGGER update_homework_updated_at BEFORE UPDATE ON "Homework" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_mark_updated_at ON "Mark";
 CREATE TRIGGER update_mark_updated_at BEFORE UPDATE ON "Mark" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_attendance_updated_at ON "Attendance";
 CREATE TRIGGER update_attendance_updated_at BEFORE UPDATE ON "Attendance" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_fee_updated_at ON "Fee";
 CREATE TRIGGER update_fee_updated_at BEFORE UPDATE ON "Fee" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_news_updated_at ON "News";
 CREATE TRIGGER update_news_updated_at BEFORE UPDATE ON "News" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_circular_updated_at ON "Circular";
 CREATE TRIGGER update_circular_updated_at BEFORE UPDATE ON "Circular" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_exam_schedule_updated_at ON "ExamSchedule";
 CREATE TRIGGER update_exam_schedule_updated_at BEFORE UPDATE ON "ExamSchedule" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_post_updated_at ON "Post";
 CREATE TRIGGER update_post_updated_at BEFORE UPDATE ON "Post" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_tenant_updated_at ON "Tenant";
 CREATE TRIGGER update_tenant_updated_at BEFORE UPDATE ON "Tenant" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_weeklylessonlog_updated_at ON "WeeklyLessonLog";
 CREATE TRIGGER update_weeklylessonlog_updated_at BEFORE UPDATE ON "WeeklyLessonLog" FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================

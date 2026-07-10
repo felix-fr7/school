@@ -28,7 +28,9 @@ type NavigationProp = StackNavigationProp<AdminStackParamList, 'ClassDetail'>;
 const EditClassScreen: React.FC = () => {
   const route = useRoute<RoutePropType>();
   const navigation = useNavigation<NavigationProp>();
-  const { classId } = route.params;
+  // Safely extract classId from params, handling both 'id' and 'classId' field names
+  const params = route.params;
+  const classId = params?.classId || (params as any)?.id;
 
   // Class fields
   const [classData, setClassData] = useState<Class | null>(null);
@@ -50,6 +52,11 @@ const EditClassScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    if (!classId) {
+      Alert.alert('Error', 'No class ID provided');
+      navigation.goBack();
+      return;
+    }
     fetchClassData();
     fetchAvailableTeachers();
   }, [classId]);
@@ -199,7 +206,7 @@ const EditClassScreen: React.FC = () => {
         <View style={styles.classIdCard}>
           <Text style={styles.classIdLabel}>Class Login ID</Text>
           <Text style={styles.classIdValue}>
-            {classData?.classCode || 'Not yet generated'}
+            {classData?.classCode || classData?.class_code || 'Not yet generated'}
           </Text>
           <Text style={styles.classIdNote}>
             Share this ID with students/parents for class login
