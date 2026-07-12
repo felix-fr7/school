@@ -64,7 +64,7 @@ const getAllTenants = async (req, res, next) => {
         t.*,
         (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
         (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount",
-        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenantId" = t.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenant_id" = t.id) as "homeworkCount",
         (SELECT COUNT(*) FROM "News" n WHERE n."tenantId" = t.id) as "newsCount"
       FROM "Tenant" t
       WHERE ${whereClause}
@@ -124,7 +124,7 @@ const getTenantById = async (req, res, next) => {
         t.*,
         (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
         (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount",
-        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenantId" = t.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenant_id" = t.id) as "homeworkCount",
         (SELECT COUNT(*) FROM "News" n WHERE n."tenantId" = t.id) as "newsCount",
         (SELECT COUNT(*) FROM "Circular" cir WHERE cir."tenantId" = t.id) as "circularCount"
       FROM "Tenant" t
@@ -472,7 +472,7 @@ const deleteTenant = async (req, res, next) => {
         t.*,
         (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
         (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount",
-        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenantId" = t.id) as "homeworkCount",
+        (SELECT COUNT(*) FROM "Homework" h WHERE h."tenant_id" = t.id) as "homeworkCount",
         (SELECT COUNT(*) FROM "Mark" m WHERE m."tenantId" = t.id) as "markCount",
         (SELECT COUNT(*) FROM "News" n WHERE n."tenantId" = t.id) as "newsCount",
         (SELECT COUNT(*) FROM "Circular" cir WHERE cir."tenantId" = t.id) as "circularCount",
@@ -571,7 +571,7 @@ const getTenantStats = async (req, res, next) => {
         (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'STUDENT') as "totalStudents",
         (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'ADMIN') as "totalAdmins",
         (SELECT COUNT(*) FROM "Class" WHERE "tenantId" = $1) as "totalClasses",
-        (SELECT COUNT(*) FROM "Homework" WHERE "tenantId" = $1) as "totalHomeworks",
+        (SELECT COUNT(*) FROM "Homework" WHERE "tenant_id" = $1) as "totalHomeworks",
         (SELECT COUNT(*) FROM "Mark" WHERE "tenantId" = $1) as "totalMarks",
         (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $1) as "totalNews",
         (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $1) as "totalCirculars",
