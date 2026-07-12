@@ -175,6 +175,7 @@ export interface CreateNewsInput {
   imageUrl?: string;
   pdfUrl?: string;
   visibility?: 'ALL' | 'SPECIFIC_CLASSES';
+  classId?: string; // For SPECIFIC_CLASSES visibility targeting
 }
 
 export interface Circular {
@@ -442,6 +443,7 @@ export type ClassControllerStackParamList = {
   ClassCreateHomework: { classId: string };
   ClassAttendanceList: { classId: string };
   ClassMarkAttendance: { classId: string; date: string };
+  ClassNewsList: { classId: string } | undefined;
   ClassCircularsList: { classId: string } | undefined;
   ClassCreateCircular: { classId: string };
   ClassExamSchedulesList: { classId: string } | undefined;

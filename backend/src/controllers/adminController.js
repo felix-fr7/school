@@ -153,6 +153,7 @@ const getClassDashboard = async (req, res, next) => {
       data: {
         class: {
           id: classData.id,
+          classCode: classData.class_code,
           name: classData.name,
           section: classData.section,
           tenantId: classData.tenantId,

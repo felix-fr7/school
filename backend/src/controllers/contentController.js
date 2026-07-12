@@ -7,31 +7,41 @@
 const db = require('../config/db');
 
 /**
- * Get all news with visibility filtering based on user role
- * Students see only 'ALL', Teachers see 'ALL' and 'TEACHERS_ONLY'
+ * Get all news with visibility filtering based on user role AND class isolation
+ * - Students: See school-wide news (class_id IS NULL) + their class's specific news with visibility='ALL'
+ * - Teachers: See school-wide news + their class's specific news (including TEACHERS_ONLY)
+ * - Admins: See all news (no class filtering)
  */
 const getNews = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
     const userRole = req.user.role;
+    const userClassId = req.user.classId;
     const { category, page = 1, limit = 10 } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build visibility filter based on role
-    let visibilityFilter = '';
-    if (userRole === 'student') {
-      visibilityFilter = "AND n.visibility = 'ALL'";
-    } else if (userRole === 'teacher') {
-      visibilityFilter = "AND n.visibility IN ('ALL', 'TEACHERS_ONLY')";
-    }
-    // Admins see all (no filter)
-
-    // Build where clause
-    let whereClause = `n."tenantId" = $1 AND n."isPublished" = true ${visibilityFilter}`;
+    // Build where clause with proper tenant and class isolation
+    let whereClause = `n."tenantId" = $1 AND n."isPublished" = true`;
     let params = [tenantId];
     let paramIndex = 2;
+
+    // Apply visibility filtering for students - they only see 'ALL' visibility content
+    if (userRole === 'STUDENT') {
+      whereClause += ` AND (n."visibility" IS NULL OR n."visibility" = 'ALL')`;
+    }
+    // Teachers and Class Controllers see all visibility levels
+
+    // Apply class-based isolation for students, teachers, and class controllers
+    // Class controllers (CLS-X login) always have a classId and should see class-specific content
+    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+      // Students, Teachers, and Class Controllers see school-wide news + their class's specific news only
+      params.push(userClassId);
+      whereClause += ` AND (n."class_id" IS NULL OR n."class_id" = $${paramIndex})`;
+      paramIndex++;
+    }
+    // Admins see all news (no class filtering)
 
     if (category) {
       params.push(category);
@@ -83,30 +93,36 @@ const getNews = async (req, res, next) => {
 };
 
 /**
- * Get single news with visibility filtering
+ * Get single news with visibility filtering AND class-based access control
  */
 const getNewsById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     const userRole = req.user.role;
+    const userClassId = req.user.classId;
 
-    // Build visibility filter based on role
-    let visibilityFilter = '';
-    if (userRole === 'student') {
-      visibilityFilter = "AND n.visibility = 'ALL'";
-    } else if (userRole === 'teacher') {
-      visibilityFilter = "AND n.visibility IN ('ALL', 'TEACHERS_ONLY')";
+    // Build where clause with tenant, publication, and class isolation
+    let whereClause = `n.id = $1 AND n."tenantId" = $2 AND n."isPublished" = true`;
+    let params = [id, tenantId];
+    let paramIndex = 3;
+
+    // Apply class-based isolation for students, teachers, and class controllers
+    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+      params.push(userClassId);
+      whereClause += ` AND (n."class_id" IS NULL OR n."class_id" = $${paramIndex})`;
+      paramIndex++;
     }
+    // Admins can access any news (no class filtering)
 
     const newsQuery = `
       SELECT n.*, u.id as "postedById", u.name as "postedByName"
       FROM "News" n
       LEFT JOIN "User" u ON n."postedBy" = u.id
-      WHERE n.id = $1 AND n."tenantId" = $2 AND n."isPublished" = true ${visibilityFilter}
+      WHERE ${whereClause}
     `;
 
-    const newsResult = await db.query(newsQuery, [id, tenantId]);
+    const newsResult = await db.query(newsQuery, params);
 
     if (newsResult.rows.length === 0) {
       return res.status(404).json({
@@ -135,31 +151,48 @@ const getNewsById = async (req, res, next) => {
 };
 
 /**
- * Get all circulars with visibility filtering based on user role
+ * Get all circulars with visibility filtering based on user role AND class isolation
+ * - Students: See school-wide circulars (class_id IS NULL) + their class's specific circulars with visibility='ALL'
+ * - Teachers: See school-wide circulars + their class's specific circulars (including TEACHERS_ONLY)
+ * - Admins: See all circulars (no class filtering)
  */
 const getCirculars = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
     const userRole = req.user.role;
+    const userClassId = req.user.classId;
     const { page = 1, limit = 10 } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build visibility filter based on role
-    let visibilityFilter = '';
-    if (userRole === 'student') {
-      visibilityFilter = "AND c.visibility = 'ALL'";
-    } else if (userRole === 'teacher') {
-      visibilityFilter = "AND c.visibility IN ('ALL', 'TEACHERS_ONLY')";
+    // Build where clause with proper tenant and class isolation
+    let whereClause = `c."tenantId" = $1 AND c."isPublished" = true`;
+    let params = [tenantId];
+    let paramIndex = 2;
+
+    // Apply visibility filtering for students - they only see 'ALL' visibility content
+    // Students should NOT see class-specific content (visibility = 'TEACHERS_ONLY')
+    if (userRole === 'STUDENT') {
+      // Strict filtering: Students only see content explicitly marked as 'ALL' or legacy NULL content
+      whereClause += ` AND (c."visibility" = 'ALL' OR c."visibility" IS NULL)`;
     }
+    // Teachers and Class Controllers see all visibility levels
+
+    // Apply class-based isolation for students, teachers, and class controllers
+    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+      // Students, Teachers, and Class Controllers see school-wide circulars + their class's specific circulars only
+      params.push(userClassId);
+      whereClause += ` AND (c."class_id" IS NULL OR c."class_id" = $${paramIndex})`;
+      paramIndex++;
+    }
+    // Admins see all circulars (no class filtering)
 
     // Get total count
     const countQuery = `
-      SELECT COUNT(*) as total FROM "Circular"
-      WHERE "tenantId" = $1 AND "isPublished" = true ${visibilityFilter}
+      SELECT COUNT(*) as total FROM "Circular" c WHERE ${whereClause}
     `;
-    const countResult = await db.query(countQuery, [tenantId]);
+    const countResult = await db.query(countQuery, params);
     const total = parseInt(countResult.rows[0].total);
 
     // Get circulars
@@ -167,12 +200,13 @@ const getCirculars = async (req, res, next) => {
       SELECT c.*, u.id as "issuedById", u.name as "issuedByName"
       FROM "Circular" c
       LEFT JOIN "User" u ON c."issuedBy" = u.id
-      WHERE c."tenantId" = $1 AND c."isPublished" = true ${visibilityFilter}
+      WHERE ${whereClause}
       ORDER BY c."issueDate" DESC
-      LIMIT $2 OFFSET $3
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
-    const circularsResult = await db.query(circularsQuery, [tenantId, take, skip]);
+    const circularsParams = [...params, take, skip];
+    const circularsResult = await db.query(circularsQuery, circularsParams);
 
     const circulars = circularsResult.rows.map(item => ({
       ...item,
@@ -200,30 +234,36 @@ const getCirculars = async (req, res, next) => {
 };
 
 /**
- * Get single circular with visibility filtering
+ * Get single circular with visibility filtering AND class-based access control
  */
 const getCircularById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     const userRole = req.user.role;
+    const userClassId = req.user.classId;
 
-    // Build visibility filter based on role
-    let visibilityFilter = '';
-    if (userRole === 'student') {
-      visibilityFilter = "AND c.visibility = 'ALL'";
-    } else if (userRole === 'teacher') {
-      visibilityFilter = "AND c.visibility IN ('ALL', 'TEACHERS_ONLY')";
+    // Build where clause with tenant, publication, and class isolation
+    let whereClause = `c.id = $1 AND c."tenantId" = $2 AND c."isPublished" = true`;
+    let params = [id, tenantId];
+    let paramIndex = 3;
+
+    // Apply class-based isolation for students, teachers, and class controllers
+    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+      params.push(userClassId);
+      whereClause += ` AND (c."class_id" IS NULL OR c."class_id" = $${paramIndex})`;
+      paramIndex++;
     }
+    // Admins can access any circular (no class filtering)
 
     const circularQuery = `
       SELECT c.*, u.id as "issuedById", u.name as "issuedByName"
       FROM "Circular" c
       LEFT JOIN "User" u ON c."issuedBy" = u.id
-      WHERE c.id = $1 AND c."tenantId" = $2 AND c."isPublished" = true ${visibilityFilter}
+      WHERE ${whereClause}
     `;
 
-    const circularResult = await db.query(circularQuery, [id, tenantId]);
+    const circularResult = await db.query(circularQuery, params);
 
     if (circularResult.rows.length === 0) {
       return res.status(404).json({
@@ -252,26 +292,41 @@ const getCircularById = async (req, res, next) => {
 };
 
 /**
- * Get all exams (public to all roles - no visibility filtering needed)
+ * Get all exams with visibility filtering based on user role AND class isolation
+ * - Students: See school-wide exams + their class's specific exams with visibility='ALL'
+ * - Teachers: See school-wide exams + their class's specific exams (including TEACHERS_ONLY)
+ * - Admins: See all exams (no class filtering)
  */
 const getExams = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
-    const { classId, page = 1, limit = 10 } = req.query;
+    const userRole = req.user.role;
+    const userClassId = req.user.classId;
+    const { page = 1, limit = 10 } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build where clause
+    // Build where clause with proper isolation
+    // Students, teachers, and class controllers only see: school-wide (class_id IS NULL) OR their class's content
     let whereClause = 'e."tenantId" = $1';
     let params = [tenantId];
     let paramIndex = 2;
 
-    if (classId) {
-      params.push(classId);
-      whereClause += ` AND e."classId" = $${paramIndex}`;
+    // Apply visibility filtering for students - they only see 'ALL' visibility content
+    if (userRole === 'STUDENT') {
+      whereClause += ` AND (e."visibility" IS NULL OR e."visibility" = 'ALL')`;
+    }
+    // Teachers and Class Controllers see all visibility levels
+
+    // Apply class-based isolation for students, teachers, and class controllers
+    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+      // Students, Teachers, and Class Controllers see school-wide exams + their class's specific exams
+      params.push(userClassId);
+      whereClause += ` AND (e."class_id" IS NULL OR e."class_id" = $${paramIndex})`;
       paramIndex++;
     }
+    // Admins see all exams (no class filtering)
 
     // Get total count
     const countQuery = `SELECT COUNT(*) as total FROM "Exam" e WHERE ${whereClause}`;
@@ -282,7 +337,7 @@ const getExams = async (req, res, next) => {
     const examsQuery = `
       SELECT e.*, c.id as "classId", c.name as "className", c.section as "classSection"
       FROM "Exam" e
-      LEFT JOIN "Class" c ON e."classId" = c.id
+      LEFT JOIN "Class" c ON e."class_id" = c.id
       WHERE ${whereClause}
       ORDER BY e."createdAt" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -328,7 +383,7 @@ const getExamById = async (req, res, next) => {
     const examQuery = `
       SELECT e.*, c.id as "classId", c.name as "className", c.section as "classSection"
       FROM "Exam" e
-      LEFT JOIN "Class" c ON e."classId" = c.id
+      LEFT JOIN "Class" c ON e."class_id" = c.id
       WHERE e.id = $1 AND e."tenantId" = $2
     `;
 

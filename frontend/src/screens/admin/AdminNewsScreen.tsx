@@ -243,6 +243,10 @@ const AdminNewsScreen: React.FC = () => {
         imageUrl: imageUrl || undefined,
         pdfUrl: pdfUrl || undefined,
         visibility,
+        // Send classId for specific class targeting (first selected class)
+        classId: visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length > 0 
+          ? selectedClassIds[0] 
+          : undefined,
       };
 
       const response = await adminContentAPI.createNews(data);

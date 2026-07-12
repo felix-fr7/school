@@ -7,8 +7,9 @@
 const express = require('express');
 const router = express.Router();
 
-// Import controller
+// Import controllers
 const classController = require('../controllers/classController');
+const contentController = require('../controllers/contentController');
 
 // Import authentication middleware for class users
 // This middleware verifies the JWT token and extracts class info
@@ -59,8 +60,15 @@ router.post('/students', classController.addClassStudent);
 router.put('/students/:id', classController.updateStudent);
 
 /**
+ * PUT /api/class-controller/students/:id/reset-password
+ * Reset a student's password (with custom or default password)
+ * Body: password (optional) - if not provided, defaults to 'Student@123'
+ */
+router.put('/students/:id/reset-password', classController.resetStudentPassword);
+
+/**
  * POST /api/class-controller/students/:id/reset-password
- * Reset a student's password to temporary password
+ * Reset a student's password to temporary password (legacy - resets to default)
  */
 router.post('/students/:id/reset-password', classController.resetStudentPassword);
 
@@ -87,19 +95,31 @@ router.delete('/students/:id', classController.deleteStudent);
 // POST /api/class-controller/attendance - Mark attendance
 
 // ============================================
-// Circulars Routes (placeholders for future)
+// Circulars Routes (using contentController)
 // ============================================
 
-// GET /api/class-controller/circulars - List circulars
-// POST /api/class-controller/circulars - Create circular
-// DELETE /api/class-controller/circulars/:id - Delete circular
+/**
+ * GET /api/class-controller/circulars
+ * List circulars for the class
+ * Query params: page, limit
+ */
+router.get('/circulars', contentController.getCirculars);
+
+// POST /api/class-controller/circulars - Create circular (use adminContentController)
+// DELETE /api/class-controller/circulars/:id - Delete circular (use adminContentController)
 
 // ============================================
-// Exam Schedule Routes (placeholders for future)
+// Exam Schedule Routes (using contentController)
 // ============================================
 
-// GET /api/class-controller/exam-schedules - List exams
-// POST /api/class-controller/exam-schedules - Create exam
-// DELETE /api/class-controller/exam-schedules/:id - Delete exam
+/**
+ * GET /api/class-controller/exam-schedules
+ * List exam schedules for the class
+ * Query params: page, limit
+ */
+router.get('/exam-schedules', contentController.getExamSchedules);
+
+// POST /api/class-controller/exam-schedules - Create exam schedule (use adminContentController)
+// DELETE /api/class-controller/exam-schedules/:id - Delete exam schedule (use adminContentController)
 
 module.exports = router;

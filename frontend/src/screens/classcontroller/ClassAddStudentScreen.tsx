@@ -1,6 +1,7 @@
 /**
  * Class Add Student Screen
  * Add a new student to the class with auto-generated sequential ID
+ * Email-free flow: Only name and password required
  */
 
 import React, { useEffect, useState } from 'react';
@@ -28,11 +29,10 @@ type RoutePropType = RouteProp<ClassControllerStackParamList, 'ClassAddStudent'>
 
 interface StudentCreationResult {
   id: string;
-  email: string;
   name: string;
   studentId: string;
   createdAt: string;
-  temporaryPassword?: string;
+  password: string;
 }
 
 const ClassAddStudentScreen: React.FC = () => {
@@ -40,7 +40,8 @@ const ClassAddStudentScreen: React.FC = () => {
   const route = useRoute<RoutePropType>();
   
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [nextStudentId, setNextStudentId] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -67,14 +68,13 @@ const ClassAddStudentScreen: React.FC = () => {
       return false;
     }
     
-    if (!email.trim()) {
-      Alert.alert('Validation Error', 'Student email is required');
+    if (!password.trim()) {
+      Alert.alert('Validation Error', 'Password is required');
       return false;
     }
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      Alert.alert('Validation Error', 'Please enter a valid email address');
+    if (password.length < 6) {
+      Alert.alert('Validation Error', 'Password must be at least 6 characters long');
       return false;
     }
     
@@ -91,7 +91,7 @@ const ClassAddStudentScreen: React.FC = () => {
     try {
       const response = await classControllerAPI.createStudent({
         name: name.trim(),
-        email: email.trim().toLowerCase(),
+        password: password.trim(),
       });
       
       if (response.success && response.data) {
@@ -99,7 +99,7 @@ const ClassAddStudentScreen: React.FC = () => {
         setShowSuccessModal(true);
         // Reset form
         setName('');
-        setEmail('');
+        setPassword('');
         // Refresh next student ID
         fetchNextStudentId();
       }
@@ -119,12 +119,12 @@ const ClassAddStudentScreen: React.FC = () => {
   };
 
   const handleCopyPassword = () => {
-    if (createdStudent?.temporaryPassword) {
+    if (createdStudent?.password) {
       // On React Native, we can use Clipboard API
       // For now, just show it in an alert
       Alert.alert(
-        'Temporary Password',
-        `Password: ${createdStudent.temporaryPassword}\n\nPlease save this password securely!`,
+        'Password',
+        `Password: ${createdStudent.password}\n\nPlease save this password securely!`,
         [{ text: 'OK' }]
       );
     }
@@ -174,27 +174,39 @@ const ClassAddStudentScreen: React.FC = () => {
               />
             </View>
 
-            {/* Student Email */}
+            {/* Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Student Email *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="student@example.com"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                textContentType="emailAddress"
-              />
+              <Text style={styles.inputLabel}>Password *</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Enter password (min 6 characters)"
+                  value={password}
+                  onChangeText={setPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={!showPassword}
+                  textContentType="password"
+                />
+                <TouchableOpacity 
+                  style={styles.passwordToggle}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Text style={styles.passwordToggleText}>
+                    {showPassword ? '🙈' : '👁️'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.inputHint}>
+                This password will be used for student login
+              </Text>
             </View>
 
-            {/* Temporary Password Info */}
+            {/* Info Box */}
             <View style={styles.infoBox}>
               <Text style={styles.infoIcon}>ℹ️</Text>
               <Text style={styles.infoText}>
-                A temporary password <Text style={styles.passwordHighlight}>Student@123</Text> will be 
-                set for this student. They will be required to change it on first login.
+                The student will use their <Text style={styles.idHighlight}>Student ID</Text> as username and this password to login.
               </Text>
             </View>
           </View>
@@ -233,9 +245,9 @@ const ClassAddStudentScreen: React.FC = () => {
             
             {createdStudent && (
               <View style={styles.modalDetails}>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Student ID:</Text>
-                  <Text style={styles.detailValue}>{createdStudent.studentId}</Text>
+                <View style={styles.studentIdHighlight}>
+                  <Text style={styles.studentIdLabel}>Student ID</Text>
+                  <Text style={styles.studentIdValue}>{createdStudent.studentId}</Text>
                 </View>
                 
                 <View style={styles.detailRow}>
@@ -243,16 +255,11 @@ const ClassAddStudentScreen: React.FC = () => {
                   <Text style={styles.detailValue}>{createdStudent.name}</Text>
                 </View>
                 
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Email:</Text>
-                  <Text style={styles.detailValue}>{createdStudent.email}</Text>
-                </View>
-                
                 <View style={[styles.detailRow, styles.passwordRow]}>
-                  <Text style={styles.detailLabel}>Temporary Password:</Text>
-                  <View style={styles.passwordContainer}>
+                  <Text style={styles.detailLabel}>Password:</Text>
+                  <View style={styles.modalPasswordContainer}>
                     <Text style={styles.passwordValue}>
-                      {createdStudent.temporaryPassword || 'Student@123'}
+                      {createdStudent.password}
                     </Text>
                     <TouchableOpacity 
                       style={styles.copyButton}
@@ -268,7 +275,7 @@ const ClassAddStudentScreen: React.FC = () => {
             <View style={styles.modalWarning}>
               <Text style={styles.warningIcon}>⚠️</Text>
               <Text style={styles.warningText}>
-                Please save the temporary password securely! You won't be able to see it again.
+                Please save the Student ID and password securely! The password won't be shown again.
               </Text>
             </View>
 
@@ -279,8 +286,9 @@ const ClassAddStudentScreen: React.FC = () => {
                 onPress={() => {
                   setShowSuccessModal(false);
                   setName('');
-                  setEmail('');
+                  setPassword('');
                   setCreatedStudent(null);
+                  fetchNextStudentId();
                 }}
               >
                 <Text style={styles.modalSecondaryButtonText}>Add Another</Text>
@@ -380,6 +388,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+  },
+  passwordToggle: {
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+  },
+  passwordToggleText: {
+    fontSize: 18,
+  },
+  inputHint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 6,
+  },
   infoBox: {
     flexDirection: 'row',
     backgroundColor: '#FFF5F0',
@@ -397,7 +431,7 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20,
   },
-  passwordHighlight: {
+  idHighlight: {
     fontWeight: '700',
     color: '#FF6B35',
     backgroundColor: '#FFE8DD',
@@ -465,6 +499,27 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
   },
+  studentIdHighlight: {
+    backgroundColor: '#FF6B35',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  studentIdLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.9)',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  studentIdValue: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 2,
+  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -487,10 +542,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     paddingTop: 12,
   },
-  passwordContainer: {
+  modalPasswordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginTop: 4,
   },
   passwordValue: {
     fontSize: 14,

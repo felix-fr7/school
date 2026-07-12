@@ -101,7 +101,7 @@ const getAllNews = async (req, res, next) => {
  */
 const createNews = async (req, res, next) => {
   try {
-    const { title, content, imageUrl, pdfUrl, visibility } = req.body;
+    const { title, content, imageUrl, pdfUrl, visibility, classId } = req.body;
     const tenantId = req.user.tenantId;
     const postedBy = req.user.id;
 
@@ -121,23 +121,43 @@ const createNews = async (req, res, next) => {
     }
 
     // Validate visibility
-    const validVisibility = ['ALL', 'TEACHERS_ONLY'];
+    const validVisibility = ['ALL', 'TEACHERS_ONLY', 'SPECIFIC_CLASSES'];
     const newsVisibility = visibility || 'ALL';
     if (!validVisibility.includes(newsVisibility)) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Visibility must be either "ALL" or "TEACHERS_ONLY"' },
+        error: { message: 'Visibility must be either "ALL", "TEACHERS_ONLY", or "SPECIFIC_CLASSES"' },
       });
     }
 
+    // Validate classId if SPECIFIC_CLASSES visibility is selected
+    if (newsVisibility === 'SPECIFIC_CLASSES' && !classId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Class ID is required when visibility is "SPECIFIC_CLASSES"' },
+      });
+    }
+
+    // Verify class exists and belongs to this tenant if classId provided
+    if (classId) {
+      const classCheckQuery = 'SELECT id FROM "Class" WHERE id = $1 AND "tenantId" = $2';
+      const classCheckResult = await db.query(classCheckQuery, [classId, tenantId]);
+      if (classCheckResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Class not found in your school' },
+        });
+      }
+    }
+
     const createQuery = `
-      INSERT INTO "News" (title, content, "imageUrl", "pdfUrl", visibility, "tenantId", "postedBy", "isPublished", "createdAt", "updatedAt")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      INSERT INTO "News" (title, content, "imageUrl", "pdfUrl", visibility, "class_id", "tenantId", "postedBy", "isPublished", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
       RETURNING *
     `;
 
     const createResult = await db.query(createQuery, [
-      title.trim(), content.trim(), imageUrl || null, pdfUrl || null, newsVisibility, tenantId, postedBy, true
+      title.trim(), content.trim(), imageUrl || null, pdfUrl || null, newsVisibility, classId || null, tenantId, postedBy, true
     ]);
 
     const news = createResult.rows[0];
@@ -377,11 +397,11 @@ const getAllCirculars = async (req, res, next) => {
 /**
  * Create new circular with visibility and image support
  * POST /api/admin/content/circulars
- * Body: { title, message/content, imageUrl?, visibility: 'ALL' | 'TEACHERS_ONLY' }
+ * Body: { title, message/content, imageUrl?, visibility: 'ALL' | 'TEACHERS_ONLY', classId? }
  */
 const createCircular = async (req, res, next) => {
   try {
-    const { title, message, content, imageUrl, visibility } = req.body;
+    const { title, message, content, imageUrl, visibility, classId } = req.body;
     const tenantId = req.user.tenantId;
     const issuedBy = req.user.id;
 
@@ -396,18 +416,44 @@ const createCircular = async (req, res, next) => {
     // Support both 'message' and 'content' field names for flexibility
     const circularContent = message || content;
 
+    // Determine visibility: If classId is provided without visibility, default to TEACHERS_ONLY
+    // This ensures class-specific circulars are not shown to students
+    let circularVisibility = visibility;
+    if (!circularVisibility) {
+      circularVisibility = classId ? 'TEACHERS_ONLY' : 'ALL';
+    }
+
     // Validate visibility
-    const validVisibility = ['ALL', 'SPECIFIC_CLASSES'];
-    const circularVisibility = visibility || 'ALL';
+    const validVisibility = ['ALL', 'TEACHERS_ONLY', 'SPECIFIC_CLASSES'];
     if (!validVisibility.includes(circularVisibility)) {
       return res.status(400).json({
         success: false,
-        error: { message: 'Visibility must be either "ALL" or "TEACHERS_ONLY"' },
+        error: { message: 'Visibility must be either "ALL", "TEACHERS_ONLY", or "SPECIFIC_CLASSES"' },
       });
     }
 
+    // If visibility is SPECIFIC_CLASSES, classId is required
+    if (circularVisibility === 'SPECIFIC_CLASSES' && !classId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Class ID is required when visibility is "SPECIFIC_CLASSES"' },
+      });
+    }
+
+    // Verify class exists and belongs to this tenant if classId provided
+    if (classId) {
+      const classCheckQuery = 'SELECT id FROM "Class" WHERE id = $1 AND "tenantId" = $2';
+      const classCheckResult = await db.query(classCheckQuery, [classId, tenantId]);
+      if (classCheckResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Class not found in your school' },
+        });
+      }
+    }
+
     const createQuery = `
-      INSERT INTO "Circular" (title, content, "imageUrl", visibility, "tenantId", "issuedBy", "isPublished", "createdAt", "updatedAt")
+      INSERT INTO "Circular" (title, content, "imageUrl", visibility, "class_id", "tenantId", "issuedBy", "isPublished", "createdAt", "updatedAt")
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
       RETURNING *
     `;
@@ -578,13 +624,13 @@ const getAllExams = async (req, res, next) => {
     const take = parseInt(limit);
 
     // Build where clause
-    let whereClause = 'e."tenantId" = $1';
+    let whereClause = 'e."tenant_id" = $1';
     let params = [tenantId];
     let paramIndex = 2;
 
     if (classId) {
       params.push(classId);
-      whereClause += ` AND e."classId" = $${paramIndex}`;
+      whereClause += ` AND e."class_id" = $${paramIndex}`;
       paramIndex++;
     }
 
@@ -601,9 +647,9 @@ const getAllExams = async (req, res, next) => {
         c.name as "className",
         c.section as "classSection"
       FROM "Exam" e
-      LEFT JOIN "Class" c ON e."classId" = c.id
+      LEFT JOIN "Class" c ON e."class_id" = c.id
       WHERE ${whereClause}
-      ORDER BY e."createdAt" DESC
+      ORDER BY e."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -676,7 +722,7 @@ const createExam = async (req, res, next) => {
     }
 
     const createQuery = `
-      INSERT INTO "Exam" ("examName", "classId", "pdfUrl", "imageUrl", "tenantId", "createdAt", "updatedAt")
+      INSERT INTO "Exam" ("examName", "class_id", "pdfUrl", "imageUrl", "tenant_id", "createdAt", "updatedAt")
       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
       RETURNING *
     `;
@@ -737,7 +783,7 @@ const updateExam = async (req, res, next) => {
           });
         }
       }
-      updateFields.push(`"classId" = $${paramIndex}`);
+      updateFields.push(`"class_id" = $${paramIndex}`);
       updateParams.push(classId || null);
       paramIndex++;
     }
@@ -767,7 +813,7 @@ const updateExam = async (req, res, next) => {
     const updateQuery = `
       UPDATE "Exam"
       SET ${updateFields.join(', ')}, "updatedAt" = NOW()
-      WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
+      WHERE id = $${paramIndex} AND "tenant_id" = $${paramIndex + 1}
       RETURNING *
     `;
 
@@ -799,7 +845,7 @@ const deleteExam = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const deleteQuery = 'DELETE FROM "Exam" WHERE id = $1 AND "tenantId" = $2';
+    const deleteQuery = 'DELETE FROM "Exam" WHERE id = $1 AND "tenant_id" = $2';
     const deleteResult = await db.query(deleteQuery, [id, tenantId]);
 
     if (deleteResult.rowCount === 0) {

@@ -1,6 +1,7 @@
 /**
  * Login Screen
- * Supports both User login (email/student ID) and Class login (class code/password)
+ * Supports Student login (Student ID/password), Staff login (email/password), 
+ * and Class login (class code/password)
  */
 
 import React, { useState } from 'react';
@@ -24,11 +25,15 @@ type LoginScreenProps = StackScreenProps<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const { login, classLogin } = useAuth();
-  const [loginMode, setLoginMode] = useState<'user' | 'class'>('user');
+  const [loginMode, setLoginMode] = useState<'student' | 'staff' | 'class'>('student');
   
-  // User login state
-  const [usernameOrEmailOrId, setUsernameOrEmailOrId] = useState('');
-  const [password, setPassword] = useState('');
+  // Student login state (Student ID + Password)
+  const [studentId, setStudentId] = useState('');
+  const [studentPassword, setStudentPassword] = useState('');
+  
+  // Staff login state (Email + Password)
+  const [email, setEmail] = useState('');
+  const [staffPassword, setStaffPassword] = useState('');
   
   // Class login state
   const [classCode, setClassCode] = useState('');
@@ -36,28 +41,34 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check if input is email format
-  const isEmailFormat = (value: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
-
-  const handleUserLogin = async () => {
-    // Basic validation
-    if (!usernameOrEmailOrId.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    // Validate email format if it contains @
-    if (usernameOrEmailOrId.includes('@') && !isEmailFormat(usernameOrEmailOrId)) {
-      Alert.alert('Error', 'Please enter a valid email address or Student ID');
+  const handleStudentLogin = async () => {
+    if (!studentId.trim() || !studentPassword.trim()) {
+      Alert.alert('Error', 'Please enter Student ID and Password');
       return;
     }
 
     setIsLoading(true);
-
     try {
-      await login(usernameOrEmailOrId.trim(), password);
+      console.log('[StudentLogin] Attempting login with studentId:', studentId.trim());
+      await login(studentId.trim(), studentPassword);
+      console.log('[StudentLogin] Login successful');
+    } catch (err: any) {
+      console.log('[StudentLogin] Login error:', err);
+      handleError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStaffLogin = async () => {
+    if (!email.trim() || !staffPassword.trim()) {
+      Alert.alert('Error', 'Please enter Email and Password');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await login(email.trim(), staffPassword);
     } catch (err: any) {
       handleError(err);
     } finally {
@@ -66,14 +77,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   };
 
   const handleClassLogin = async () => {
-    // Basic validation
     if (!classCode.trim() || !classPassword.trim()) {
       Alert.alert('Error', 'Please enter Class ID and Password');
       return;
     }
 
     setIsLoading(true);
-
     try {
       await classLogin(classCode.trim().toUpperCase(), classPassword);
     } catch (err: any) {
@@ -88,7 +97,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     let rawMessage: any = "Login failed. Please try again.";
 
-    // 1. Extract potentially nested string message safely
     if (err?.response?.data?.error?.message) {
       rawMessage = err.response.data.error.message;
     } else if (err?.response?.data?.message) {
@@ -101,13 +109,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       rawMessage = err;
     }
 
-    // 2. THE NUCLEAR SAFEGUARD: Absolutely destroy any remaining object reference
     let cleanStringMessage = "";
 
     if (typeof rawMessage === 'string') {
       cleanStringMessage = rawMessage;
     } else if (typeof rawMessage === 'object' && rawMessage !== null) {
-      // If it's an object or ReadableNativeMap, force convert to standard JSON string
       try {
         cleanStringMessage = JSON.stringify(rawMessage);
       } catch (e) {
@@ -117,12 +123,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       cleanStringMessage = String(rawMessage);
     }
 
-    // Double check it's a pure primitive string, otherwise fallback to hardcoded text
     if (typeof cleanStringMessage !== 'string' || cleanStringMessage.includes('[object')) {
       cleanStringMessage = "Authentication failed. Server returned an invalid payload structure.";
     }
 
-    // 3. Trigger native dialog safely
     Alert.alert('Login Error', cleanStringMessage);
   };
 
@@ -140,11 +144,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         {/* Login Mode Toggle */}
         <View style={styles.toggleContainer}>
           <TouchableOpacity
-            style={[styles.toggleButton, loginMode === 'user' && styles.toggleButtonActive]}
-            onPress={() => setLoginMode('user')}
+            style={[styles.toggleButton, loginMode === 'student' && styles.toggleButtonActive]}
+            onPress={() => setLoginMode('student')}
           >
-            <Text style={[styles.toggleText, loginMode === 'user' && styles.toggleTextActive]}>
-              User Login
+            <Text style={[styles.toggleText, loginMode === 'student' && styles.toggleTextActive]}>
+              Student
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleButton, loginMode === 'staff' && styles.toggleButtonActive]}
+            onPress={() => setLoginMode('staff')}
+          >
+            <Text style={[styles.toggleText, loginMode === 'staff' && styles.toggleTextActive]}>
+              Staff
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -152,31 +164,28 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             onPress={() => setLoginMode('class')}
           >
             <Text style={[styles.toggleText, loginMode === 'class' && styles.toggleTextActive]}>
-              Class Login
+              Class
             </Text>
           </TouchableOpacity>
         </View>
 
-        {loginMode === 'user' ? (
+        {/* Student Login Form */}
+        {loginMode === 'student' && (
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email or Student ID</Text>
+              <Text style={styles.label}>Student ID</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email or Roll Number"
-                value={usernameOrEmailOrId}
-                onChangeText={setUsernameOrEmailOrId}
+                placeholder="Enter your Student ID (e.g., STU-0001)"
+                value={studentId}
+                onChangeText={setStudentId}
                 keyboardType="default"
-                autoCapitalize="none"
+                autoCapitalize="characters"
                 autoCorrect={false}
                 editable={!isLoading}
               />
               <Text style={styles.hintText}>
-                {usernameOrEmailOrId.includes('@') 
-                  ? 'Logging in with Email' 
-                  : usernameOrEmailOrId.length > 0 
-                    ? 'Logging in with Student ID / Roll Number' 
-                    : 'Use your Roll Number (Students) or Email (Staff)'}
+                Your Student ID was provided by your teacher (format: STU-XXXX)
               </Text>
             </View>
 
@@ -185,8 +194,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
+                value={studentPassword}
+                onChangeText={setStudentPassword}
                 secureTextEntry
                 editable={!isLoading}
               />
@@ -194,7 +203,55 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
             <TouchableOpacity
               style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleUserLogin}
+              onPress={handleStudentLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Sign In as Student</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.registerContainer}>
+              <Text style={styles.registerText}>Default password: </Text>
+              <Text style={styles.passwordHint}>Student@123</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Staff Login Form */}
+        {loginMode === 'staff' && (
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                value={staffPassword}
+                onChangeText={setStaffPassword}
+                secureTextEntry
+                editable={!isLoading}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, isLoading && styles.buttonDisabled]}
+              onPress={handleStaffLogin}
               disabled={isLoading}
             >
               {isLoading ? (
@@ -203,13 +260,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 <Text style={styles.buttonText}>Sign In</Text>
               )}
             </TouchableOpacity>
-
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Default password for students: </Text>
-              <Text style={styles.passwordHint}>Student@123</Text>
-            </View>
           </View>
-        ) : (
+        )}
+
+        {/* Class Login Form */}
+        {loginMode === 'class' && (
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Class ID</Text>

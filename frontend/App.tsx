@@ -79,6 +79,7 @@ import ClassHomeworkListScreen from './src/screens/classcontroller/ClassHomework
 import ClassCreateHomeworkScreen from './src/screens/classcontroller/ClassCreateHomeworkScreen';
 import ClassAttendanceListScreen from './src/screens/classcontroller/ClassAttendanceListScreen';
 import ClassMarkAttendanceScreen from './src/screens/classcontroller/ClassMarkAttendanceScreen';
+import ClassNewsListScreen from './src/screens/classcontroller/ClassNewsListScreen';
 import ClassCircularsListScreen from './src/screens/classcontroller/ClassCircularsListScreen';
 import ClassCreateCircularScreen from './src/screens/classcontroller/ClassCreateCircularScreen';
 import ClassExamSchedulesListScreen from './src/screens/classcontroller/ClassExamSchedulesListScreen';
@@ -430,6 +431,11 @@ const ClassControllerNavigator = () => (
       name="ClassMarkAttendance"
       component={ClassMarkAttendanceScreen}
       options={{ title: 'Mark Attendance' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassNewsList"
+      component={ClassNewsListScreen}
+      options={{ title: 'School News' }}
     />
     <ClassControllerStack.Screen
       name="ClassCircularsList"

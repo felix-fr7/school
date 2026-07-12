@@ -1114,27 +1114,24 @@ export const classControllerAPI = {
   /**
    * Create a new student for the class (with auto-generated ID)
    * POST /api/class-controller/students
+   * Note: Email is no longer required - a dummy email is auto-generated internally
    */
   async createStudent(data: {
     name: string;
-    email: string;
     password?: string;
-    studentId?: string;
   }): Promise<ApiResponse<{
     id: string;
-    email: string;
     name: string;
     studentId: string;
     createdAt: string;
-    temporaryPassword?: string;
+    password: string;
   }>> {
     const response = await api.post<ApiResponse<{
       id: string;
-      email: string;
       name: string;
       studentId: string;
       createdAt: string;
-      temporaryPassword?: string;
+      password: string;
     }>>('/class-controller/students', data);
     return response.data;
   },
@@ -1149,12 +1146,15 @@ export const classControllerAPI = {
   },
 
   /**
-   * Reset student password
-   * POST /api/class-controller/students/:id/reset-password
+   * Reset student password (with custom or default password)
+   * PUT /api/class-controller/students/:id/reset-password
+   * @param studentId - The student's UUID
+   * @param password - Optional new password (defaults to 'Student@123' if not provided)
    */
-  async resetStudentPassword(studentId: string): Promise<ApiResponse<{ temporaryPassword: string }>> {
-    const response = await api.post<ApiResponse<{ temporaryPassword: string }>>(
-      `/class-controller/students/${studentId}/reset-password`
+  async resetStudentPassword(studentId: string, password?: string): Promise<ApiResponse<{ password: string }>> {
+    const response = await api.put<ApiResponse<{ password: string }>>(
+      `/class-controller/students/${studentId}/reset-password`,
+      password ? { password } : {}
     );
     return response.data;
   },

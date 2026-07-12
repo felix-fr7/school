@@ -129,12 +129,12 @@ const login = async (req, res, next) => {
     }
 
     // Universal lookup: search by email or studentId using OR condition
-    // IMPORTANT: Lowercase the email for case-insensitive matching
-    // This ensures login works regardless of email case used during registration
+    // IMPORTANT: Lowercase both email and studentId for case-insensitive matching
+    // This ensures login works regardless of case used during registration or login
     const normalizedIdentifier = loginIdentifier.toLowerCase();
     const userQuery = `
       SELECT * FROM "User"
-      WHERE LOWER(email) = $1 OR "studentId" = $1
+      WHERE LOWER(email) = $1 OR LOWER("studentId") = $1
       LIMIT 1
     `;
     const userResult = await db.query(userQuery, [normalizedIdentifier]);

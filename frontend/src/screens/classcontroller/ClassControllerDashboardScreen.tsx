@@ -144,6 +144,14 @@ const ClassControllerDashboardScreen: React.FC = () => {
     },
     {
       id: '5',
+      title: 'News',
+      subtitle: 'School updates',
+      icon: '📰',
+      color: '#FF5722',
+      route: 'ClassNewsList',
+    },
+    {
+      id: '6',
       title: 'Circulars',
       subtitle: 'Class notices',
       icon: '📋',
@@ -151,7 +159,7 @@ const ClassControllerDashboardScreen: React.FC = () => {
       route: 'ClassCircularsList',
     },
     {
-      id: '6',
+      id: '7',
       title: 'Add Student',
       subtitle: 'New enrollment',
       icon: '➕',
@@ -159,7 +167,7 @@ const ClassControllerDashboardScreen: React.FC = () => {
       route: 'ClassAddStudent',
     },
     {
-      id: '7',
+      id: '8',
       title: 'Create Homework',
       subtitle: 'Assign new',
       icon: '✍️',
@@ -167,7 +175,7 @@ const ClassControllerDashboardScreen: React.FC = () => {
       route: 'ClassCreateHomework',
     },
     {
-      id: '8',
+      id: '9',
       title: 'Profile',
       subtitle: 'Class settings',
       icon: '⚙️',

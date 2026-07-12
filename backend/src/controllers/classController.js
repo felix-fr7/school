@@ -33,7 +33,7 @@ const getClassDashboard = async (req, res, next) => {
         c.id, c.class_code as "classCode", c.name, c.section,
         t.name as "teacherName", t.email as "teacherEmail"
       FROM "Class" c
-      LEFT JOIN "TeacherDirectory" t ON c.id = t.assigned_class_id
+      LEFT JOIN "TeacherDirectory" t ON c.id = t."assignedClassId"
       WHERE c.id = $1 AND c."tenantId" = $2
       LIMIT 1
     `;
@@ -215,65 +215,41 @@ const getNextStudentId = async (req, res, next) => {
 /**
  * Add a new student to the class (with auto-generated ID)
  * POST /api/class-controller/students
+ * Note: Email is no longer required. A dummy email is auto-generated for DB constraints.
  */
 const addClassStudent = async (req, res, next) => {
   try {
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
-    const { name, email, studentId, password } = req.body;
+    const { name, password } = req.body;
 
-    // Validate required fields
-    if (!name || !email) {
+    // Validate required fields - only name is required now
+    if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
         error: {
-          message: 'Name and email are required',
+          message: 'Student name is required',
         },
       });
     }
 
-    // Check if email already exists
-    const emailCheckQuery = 'SELECT id FROM "User" WHERE email = $1';
-    const emailCheckResult = await db.query(emailCheckQuery, [email]);
+    // Auto-generate student ID sequentially
+    const countQuery = `SELECT COUNT(*) as count FROM "User" WHERE role = 'STUDENT'`;
+    const countResult = await db.query(countQuery);
+    const totalCount = parseInt(countResult.rows[0].count);
+    const nextNumber = totalCount + 1;
+    const finalStudentId = `STU-${String(nextNumber).padStart(4, '0')}`;
 
-    if (emailCheckResult.rows.length > 0) {
-      return res.status(409).json({
-        success: false,
-        error: {
-          message: 'Student with this email already exists',
-        },
-      });
-    }
-
-    // Check if studentId already exists (if provided)
-    let finalStudentId = studentId;
-    if (!finalStudentId) {
-      // Auto-generate student ID
-      const countQuery = `SELECT COUNT(*) as count FROM "User" WHERE role = 'STUDENT'`;
-      const countResult = await db.query(countQuery);
-      const totalCount = parseInt(countResult.rows[0].count);
-      const nextNumber = totalCount + 1;
-      finalStudentId = `STU-${String(nextNumber).padStart(4, '0')}`;
-    } else {
-      const studentIdCheckQuery = 'SELECT id FROM "User" WHERE "studentId" = $1';
-      const studentIdCheckResult = await db.query(studentIdCheckQuery, [finalStudentId]);
-
-      if (studentIdCheckResult.rows.length > 0) {
-        return res.status(409).json({
-          success: false,
-          error: {
-            message: 'Student ID already exists. Please use a unique ID.',
-          },
-        });
-      }
-    }
+    // Generate dummy email to satisfy DB NOT NULL constraint
+    // Format: stu-{studentId}-{timestamp}@school.internal
+    const dummyEmail = `stu-${finalStudentId}-${Date.now().toString().slice(-6)}@school.internal`;
 
     // Use provided password or default temporary password
-    const temporaryPassword = password || 'Student@123';
+    const finalPassword = password || 'Student@123';
     
     // Hash password
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(temporaryPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(finalPassword, saltRounds);
 
     // Create student (CORE TABLE uses CamelCase with double quotes)
     const createQuery = `
@@ -283,9 +259,9 @@ const addClassStudent = async (req, res, next) => {
     `;
 
     const createResult = await db.query(createQuery, [
-      email, 
+      dummyEmail, 
       hashedPassword, 
-      name, 
+      name.trim(), 
       'STUDENT', 
       tenantId, 
       finalStudentId, 
@@ -298,13 +274,12 @@ const addClassStudent = async (req, res, next) => {
       success: true,
       data: {
         id: student.id,
-        email: student.email,
         name: student.name,
         studentId: student.studentId,
         createdAt: student.createdAt,
-        temporaryPassword: temporaryPassword, // Return plaintext password for display
+        password: finalPassword, // Return the password used (either provided or default)
       },
-      message: 'Student created successfully. Please save the temporary password.',
+      message: 'Student created successfully. Please save the student ID and password.',
     });
   } catch (error) {
     next(error);
@@ -409,14 +384,15 @@ const updateStudent = async (req, res, next) => {
 };
 
 /**
- * Reset student password to temporary password
- * POST /api/class-controller/students/:id/reset-password
+ * Reset student password (with custom or default password)
+ * PUT /api/class-controller/students/:id/reset-password
+ * Body: password (optional) - if not provided, defaults to 'Student@123'
  */
 const resetStudentPassword = async (req, res, next) => {
   try {
     const classId = req.user.classId;
     const { id } = req.params;
-    const temporaryPassword = 'Student@123';
+    const { password } = req.body;
 
     // Verify student exists and belongs to this class (CORE TABLE uses CamelCase)
     const checkQuery = `
@@ -434,16 +410,29 @@ const resetStudentPassword = async (req, res, next) => {
       });
     }
 
+    // Use provided password or default temporary password
+    const newPassword = password || 'Student@123';
+
+    // Validate password strength if custom password is provided
+    if (password && password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Password must be at least 6 characters long',
+        },
+      });
+    }
+
     // Hash password
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(temporaryPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     // Update password (CORE TABLE uses CamelCase)
     const updateQuery = `
       UPDATE "User"
       SET password = $1, "updatedAt" = NOW()
       WHERE id = $2
-      RETURNING id, name, email
+      RETURNING id, name, "studentId"
     `;
 
     await db.query(updateQuery, [hashedPassword, id]);
@@ -451,9 +440,9 @@ const resetStudentPassword = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: {
-        temporaryPassword,
+        password: newPassword,
       },
-      message: 'Password reset successfully. New temporary password: Student@123',
+      message: `Password reset successfully. New password: ${newPassword}`,
     });
   } catch (error) {
     next(error);
