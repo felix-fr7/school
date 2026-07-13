@@ -15,7 +15,6 @@ import {
   RefreshControl,
   Alert,
   Image,
-  Linking,
   SafeAreaView,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -121,17 +120,8 @@ const ClassNewsListScreen: React.FC = () => {
   const onRefresh = () => fetchNews(true);
 
   const handleNewsPress = (item: News) => {
-    // Open PDF if available, otherwise show image
-    if (item.pdfUrl) {
-      Linking.openURL(item.pdfUrl).catch(() => {
-        Alert.alert('Error', 'Could not open PDF');
-      });
-    } else if (item.imageUrl) {
-      // Could navigate to a detail screen or show image preview
-      Alert.alert(item.title, item.content);
-    } else {
-      Alert.alert(item.title, item.content);
-    }
+    // Navigate to detail screen for full news view
+    navigation.navigate('ClassNewsDetail', { newsId: item.id });
   };
 
   if (loading && newsList.length === 0) {

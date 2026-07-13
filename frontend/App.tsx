@@ -65,6 +65,7 @@ import StudentHomeworkListScreen from './src/screens/student/HomeworkListScreen'
 import StudentHomeworkDetailScreen from './src/screens/student/HomeworkDetailScreen';
 import StudentMarksListScreen from './src/screens/student/MarksListScreen';
 import StudentNewsListScreen from './src/screens/student/NewsListScreen';
+import StudentNewsDetailScreen from './src/screens/student/NewsDetailScreen';
 import StudentCircularsListScreen from './src/screens/student/CircularsListScreen';
 import StudentExamSchedulesScreen from './src/screens/student/ExamSchedulesScreen';
 import StudentProfileScreen from './src/screens/student/ProfileScreen';
@@ -76,10 +77,12 @@ import ClassStudentsListScreen from './src/screens/classcontroller/ClassStudents
 import ClassAddStudentScreen from './src/screens/classcontroller/ClassAddStudentScreen';
 import ClassEditStudentScreen from './src/screens/classcontroller/ClassEditStudentScreen';
 import ClassHomeworkListScreen from './src/screens/classcontroller/ClassHomeworkListScreen';
+import ClassHomeworkDetailScreen from './src/screens/classcontroller/ClassHomeworkDetailScreen';
 import ClassCreateHomeworkScreen from './src/screens/classcontroller/ClassCreateHomeworkScreen';
 import ClassAttendanceListScreen from './src/screens/classcontroller/ClassAttendanceListScreen';
 import ClassMarkAttendanceScreen from './src/screens/classcontroller/ClassMarkAttendanceScreen';
 import ClassNewsListScreen from './src/screens/classcontroller/ClassNewsListScreen';
+import ClassNewsDetailScreen from './src/screens/classcontroller/ClassNewsDetailScreen';
 import ClassCircularsListScreen from './src/screens/classcontroller/ClassCircularsListScreen';
 import ClassCreateCircularScreen from './src/screens/classcontroller/ClassCreateCircularScreen';
 import ClassExamSchedulesListScreen from './src/screens/classcontroller/ClassExamSchedulesListScreen';
@@ -310,6 +313,11 @@ const StudentNavigator = () => (
       options={{ title: 'School News' }}
     />
     <StudentStack.Screen
+      name="StudentNewsDetail"
+      component={StudentNewsDetailScreen}
+      options={{ title: 'News Details' }}
+    />
+    <StudentStack.Screen
       name="StudentCircularsList"
       component={StudentCircularsListScreen}
       options={{ title: 'Circulars' }}
@@ -418,6 +426,11 @@ const ClassControllerNavigator = () => (
       options={{ title: 'Homework' }}
     />
     <ClassControllerStack.Screen
+      name="ClassHomeworkDetail"
+      component={ClassHomeworkDetailScreen}
+      options={{ title: 'Homework Details' }}
+    />
+    <ClassControllerStack.Screen
       name="ClassCreateHomework"
       component={ClassCreateHomeworkScreen}
       options={{ title: 'Create Homework' }}
@@ -436,6 +449,11 @@ const ClassControllerNavigator = () => (
       name="ClassNewsList"
       component={ClassNewsListScreen}
       options={{ title: 'School News' }}
+    />
+    <ClassControllerStack.Screen
+      name="ClassNewsDetail"
+      component={ClassNewsDetailScreen}
+      options={{ title: 'News Details' }}
     />
     <ClassControllerStack.Screen
       name="ClassCircularsList"

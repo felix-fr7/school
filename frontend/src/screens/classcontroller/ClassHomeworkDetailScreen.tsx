@@ -1,5 +1,5 @@
 /**
- * Student Homework Detail Screen
+ * Class Controller Homework Detail Screen
  * Displays full homework details with sent date, due date, subject, and description
  */
 
@@ -12,12 +12,13 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { StudentStackParamList } from '../../types';
-import { studentAPI } from '../../services/api';
+import { ClassControllerStackParamList } from '../../types';
+import { classControllerAPI } from '../../services/api';
 
-type HomeworkDetailScreenProps = StackScreenProps<StudentStackParamList, 'StudentHomeworkDetail'>;
+type HomeworkDetailScreenProps = StackScreenProps<ClassControllerStackParamList, 'ClassHomeworkDetail'>;
 
 interface HomeworkItem {
   id: string;
@@ -42,7 +43,7 @@ interface HomeworkItem {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ route, navigation }) => {
+const ClassHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ route, navigation }) => {
   const { homeworkId } = route.params;
   const [homework, setHomework] = useState<HomeworkItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,7 @@ const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ rout
   const fetchHomeworkDetail = async () => {
     try {
       setLoading(true);
-      const response = await studentAPI.getHomework(1, 20);
+      const response = await classControllerAPI.getHomework(1, 20);
       if (response.success && response.data) {
         const foundHomework = response.data.homeworks.find((h: HomeworkItem) => h.id === homeworkId);
         if (foundHomework) {
@@ -86,10 +87,35 @@ const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ rout
     return new Date(dueDate) < new Date();
   };
 
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Homework',
+      'Are you sure you want to delete this homework? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await classControllerAPI.deleteHomework(homeworkId);
+              Alert.alert('Success', 'Homework deleted successfully', [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            } catch (error) {
+              console.error('Error deleting homework:', error);
+              Alert.alert('Error', 'Failed to delete homework');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1565c0" />
+        <ActivityIndicator size="large" color="#FF6B35" />
       </View>
     );
   }
@@ -145,13 +171,16 @@ const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ rout
         </View>
       </View>
 
-      {/* Assigned By */}
-      {homework.assignedByUser && (
-        <View style={styles.assignedByContainer}>
-          <Text style={styles.assignedByLabel}>Assigned by</Text>
-          <Text style={styles.assignedByValue}>{homework.assignedByUser.name}</Text>
-        </View>
-      )}
+      {/* Actions */}
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={handleDelete}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.deleteButtonText}>🗑️ Delete Homework</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -159,19 +188,19 @@ const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ rout
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFF5F0',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFF5F0',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFF5F0',
     paddingVertical: 60,
   },
   errorIcon: {
@@ -187,7 +216,7 @@ const styles = StyleSheet.create({
   // Subject Badge
   subjectBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#1565c0',
+    backgroundColor: '#FF6B35',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -298,29 +327,24 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Assigned By
-  assignedByContainer: {
+  // Actions
+  actionsContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  deleteButton: {
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginBottom: 24,
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
+    borderColor: '#FED7D7',
     alignItems: 'center',
   },
-  assignedByLabel: {
-    fontSize: 12,
+  deleteButtonText: {
+    fontSize: 15,
     fontWeight: '600',
-    color: '#64748B',
-    marginRight: 8,
-  },
-  assignedByValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
+    color: '#DC2626',
   },
 });
 
-export default StudentHomeworkDetailScreen;
+export default ClassHomeworkDetailScreen;

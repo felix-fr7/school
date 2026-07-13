@@ -415,6 +415,7 @@ export type StudentStackParamList = {
   StudentHomeworkDetail: { homeworkId: string };
   StudentMarksList: undefined;
   StudentNewsList: undefined;
+  StudentNewsDetail: { newsId: string };
   StudentCircularsList: undefined;
   StudentExamSchedules: undefined;
   StudentProfile: undefined;
@@ -440,10 +441,12 @@ export type ClassControllerStackParamList = {
   ClassAddStudent: { classId: string };
   ClassEditStudent: { studentId: string; classId: string };
   ClassHomeworkList: { classId: string } | undefined;
+  ClassHomeworkDetail: { homeworkId: string };
   ClassCreateHomework: { classId: string };
-  ClassAttendanceList: { classId: string };
+  ClassAttendanceList: { classId: string } | undefined;
   ClassMarkAttendance: { classId: string; date: string };
   ClassNewsList: { classId: string } | undefined;
+  ClassNewsDetail: { newsId: string };
   ClassCircularsList: { classId: string } | undefined;
   ClassCreateCircular: { classId: string };
   ClassExamSchedulesList: { classId: string } | undefined;

@@ -14,7 +14,12 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { StudentStackParamList } from '../../types';
 import { contentAPI } from '../../services/api';
+
+type NavigationProp = StackNavigationProp<StudentStackParamList, 'StudentNewsList'>;
 
 interface NewsItem {
   id: string;
@@ -28,6 +33,7 @@ interface NewsItem {
 }
 
 const StudentNewsListScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,8 +65,16 @@ const StudentNewsListScreen: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const handleNewsPress = (newsId: string) => {
+    navigation.navigate('StudentNewsDetail', { newsId });
+  };
+
   const renderNewsItem = ({ item }: { item: NewsItem }) => (
-    <View style={styles.newsCard}>
+    <TouchableOpacity
+      style={styles.newsCard}
+      onPress={() => handleNewsPress(item.id)}
+      activeOpacity={0.7}
+    >
       {item.imageUrl && (
         <TouchableOpacity onPress={() => item.imageUrl && Linking.openURL(item.imageUrl)}>
           <View style={styles.newsImagePlaceholder}>
@@ -83,7 +97,7 @@ const StudentNewsListScreen: React.FC = () => {
         )}
         <Text style={styles.newsAuthor}>By: {item.postedByUser?.name || 'Admin'}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {

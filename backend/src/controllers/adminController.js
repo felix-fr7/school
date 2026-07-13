@@ -1098,7 +1098,17 @@ const getAllHomework = async (req, res, next) => {
     const homeworksResult = await db.query(homeworksQuery, homeworksParams);
 
     const homeworks = homeworksResult.rows.map(hw => ({
-      ...hw,
+      id: hw.id,
+      title: hw.title,
+      description: hw.description,
+      subject: hw.subject,
+      classId: hw.class_id,
+      tenantId: hw.tenant_id,
+      assignedBy: hw.assigned_by,
+      dueDate: hw.due_date,
+      isPublished: hw.is_published,
+      createdAt: hw.created_at,
+      updatedAt: hw.updated_at,
       class: hw.classId ? {
         id: hw.classId,
         name: hw.className,
@@ -1186,12 +1196,51 @@ const getHomeworkById = async (req, res, next) => {
 /**
  * Create new homework
  * POST /api/admin/homework
+ * Also handles POST /api/class-controller/homework (class-based login)
  */
 const createHomework = async (req, res, next) => {
   try {
     const { title, description, subject, classId, dueDate } = req.body;
     const tenantId = req.user.tenantId;
-    const assignedBy = req.user.id;
+    
+    // Determine assigned_by user ID
+    let assignedBy;
+    
+    if (req.user.id) {
+      // Regular user login - use the user's ID
+      assignedBy = req.user.id;
+    } else if (req.user.classId) {
+      // Class-based login - look up the class's assigned teacher
+      const classQuery = `SELECT "teacherId" FROM "Class" WHERE id = $1 AND "tenantId" = $2`;
+      const classResult = await db.query(classQuery, [req.user.classId, tenantId]);
+      
+      if (classResult.rows.length > 0 && classResult.rows[0].teacherId) {
+        // Use the class's assigned teacher ID
+        assignedBy = classResult.rows[0].teacherId;
+      } else {
+        // Fallback: Use a system approach - find any teacher in the tenant
+        const fallbackQuery = `SELECT id FROM "User" WHERE "tenantId" = $1 AND role = 'TEACHER' LIMIT 1`;
+        const fallbackResult = await db.query(fallbackQuery, [tenantId]);
+        
+        if (fallbackResult.rows.length > 0) {
+          assignedBy = fallbackResult.rows[0].id;
+        } else {
+          return res.status(400).json({
+            success: false,
+            error: {
+              message: 'No valid teacher found to assign homework. Please assign a teacher to your class.',
+            },
+          });
+        }
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Authentication required to create homework',
+        },
+      });
+    }
 
     const createQuery = `
       INSERT INTO "Homework" (title, description, subject, "class_id", "tenant_id", "assigned_by", "due_date", "created_at", "updated_at")

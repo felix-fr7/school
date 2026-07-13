@@ -71,19 +71,8 @@ const ClassHomeworkListScreen: React.FC = () => {
   };
 
   const handleHomeworkPress = (item: Homework) => {
-    // Navigate to edit screen or detail view
-    Alert.alert(
-      item.title,
-      item.description,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
-          onPress: () => handleDeleteHomework(item) 
-        },
-      ]
-    );
+    // Navigate to homework detail screen
+    navigation.navigate('ClassHomeworkDetail', { homeworkId: item.id });
   };
 
   const handleDeleteHomework = (item: Homework) => {

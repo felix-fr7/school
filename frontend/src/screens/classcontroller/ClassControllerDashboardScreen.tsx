@@ -128,14 +128,6 @@ const ClassControllerDashboardScreen: React.FC = () => {
     },
     {
       id: '3',
-      title: 'Attendance',
-      subtitle: `${dashboardData?.stats.attendanceRate ?? 0}% rate`,
-      icon: '✅',
-      color: '#FF9800',
-      route: 'ClassAttendanceList',
-    },
-    {
-      id: '4',
       title: 'Exams',
       subtitle: `${dashboardData?.stats.upcomingExams ?? 0} upcoming`,
       icon: '📅',
@@ -143,7 +135,7 @@ const ClassControllerDashboardScreen: React.FC = () => {
       route: 'ClassExamSchedulesList',
     },
     {
-      id: '5',
+      id: '4',
       title: 'News',
       subtitle: 'School updates',
       icon: '📰',
@@ -151,7 +143,7 @@ const ClassControllerDashboardScreen: React.FC = () => {
       route: 'ClassNewsList',
     },
     {
-      id: '6',
+      id: '5',
       title: 'Circulars',
       subtitle: 'Class notices',
       icon: '📋',
@@ -159,7 +151,7 @@ const ClassControllerDashboardScreen: React.FC = () => {
       route: 'ClassCircularsList',
     },
     {
-      id: '7',
+      id: '6',
       title: 'Add Student',
       subtitle: 'New enrollment',
       icon: '➕',
@@ -167,15 +159,7 @@ const ClassControllerDashboardScreen: React.FC = () => {
       route: 'ClassAddStudent',
     },
     {
-      id: '8',
-      title: 'Create Homework',
-      subtitle: 'Assign new',
-      icon: '✍️',
-      color: '#795548',
-      route: 'ClassCreateHomework',
-    },
-    {
-      id: '9',
+      id: '7',
       title: 'Profile',
       subtitle: 'Class settings',
       icon: '⚙️',
