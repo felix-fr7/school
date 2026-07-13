@@ -1109,12 +1109,12 @@ const getAllHomework = async (req, res, next) => {
       isPublished: hw.is_published,
       createdAt: hw.created_at,
       updatedAt: hw.updated_at,
-      class: hw.classId ? {
+      class: hw.class_id ? {
         id: hw.classId,
         name: hw.className,
         section: hw.classSection,
       } : null,
-      assignedByUser: hw.assignedById ? {
+      assignedByUser: hw.assigned_by ? {
         id: hw.assignedById,
         name: hw.assignedByName,
       } : null,
@@ -1177,12 +1177,12 @@ const getHomeworkById = async (req, res, next) => {
       success: true,
       data: {
         ...hw,
-        class: hw.classId ? {
+        class: hw.class_id ? {
           id: hw.classId,
           name: hw.className,
           section: hw.classSection,
         } : null,
-        assignedByUser: hw.assignedById ? {
+        assignedByUser: hw.assigned_by ? {
           id: hw.assignedById,
           name: hw.assignedByName,
         } : null,

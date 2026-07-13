@@ -110,7 +110,7 @@ const getHomework = async (req, res, next) => {
     const take = parseInt(limit);
 
     // Build where clause
-    let whereClause = 'h."classId" = $1 AND h."isPublished" = true';
+    let whereClause = 'h."class_id" = $1 AND h."is_published" = true';
     let params = [classId];
     let paramIndex = 2;
 
@@ -132,10 +132,10 @@ const getHomework = async (req, res, next) => {
         c.id as "classId", c.name as "className", c.section as "classSection",
         u.id as "assignedById", u.name as "assignedByName"
       FROM "Homework" h
-      LEFT JOIN "Class" c ON h."classId" = c.id
-      LEFT JOIN "User" u ON h."assignedBy" = u.id
+      LEFT JOIN "Class" c ON h."class_id" = c.id
+      LEFT JOIN "User" u ON h."assigned_by" = u.id
       WHERE ${whereClause}
-      ORDER BY h."createdAt" DESC
+      ORDER BY h."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -143,13 +143,23 @@ const getHomework = async (req, res, next) => {
     const homeworkResult = await db.query(homeworkQuery, homeworkParams);
 
     const homeworks = homeworkResult.rows.map(hw => ({
-      ...hw,
-      class: {
+      id: hw.id,
+      title: hw.title,
+      description: hw.description,
+      subject: hw.subject,
+      classId: hw.class_id,
+      tenantId: hw.tenant_id,
+      assignedBy: hw.assigned_by,
+      dueDate: hw.due_date,
+      isPublished: hw.is_published,
+      createdAt: hw.created_at,
+      updatedAt: hw.updated_at,
+      class: hw.class_id ? {
         id: hw.classId,
         name: hw.className,
         section: hw.classSection,
-      },
-      assignedByUser: hw.assignedById ? {
+      } : null,
+      assignedByUser: hw.assigned_by ? {
         id: hw.assignedById,
         name: hw.assignedByName,
       } : null,
@@ -187,9 +197,9 @@ const getHomeworkById = async (req, res, next) => {
         c.id as "classId", c.name as "className", c.section as "classSection",
         u.id as "assignedById", u.name as "assignedByName"
       FROM "Homework" h
-      LEFT JOIN "Class" c ON h."classId" = c.id
-      LEFT JOIN "User" u ON h."assignedBy" = u.id
-      WHERE h.id = $1 AND h."classId" = $2 AND h."isPublished" = true
+      LEFT JOIN "Class" c ON h."class_id" = c.id
+      LEFT JOIN "User" u ON h."assigned_by" = u.id
+      WHERE h.id = $1 AND h."class_id" = $2 AND h."is_published" = true
     `;
 
     const homeworkResult = await db.query(homeworkQuery, [id, classId]);
@@ -208,13 +218,23 @@ const getHomeworkById = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: {
-        ...hw,
-        class: {
+        id: hw.id,
+        title: hw.title,
+        description: hw.description,
+        subject: hw.subject,
+        classId: hw.class_id,
+        tenantId: hw.tenant_id,
+        assignedBy: hw.assigned_by,
+        dueDate: hw.due_date,
+        isPublished: hw.is_published,
+        createdAt: hw.created_at,
+        updatedAt: hw.updated_at,
+        class: hw.class_id ? {
           id: hw.classId,
           name: hw.className,
           section: hw.classSection,
-        },
-        assignedByUser: hw.assignedById ? {
+        } : null,
+        assignedByUser: hw.assigned_by ? {
           id: hw.assignedById,
           name: hw.assignedByName,
         } : null,
