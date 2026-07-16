@@ -1,205 +1,167 @@
 /**
- * Create Post Screen
+ * Create Post Screen (Ionic React Version)
  * Form for creating new posts
  */
 
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { MainStackParamList } from '../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonInput,
+  IonTextarea,
+  IonText,
+  IonSpinner,
+  IonAlert,
+} from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import { usePosts } from '../contexts/PostContext';
+import './CreatePostScreen.css';
 
-type CreatePostScreenProps = StackScreenProps<MainStackParamList, 'CreatePost'>;
-
-const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ navigation }) => {
+const CreatePostScreen: React.FC = () => {
+  const history = useHistory();
   const { createPost, isLoading } = usePosts();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const handleCreate = async () => {
     // Validation
     if (!title.trim()) {
-      Alert.alert('Error', 'Please enter a title');
+      setAlertMessage('Please enter a title');
+      setShowErrorAlert(true);
       return;
     }
 
     if (title.trim().length > 255) {
-      Alert.alert('Error', 'Title must be less than 255 characters');
+      setAlertMessage('Title must be less than 255 characters');
+      setShowErrorAlert(true);
       return;
     }
 
     if (!content.trim()) {
-      Alert.alert('Error', 'Please enter some content');
+      setAlertMessage('Please enter some content');
+      setShowErrorAlert(true);
       return;
     }
 
     if (content.trim().length > 10000) {
-      Alert.alert('Error', 'Content must be less than 10,000 characters');
+      setAlertMessage('Content must be less than 10,000 characters');
+      setShowErrorAlert(true);
       return;
     }
 
     try {
       const result = await createPost({ title: title.trim(), content: content.trim() });
       if (result) {
-        Alert.alert('Success', 'Post created successfully', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        setShowSuccessAlert(true);
       } else {
-        Alert.alert('Error', 'Failed to create post');
+        setAlertMessage('Failed to create post');
+        setShowErrorAlert(true);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create post';
-      Alert.alert('Error', errorMessage);
+      setAlertMessage(errorMessage);
+      setShowErrorAlert(true);
     }
   };
 
+  const handleSuccessDismiss = () => {
+    setShowSuccessAlert(false);
+    history.goBack();
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Title</Text>
-            <TextInput
-              style={styles.input}
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/posts" />
+          </IonButtons>
+          <IonTitle>Create Post</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="create-post-content">
+        <div className="form-container">
+          <div className="input-group">
+            <label className="input-label">Title</label>
+            <IonInput
               placeholder="Enter post title"
               value={title}
-              onChangeText={setTitle}
-              maxLength={255}
-              editable={!isLoading}
+              onIonInput={(e) => setTitle(e.detail.value || '')}
+              maxlength={255}
+              disabled={isLoading}
+              className="input-field"
             />
-            <Text style={styles.charCount}>{title.length}/255</Text>
-          </View>
+            <IonText color="medium" className="char-count">
+              {title.length}/255
+            </IonText>
+          </div>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Content</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
+          <div className="input-group">
+            <label className="input-label">Content</label>
+            <IonTextarea
               placeholder="Write your post content..."
               value={content}
-              onChangeText={setContent}
-              multiline
-              numberOfLines={10}
-              maxLength={10000}
-              editable={!isLoading}
+              onIonInput={(e) => setContent(e.detail.value || '')}
+              rows={10}
+              maxlength={10000}
+              disabled={isLoading}
+              className="textarea-field"
             />
-            <Text style={styles.charCount}>{content.length}/10000</Text>
-          </View>
+            <IonText color="medium" className="char-count">
+              {content.length}/10000
+            </IonText>
+          </div>
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={() => navigation.goBack()}
+          <div className="button-container">
+            <IonButton
+              expand="block"
+              color="medium"
+              onClick={() => history.goBack()}
               disabled={isLoading}
+              className="cancel-button"
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+              Cancel
+            </IonButton>
 
-            <TouchableOpacity
-              style={[styles.button, styles.createButton, isLoading && styles.buttonDisabled]}
-              onPress={handleCreate}
+            <IonButton
+              expand="block"
+              color="primary"
+              onClick={handleCreate}
               disabled={isLoading}
+              className="create-button"
             >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.createButtonText}>Create Post</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              {isLoading ? <IonSpinner name="crescent" /> : 'Create Post'}
+            </IonButton>
+          </div>
+        </div>
+
+        <IonAlert
+          isOpen={showSuccessAlert}
+          onDidDismiss={handleSuccessDismiss}
+          header="Success"
+          message="Post created successfully"
+          buttons={['OK']}
+        />
+
+        <IonAlert
+          isOpen={showErrorAlert}
+          onDidDismiss={() => setShowErrorAlert(false)}
+          header="Error"
+          message={alertMessage}
+          buttons={['OK']}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  form: {
-    flex: 1,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    minHeight: 44,
-  },
-  textArea: {
-    minHeight: 200,
-    textAlignVertical: 'top',
-  },
-  charCount: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'right',
-    marginTop: 4,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
-  },
-  button: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#e0e0e0',
-  },
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  createButton: {
-    backgroundColor: '#007AFF',
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-});
 
 export default CreatePostScreen;

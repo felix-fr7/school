@@ -1,49 +1,25 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
-    "types": ["node"],
-    "baseUrl": ".",
-    "ignoreDeprecations": "5.0",
-    "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@components/*": [
-        "src/components/*"
-      ],
-      "@screens/*": [
-        "src/screens/*"
-      ],
-      "@services/*": [
-        "src/services/*"
-      ],
-      "@contexts/*": [
-        "src/contexts/*"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ],
-      "@utils/*": [
-        "src/utils/*"
-      ]
-    },
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js",
-    "jest.config.js"
-  ]
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

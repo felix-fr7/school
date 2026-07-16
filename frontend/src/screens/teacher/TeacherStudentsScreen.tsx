@@ -1,26 +1,45 @@
 /**
- * Teacher Students Screen
+ * Teacher Students Screen (Ionic React Version)
  * Student management for teachers - view list, add manually, edit student details, and bulk upload
- * Teachers can only update basic info (name, email, studentId) for students in their class
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-  ScrollView,
-  Linking,
-} from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
-import { teacherAPI, utilsAPI } from '../../services/api';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonIcon,
+  IonAvatar,
+  IonText,
+  IonSpinner,
+  IonList,
+  IonItem,
+  IonCard,
+  IonCardContent,
+  IonInput,
+  IonModal,
+  IonLabel,
+  IonRefresher,
+  IonRefresherContent,
+  IonAlert,
+} from '@ionic/react';
+import {
+  refreshOutline,
+  cloudUploadOutline,
+  downloadOutline,
+  addCircleOutline,
+  closeOutline,
+  personOutline,
+  mailOutline,
+  createOutline,
+} from 'ionicons/icons';
+import { teacherAPI } from '../../services/api';
+import './TeacherStudentsScreen.css';
 
 interface Student {
   id: string;
@@ -55,6 +74,9 @@ const TeacherStudentsScreen: React.FC = () => {
   const [newStudentId, setNewStudentId] = useState('');
   const [newStudentPhone, setNewStudentPhone] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const fetchStudents = async (refresh = false) => {
     try {
@@ -66,7 +88,6 @@ const TeacherStudentsScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching students:', error);
-      Alert.alert('Error', 'Failed to load students');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -77,7 +98,10 @@ const TeacherStudentsScreen: React.FC = () => {
     fetchStudents();
   }, []);
 
-  const onRefresh = () => fetchStudents(true);
+  const onRefresh = async (event: CustomEvent) => {
+    await fetchStudents(true);
+    event.detail.complete();
+  };
 
   const handleEditStudent = (student: Student) => {
     setEditingStudent(student);
@@ -89,11 +113,15 @@ const TeacherStudentsScreen: React.FC = () => {
 
   const validateEditForm = () => {
     if (!editName.trim()) {
-      Alert.alert('Error', 'Please enter student name');
+      setAlertMessage('Please enter student name');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     if (!editStudentId.trim()) {
-      Alert.alert('Error', 'Please enter student ID');
+      setAlertMessage('Please enter student ID');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     return true;
@@ -111,19 +139,17 @@ const TeacherStudentsScreen: React.FC = () => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Student updated successfully', [
-          {
-            text: 'OK',
-            onPress: () => {
-              setShowEditModal(false);
-              setEditingStudent(null);
-              fetchStudents();
-            },
-          },
-        ]);
+        setAlertMessage('Student updated successfully');
+        setIsSuccess(true);
+        setShowAlert(true);
+        setShowEditModal(false);
+        setEditingStudent(null);
+        fetchStudents();
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to update student');
+      setAlertMessage(error.response?.data?.error?.message || 'Failed to update student');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setSaving(false);
     }
@@ -158,24 +184,34 @@ const TeacherStudentsScreen: React.FC = () => {
 
   const validateNewStudentForm = () => {
     if (!newStudentName.trim()) {
-      Alert.alert('Error', 'Please enter student name');
+      setAlertMessage('Please enter student name');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     if (!newStudentEmail.trim()) {
-      Alert.alert('Error', 'Please enter student email');
+      setAlertMessage('Please enter student email');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newStudentEmail.trim())) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      setAlertMessage('Please enter a valid email address');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     if (!newStudentId.trim()) {
-      Alert.alert('Error', 'Please enter student ID (roll number)');
+      setAlertMessage('Please enter student ID (roll number)');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     if (newStudentPassword && newStudentPassword.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      setAlertMessage('Password must be at least 6 characters');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     return true;
@@ -195,21 +231,16 @@ const TeacherStudentsScreen: React.FC = () => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Student created successfully', [
-          {
-            text: 'OK',
-            onPress: () => {
-              closeAddStudentModal();
-              fetchStudents();
-            },
-          },
-        ]);
+        setAlertMessage('Student created successfully');
+        setIsSuccess(true);
+        setShowAlert(true);
+        closeAddStudentModal();
+        fetchStudents();
       }
     } catch (error: any) {
-      Alert.alert(
-        'Error',
-        error.response?.data?.error?.message || 'Failed to create student'
-      );
+      setAlertMessage(error.response?.data?.error?.message || 'Failed to create student');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setSaving(false);
     }
@@ -217,551 +248,290 @@ const TeacherStudentsScreen: React.FC = () => {
 
   // Bulk upload handlers
   const handleBulkUpload = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          'text/csv',
-          'application/vnd.ms-excel',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ],
-        copyToCacheDirectory: true,
-      });
-
-      if (result.canceled || !result.assets || result.assets.length === 0) {
-        return;
-      }
-
-      const file = result.assets[0];
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.csv,.xls,.xlsx';
+    fileInput.onchange = async (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (!file) return;
 
       setUploading(true);
-
       const formData = new FormData();
-      formData.append('file', {
-        uri: file.uri,
-        name: file.name,
-        type: file.mimeType || 'text/csv',
-      } as any);
+      formData.append('file', file);
 
-      const response = await teacherAPI.bulkUploadStudents(
-        formData as unknown as File
-      );
+      try {
+        const response = await teacherAPI.bulkUploadStudents(formData as unknown as File);
 
-      if (response.success && response.data) {
-        setUploadResult({
-          totalProcessed: response.data.totalProcessed,
-          successfullyCreated: response.data.successfullyCreated,
-          duplicates: response.data.duplicates,
-        });
-        setShowUploadResultModal(true);
-        fetchStudents();
+        if (response.success && response.data) {
+          setUploadResult({
+            totalProcessed: response.data.totalProcessed,
+            successfullyCreated: response.data.successfullyCreated,
+            duplicates: response.data.duplicates,
+          });
+          setShowUploadResultModal(true);
+          fetchStudents();
+        }
+      } catch (error: any) {
+        setAlertMessage(error.response?.data?.error?.message || 'Failed to upload file');
+        setIsSuccess(false);
+        setShowAlert(true);
+      } finally {
+        setUploading(false);
       }
-    } catch (error: any) {
-      Alert.alert(
-        'Upload Failed',
-        error.response?.data?.error?.message || 'Failed to upload file'
-      );
-    } finally {
-      setUploading(false);
-    }
+    };
+    fileInput.click();
   };
 
   // Download CSV template handler
-  const handleDownloadSampleCSV = async () => {
-    try {
-      // Open the CSV download URL directly
-      // The browser/device will handle the download
-      const csvUrl = utilsAPI.getSampleCSVUrl();
-      Linking.openURL(csvUrl);
-    } catch (error) {
-      console.error('Error opening CSV download:', error);
-      Alert.alert('Error', 'Failed to download CSV template');
-    }
+  const handleDownloadSampleCSV = () => {
+    // Download sample CSV template
+    const csvContent = 'Name,Email,StudentID,Phone\nJohn Doe,john@example.com,STU001,1234567890';
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'student_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
-
-  const renderStudent = ({ item }: { item: Student }) => (
-    <TouchableOpacity
-      style={styles.studentCard}
-      onPress={() => handleEditStudent(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.studentAvatar}>
-        <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
-      </View>
-      <View style={styles.studentInfo}>
-        <Text style={styles.studentName}>{item.name}</Text>
-        <Text style={styles.studentRoll}>ID: {item.studentId || 'N/A'}</Text>
-        <Text style={styles.studentEmail}>{item.email}</Text>
-      </View>
-      <View style={styles.editIcon}>
-        <Text style={styles.editIconText}>✏️</Text>
-      </View>
-    </TouchableOpacity>
-  );
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7b1fa2" />
-      </View>
+      <IonPage>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+          <IonText color="medium">
+            <p>Loading students...</p>
+          </IonText>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Bulk Upload Button */}
-      <TouchableOpacity style={styles.bulkUploadButton} onPress={handleBulkUpload}>
-        <Text style={styles.bulkUploadIcon}>📂</Text>
-        <Text style={styles.bulkUploadText}>Bulk Upload (CSV)</Text>
-      </TouchableOpacity>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/teacher/dashboard" />
+          </IonButtons>
+          <IonTitle>My Students</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="teacher-students-content">
+        <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
+          <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
+        </IonRefresher>
 
-      {/* Download Sample CSV Button */}
-      <TouchableOpacity style={styles.downloadTemplateButton} onPress={handleDownloadSampleCSV}>
-        <Text style={styles.downloadTemplateIcon}>📄</Text>
-        <Text style={styles.downloadTemplateText}>Download Sample CSV Template</Text>
-      </TouchableOpacity>
+        {/* Action Buttons */}
+        <div className="action-buttons">
+          <IonButton expand="block" color="primary" onClick={handleBulkUpload} disabled={uploading}>
+            <IonIcon icon={cloudUploadOutline} slot="start" /> Bulk Upload (CSV)
+          </IonButton>
+          <IonButton expand="block" color="secondary" fill="outline" onClick={handleDownloadSampleCSV}>
+            <IonIcon icon={downloadOutline} slot="start" /> Download Sample CSV Template
+          </IonButton>
+          <IonButton expand="block" color="success" onClick={openAddStudentModal}>
+            <IonIcon icon={addCircleOutline} slot="start" /> Add Student Manually
+          </IonButton>
+        </div>
 
-      {/* Add Student Manually Button */}
-      <TouchableOpacity style={styles.addManualButton} onPress={openAddStudentModal}>
-        <Text style={styles.addManualIcon}>➕</Text>
-        <Text style={styles.addManualText}>Add Student Manually</Text>
-      </TouchableOpacity>
+        {/* Students List */}
+        {students.length === 0 ? (
+          <div className="empty-container">
+            <IonIcon icon={personOutline} className="empty-icon" />
+            <IonText color="medium">
+              <h3>No students in your class yet</h3>
+              <p>Use the buttons above to add students</p>
+            </IonText>
+          </div>
+        ) : (
+          <IonList>
+            {students.map((item) => (
+              <IonItem key={item.id} className="student-item" button onClick={() => handleEditStudent(item)}>
+                <IonAvatar slot="start">
+                  <span>{item.name.charAt(0).toUpperCase()}</span>
+                </IonAvatar>
+                <div className="student-info">
+                  <h3 className="student-name">{item.name}</h3>
+                  <p className="student-id">ID: {item.studentId || 'N/A'}</p>
+                  <p className="student-email">{item.email}</p>
+                </div>
+                <IonIcon icon={createOutline} slot="end" className="edit-icon" />
+              </IonItem>
+            ))}
+          </IonList>
+        )}
 
-      <FlatList
-        data={students}
-        renderItem={renderStudent}
-        keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>👥</Text>
-            <Text style={styles.emptyText}>No students in your class yet</Text>
-            <Text style={styles.emptySubtext}>Use the buttons above to add students</Text>
-          </View>
-        }
-        contentContainerStyle={students.length === 0 ? { flex: 1 } : undefined}
-      />
+        {/* Info Text */}
+        {students.length > 0 && (
+          <div className="info-bar">
+            <IonText color="primary">
+              <p>Tap on a student to edit their details</p>
+            </IonText>
+          </div>
+        )}
 
-      {/* Info Text */}
-      {students.length > 0 && (
-        <View style={styles.infoBar}>
-          <Text style={styles.infoText}>Tap on a student to edit their details</Text>
-        </View>
-      )}
+        {/* Upload Progress Overlay */}
+        {uploading && (
+          <div className="upload-overlay">
+            <div className="upload-progress-card">
+              <IonSpinner name="crescent" />
+              <IonText color="medium">
+                <p>Parsing data & uploading...</p>
+              </IonText>
+            </div>
+          </div>
+        )}
 
-      {/* Upload Progress Overlay */}
-      {uploading && (
-        <View style={styles.uploadOverlay}>
-          <View style={styles.uploadProgressCard}>
-            <ActivityIndicator size="large" color="#7b1fa2" />
-            <Text style={styles.uploadProgressText}>
-              Parsing data & uploading...
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Upload Result Modal */}
-      <Modal
-        visible={showUploadResultModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowUploadResultModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.resultCard}>
-            <View style={styles.resultHeader}>
-              <Text style={styles.resultIcon}>✅</Text>
-              <Text style={styles.resultTitle}>Upload Complete</Text>
-            </View>
-
+        {/* Upload Result Modal */}
+        <IonModal isOpen={showUploadResultModal} onDidDismiss={() => setShowUploadResultModal(false)}>
+          <div className="modal-container">
+            <div className="result-header">
+              <IonIcon icon="checkmark-circle-outline" className="result-icon" />
+              <h2>Upload Complete</h2>
+            </div>
             {uploadResult && (
-              <View style={styles.resultStats}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{uploadResult.totalProcessed}</Text>
-                  <Text style={styles.statLabel}>Total Parsed</Text>
-                </View>
-                <View style={[styles.statItem, styles.statSuccess]}>
-                  <Text style={styles.statValue}>{uploadResult.successfullyCreated}</Text>
-                  <Text style={styles.statLabel}>Created</Text>
-                </View>
-                <View style={[styles.statItem, styles.statWarning]}>
-                  <Text style={styles.statValue}>{uploadResult.duplicates}</Text>
-                  <Text style={styles.statLabel}>Skipped</Text>
-                </View>
-              </View>
+              <div className="result-stats">
+                <div className="stat-item">
+                  <span className="stat-value">{uploadResult.totalProcessed}</span>
+                  <span className="stat-label">Total Parsed</span>
+                </div>
+                <div className="stat-item stat-success">
+                  <span className="stat-value">{uploadResult.successfullyCreated}</span>
+                  <span className="stat-label">Created</span>
+                </div>
+                <div className="stat-item stat-warning">
+                  <span className="stat-value">{uploadResult.duplicates}</span>
+                  <span className="stat-label">Skipped</span>
+                </div>
+              </div>
             )}
+            <IonButton expand="block" onClick={() => { setShowUploadResultModal(false); setUploadResult(null); }}>
+              Close
+            </IonButton>
+          </div>
+        </IonModal>
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => {
-                setShowUploadResultModal(false);
-                setUploadResult(null);
-              }}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Edit Student Modal */}
-      <Modal
-        visible={showEditModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeEditModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Student</Text>
-              <TouchableOpacity onPress={closeEditModal}>
-                <Text style={styles.modalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalForm}>
-              <Text style={styles.label}>Full Name *</Text>
-              <TextInput
-                style={styles.input}
+        {/* Edit Student Modal */}
+        <IonModal isOpen={showEditModal} onDidDismiss={closeEditModal}>
+          <div className="modal-container">
+            <div className="modal-header">
+              <h2>Edit Student</h2>
+              <IonButton fill="clear" onClick={closeEditModal}>
+                <IonIcon icon={closeOutline} slot="icon-only" />
+              </IonButton>
+            </div>
+            <div className="modal-form">
+              <IonInput
+                label="Full Name *"
+                labelPlacement="stacked"
                 placeholder="Enter student's full name"
                 value={editName}
-                onChangeText={(text) => setEditName(text)}
-                autoCapitalize="words"
+                onIonInput={(e) => setEditName(e.detail.value || '')}
+                autocapitalize="words"
               />
-
-              <Text style={styles.label}>Student ID *</Text>
-              <TextInput
-                style={styles.input}
+              <IonInput
+                label="Student ID *"
+                labelPlacement="stacked"
                 placeholder="e.g., STU001"
                 value={editStudentId}
-                onChangeText={(text) => setEditStudentId(text)}
-                autoCapitalize="characters"
+                onIonInput={(e) => setEditStudentId(e.detail.value || '')}
+                autocapitalize="characters"
               />
-
-              <Text style={styles.label}>Email (Optional)</Text>
-              <TextInput
-                style={styles.input}
+              <IonInput
+                label="Email (Optional)"
+                labelPlacement="stacked"
                 placeholder="student@email.com"
                 value={editEmail}
-                onChangeText={(text) => setEditEmail(text)}
-                autoCapitalize="none"
-                keyboardType="email-address"
+                onIonInput={(e) => setEditEmail(e.detail.value || '')}
+                type="email"
+                autocapitalize="none"
               />
-              <Text style={styles.hint}>Leave email field empty to keep current email</Text>
-            </ScrollView>
+              <IonText color="medium" className="hint">Leave email field empty to keep current email</IonText>
+            </div>
+            <div className="modal-actions">
+              <IonButton fill="outline" color="medium" onClick={closeEditModal}>Cancel</IonButton>
+              <IonButton color="primary" onClick={handleUpdateStudent} disabled={saving}>
+                {saving ? <IonSpinner name="crescent" /> : 'Update Student'}
+              </IonButton>
+            </div>
+          </div>
+        </IonModal>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={closeEditModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, saving && styles.submitButtonDisabled]}
-                onPress={handleUpdateStudent}
-                disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Update Student</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Add Student Manually Modal */}
-      <Modal
-        visible={showAddStudentModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeAddStudentModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Student Manually</Text>
-              <TouchableOpacity onPress={closeAddStudentModal}>
-                <Text style={styles.modalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalForm}>
-              <Text style={styles.label}>Full Name *</Text>
-              <TextInput
-                style={styles.input}
+        {/* Add Student Manually Modal */}
+        <IonModal isOpen={showAddStudentModal} onDidDismiss={closeAddStudentModal}>
+          <div className="modal-container">
+            <div className="modal-header">
+              <h2>Add Student Manually</h2>
+              <IonButton fill="clear" onClick={closeAddStudentModal}>
+                <IonIcon icon={closeOutline} slot="icon-only" />
+              </IonButton>
+            </div>
+            <div className="modal-form">
+              <IonInput
+                label="Full Name *"
+                labelPlacement="stacked"
                 placeholder="Enter student's full name"
                 value={newStudentName}
-                onChangeText={(text) => setNewStudentName(text)}
-                autoCapitalize="words"
+                onIonInput={(e) => setNewStudentName(e.detail.value || '')}
+                autocapitalize="words"
               />
-
-              <Text style={styles.label}>Email *</Text>
-              <TextInput
-                style={styles.input}
+              <IonInput
+                label="Email *"
+                labelPlacement="stacked"
                 placeholder="student@email.com"
                 value={newStudentEmail}
-                onChangeText={(text) => setNewStudentEmail(text)}
-                autoCapitalize="none"
-                keyboardType="email-address"
+                onIonInput={(e) => setNewStudentEmail(e.detail.value || '')}
+                type="email"
+                autocapitalize="none"
               />
-
-              <Text style={styles.label}>Student ID (Roll Number) *</Text>
-              <TextInput
-                style={styles.input}
+              <IonInput
+                label="Student ID (Roll Number) *"
+                labelPlacement="stacked"
                 placeholder="e.g., STU001"
                 value={newStudentId}
-                onChangeText={(text) => setNewStudentId(text)}
-                autoCapitalize="characters"
+                onIonInput={(e) => setNewStudentId(e.detail.value || '')}
+                autocapitalize="characters"
               />
-
-              <Text style={styles.label}>Phone Number (Optional)</Text>
-              <TextInput
-                style={styles.input}
+              <IonInput
+                label="Phone Number (Optional)"
+                labelPlacement="stacked"
                 placeholder="Parent's phone number"
                 value={newStudentPhone}
-                onChangeText={(text) => setNewStudentPhone(text)}
-                keyboardType="phone-pad"
+                onIonInput={(e) => setNewStudentPhone(e.detail.value || '')}
+                type="tel"
               />
-
-              <Text style={styles.label}>Password (Optional)</Text>
-              <TextInput
-                style={styles.input}
+              <IonInput
+                label="Password (Optional)"
+                labelPlacement="stacked"
                 placeholder="Leave empty for default: Student@123"
                 value={newStudentPassword}
-                onChangeText={(text) => setNewStudentPassword(text)}
-                secureTextEntry
+                onIonInput={(e) => setNewStudentPassword(e.detail.value || '')}
+                type="password"
               />
-              <Text style={styles.hint}>Default password will be used if left empty</Text>
-            </ScrollView>
+              <IonText color="medium" className="hint">Default password will be used if left empty</IonText>
+            </div>
+            <div className="modal-actions">
+              <IonButton fill="outline" color="medium" onClick={closeAddStudentModal}>Cancel</IonButton>
+              <IonButton color="primary" onClick={handleCreateStudentManual} disabled={saving}>
+                {saving ? <IonSpinner name="crescent" /> : 'Create Student'}
+              </IonButton>
+            </div>
+          </div>
+        </IonModal>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={closeAddStudentModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitButton, saving && styles.submitButtonDisabled]}
-                onPress={handleCreateStudentManual}
-                disabled={saving}
-              >
-                {saving ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Create Student</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={isSuccess ? 'Success' : 'Error'}
+          message={alertMessage}
+          buttons={['OK']}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  bulkUploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#7b1fa2',
-    margin: 16,
-    marginBottom: 8,
-    padding: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  bulkUploadIcon: { fontSize: 20 },
-  bulkUploadText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  downloadTemplateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#7b1fa2',
-    marginHorizontal: 16,
-    marginBottom: 8,
-    padding: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  downloadTemplateIcon: { fontSize: 20 },
-  downloadTemplateText: { color: '#7b1fa2', fontSize: 15, fontWeight: '600' },
-  addManualButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4caf50',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  addManualIcon: { fontSize: 20 },
-  addManualText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  uploadOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  uploadProgressCard: {
-    backgroundColor: '#fff',
-    padding: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  uploadProgressText: {
-    fontSize: 16,
-    color: '#333',
-    marginTop: 16,
-    fontWeight: '500',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  resultCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 350,
-  },
-  resultHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  resultIcon: { fontSize: 32, marginRight: 12 },
-  resultTitle: { fontSize: 20, fontWeight: '700', color: '#333' },
-  resultStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-  },
-  statItem: { alignItems: 'center', padding: 12, borderRadius: 8, backgroundColor: '#f5f5f5', flex: 1, marginHorizontal: 4 },
-  statSuccess: { backgroundColor: '#e8f5e9' },
-  statWarning: { backgroundColor: '#fff3e0' },
-  statValue: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-  statLabel: { fontSize: 12, color: '#666', marginTop: 4 },
-  closeButton: {
-    backgroundColor: '#7b1fa2',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  closeButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 16, color: '#999', textAlign: 'center' },
-  emptySubtext: { fontSize: 14, color: '#bbb', textAlign: 'center', marginTop: 4 },
-  studentCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 6,
-    padding: 14,
-    borderRadius: 12,
-    elevation: 2,
-    alignItems: 'center',
-  },
-  studentAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#7b1fa2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  avatarText: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
-  studentInfo: { flex: 1 },
-  studentName: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 4 },
-  studentRoll: { fontSize: 13, color: '#666', marginBottom: 2 },
-  studentEmail: { fontSize: 12, color: '#999' },
-  editIcon: { padding: 8 },
-  editIconText: { fontSize: 18 },
-  infoBar: {
-    backgroundColor: '#f3e5f5',
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 8,
-  },
-  infoText: { fontSize: 12, color: '#7b1fa2', textAlign: 'center' },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#333' },
-  modalClose: { fontSize: 24, color: '#999' },
-  modalForm: { padding: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8, marginTop: 12 },
-  input: {
-    backgroundColor: '#f5f5f5',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  hint: { fontSize: 12, color: '#999', marginTop: 6 },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#e0e0e0',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: { color: '#333', fontSize: 16, fontWeight: '600' },
-  submitButton: { flex: 1, backgroundColor: '#7b1fa2', padding: 16, borderRadius: 8, alignItems: 'center' },
-  submitButtonDisabled: { opacity: 0.6 },
-  submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
 
 export default TeacherStudentsScreen;

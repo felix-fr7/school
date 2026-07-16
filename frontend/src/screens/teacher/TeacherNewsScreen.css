@@ -1,0 +1,76 @@
+.teacher-news-content {
+  --background: #f5f5f5;
+}
+
+/* Empty State */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+/* News Card */
+.news-card {
+  margin: 0 16px 12px 16px;
+  border-radius: 12px;
+}
+
+.news-image-placeholder {
+  height: 120px;
+  background-color: #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+}
+
+.news-card IonCardContent {
+  padding: 16px;
+}
+
+.news-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.category-badge {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.news-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.news-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.news-summary {
+  font-size: 14px;
+  color: #666;
+  line-height: 20px;
+  margin: 0 0 8px 0;
+}
+
+.news-author {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  margin: 0;
+}

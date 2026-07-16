@@ -1,0 +1,378 @@
+/**
+ * Class Profile Screen (Ionic React Styles)
+ * View and manage class profile and settings
+ */
+
+/* ============================================
+   Loading State
+   ============================================ */
+.profile-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.profile-loading .loading-text {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.profile-content {
+  --background: #FFF5F0;
+}
+
+/* ============================================
+   Header Card
+   ============================================ */
+.header-card {
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C61 100%);
+  border-radius: 20px;
+  padding: 24px;
+  margin: 16px;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.class-code-container {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.class-code-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.class-code-value {
+  display: block;
+  font-size: 36px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: 3px;
+}
+
+.class-info {
+  text-align: center;
+}
+
+.class-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 4px 0;
+}
+
+.class-section {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* ============================================
+   Info Card
+   ============================================ */
+.info-card {
+  --background: #FFFFFF;
+  border-radius: 16px;
+  margin: 0 16px 16px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.info-card ion-card-content {
+  padding: 20px;
+}
+
+.info-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0 0 16px 0;
+}
+
+/* ============================================
+   Teacher Info
+   ============================================ */
+.teacher-info {
+  display: flex;
+  align-items: center;
+}
+
+.teacher-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #FF6B35;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.teacher-details {
+  flex: 1;
+}
+
+.teacher-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 4px;
+}
+
+.teacher-email {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Stats Card
+   ============================================ */
+.stats-card {
+  --background: #FFFFFF;
+  border-radius: 16px;
+  margin: 0 16px 16px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stats-card ion-card-content {
+  padding: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.stat-item {
+  background: #FFF5F0;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FF6B35;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Settings Card
+   ============================================ */
+.settings-card {
+  --background: #FFFFFF;
+  border-radius: 16px;
+  margin: 0 16px 16px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.settings-card ion-card-content {
+  padding: 20px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #F5F5F5;
+  cursor: pointer;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #FFF5F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.setting-icon-container ion-icon {
+  font-size: 20px;
+  color: #FF6B35;
+}
+
+.setting-content {
+  flex: 1;
+}
+
+.setting-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 2px;
+}
+
+.setting-subtitle {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.setting-arrow {
+  font-size: 24px;
+  color: #CCC;
+}
+
+/* ============================================
+   About Card
+   ============================================ */
+.about-card {
+  --background: #FFFFFF;
+  border-radius: 16px;
+  margin: 0 16px 16px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.about-card ion-card-content {
+  padding: 20px;
+}
+
+.about-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px 0;
+}
+
+.about-version {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 0 0 8px 0;
+}
+
+.about-copyright {
+  font-size: 11px;
+  color: #999;
+  margin: 0;
+}
+
+/* ============================================
+   Logout Button
+   ============================================ */
+.logout-button {
+  --border-radius: 16px;
+  margin: 0 16px 32px 16px;
+  --background: #FFFFFF;
+  --color: #F44336;
+  --border-color: #F44336;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (min-width: 768px) {
+  .header-card,
+  .info-card,
+  .stats-card,
+  .settings-card,
+  .about-card {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .profile-content {
+    --background: #121212;
+  }
+
+  .header-card {
+    background: linear-gradient(135deg, #E65100 0%, #FF8C61 100%);
+  }
+
+  .info-card,
+  .stats-card,
+  .settings-card,
+  .about-card {
+    --background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .info-card-title {
+    color: #fff;
+  }
+
+  .teacher-name {
+    color: #fff;
+  }
+
+  .teacher-email {
+    color: #888;
+  }
+
+  .stat-item {
+    background: #2a2a2a;
+  }
+
+  .stat-value {
+    color: #FF8C61;
+  }
+
+  .stat-label {
+    color: #888;
+  }
+
+  .setting-item {
+    border-bottom-color: #333;
+  }
+
+  .setting-icon-container {
+    background: #2a2a2a;
+  }
+
+  .setting-title {
+    color: #fff;
+  }
+
+  .setting-subtitle {
+    color: #888;
+  }
+
+  .about-title {
+    color: #fff;
+  }
+
+  .about-version {
+    color: #888;
+  }
+
+  .about-copyright {
+    color: #666;
+  }
+
+  .logout-button {
+    --background: #1e1e1e;
+    --border-color: #F44336;
+  }
+}

@@ -1,25 +1,36 @@
 /**
- * Student News Screen
+ * Student News Screen (Ionic React Version)
  * View school news and announcements
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-  TouchableOpacity,
-  Linking,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { StudentStackParamList } from '../../types';
-import { contentAPI } from '../../services/api';
-
-type NavigationProp = StackNavigationProp<StudentStackParamList, 'StudentNewsList'>;
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonBackButton,
+  IonButtons,
+  IonList,
+  IonItem,
+  IonCard,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonCardContent,
+  IonBadge,
+  IonText,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  IonIcon,
+  IonImg,
+} from '@ionic/react';
+import { useHistory } from 'react-router-dom';
+import { newspaperOutline, calendarOutline, personOutline, imageOutline, refreshOutline } from 'ionicons/icons';
+import { studentAPI } from '../../services/api';
+import './NewsListScreen.css';
 
 interface NewsItem {
   id: string;
@@ -33,16 +44,14 @@ interface NewsItem {
 }
 
 const StudentNewsListScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const history = useHistory();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchNews = async (refresh = false) => {
+  const fetchNews = async () => {
     try {
-      if (refresh) setRefreshing(true);
-      else setLoading(true);
-      const response = await contentAPI.getNews(1, 20, '');
+      const response = await studentAPI.getNews(1, 20, '');
       if (response.success && response.data) {
         setNews(response.data.news);
       }
@@ -58,7 +67,11 @@ const StudentNewsListScreen: React.FC = () => {
     fetchNews();
   }, []);
 
-  const onRefresh = () => fetchNews(true);
+  const onRefresh = async (event: CustomEvent) => {
+    setRefreshing(true);
+    await fetchNews();
+    event.detail.complete();
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -66,106 +79,99 @@ const StudentNewsListScreen: React.FC = () => {
   };
 
   const handleNewsPress = (newsId: string) => {
-    navigation.navigate('StudentNewsDetail', { newsId });
+    history.push(`/student/news/${newsId}`);
   };
-
-  const renderNewsItem = ({ item }: { item: NewsItem }) => (
-    <TouchableOpacity
-      style={styles.newsCard}
-      onPress={() => handleNewsPress(item.id)}
-      activeOpacity={0.7}
-    >
-      {item.imageUrl && (
-        <TouchableOpacity onPress={() => item.imageUrl && Linking.openURL(item.imageUrl)}>
-          <View style={styles.newsImagePlaceholder}>
-            <Text style={styles.imagePlaceholderText}>📷</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-      <View style={styles.newsContent}>
-        <View style={styles.newsHeader}>
-          {item.category && (
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{item.category}</Text>
-            </View>
-          )}
-          <Text style={styles.newsDate}>{formatDate(item.createdAt)}</Text>
-        </View>
-        <Text style={styles.newsTitle}>{item.title}</Text>
-        {item.summary && (
-          <Text style={styles.newsSummary} numberOfLines={3}>{item.summary}</Text>
-        )}
-        <Text style={styles.newsAuthor}>By: {item.postedByUser?.name || 'Admin'}</Text>
-      </View>
-    </TouchableOpacity>
-  );
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7b1fa2" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/dashboard" />
+            </IonButtons>
+            <IonTitle>News</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <FlatList
-      data={news}
-      renderItem={renderNewsItem}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      ListEmptyComponent={
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📰</Text>
-          <Text style={styles.emptyText}>No news or announcements available</Text>
-        </View>
-      }
-      contentContainerStyle={news.length === 0 ? { flex: 1 } : undefined}
-    />
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/student/dashboard" />
+          </IonButtons>
+          <IonTitle>News</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="news-list-content">
+        <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
+          <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
+        </IonRefresher>
+
+        {news.length === 0 ? (
+          <div className="empty-container">
+            <IonIcon icon={newspaperOutline} className="empty-icon" />
+            <IonText color="medium">
+              <h3>No news or announcements available</h3>
+            </IonText>
+          </div>
+        ) : (
+          <IonList>
+            {news.map((item) => (
+              <IonItem
+                key={item.id}
+                button
+                onClick={() => handleNewsPress(item.id)}
+                className="news-item"
+              >
+                <IonCard className="news-card">
+                  {item.imageUrl ? (
+                    <IonImg src={item.imageUrl} className="news-image" />
+                  ) : (
+                    <div className="news-image-placeholder">
+                      <IonIcon icon={imageOutline} />
+                    </div>
+                  )}
+                  <IonCardContent>
+                    <div className="news-header">
+                      {item.category && (
+                        <IonBadge color="secondary" className="category-badge">
+                          {item.category}
+                        </IonBadge>
+                      )}
+                      <IonText color="medium" className="news-date">
+                        <IonIcon icon={calendarOutline} /> {formatDate(item.createdAt)}
+                      </IonText>
+                    </div>
+                    <h3 className="news-title">{item.title}</h3>
+                    {item.summary && (
+                      <p className="news-summary">
+                        {item.summary.length > 150
+                          ? `${item.summary.substring(0, 150)}...`
+                          : item.summary}
+                      </p>
+                    )}
+                    {item.postedByUser && (
+                      <IonText color="medium" className="news-author">
+                        <IonIcon icon={personOutline} /> By: {item.postedByUser.name}
+                      </IonText>
+                    )}
+                  </IonCardContent>
+                </IonCard>
+              </IonItem>
+            ))}
+          </IonList>
+        )}
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 16, color: '#999', textAlign: 'center' },
-  newsCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    elevation: 2,
-    overflow: 'hidden',
-  },
-  newsImagePlaceholder: {
-    height: 120,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imagePlaceholderText: { fontSize: 40 },
-  newsContent: { padding: 16 },
-  newsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  categoryBadge: {
-    backgroundColor: '#7b1fa2',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  categoryText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  newsDate: { fontSize: 12, color: '#999' },
-  newsTitle: { fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 8 },
-  newsSummary: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 8 },
-  newsAuthor: { fontSize: 12, color: '#999', fontStyle: 'italic' },
-});
 
 export default StudentNewsListScreen;

@@ -418,6 +418,7 @@ export type StudentStackParamList = {
   StudentNewsDetail: { newsId: string };
   StudentCircularsList: undefined;
   StudentExamSchedules: undefined;
+  StudentExamDetail: { examId: string };
   StudentProfile: undefined;
   WeeklyLessonView: undefined;
 };
@@ -451,6 +452,7 @@ export type ClassControllerStackParamList = {
   ClassCreateCircular: { classId: string };
   ClassExamSchedulesList: { classId: string } | undefined;
   ClassCreateExamSchedule: { classId: string };
+  ClassExamDetail: { examId: string };
   ClassProfile: undefined;
 };
 

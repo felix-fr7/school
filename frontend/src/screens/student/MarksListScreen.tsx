@@ -1,7 +1,32 @@
+/**
+ * Student Marks List Screen (Ionic React Version)
+ * Displays all marks/grades for the student
+ */
+
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
-import { Mark } from '../../types';
+import {
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonBackButton,
+  IonButtons,
+  IonList,
+  IonItem,
+  IonCard,
+  IonCardContent,
+  IonText,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  IonIcon,
+  IonBadge,
+} from '@ionic/react';
+import { refreshOutline, statsChartOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
+import { Mark } from '../../types';
+import './MarksListScreen.css';
 
 const StudentMarksListScreen: React.FC = () => {
   const [marks, setMarks] = useState<Mark[]>([]);
@@ -24,70 +49,105 @@ const StudentMarksListScreen: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchMarks(); }, []);
+  useEffect(() => {
+    fetchMarks();
+  }, []);
 
-  const onRefresh = () => { setRefreshing(true); fetchMarks(); };
+  const onRefresh = async (event: CustomEvent) => {
+    setRefreshing(true);
+    await fetchMarks();
+    event.detail.complete();
+  };
+
+  const getGradeColor = (grade?: string) => {
+    if (!grade) return 'medium';
+    const g = grade.toUpperCase();
+    if (['A+', 'A', 'A-'].includes(g)) return 'success';
+    if (['B+', 'B', 'B-'].includes(g)) return 'primary';
+    if (['C+', 'C', 'C-'].includes(g)) return 'warning';
+    if (['D', 'F'].includes(g)) return 'danger';
+    return 'medium';
+  };
 
   if (loading) {
-    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#1565c0" /></View>;
+    return (
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/dashboard" />
+            </IonButtons>
+            <IonTitle>Marks</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
+    );
   }
 
-  const renderMark = ({ item }: { item: Mark }) => (
-    <View style={styles.markCard}>
-      <View style={styles.markHeader}>
-        <Text style={styles.subject}>{item.subject}</Text>
-        <Text style={styles.grade}>{item.grade || 'N/A'}</Text>
-      </View>
-      <Text style={styles.marks}>
-        {item.marksObtained} / {item.totalMarks}
-      </Text>
-      <Text style={styles.examType}>{item.examType}</Text>
-      {item.percentage && <Text style={styles.percentage}>{item.percentage.toFixed(1)}%</Text>}
-    </View>
-  );
-
   return (
-    <FlatList
-      data={marks}
-      renderItem={renderMark}
-      keyExtractor={(item) => item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      contentContainerStyle={styles.listContent}
-      ListHeaderComponent={
-        statistics ? (
-          <View style={styles.statsCard}>
-            <Text style={styles.statsTitle}>Overall Statistics</Text>
-            <Text style={styles.statItem}>Overall: {statistics.overallPercentage?.toFixed(1)}%</Text>
-          </View>
-        ) : null
-      }
-      ListEmptyComponent={
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📊</Text>
-          <Text style={styles.emptyText}>No marks available yet</Text>
-        </View>
-      }
-    />
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/student/dashboard" />
+          </IonButtons>
+          <IonTitle>Marks</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="marks-list-content">
+        <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
+          <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
+        </IonRefresher>
+
+        {/* Statistics Card */}
+        {statistics && (
+          <div className="stats-card">
+            <IonIcon icon={statsChartOutline} className="stats-icon" />
+            <h3>Overall Statistics</h3>
+            <p className="stats-percentage">{statistics.overallPercentage?.toFixed(1)}%</p>
+          </div>
+        )}
+
+        {marks.length === 0 ? (
+          <div className="empty-container">
+            <IonIcon icon={statsChartOutline} className="empty-icon" />
+            <IonText color="medium">
+              <h3>No marks available yet</h3>
+            </IonText>
+          </div>
+        ) : (
+          <IonList>
+            {marks.map((item) => (
+              <IonItem key={item.id} className="mark-item">
+                <IonCard className="mark-card">
+                  <IonCardContent>
+                    <div className="mark-header">
+                      <span className="subject">{item.subject}</span>
+                      {item.grade && (
+                        <IonBadge color={getGradeColor(item.grade)} className="grade-badge">
+                          {item.grade}
+                        </IonBadge>
+                      )}
+                    </div>
+                    <p className="marks-obtained">
+                      {item.marksObtained} / {item.totalMarks}
+                    </p>
+                    <p className="exam-type">{item.examType}</p>
+                    {item.percentage && (
+                      <p className="percentage">{item.percentage.toFixed(1)}%</p>
+                    )}
+                  </IonCardContent>
+                </IonCard>
+              </IonItem>
+            ))}
+          </IonList>
+        )}
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: 16 },
-  statsCard: { backgroundColor: '#1565c0', padding: 16, borderRadius: 8, marginBottom: 16 },
-  statsTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
-  statItem: { fontSize: 14, color: '#fff' },
-  markCard: { backgroundColor: '#fff', padding: 16, borderRadius: 8, marginBottom: 12, elevation: 2 },
-  markHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  subject: { fontSize: 16, fontWeight: '600', color: '#333' },
-  grade: { fontSize: 18, fontWeight: 'bold', color: '#1565c0' },
-  marks: { fontSize: 14, color: '#666', marginBottom: 4 },
-  examType: { fontSize: 12, color: '#999' },
-  percentage: { fontSize: 12, color: '#1565c0', fontWeight: '600', marginTop: 4 },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 16, color: '#666' },
-});
 
 export default StudentMarksListScreen;

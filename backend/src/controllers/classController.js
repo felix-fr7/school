@@ -487,6 +487,159 @@ const deleteStudent = async (req, res, next) => {
   }
 };
 
+// ============================================
+// New Exam Table (PDF/Image based timetables)
+// Global publishing support: class_id IS NULL
+// ============================================
+
+/**
+ * Get all exams for the class (New Exam table with PDF/Image support)
+ * GET /api/class-controller/exams
+ * Simplified: Fetches all published exams
+ */
+const getExams = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count - fetch all published exams
+    const countQuery = `
+      SELECT COUNT(*) as total FROM "Exam"
+      WHERE "is_published" = true
+    `;
+    const countResult = await db.query(countQuery);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get exams - fetch all published exams, ordered by creation date
+    const examsQuery = `
+      SELECT 
+        e.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "Exam" e
+      LEFT JOIN "Class" c ON e."class_id" = c.id
+      WHERE e."is_published" = true
+      ORDER BY e."created_at" DESC
+      LIMIT $1 OFFSET $2
+    `;
+
+    const examsResult = await db.query(examsQuery, [take, skip]);
+
+    const exams = examsResult.rows.map(item => ({
+      id: item.id,
+      title: item.title || item.exam_name || 'Exam',
+      examName: item.title || item.exam_name || 'Exam',
+      classId: item.class_id,
+      tenantId: item.tenant_id,
+      fileUrl: item.file_url || item.pdf_url || item.image_url,
+      pdfUrl: item.pdf_url || item.file_url,
+      imageUrl: item.image_url || item.file_url,
+      dueDate: item.due_date,
+      isPublished: item.is_published,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      class: item.classId ? {
+        id: item.classId,
+        name: item.className,
+        section: item.classSection,
+      } : null,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        exams,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error in getExams (classController):', error);
+    next(error);
+  }
+};
+
+/**
+ * Get single exam details (New Exam table with PDF/Image support)
+ * GET /api/class-controller/exams/:id
+ */
+const getExamById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const classId = req.user.classId;
+    const tenantId = req.user.tenantId;
+
+    if (!classId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Invalid class session. Please login again.',
+        },
+      });
+    }
+
+    // Get exam - include global exams (class_id IS NULL)
+    const examQuery = `
+      SELECT 
+        e.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "Exam" e
+      LEFT JOIN "Class" c ON e."class_id" = c.id
+      WHERE e.id = $1 AND e."tenant_id" = $2 AND (e."class_id" = $3 OR e."class_id" IS NULL) AND e."is_published" = true
+    `;
+
+    const examResult = await db.query(examQuery, [id, tenantId, classId]);
+
+    if (examResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Exam not found',
+        },
+      });
+    }
+
+    const item = examResult.rows[0];
+
+    const exam = {
+      id: item.id,
+      title: item.title || item.exam_name || 'Exam',
+      examName: item.title || item.exam_name || 'Exam',
+      classId: item.class_id,
+      tenantId: item.tenant_id,
+      fileUrl: item.file_url || item.pdf_url || item.image_url,
+      pdfUrl: item.pdf_url || item.file_url,
+      imageUrl: item.image_url || item.file_url,
+      dueDate: item.due_date,
+      isPublished: item.is_published,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      class: item.classId ? {
+        id: item.classId,
+        name: item.className,
+        section: item.classSection,
+      } : null,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: exam,
+    });
+  } catch (error) {
+    console.error('Error in getExamById (classController):', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getClassDashboard,
   getClassStudents,
@@ -495,4 +648,7 @@ module.exports = {
   updateStudent,
   resetStudentPassword,
   deleteStudent,
+  // New Exam table endpoints (PDF/Image based timetables)
+  getExams,
+  getExamById,
 };

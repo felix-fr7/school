@@ -1,19 +1,31 @@
 /**
- * Student Circulars Screen
+ * Student Circulars Screen (Ionic React Version)
  * View school circulars and official notices
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native';
-import { contentAPI } from '../../services/api';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonBackButton,
+  IonButtons,
+  IonList,
+  IonItem,
+  IonCard,
+  IonCardContent,
+  IonBadge,
+  IonText,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  IonIcon,
+} from '@ionic/react';
+import { refreshOutline, clipboardOutline } from 'ionicons/icons';
+import { studentAPI } from '../../services/api';
+import './CircularsListScreen.css';
 
 interface CircularItem {
   id: string;
@@ -34,7 +46,7 @@ const StudentCircularsListScreen: React.FC = () => {
     try {
       if (refresh) setRefreshing(true);
       else setLoading(true);
-      const response = await contentAPI.getCirculars(1, 20);
+      const response = await studentAPI.getCirculars(1, 20);
       if (response.success && response.data) {
         setCirculars(response.data.circulars);
       }
@@ -50,96 +62,90 @@ const StudentCircularsListScreen: React.FC = () => {
     fetchCirculars();
   }, []);
 
-  const onRefresh = () => fetchCirculars(true);
+  const onRefresh = async (event: CustomEvent) => {
+    await fetchCirculars(true);
+    event.detail.complete();
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const renderCircular = ({ item }: { item: CircularItem }) => (
-    <TouchableOpacity
-      style={styles.circularCard}
-      onPress={() => {
-        // Could expand to show full content in a modal
-      }}
-    >
-      <View style={styles.circularHeader}>
-        {item.circularNo && (
-          <View style={styles.circularNoBadge}>
-            <Text style={styles.circularNoText}>{item.circularNo}</Text>
-          </View>
-        )}
-        <Text style={styles.circularDate}>Issued: {formatDate(item.issueDate)}</Text>
-      </View>
-      <Text style={styles.circularTitle}>{item.title}</Text>
-      <Text style={styles.circularContent} numberOfLines={4}>
-        {item.content}
-      </Text>
-      <Text style={styles.circularAuthor}>Issued by: {item.issuedByUser?.name || 'Admin'}</Text>
-    </TouchableOpacity>
-  );
-
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7b1fa2" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/dashboard" />
+            </IonButtons>
+            <IonTitle>Circulars</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <FlatList
-      data={circulars}
-      renderItem={renderCircular}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      ListEmptyComponent={
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📋</Text>
-          <Text style={styles.emptyText}>No circulars or notices available</Text>
-        </View>
-      }
-      contentContainerStyle={circulars.length === 0 ? { flex: 1 } : undefined}
-    />
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/student/dashboard" />
+          </IonButtons>
+          <IonTitle>Circulars</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="circulars-list-content">
+        <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
+          <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
+        </IonRefresher>
+
+        {circulars.length === 0 ? (
+          <div className="empty-container">
+            <IonIcon icon={clipboardOutline} className="empty-icon" />
+            <IonText color="medium">
+              <h3>No circulars or notices available</h3>
+            </IonText>
+          </div>
+        ) : (
+          <IonList>
+            {circulars.map((item) => (
+              <IonItem key={item.id} className="circular-item">
+                <IonCard className="circular-card">
+                  <IonCardContent>
+                    <div className="circular-header">
+                      {item.circularNo && (
+                        <IonBadge color="secondary" className="circular-no-badge">
+                          {item.circularNo}
+                        </IonBadge>
+                      )}
+                      <IonText color="medium" className="circular-date">
+                        Issued: {formatDate(item.issueDate)}
+                      </IonText>
+                    </div>
+                    <h3 className="circular-title">{item.title}</h3>
+                    <p className="circular-content">
+                      {item.content.length > 200
+                        ? `${item.content.substring(0, 200)}...`
+                        : item.content}
+                    </p>
+                    <IonText color="medium" className="circular-author">
+                      Issued by: {item.issuedByUser?.name || 'Admin'}
+                    </IonText>
+                  </IonCardContent>
+                </IonCard>
+              </IonItem>
+            ))}
+          </IonList>
+        )}
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 16, color: '#999', textAlign: 'center' },
-  circularCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 6,
-    padding: 16,
-    borderRadius: 12,
-    elevation: 2,
-    borderLeftWidth: 4,
-    borderLeftColor: '#7b1fa2',
-  },
-  circularHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  circularNoBadge: {
-    backgroundColor: '#f3e5f5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  circularNoText: { color: '#7b1fa2', fontSize: 11, fontWeight: '600' },
-  circularDate: { fontSize: 12, color: '#999' },
-  circularTitle: { fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 8 },
-  circularContent: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 8 },
-  circularAuthor: { fontSize: 12, color: '#999', fontStyle: 'italic' },
-});
 
 export default StudentCircularsListScreen;

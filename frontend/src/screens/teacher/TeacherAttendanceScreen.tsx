@@ -1,20 +1,32 @@
 /**
- * Teacher Attendance Screen
+ * Teacher Attendance Screen (Ionic React Version)
  * Mark daily attendance for students in teacher's class
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-} from 'react-native';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonIcon,
+  IonText,
+  IonSpinner,
+  IonList,
+  IonItem,
+  IonCard,
+  IonCardContent,
+  IonAlert,
+  IonAvatar,
+  IonBadge,
+} from '@ionic/react';
+import { checkmarkCircleOutline, timeOutline, closeCircleOutline, helpCircleOutline } from 'ionicons/icons';
 import { teacherAPI } from '../../services/api';
+import './TeacherAttendanceScreen.css';
 
 type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED' | null;
 
@@ -31,9 +43,13 @@ const TeacherAttendanceScreen: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const today = new Date().toISOString().split('T')[0] as string;
+  const today = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState<string>(today);
   const [summary, setSummary] = useState({ total: 0, marked: 0, unmarked: 0 });
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showUnmarkedAlert, setShowUnmarkedAlert] = useState(false);
 
   const fetchAttendance = async () => {
     try {
@@ -49,7 +65,9 @@ const TeacherAttendanceScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching attendance:', error);
-      Alert.alert('Error', 'Failed to load attendance');
+      setAlertMessage('Failed to load attendance');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setLoading(false);
     }
@@ -83,25 +101,18 @@ const TeacherAttendanceScreen: React.FC = () => {
   const handleSave = async () => {
     const unmarkedStudents = students.filter(s => s.status === null);
     if (unmarkedStudents.length > 0) {
-      Alert.alert(
-        'Unmarked Students',
-        `${unmarkedStudents.length} students have not been marked. Mark them as absent?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Mark Absent',
-            onPress: () => {
-              setStudents(prev =>
-                prev.map(s => s.status === null ? { ...s, status: 'ABSENT' as AttendanceStatus } : s)
-              );
-              setTimeout(() => saveAttendance(), 100);
-            },
-          },
-        ]
-      );
+      setShowUnmarkedAlert(true);
       return;
     }
     await saveAttendance();
+  };
+
+  const handleMarkUnmarkedAbsent = async () => {
+    setStudents(prev =>
+      prev.map(s => s.status === null ? { ...s, status: 'ABSENT' as AttendanceStatus } : s)
+    );
+    setShowUnmarkedAlert(false);
+    setTimeout(() => saveAttendance(), 100);
   };
 
   const saveAttendance = async () => {
@@ -115,11 +126,15 @@ const TeacherAttendanceScreen: React.FC = () => {
 
       const response = await teacherAPI.markAttendance(selectedDate, attendanceData);
       if (response.success && response.data) {
-        Alert.alert('Success', `Attendance marked for ${response.data.marked} students`);
+        setAlertMessage(`Attendance marked for ${response.data.marked} students`);
+        setIsSuccess(true);
+        setShowAlert(true);
         fetchAttendance();
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to save attendance');
+      setAlertMessage(error.response?.data?.error?.message || 'Failed to save attendance');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setSaving(false);
     }
@@ -127,11 +142,11 @@ const TeacherAttendanceScreen: React.FC = () => {
 
   const getStatusColor = (status: Student['status']) => {
     switch (status) {
-      case 'PRESENT': return '#4CAF50';
-      case 'ABSENT': return '#f44336';
-      case 'LATE': return '#FF9800';
-      case 'EXCUSED': return '#2196F3';
-      default: return '#e0e0e0';
+      case 'PRESENT': return 'success';
+      case 'ABSENT': return 'danger';
+      case 'LATE': return 'warning';
+      case 'EXCUSED': return 'primary';
+      default: return 'medium';
     }
   };
 
@@ -145,169 +160,135 @@ const TeacherAttendanceScreen: React.FC = () => {
     }
   };
 
-  const renderStudent = ({ item }: { item: Student }) => (
-    <TouchableOpacity
-      style={styles.studentCard}
-      onPress={() => toggleStatus(item.studentId)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.studentAvatar}>
-        <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
-      </View>
-      <View style={styles.studentInfo}>
-        <Text style={styles.studentName}>{item.name}</Text>
-        <Text style={styles.studentCode}>{item.studentCode}</Text>
-      </View>
-      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-        <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const getStatusIcon = (status: Student['status']) => {
+    switch (status) {
+      case 'PRESENT': return checkmarkCircleOutline;
+      case 'ABSENT': return closeCircleOutline;
+      case 'LATE': return timeOutline;
+      case 'EXCUSED': return helpCircleOutline;
+      default: return null;
+    }
+  };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7b1fa2" />
-      </View>
+      <IonPage>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+          <IonText color="medium">
+            <p>Loading attendance...</p>
+          </IonText>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Date and Actions */}
-      <View style={styles.header}>
-        <View style={styles.dateContainer}>
-          <Text style={styles.dateLabel}>Date:</Text>
-          <Text style={styles.dateValue}>{selectedDate}</Text>
-        </View>
-        <TouchableOpacity style={styles.markAllButton} onPress={markAllPresent}>
-          <Text style={styles.markAllText}>✓ Mark All Present</Text>
-        </TouchableOpacity>
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/teacher/dashboard" />
+          </IonButtons>
+          <IonTitle>Mark Attendance</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="teacher-attendance-content">
+        {/* Date and Actions */}
+        <div className="header-section">
+          <div className="date-container">
+            <IonText color="medium">Date: </IonText>
+            <IonText><strong>{selectedDate}</strong></IonText>
+          </div>
+          <IonButton size="small" color="success" onClick={markAllPresent}>
+            ✓ Mark All Present
+          </IonButton>
+        </div>
 
-      {/* Summary */}
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>{summary.total}</Text>
-          <Text style={styles.summaryLabel}>Total</Text>
-        </View>
-        <View style={[styles.summaryItem, styles.summaryMarked]}>
-          <Text style={styles.summaryValue}>{summary.marked}</Text>
-          <Text style={styles.summaryLabel}>Marked</Text>
-        </View>
-        <View style={[styles.summaryItem, styles.summaryUnmarked]}>
-          <Text style={styles.summaryValue}>{summary.unmarked}</Text>
-          <Text style={styles.summaryLabel}>Unmarked</Text>
-        </View>
-      </View>
+        {/* Summary */}
+        <div className="summary-row">
+          <div className="summary-item">
+            <span className="summary-value">{summary.total}</span>
+            <span className="summary-label">Total</span>
+          </div>
+          <div className="summary-item summary-marked">
+            <span className="summary-value">{summary.marked}</span>
+            <span className="summary-label">Marked</span>
+          </div>
+          <div className="summary-item summary-unmarked">
+            <span className="summary-value">{summary.unmarked}</span>
+            <span className="summary-label">Unmarked</span>
+          </div>
+        </div>
 
-      {/* Student List */}
-      <FlatList
-        data={students}
-        renderItem={renderStudent}
-        keyExtractor={(item) => item.studentId}
-        contentContainerStyle={students.length === 0 ? { flex: 1 } : undefined}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No students found in your class</Text>
-          </View>
-        }
-      />
-
-      {/* Save Button */}
-      <TouchableOpacity
-        style={[
-          styles.saveButton,
-          (saving || students.length === 0) && styles.saveButtonDisabled,
-        ]}
-        onPress={handleSave}
-        disabled={saving || students.length === 0}
-      >
-        {saving ? (
-          <ActivityIndicator color="#fff" />
+        {/* Student List */}
+        {students.length === 0 ? (
+          <div className="empty-container">
+            <IonText color="medium">
+              <h3>No students found in your class</h3>
+            </IonText>
+          </div>
         ) : (
-          <Text style={styles.saveButtonText}>Save Attendance</Text>
+          <IonList>
+            {students.map((item) => (
+              <IonItem
+                key={item.studentId}
+                className="student-card"
+                button
+                onClick={() => toggleStatus(item.studentId)}
+              >
+                <IonAvatar slot="start" className="student-avatar">
+                  <span>{item.name.charAt(0).toUpperCase()}</span>
+                </IonAvatar>
+                <div className="student-info">
+                  <h4 className="student-name">{item.name}</h4>
+                  <p className="student-code">{item.studentCode}</p>
+                </div>
+                <IonBadge slot="end" color={getStatusColor(item.status)} className="status-badge">
+                  {getStatusLabel(item.status)}
+                </IonBadge>
+              </IonItem>
+            ))}
+          </IonList>
         )}
-      </TouchableOpacity>
-    </View>
+
+        {/* Save Button */}
+        <div className="save-section">
+          <IonButton
+            expand="block"
+            color="secondary"
+            onClick={handleSave}
+            disabled={saving || students.length === 0}
+          >
+            {saving ? <IonSpinner name="crescent" /> : 'Save Attendance'}
+          </IonButton>
+        </div>
+
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={isSuccess ? 'Success' : 'Error'}
+          message={alertMessage}
+          buttons={['OK']}
+        />
+
+        <IonAlert
+          isOpen={showUnmarkedAlert}
+          onDidDismiss={() => setShowUnmarkedAlert(false)}
+          header="Unmarked Students"
+          message={`${students.filter(s => s.status === null).length} students have not been marked. Mark them as absent?`}
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Mark Absent',
+              role: 'destructive',
+              handler: handleMarkUnmarkedAbsent,
+            },
+          ]}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  dateContainer: { flexDirection: 'row', alignItems: 'center' },
-  dateLabel: { fontSize: 14, color: '#666', marginRight: 8 },
-  dateValue: { fontSize: 16, fontWeight: '600', color: '#333' },
-  markAllButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  markAllText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  summaryItem: { alignItems: 'center', padding: 8, borderRadius: 8, backgroundColor: '#f5f5f5', flex: 1, marginHorizontal: 4 },
-  summaryMarked: { backgroundColor: '#e8f5e9' },
-  summaryUnmarked: { backgroundColor: '#fff3e0' },
-  summaryValue: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-  summaryLabel: { fontSize: 12, color: '#666', marginTop: 4 },
-  studentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 4,
-    padding: 14,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  studentAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#7b1fa2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  avatarText: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
-  studentInfo: { flex: 1 },
-  studentName: { fontSize: 15, fontWeight: '600', color: '#333', marginBottom: 2 },
-  studentCode: { fontSize: 12, color: '#666' },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  statusText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: 16, color: '#999', textAlign: 'center' },
-  saveButton: {
-    backgroundColor: '#7b1fa2',
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonDisabled: { opacity: 0.5 },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
 
 export default TeacherAttendanceScreen;

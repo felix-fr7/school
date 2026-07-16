@@ -602,6 +602,31 @@ const deleteCircular = async (req, res, next) => {
 // Exam Management (New Table for Exam Timetables)
 // ============================================
 
+// Helper to map DB row to API response model
+const mapExamRow = (row) => {
+  if (!row) return null;
+  const examName = row.title || row.examName || row.name || 'Exam Timetable';
+  const fileUrl = row.file_url || row.pdfUrl || row.imageUrl;
+  return {
+    id: row.id,
+    title: examName,
+    examName: examName, // backward compatibility
+    classId: row.class_id,
+    tenantId: row.tenant_id,
+    fileUrl: fileUrl,
+    pdfUrl: fileUrl, // fallback
+    imageUrl: fileUrl, // fallback
+    dueDate: row.due_date,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    class: row.classId ? {
+      id: row.classId,
+      name: row.className,
+      section: row.classSection,
+    } : null,
+  };
+};
+
 /**
  * Get all exams for admin's school
  * GET /api/admin/content/exams
@@ -656,14 +681,7 @@ const getAllExams = async (req, res, next) => {
     const examsParams = [...params, take, skip];
     const examsResult = await db.query(examsQuery, examsParams);
 
-    const exams = examsResult.rows.map(item => ({
-      ...item,
-      class: item.classId ? {
-        id: item.classId,
-        name: item.className,
-        section: item.classSection,
-      } : null,
-    }));
+    const exams = examsResult.rows.map(mapExamRow);
 
     res.status(200).json({
       success: true,
@@ -685,26 +703,21 @@ const getAllExams = async (req, res, next) => {
 /**
  * Create new exam with PDF or Image timetable
  * POST /api/admin/content/exams
- * Body: { examName, classId?, pdfUrl?, imageUrl? }
+ * Body: { title, examName, classId?, fileUrl?, pdfUrl?, imageUrl?, dueDate? }
  */
 const createExam = async (req, res, next) => {
   try {
-    const { examName, classId, pdfUrl, imageUrl } = req.body;
+    const titleInput = req.body.title || req.body.examName || req.body.name;
+    const classId = req.body.classId || req.body.class_id;
+    const fileUrl = req.body.fileUrl || req.body.file_url || req.body.pdfUrl || req.body.imageUrl;
+    const dueDate = req.body.dueDate || req.body.due_date;
     const tenantId = req.user.tenantId;
 
     // Validate required fields
-    if (!examName || !examName.trim()) {
+    if (!titleInput || !titleInput.trim()) {
       return res.status(400).json({
         success: false,
         error: { message: 'Exam name is required' },
-      });
-    }
-
-    // At least one of pdfUrl or imageUrl should be provided
-    if (!pdfUrl && !imageUrl) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'Either PDF URL or Image URL is required for the exam timetable' },
       });
     }
 
@@ -722,16 +735,25 @@ const createExam = async (req, res, next) => {
     }
 
     const createQuery = `
-      INSERT INTO "Exam" ("examName", "class_id", "pdfUrl", "imageUrl", "tenant_id", "createdAt", "updatedAt")
-      VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      INSERT INTO "Exam" (title, exam_name, class_id, file_url, pdf_url, image_url, tenant_id, due_date, is_published, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
       RETURNING *
     `;
 
+    const titleValue = titleInput.trim();
     const createResult = await db.query(createQuery, [
-      examName.trim(), classId || null, pdfUrl || null, imageUrl || null, tenantId
+      titleValue,           // title
+      titleValue,           // exam_name (same as title for backward compatibility)
+      classId || null,      // class_id
+      fileUrl || null,      // file_url
+      fileUrl || null,      // pdf_url (same as file_url)
+      fileUrl || null,      // image_url (same as file_url)
+      tenantId,             // tenant_id
+      dueDate || null,      // due_date
+      true                  // is_published
     ]);
 
-    const exam = createResult.rows[0];
+    const exam = mapExamRow(createResult.rows[0]);
 
     res.status(201).json({
       success: true,
@@ -750,7 +772,10 @@ const createExam = async (req, res, next) => {
 const updateExam = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { examName, classId, pdfUrl, imageUrl } = req.body;
+    const titleInput = req.body.title !== undefined ? req.body.title : (req.body.examName !== undefined ? req.body.examName : req.body.name);
+    const classId = req.body.classId !== undefined ? req.body.classId : req.body.class_id;
+    const fileUrl = req.body.fileUrl !== undefined ? req.body.fileUrl : (req.body.file_url !== undefined ? req.body.file_url : (req.body.pdfUrl !== undefined ? req.body.pdfUrl : req.body.imageUrl));
+    const dueDate = req.body.dueDate !== undefined ? req.body.dueDate : req.body.due_date;
     const tenantId = req.user.tenantId;
 
     // Build update fields
@@ -758,15 +783,15 @@ const updateExam = async (req, res, next) => {
     const updateParams = [];
     let paramIndex = 1;
 
-    if (examName !== undefined) {
-      if (!examName.trim()) {
+    if (titleInput !== undefined) {
+      if (!titleInput || !titleInput.trim()) {
         return res.status(400).json({
           success: false,
           error: { message: 'Exam name cannot be empty' },
         });
       }
-      updateFields.push(`"examName" = $${paramIndex}`);
-      updateParams.push(examName.trim());
+      updateFields.push(`title = $${paramIndex}`);
+      updateParams.push(titleInput.trim());
       paramIndex++;
     }
 
@@ -783,20 +808,20 @@ const updateExam = async (req, res, next) => {
           });
         }
       }
-      updateFields.push(`"class_id" = $${paramIndex}`);
+      updateFields.push(`class_id = $${paramIndex}`);
       updateParams.push(classId || null);
       paramIndex++;
     }
 
-    if (pdfUrl !== undefined) {
-      updateFields.push(`"pdfUrl" = $${paramIndex}`);
-      updateParams.push(pdfUrl || null);
+    if (fileUrl !== undefined) {
+      updateFields.push(`file_url = $${paramIndex}`);
+      updateParams.push(fileUrl || null);
       paramIndex++;
     }
 
-    if (imageUrl !== undefined) {
-      updateFields.push(`"imageUrl" = $${paramIndex}`);
-      updateParams.push(imageUrl || null);
+    if (dueDate !== undefined) {
+      updateFields.push(`due_date = $${paramIndex}`);
+      updateParams.push(dueDate || null);
       paramIndex++;
     }
 
@@ -812,7 +837,7 @@ const updateExam = async (req, res, next) => {
 
     const updateQuery = `
       UPDATE "Exam"
-      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
+      SET ${updateFields.join(', ')}, updated_at = NOW()
       WHERE id = $${paramIndex} AND "tenant_id" = $${paramIndex + 1}
       RETURNING *
     `;
@@ -828,7 +853,7 @@ const updateExam = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: updateResult.rows[0],
+      data: mapExamRow(updateResult.rows[0]),
       message: 'Exam updated successfully',
     });
   } catch (error) {

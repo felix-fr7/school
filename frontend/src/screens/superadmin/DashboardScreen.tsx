@@ -1,29 +1,41 @@
 /**
- * Super Admin Dashboard Screen
+ * Super Admin Dashboard Screen (Ionic React Version)
  * Main dashboard for Super Admin to manage schools
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { SuperAdminStackParamList } from '../../types';
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonButton,
+  IonIcon,
+  IonSpinner,
+  IonGrid,
+  IonRow,
+  IonCol,
+} from '@ionic/react';
+import {
+  schoolOutline,
+  peopleOutline,
+  personOutline,
+  addCircleOutline,
+  listOutline,
+  logOutOutline,
+  trendingUpOutline,
+} from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { tenantsAPI } from '../../services/api';
 import { Tenant } from '../../types';
-
-type NavigationProp = StackNavigationProp<SuperAdminStackParamList, 'SuperAdminDashboard'>;
+import './DashboardScreen.css';
 
 const SuperAdminDashboardScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const history = useHistory();
   const { user, logout } = useAuth();
   const [stats, setStats] = useState({
     totalSchools: 0,
@@ -32,7 +44,6 @@ const SuperAdminDashboardScreen: React.FC = () => {
   });
   const [recentSchools, setRecentSchools] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -49,7 +60,6 @@ const SuperAdminDashboardScreen: React.FC = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -57,239 +67,120 @@ const SuperAdminDashboardScreen: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchDashboardData();
+  const handleLogout = async () => {
+    await logout();
+    history.push('/login');
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1a237e" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonTitle>Super Admin Dashboard</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="super-admin-dashboard" fullscreen>
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <p>Loading dashboard...</p>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Welcome, {user?.name}</Text>
-        <Text style={styles.roleText}>Super Administrator</Text>
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Super Admin Dashboard</IonTitle>
+        </IonToolbar>
+      </IonHeader>
 
-      {/* Stats Cards */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.totalSchools}</Text>
-          <Text style={styles.statLabel}>Schools</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.totalStudents}</Text>
-          <Text style={styles.statLabel}>Students</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.totalAdmins}</Text>
-          <Text style={styles.statLabel}>Admins</Text>
-        </View>
-      </View>
+      <IonContent className="super-admin-dashboard" fullscreen>
+        <div className="container">
+          {/* Welcome Header */}
+          <div className="welcome-header">
+            <h1 className="welcome-text">Welcome, {user?.name}</h1>
+            <p className="role-text">Super Administrator</p>
+          </div>
 
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>Quick Actions</Text>
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('CreateSchool')}
-        >
-          <Text style={styles.actionIcon}>🏫</Text>
-          <Text style={styles.actionText}>Add School</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('SchoolsList')}
-        >
-          <Text style={styles.actionIcon}>📋</Text>
-          <Text style={styles.actionText}>View All</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Stats Cards */}
+          <div className="stats-container">
+            <IonCard className="stat-card">
+              <IonIcon icon={schoolOutline} className="stat-icon" />
+              <div className="stat-number">{stats.totalSchools}</div>
+              <div className="stat-label">Schools</div>
+            </IonCard>
+            <IonCard className="stat-card">
+              <IonIcon icon={peopleOutline} className="stat-icon" />
+              <div className="stat-number">{stats.totalStudents}</div>
+              <div className="stat-label">Students</div>
+            </IonCard>
+            <IonCard className="stat-card">
+              <IonIcon icon={personOutline} className="stat-icon" />
+              <div className="stat-number">{stats.totalAdmins}</div>
+              <div className="stat-label">Admins</div>
+            </IonCard>
+          </div>
 
-      {/* Recent Schools */}
-      <Text style={styles.sectionTitle}>Recent Schools</Text>
-      {recentSchools.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No schools added yet</Text>
-          <Text style={styles.emptySubtext}>Tap "Add School" to get started</Text>
-        </View>
-      ) : (
-        recentSchools.map((school) => (
-          <TouchableOpacity
-            key={school.id}
-            style={styles.schoolCard}
-            onPress={() => navigation.navigate('SchoolDetail', { tenantId: school.id })}
+          {/* Quick Actions */}
+          <h2 className="section-title">Quick Actions</h2>
+          <div className="actions-container">
+            <IonCard className="action-card" button onClick={() => history.push('/superadmin/schools/create')}>
+              <IonIcon icon={addCircleOutline} className="action-icon" />
+              <span className="action-text">Add School</span>
+            </IonCard>
+            <IonCard className="action-card" button onClick={() => history.push('/superadmin/schools')}>
+              <IonIcon icon={listOutline} className="action-icon" />
+              <span className="action-text">View All</span>
+            </IonCard>
+          </div>
+
+          {/* Recent Schools */}
+          <h2 className="section-title">Recent Schools</h2>
+          {recentSchools.length === 0 ? (
+            <div className="empty-container">
+              <IonIcon icon={schoolOutline} className="empty-icon" />
+              <p className="empty-text">No schools added yet</p>
+              <p className="empty-subtext">Tap "Add School" to get started</p>
+            </div>
+          ) : (
+            <div className="schools-list">
+              {recentSchools.map((school) => (
+                <IonCard
+                  key={school.id}
+                  className="school-card"
+                  button
+                  onClick={() => history.push(`/superadmin/schools/${school.id}`)}
+                >
+                  <IonCardContent>
+                    <div className="school-info">
+                      <h3 className="school-name">{school.name}</h3>
+                      <p className="school-code">{school.code}</p>
+                    </div>
+                    <span className="school-status active">Active</span>
+                  </IonCardContent>
+                </IonCard>
+              ))}
+            </div>
+          )}
+
+          {/* Logout Button */}
+          <IonButton
+            expand="block"
+            color="danger"
+            className="logout-button"
+            onClick={handleLogout}
           >
-            <View style={styles.schoolInfo}>
-              <Text style={styles.schoolName}>{school.name}</Text>
-              <Text style={styles.schoolCode}>{school.code}</Text>
-            </View>
-            <Text style={styles.schoolStatus}>{school.isActive ? 'Active' : 'Inactive'}</Text>
-          </TouchableOpacity>
-        ))
-      )}
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+            <IonIcon icon={logOutOutline} slot="start" />
+            Logout
+          </IonButton>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    backgroundColor: '#1a237e',
-    padding: 20,
-    paddingTop: 30,
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  roleText: {
-    fontSize: 14,
-    color: '#c5cae9',
-    marginTop: 4,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-    backgroundColor: '#fff',
-    marginTop: -20,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  statCard: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a237e',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 24,
-    marginHorizontal: 16,
-    marginBottom: 12,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  actionIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  schoolCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 8,
-    padding: 16,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    elevation: 1,
-  },
-  schoolInfo: {
-    flex: 1,
-  },
-  schoolName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  schoolCode: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  schoolStatus: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#4caf50',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 32,
-    marginHorizontal: 16,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
-  },
-  logoutButton: {
-    backgroundColor: '#f44336',
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default SuperAdminDashboardScreen;

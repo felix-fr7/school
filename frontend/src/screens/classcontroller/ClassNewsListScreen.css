@@ -1,0 +1,208 @@
+/**
+ * Class News List Screen (Ionic React Styles)
+ * Displays school news for class controller users
+ */
+
+/* ============================================
+   Loading State
+   ============================================ */
+.news-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.news-loading .loading-text {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.news-list-content {
+  --background: #FFF5F0;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* ============================================
+   News Card
+   ============================================ */
+.news-card {
+  --background: #FFFFFF;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.news-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.news-content {
+  padding: 16px;
+}
+
+.news-content.no-image {
+  padding-top: 16px;
+}
+
+.news-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+  line-height: 22px;
+}
+
+.news-summary {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  line-height: 20px;
+  margin: 0 0 12px 0;
+}
+
+/* ============================================
+   News Meta
+   ============================================ */
+.news-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.news-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.news-date ion-icon {
+  font-size: 12px;
+}
+
+.category-badge {
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ============================================
+   Attachments
+   ============================================ */
+.attachments {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.attachment-badge {
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  --color: #1976D2;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.footer {
+  margin-top: 32px;
+  padding: 16px;
+  text-align: center;
+}
+
+.footer-text {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (min-width: 768px) {
+  .news-card {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .news-list-content {
+    --background: #121212;
+  }
+
+  .news-card {
+    --background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .news-title {
+    color: #fff;
+  }
+
+  .news-summary {
+    color: #888;
+  }
+
+  .news-date {
+    color: #888;
+  }
+
+  .empty-state h3 {
+    color: #fff;
+  }
+
+  .empty-subtext {
+    color: #888;
+  }
+
+  .footer-text {
+    color: #888;
+  }
+}

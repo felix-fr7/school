@@ -1,0 +1,151 @@
+.news-detail-content {
+  --background: #F8FAFC;
+  padding: 16px;
+}
+
+.category-badge {
+  align-self: flex-start;
+  margin-bottom: 16px;
+}
+
+.news-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1E293B;
+  margin: 0 0 16px 0;
+  line-height: 1.3;
+}
+
+.meta-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.meta-date,
+.meta-author {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.image-container {
+  position: relative;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.news-image {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-container:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-overlay IonIcon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.image-overlay span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.content-container {
+  margin-bottom: 20px;
+}
+
+.news-content {
+  font-size: 16px;
+  color: #334155;
+  line-height: 1.7;
+  letter-spacing: 0.2px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+.pdf-container {
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.pdf-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-button {
+  --background: #1E3A8A;
+  --border-radius: 8px;
+}
+
+.summary-container {
+  background-color: #F1F5F9;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.summary-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px 0;
+}
+
+.summary-text {
+  font-size: 14px;
+  color: #64748B;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}

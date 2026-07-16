@@ -1,22 +1,36 @@
 /**
- * Teacher Homework Screen
+ * Teacher Homework Screen (Ionic React Version)
  * Create and manage homework assignments for the teacher's class
  * Supports full CRUD operations with teacher-scoped validation
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
-} from 'react-native';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonIcon,
+  IonText,
+  IonSpinner,
+  IonList,
+  IonItem,
+  IonCard,
+  IonCardContent,
+  IonInput,
+  IonTextarea,
+  IonRefresher,
+  IonRefresherContent,
+  IonAlert,
+  IonBadge,
+} from '@ionic/react';
+import { refreshOutline, addCircleOutline, bookOutline } from 'ionicons/icons';
 import { teacherAPI } from '../../services/api';
+import './TeacherHomeworkScreen.css';
 
 interface Homework {
   id: string;
@@ -39,6 +53,11 @@ const TeacherHomeworkScreen: React.FC = () => {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [homeworkToDelete, setHomeworkToDelete] = useState<Homework | null>(null);
 
   const fetchHomeworks = async (refresh = false) => {
     try {
@@ -50,7 +69,9 @@ const TeacherHomeworkScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching homework:', error);
-      Alert.alert('Error', 'Failed to load homework');
+      setAlertMessage('Failed to load homework');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,25 +82,34 @@ const TeacherHomeworkScreen: React.FC = () => {
     fetchHomeworks();
   }, []);
 
-  const onRefresh = () => fetchHomeworks(true);
+  const onRefresh = async (event: CustomEvent) => {
+    await fetchHomeworks(true);
+    event.detail.complete();
+  };
 
   const validateForm = () => {
     if (!subject.trim()) {
-      Alert.alert('Error', 'Please enter subject');
+      setAlertMessage('Please enter subject');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     if (!title.trim()) {
-      Alert.alert('Error', 'Please enter homework title');
+      setAlertMessage('Please enter homework title');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     if (!description.trim()) {
-      Alert.alert('Error', 'Please enter description');
+      setAlertMessage('Please enter description');
+      setIsSuccess(false);
+      setShowAlert(true);
       return false;
     }
     return true;
   };
 
-  const resetForm = (): void => {
+  const resetForm = () => {
     setSubject('');
     setTitle('');
     setDescription('');
@@ -101,18 +131,16 @@ const TeacherHomeworkScreen: React.FC = () => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Homework assigned successfully!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              resetForm();
-              fetchHomeworks();
-            },
-          },
-        ]);
+        setAlertMessage('Homework assigned successfully!');
+        setIsSuccess(true);
+        setShowAlert(true);
+        resetForm();
+        fetchHomeworks();
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to create homework');
+      setAlertMessage(error.response?.data?.error?.message || 'Failed to create homework');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setSaving(false);
     }
@@ -131,47 +159,43 @@ const TeacherHomeworkScreen: React.FC = () => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Homework updated successfully!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              resetForm();
-              fetchHomeworks();
-            },
-          },
-        ]);
+        setAlertMessage('Homework updated successfully!');
+        setIsSuccess(true);
+        setShowAlert(true);
+        resetForm();
+        fetchHomeworks();
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to update homework');
+      setAlertMessage(error.response?.data?.error?.message || 'Failed to update homework');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteHomework = (homework: Homework) => {
-    Alert.alert(
-      'Delete Homework',
-      `Are you sure you want to delete "${homework.title}"? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const response = await teacherAPI.deleteHomework(homework.id);
-              if (response.success) {
-                Alert.alert('Success', 'Homework deleted successfully', [
-                  { text: 'OK', onPress: () => { fetchHomeworks(); } },
-                ]);
-              }
-            } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.error?.message || 'Failed to delete homework');
-            }
-          },
-        },
-      ]
-    );
+  const handleDeleteClick = (homework: Homework) => {
+    setHomeworkToDelete(homework);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!homeworkToDelete) return;
+    try {
+      const response = await teacherAPI.deleteHomework(homeworkToDelete.id);
+      if (response.success) {
+        setAlertMessage('Homework deleted successfully');
+        setIsSuccess(true);
+        setShowAlert(true);
+        fetchHomeworks();
+      }
+    } catch (error: any) {
+      setAlertMessage(error.response?.data?.error?.message || 'Failed to delete homework');
+      setIsSuccess(false);
+      setShowAlert(true);
+    }
+    setShowDeleteConfirm(false);
+    setHomeworkToDelete(null);
   };
 
   const handleEditHomework = (homework: Homework) => {
@@ -189,197 +213,176 @@ const TeacherHomeworkScreen: React.FC = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const renderHomework = ({ item }: { item: Homework }) => (
-    <TouchableOpacity
-      style={styles.homeworkCard}
-      onPress={() => handleEditHomework(item)}
-      onLongPress={() => handleDeleteHomework(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.homeworkHeader}>
-        <View style={[styles.subjectBadge, { backgroundColor: '#7b1fa2' }]}>
-          <Text style={styles.subjectBadgeText}>{item.subject}</Text>
-        </View>
-        {item.dueDate && (
-          <Text style={styles.dueDate}>Due: {formatDate(item.dueDate)}</Text>
-        )}
-      </View>
-      <Text style={styles.homeworkTitle}>{item.title}</Text>
-      <Text style={styles.homeworkDesc} numberOfLines={2}>{item.description}</Text>
-      <Text style={styles.homeworkDate}>Assigned: {formatDate(item.createdAt)}</Text>
-      <View style={styles.actionHint}>
-        <Text style={styles.actionHintText}>Tap to edit • Long press to delete</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7b1fa2" />
-      </View>
+      <IonPage>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+          <IonText color="medium">
+            <p>Loading homework...</p>
+          </IonText>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Create/Edit Homework Toggle */}
-      <TouchableOpacity
-        style={styles.formToggle}
-        onPress={() => (showForm ? resetForm() : setShowForm(true))}
-      >
-        <Text style={styles.formToggleText}>
-          {showForm ? '✕ Cancel' : '+ Assign New Homework'}
-        </Text>
-      </TouchableOpacity>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/teacher/dashboard" />
+          </IonButtons>
+          <IonTitle>Homework</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="teacher-homework-content">
+        <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
+          <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
+        </IonRefresher>
 
-      {/* Create/Edit Homework Form */}
-      {showForm && (
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle}>
-            {editingHomework ? 'Edit Homework' : 'Assign New Homework'}
-          </Text>
+        {/* Create/Edit Homework Toggle */}
+        <div className="form-toggle" onClick={() => (showForm ? resetForm() : setShowForm(true))}>
+          <IonText color="light">
+            <IonIcon icon={showForm ? 'close-circle-outline' : 'add-circle-outline'} />
+            <span>{showForm ? 'Cancel' : 'Assign New Homework'}</span>
+          </IonText>
+        </div>
 
-          <Text style={styles.label}>Subject *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Mathematics, Science, English"
-            value={subject}
-            onChangeText={(text) => setSubject(text)}
-            autoCapitalize="words"
-          />
+        {/* Create/Edit Homework Form */}
+        {showForm && (
+          <IonCard className="form-card">
+            <IonCardContent>
+              <h3 className="form-title">
+                {editingHomework ? 'Edit Homework' : 'Assign New Homework'}
+              </h3>
 
-          <Text style={styles.label}>Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Chapter 5 Exercises"
-            value={title}
-            onChangeText={(text) => setTitle(text)}
-            autoCapitalize="words"
-          />
+              <div className="input-group">
+                <label className="input-label">Subject *</label>
+                <IonInput
+                  placeholder="e.g., Mathematics, Science, English"
+                  value={subject}
+                  onIonInput={(e) => setSubject(e.detail.value || '')}
+                  autocapitalize="words"
+                />
+              </div>
 
-          <Text style={styles.label}>Description *</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Enter homework details and instructions..."
-            value={description}
-            onChangeText={(text) => setDescription(text)}
-            multiline
-            numberOfLines={4}
-          />
+              <div className="input-group">
+                <label className="input-label">Title *</label>
+                <IonInput
+                  placeholder="e.g., Chapter 5 Exercises"
+                  value={title}
+                  onIonInput={(e) => setTitle(e.detail.value || '')}
+                  autocapitalize="words"
+                />
+              </div>
 
-          <Text style={styles.label}>Due Date (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={dueDate}
-            onChangeText={(text) => setDueDate(text)}
-          />
+              <div className="input-group">
+                <label className="input-label">Description *</label>
+                <IonTextarea
+                  placeholder="Enter homework details and instructions..."
+                  value={description}
+                  onIonInput={(e) => setDescription(e.detail.value || '')}
+                  rows={4}
+                />
+              </div>
 
-          <TouchableOpacity
-            style={[styles.submitButton, saving && styles.submitButtonDisabled]}
-            onPress={editingHomework ? handleUpdateHomework : handleCreateHomework}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitButtonText}>
-                {editingHomework ? 'Update Homework' : 'Assign Homework'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
+              <div className="input-group">
+                <label className="input-label">Due Date (Optional)</label>
+                <IonInput
+                  type="date"
+                  value={dueDate}
+                  onIonInput={(e) => setDueDate(e.detail.value || '')}
+                />
+              </div>
 
-      {/* Homework List */}
-      <FlatList
-        data={homeworks}
-        renderItem={renderHomework}
-        keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📚</Text>
-            <Text style={styles.emptyText}>No homework assigned yet</Text>
-            <Text style={styles.emptySubtext}>Use the form above to assign homework</Text>
-          </View>
-        }
-        contentContainerStyle={homeworks.length === 0 ? { flex: 1 } : undefined}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
-    </View>
+              <IonButton
+                expand="block"
+                color="secondary"
+                onClick={editingHomework ? handleUpdateHomework : handleCreateHomework}
+                disabled={saving}
+              >
+                {saving ? <IonSpinner name="crescent" /> : (editingHomework ? 'Update Homework' : 'Assign Homework')}
+              </IonButton>
+            </IonCardContent>
+          </IonCard>
+        )}
+
+        {/* Homework List */}
+        {homeworks.length === 0 ? (
+          <div className="empty-container">
+            <IonIcon icon={bookOutline} className="empty-icon" />
+            <IonText color="medium">
+              <h3>No homework assigned yet</h3>
+              <p>Use the form above to assign homework</p>
+            </IonText>
+          </div>
+        ) : (
+          <IonList>
+            {homeworks.map((item) => (
+              <IonItem key={item.id} className="homework-item" button onClick={() => handleEditHomework(item)}>
+                <IonCard className="homework-card">
+                  <IonCardContent>
+                    <div className="homework-header">
+                      <IonBadge color="secondary" className="subject-badge">
+                        {item.subject}
+                      </IonBadge>
+                      {item.dueDate && (
+                        <span className="due-date">Due: {formatDate(item.dueDate)}</span>
+                      )}
+                    </div>
+                    <h4 className="homework-title">{item.title}</h4>
+                    <p className="homework-desc">{item.description}</p>
+                    <p className="homework-date">Assigned: {formatDate(item.createdAt)}</p>
+                    <div className="action-hint">
+                      <IonText color="medium">
+                        <small>Tap to edit • Long press to delete</small>
+                      </IonText>
+                    </div>
+                  </IonCardContent>
+                </IonCard>
+                <IonButton
+                  slot="end"
+                  fill="clear"
+                  color="danger"
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(item);
+                  }}
+                >
+                  <IonIcon icon="trash-outline" />
+                </IonButton>
+              </IonItem>
+            ))}
+          </IonList>
+        )}
+
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={isSuccess ? 'Success' : 'Error'}
+          message={alertMessage}
+          buttons={['OK']}
+        />
+
+        <IonAlert
+          isOpen={showDeleteConfirm}
+          onDidDismiss={() => { setShowDeleteConfirm(false); setHomeworkToDelete(null); }}
+          header="Delete Homework"
+          message={`Are you sure you want to delete "${homeworkToDelete?.title}"? This action cannot be undone.`}
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Delete',
+              role: 'destructive',
+              handler: handleDeleteConfirm,
+            },
+          ]}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  formToggle: {
-    backgroundColor: '#7b1fa2',
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  formToggleText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  formCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 20,
-    borderRadius: 12,
-    elevation: 3,
-  },
-  formTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 20, textAlign: 'center' },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8, marginTop: 12 },
-  input: {
-    backgroundColor: '#f5f5f5',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  textArea: { height: 80, textAlignVertical: 'top' },
-  submitButton: {
-    backgroundColor: '#7b1fa2',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonDisabled: { opacity: 0.6 },
-  submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  separator: { height: 1, backgroundColor: '#e0e0e0', marginHorizontal: 16 },
-  homeworkCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 6,
-    padding: 16,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  homeworkHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  subjectBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 },
-  subjectBadgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  dueDate: { fontSize: 12, color: '#f44336', fontWeight: '500' },
-  homeworkTitle: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 6 },
-  homeworkDesc: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 8 },
-  homeworkDate: { fontSize: 12, color: '#999' },
-  actionHint: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
-  actionHintText: { fontSize: 11, color: '#999', textAlign: 'center', fontStyle: 'italic' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 16, fontWeight: '600', color: '#333' },
-  emptySubtext: { fontSize: 14, color: '#999', marginTop: 4 },
-});
 
 export default TeacherHomeworkScreen;

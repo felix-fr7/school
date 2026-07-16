@@ -1,0 +1,146 @@
+.teacher-marks-content {
+  --background: #f5f5f5;
+}
+
+/* Filters Card */
+.filters-card {
+  margin: 16px;
+  border-radius: 12px;
+}
+
+.filters-card IonCardContent {
+  padding: 16px;
+}
+
+.filters-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+/* Filters Row */
+.filters-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.filter-item {
+  position: relative;
+}
+
+.filter-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+/* Total Marks Row */
+.total-marks-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12px;
+  gap: 8px;
+}
+
+.total-marks-input {
+  width: 80px;
+  text-align: center;
+}
+
+/* Empty State */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+/* Matrix Header */
+.matrix-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px 8px 16px;
+}
+
+/* Student Row */
+.student-row {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --background: #fff;
+  margin-bottom: 4px;
+  margin-left: 16px;
+  margin-right: 16px;
+  border-radius: 8px;
+}
+
+.student-index {
+  width: 30px;
+  height: 30px;
+  background-color: #7b1fa2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  border-radius: 15px;
+  margin-right: 12px;
+}
+
+.student-info {
+  flex: 1;
+}
+
+.student-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.student-roll {
+  font-size: 12px;
+  color: #999;
+  margin: 2px 0 0 0;
+}
+
+/* Mark Input Container */
+.mark-input-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mark-input {
+  width: 60px;
+  text-align: center;
+}
+
+.mark-max {
+  font-size: 14px;
+  color: #999;
+}
+
+/* Footer */
+.footer {
+  background-color: #fff;
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 16px;
+}

@@ -1,0 +1,342 @@
+/**
+ * Class Controller Dashboard Screen (Ionic React Styles)
+ * Management dashboard for Class ID (CLS-X) login users
+ */
+
+/* ============================================
+   Loading State
+   ============================================ */
+.class-controller-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.class-controller-loading .loading-text {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.class-controller-dashboard {
+  --background: #FFF5F0;
+}
+
+/* ============================================
+   Header Section
+   ============================================ */
+.header-section {
+  background: var(--ion-color-secondary);
+  padding: 20px 16px;
+  padding-top: max(20px, env(safe-area-inset-top));
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.class-code-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+
+.class-code-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: 1px;
+}
+
+.class-info {
+  flex: 1;
+}
+
+.class-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.class-section {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 2px 0 0 0;
+}
+
+/* ============================================
+   Stats Row
+   ============================================ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 16px;
+}
+
+.stat-card {
+  --background: #FFFFFF;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card ion-card-content {
+  padding: 8px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ion-color-secondary);
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--ion-color-medium);
+  margin-top: 4px;
+}
+
+/* ============================================
+   Class ID Card
+   ============================================ */
+.class-id-card {
+  --background: #FFFFFF;
+  margin: 0 16px 16px 16px;
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  border: 2px solid var(--ion-color-secondary);
+  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.1);
+}
+
+.class-id-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ion-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+}
+
+.class-id-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--ion-color-secondary);
+  letter-spacing: 2px;
+  margin: 8px 0;
+}
+
+.class-id-note {
+  font-size: 12px;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* ============================================
+   Section
+   ============================================ */
+.section {
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin-bottom: 12px;
+}
+
+/* ============================================
+   Menu Cards Grid
+   ============================================ */
+.menu-card {
+  --background: #FFFFFF;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-card:active {
+  transform: scale(0.98);
+}
+
+.menu-card ion-card-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.menu-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 11px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.menu-icon-container {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.menu-icon {
+  font-size: 24px;
+}
+
+.menu-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px 0;
+}
+
+.menu-subtitle {
+  font-size: 11px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* Menu card color variations */
+.menu-card-1 { border-left: 4px solid #4CAF50; }
+.menu-card-2 { border-left: 4px solid #2196F3; }
+.menu-card-3 { border-left: 4px solid #9C27B0; }
+.menu-card-4 { border-left: 4px solid #FF5722; }
+.menu-card-5 { border-left: 4px solid #00BCD4; }
+.menu-card-6 { border-left: 4px solid #E91E63; }
+.menu-card-7 { border-left: 4px solid #607D8B; }
+
+/* ============================================
+   Logout Section
+   ============================================ */
+.logout-section {
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.logout-button {
+  --border-radius: 12px;
+  --border-width: 1px;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.footer {
+  padding: 16px;
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (min-width: 768px) {
+  .stats-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .header-section {
+    padding: 24px;
+  }
+
+  .section {
+    padding: 24px;
+  }
+
+  .logout-section {
+    padding: 24px;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .class-controller-dashboard {
+    --background: #121212;
+  }
+
+  .header-section {
+    background: #1a1a1a;
+  }
+
+  .class-code-text,
+  .class-name {
+    color: #fff;
+  }
+
+  .class-section {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .stat-card,
+  .class-id-card,
+  .menu-card {
+    --background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .stat-value {
+    color: var(--ion-color-secondary);
+  }
+
+  .stat-label {
+    color: #888;
+  }
+
+  .class-id-value {
+    color: var(--ion-color-secondary);
+  }
+
+  .class-id-card {
+    border-color: var(--ion-color-secondary);
+  }
+
+  .section-title {
+    color: #fff;
+  }
+
+  .menu-title {
+    color: #fff;
+  }
+
+  .menu-subtitle {
+    color: #888;
+  }
+}

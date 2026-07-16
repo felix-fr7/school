@@ -1,35 +1,45 @@
 /**
- * Edit Post Screen
+ * Edit Post Screen (Ionic React Version)
  * Form for editing existing posts
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { MainStackParamList } from '../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonInput,
+  IonTextarea,
+  IonText,
+  IonSpinner,
+  IonAlert,
+} from '@ionic/react';
+import { useParams, useHistory } from 'react-router-dom';
 import { usePosts } from '../contexts/PostContext';
 import { Post } from '../types';
+import './EditPostScreen.css';
 
-type EditPostScreenProps = StackScreenProps<MainStackParamList, 'EditPost'>;
+interface EditPostParams {
+  postId: string;
+}
 
-const EditPostScreen: React.FC<EditPostScreenProps> = ({ navigation, route }) => {
-  const { postId } = route.params;
+const EditPostScreen: React.FC = () => {
+  const { postId } = useParams<EditPostParams>();
+  const history = useHistory();
   const { fetchPost, updatePost, isLoading } = usePosts();
   const [post, setPost] = useState<Post | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [showNoChangesAlert, setShowNoChangesAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     loadPost();
@@ -47,28 +57,32 @@ const EditPostScreen: React.FC<EditPostScreenProps> = ({ navigation, route }) =>
   const handleUpdate = async () => {
     // Validation
     if (!title.trim()) {
-      Alert.alert('Error', 'Please enter a title');
+      setAlertMessage('Please enter a title');
+      setShowErrorAlert(true);
       return;
     }
 
     if (title.trim().length > 255) {
-      Alert.alert('Error', 'Title must be less than 255 characters');
+      setAlertMessage('Title must be less than 255 characters');
+      setShowErrorAlert(true);
       return;
     }
 
     if (!content.trim()) {
-      Alert.alert('Error', 'Please enter some content');
+      setAlertMessage('Please enter some content');
+      setShowErrorAlert(true);
       return;
     }
 
     if (content.trim().length > 10000) {
-      Alert.alert('Error', 'Content must be less than 10,000 characters');
+      setAlertMessage('Content must be less than 10,000 characters');
+      setShowErrorAlert(true);
       return;
     }
 
     // Check if anything changed
     if (title === post?.title && content === post?.content) {
-      Alert.alert('Info', 'No changes made');
+      setShowNoChangesAlert(true);
       return;
     }
 
@@ -77,169 +91,135 @@ const EditPostScreen: React.FC<EditPostScreenProps> = ({ navigation, route }) =>
     try {
       const result = await updatePost(postId, { title: title.trim(), content: content.trim() });
       if (result) {
-        Alert.alert('Success', 'Post updated successfully', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        setShowSuccessAlert(true);
       } else {
-        Alert.alert('Error', 'Failed to update post');
+        setAlertMessage('Failed to update post');
+        setShowErrorAlert(true);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update post';
-      Alert.alert('Error', errorMessage);
+      setAlertMessage(errorMessage);
+      setShowErrorAlert(true);
     } finally {
       setIsSaving(false);
     }
   };
 
+  const handleSuccessDismiss = () => {
+    setShowSuccessAlert(false);
+    history.goBack();
+  };
+
   if (!post) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/posts" />
+            </IonButtons>
+            <IonTitle>Edit Post</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Title</Text>
-            <TextInput
-              style={styles.input}
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref={`/posts/${postId}`} />
+          </IonButtons>
+          <IonTitle>Edit Post</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="edit-post-content">
+        <div className="form-container">
+          <div className="input-group">
+            <label className="input-label">Title</label>
+            <IonInput
               placeholder="Enter post title"
               value={title}
-              onChangeText={setTitle}
-              maxLength={255}
-              editable={!isSaving && !isLoading}
+              onIonInput={(e) => setTitle(e.detail.value || '')}
+              maxlength={255}
+              disabled={isSaving || isLoading}
+              className="input-field"
             />
-            <Text style={styles.charCount}>{title.length}/255</Text>
-          </View>
+            <IonText color="medium" className="char-count">
+              {title.length}/255
+            </IonText>
+          </div>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Content</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
+          <div className="input-group">
+            <label className="input-label">Content</label>
+            <IonTextarea
               placeholder="Write your post content..."
               value={content}
-              onChangeText={setContent}
-              multiline
-              numberOfLines={10}
-              maxLength={10000}
-              editable={!isSaving && !isLoading}
+              onIonInput={(e) => setContent(e.detail.value || '')}
+              rows={10}
+              maxlength={10000}
+              disabled={isSaving || isLoading}
+              className="textarea-field"
             />
-            <Text style={styles.charCount}>{content.length}/10000</Text>
-          </View>
+            <IonText color="medium" className="char-count">
+              {content.length}/10000
+            </IonText>
+          </div>
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={() => navigation.goBack()}
+          <div className="button-container">
+            <IonButton
+              expand="block"
+              color="medium"
+              onClick={() => history.goBack()}
               disabled={isSaving || isLoading}
+              className="cancel-button"
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+              Cancel
+            </IonButton>
 
-            <TouchableOpacity
-              style={[styles.button, styles.saveButton, (isSaving || isLoading) && styles.buttonDisabled]}
-              onPress={handleUpdate}
+            <IonButton
+              expand="block"
+              color="primary"
+              onClick={handleUpdate}
               disabled={isSaving || isLoading}
+              className="save-button"
             >
-              {isSaving || isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              {isSaving || isLoading ? <IonSpinner name="crescent" /> : 'Save Changes'}
+            </IonButton>
+          </div>
+        </div>
+
+        <IonAlert
+          isOpen={showSuccessAlert}
+          onDidDismiss={handleSuccessDismiss}
+          header="Success"
+          message="Post updated successfully"
+          buttons={['OK']}
+        />
+
+        <IonAlert
+          isOpen={showErrorAlert}
+          onDidDismiss={() => setShowErrorAlert(false)}
+          header="Error"
+          message={alertMessage}
+          buttons={['OK']}
+        />
+
+        <IonAlert
+          isOpen={showNoChangesAlert}
+          onDidDismiss={() => setShowNoChangesAlert(false)}
+          header="Info"
+          message="No changes made"
+          buttons={['OK']}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  form: {
-    flex: 1,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    minHeight: 44,
-  },
-  textArea: {
-    minHeight: 200,
-    textAlignVertical: 'top',
-  },
-  charCount: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'right',
-    marginTop: 4,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
-  },
-  button: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#e0e0e0',
-  },
-  cancelButtonText: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-});
 
 export default EditPostScreen;

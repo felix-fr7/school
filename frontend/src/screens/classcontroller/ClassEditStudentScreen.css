@@ -1,0 +1,385 @@
+/**
+ * Class Edit Student Screen (Ionic React Styles)
+ * View and manage student details
+ */
+
+/* ============================================
+   Loading State
+   ============================================ */
+.student-edit-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.student-edit-loading .loading-text {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.student-edit-content {
+  --background: #FFF5F0;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 24px 0;
+}
+
+/* ============================================
+   Student ID Card
+   ============================================ */
+.student-id-card {
+  --background: var(--ion-color-secondary);
+  margin: 16px;
+  border-radius: 20px;
+  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+  text-align: center;
+}
+
+.student-id-card ion-card-content {
+  padding: 24px;
+}
+
+.student-id-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.student-id-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: 2px;
+  margin: 8px 0;
+}
+
+.student-id-hint {
+  font-size: 13px;
+  display: block;
+}
+
+/* ============================================
+   Info Card
+   ============================================ */
+.info-card {
+  --background: #FFFFFF;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.info-card ion-card-content {
+  padding: 20px;
+}
+
+.info-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0 0 16px 0;
+}
+
+.info-card ion-list {
+  padding: 0;
+}
+
+.info-card ion-item {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --border-bottom: 1px solid #F5F5F5;
+}
+
+.info-card ion-item:last-child {
+  --border-bottom: none;
+}
+
+.info-card ion-icon[slot="start"] {
+  margin-right: 12px;
+}
+
+.info-card ion-label small {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  display: block;
+}
+
+.info-card ion-label p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
+}
+
+/* ============================================
+   Actions Card
+   ============================================ */
+.actions-card {
+  --background: #FFFFFF;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.actions-card ion-card-content {
+  padding: 20px;
+}
+
+.action-button {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  cursor: pointer;
+}
+
+.action-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #FFF5F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.action-icon-container ion-icon {
+  font-size: 20px;
+  color: var(--ion-color-secondary);
+}
+
+.action-button ion-label h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 2px 0;
+}
+
+.action-button ion-label p {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* ============================================
+   Info Box
+   ============================================ */
+.info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #FFF5F0;
+  margin: 16px;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.info-icon {
+  font-size: 18px;
+  color: var(--ion-color-secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-box small {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  line-height: 1.5;
+}
+
+.id-highlight {
+  color: var(--ion-color-secondary);
+  font-weight: 700;
+  background: #FFE8DD;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+/* ============================================
+   Reset Password Modal
+   ============================================ */
+.reset-password-modal {
+  --height: auto;
+  --max-height: 90vh;
+  --width: 85%;
+  --max-width: 400px;
+}
+
+.modal-container {
+  padding: 24px;
+  background: var(--ion-color-light);
+  border-radius: 24px;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0 0 24px 0;
+}
+
+.input-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.input-group ion-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 8px;
+}
+
+.input-group ion-input {
+  --background: #FFFFFF;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-size: 15px;
+  border: 1px solid #E0E0E0;
+  border-radius: 12px;
+}
+
+.default-password-button {
+  --border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.submit-button {
+  --border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (min-width: 768px) {
+  .student-id-card,
+  .info-card,
+  .actions-card,
+  .info-box {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 500px;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .student-edit-content {
+    --background: #121212;
+  }
+
+  .student-id-card {
+    --background: var(--ion-color-secondary);
+  }
+
+  .info-card,
+  .actions-card {
+    --background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .info-card-title {
+    color: #fff;
+  }
+
+  .info-card ion-item {
+    --border-bottom-color: #333;
+  }
+
+  .info-card ion-label small {
+    color: #888;
+  }
+
+  .info-card ion-label p {
+    color: #fff;
+  }
+
+  .action-icon-container {
+    background: #332900;
+  }
+
+  .action-button ion-label h4 {
+    color: #fff;
+  }
+
+  .action-button ion-label p {
+    color: #888;
+  }
+
+  .info-box {
+    background: #1e1e1e;
+  }
+
+  .info-box small {
+    color: #888;
+  }
+
+  .modal-container {
+    background: #1e1e1e;
+  }
+
+  .modal-title {
+    color: #fff;
+  }
+
+  .modal-subtitle {
+    color: #888;
+  }
+
+  .input-group ion-label {
+    color: #fff;
+  }
+
+  .input-group ion-input {
+    --background: #2a2a2a;
+    border-color: #444;
+    color: #fff;
+  }
+}

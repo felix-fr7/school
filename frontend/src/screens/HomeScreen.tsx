@@ -1,28 +1,39 @@
 /**
- * Home Screen
+ * Home Screen (Ionic React Version)
  * Dashboard displaying all posts with pull-to-refresh
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  RefreshControl,
-  ActivityIndicator,
-  TextInput,
-} from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { MainStackParamList } from '../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButton,
+  IonIcon,
+  IonInput,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonText,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  IonFab,
+  IonFabButton,
+  IonCard,
+  IonCardContent,
+} from '@ionic/react';
+import { useHistory } from 'react-router-dom';
+import { addOutline, logOutOutline, searchOutline, personOutline, calendarOutline } from 'ionicons/icons';
 import { usePosts } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Post } from '../types';
+import './HomeScreen.css';
 
-type HomeScreenProps = StackScreenProps<MainStackParamList, 'Home'>;
-
-const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+const HomeScreen: React.FC = () => {
+  const history = useHistory();
   const { posts, isLoading, fetchPosts } = usePosts();
   const { user, logout } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
@@ -45,6 +56,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const handleLogout = async () => {
     try {
       await logout();
+      history.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -59,219 +71,100 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     });
   };
 
-  const renderPost = ({ item }: { item: Post }) => (
-    <TouchableOpacity
-      style={styles.postCard}
-      onPress={() => navigation.navigate('PostDetail', { postId: item.id })}
-    >
-      <Text style={styles.postTitle}>{item.title}</Text>
-      <Text style={styles.postContent} numberOfLines={3}>
-        {item.content}
-      </Text>
-      <View style={styles.postFooter}>
-        <Text style={styles.postAuthor}>By {item.user.name}</Text>
-        <Text style={styles.postDate}>{formatDate(item.createdAt)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No posts available</Text>
-      <Text style={styles.emptySubtext}>Be the first to create a post!</Text>
-    </View>
-  );
+  const handleSearch = () => {
+    fetchPosts(1, 10, searchQuery);
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.greeting}>Hello, {user?.name || 'Guest'}!</Text>
-          <Text style={styles.subtitle}>Here are the latest posts</Text>
-        </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar color="primary">
+          <IonTitle>Posts</IonTitle>
+          <IonButton slot="end" fill="clear" onClick={handleLogout}>
+            <IonIcon icon={logOutOutline} slot="icon-only" />
+          </IonButton>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="home-content">
+        {/* Greeting */}
+        <div className="greeting-container">
+          <h1 className="greeting">Hello, {user?.name || 'Guest'}!</h1>
+          <p className="subtitle">Here are the latest posts</p>
+        </div>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search posts..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSubmitEditing={() => fetchPosts(1, 10, searchQuery)}
-        />
-      </View>
+        {/* Search Bar */}
+        <div className="search-container">
+          <IonInput
+            placeholder="Search posts..."
+            value={searchQuery}
+            onIonInput={(e) => setSearchQuery(e.detail.value || '')}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            className="search-input"
+          >
+            <IonIcon icon={searchOutline} slot="start" className="search-icon" />
+          </IonInput>
+        </div>
 
-      {/* Posts List */}
-      {isLoading && posts.length === 0 ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-      ) : (
-        <FlatList
-          data={posts}
-          renderItem={renderPost}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          ListEmptyComponent={renderEmpty}
-          contentContainerStyle={posts.length === 0 ? styles.emptyList : styles.list}
-        />
-      )}
+        {/* Posts List */}
+        {isLoading && posts.length === 0 ? (
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="empty-container">
+            <IonText color="medium">
+              <h3>No posts available</h3>
+              <p>Be the first to create a post!</p>
+            </IonText>
+          </div>
+        ) : (
+          <IonList>
+            {posts.map((post: Post) => (
+              <IonItem
+                key={post.id}
+                button
+                onClick={() => history.push(`/posts/${post.id}`)}
+                className="post-item"
+              >
+                <IonCard className="post-card">
+                  <IonCardContent>
+                    <h3 className="post-title">{post.title}</h3>
+                    <p className="post-content">
+                      {post.content.length > 150
+                        ? `${post.content.substring(0, 150)}...`
+                        : post.content}
+                    </p>
+                    <div className="post-footer">
+                      <div className="post-author">
+                        <IonIcon icon={personOutline} />
+                        <span>By {post.user.name}</span>
+                      </div>
+                      <div className="post-date">
+                        <IonIcon icon={calendarOutline} />
+                        <span>{formatDate(post.createdAt)}</span>
+                      </div>
+                    </div>
+                  </IonCardContent>
+                </IonCard>
+              </IonItem>
+            ))}
+          </IonList>
+        )}
 
-      {/* Create Post Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('CreatePost')}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Create Post FAB */}
+        <IonFab
+          vertical="bottom"
+          horizontal="end"
+          slot="fixed"
+          className="create-post-fab"
+        >
+          <IonFabButton onClick={() => history.push('/posts/create')} color="primary">
+            <IonIcon icon={addOutline} />
+          </IonFabButton>
+        </IonFab>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  logoutButton: {
-    padding: 8,
-  },
-  logoutText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  searchContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  searchInput: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  list: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  emptyList: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 100,
-  },
-  postCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  postTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  postContent: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  postFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-    paddingTop: 12,
-  },
-  postAuthor: {
-    fontSize: 12,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-  postDate: {
-    fontSize: 12,
-    color: '#999',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  fabText: {
-    fontSize: 30,
-    color: '#fff',
-    fontWeight: '300',
-  },
-});
 
 export default HomeScreen;

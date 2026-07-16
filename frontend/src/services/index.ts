@@ -3,5 +3,14 @@
  * Central export for all services
  */
 
-export { authAPI, postsAPI, storage } from './api';
-export { default as api } from './api';
+export { 
+  authAPI, 
+  postsAPI, 
+  tenantsAPI,
+  adminAPI,
+  studentAPI,
+  teacherAPI,
+  classControllerAPI,
+  storage,
+  api 
+} from './api';

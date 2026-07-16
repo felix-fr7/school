@@ -1,30 +1,38 @@
 /**
- * Login Screen
+ * Login Screen (Ionic React Version)
  * Supports Student login (Student ID/password), Staff login (email/password), 
  * and Class login (class code/password)
+ * 
+ * Multi-Tenant School Management System
  */
 
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { AuthStackParamList } from '../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButton,
+  IonInput,
+  IonText,
+  IonSpinner,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonIcon,
+  IonCard,
+  IonCardContent,
+} from '@ionic/react';
+import { useHistory } from 'react-router-dom';
+import { person, business, people } from 'ionicons/icons';
 import { useAuth } from '../contexts/AuthContext';
+import './LoginScreen.css';
 
-type LoginScreenProps = StackScreenProps<AuthStackParamList, 'Login'>;
-
-const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  const { login, classLogin } = useAuth();
+const LoginScreen: React.FC = () => {
+  const history = useHistory();
+  const { login, classLogin, isAuthenticated, isAdmin, isStudent, isTeacher, isClass } = useAuth();
+  
   const [loginMode, setLoginMode] = useState<'student' | 'staff' | 'class'>('student');
   
   // Student login state (Student ID + Password)
@@ -40,18 +48,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [classPassword, setClassPassword] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleStudentLogin = async () => {
     if (!studentId.trim() || !studentPassword.trim()) {
-      Alert.alert('Error', 'Please enter Student ID and Password');
+      setError('Please enter Student ID and Password');
       return;
     }
 
+    setError(null);
     setIsLoading(true);
     try {
       console.log('[StudentLogin] Attempting login with studentId:', studentId.trim());
       await login(studentId.trim(), studentPassword);
-      console.log('[StudentLogin] Login successful');
+      console.log('[StudentLogin] Login successful, redirecting...');
+      // Navigation will be handled by AuthContext state change
     } catch (err: any) {
       console.log('[StudentLogin] Login error:', err);
       handleError(err);
@@ -62,13 +73,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const handleStaffLogin = async () => {
     if (!email.trim() || !staffPassword.trim()) {
-      Alert.alert('Error', 'Please enter Email and Password');
+      setError('Please enter Email and Password');
       return;
     }
 
+    setError(null);
     setIsLoading(true);
     try {
       await login(email.trim(), staffPassword);
+      console.log('[StaffLogin] Login successful, redirecting...');
+      // Navigation will be handled by AuthContext state change
     } catch (err: any) {
       handleError(err);
     } finally {
@@ -78,13 +92,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   const handleClassLogin = async () => {
     if (!classCode.trim() || !classPassword.trim()) {
-      Alert.alert('Error', 'Please enter Class ID and Password');
+      setError('Please enter Class ID and Password');
       return;
     }
 
+    setError(null);
     setIsLoading(true);
     try {
       await classLogin(classCode.trim().toUpperCase(), classPassword);
+      console.log('[ClassLogin] Login successful, redirecting...');
+      // Navigation will be handled by AuthContext state change
     } catch (err: any) {
       handleError(err);
     } finally {
@@ -127,304 +144,205 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       cleanStringMessage = "Authentication failed. Server returned an invalid payload structure.";
     }
 
-    Alert.alert('Login Error', cleanStringMessage);
+    setError(cleanStringMessage);
+  };
+
+  const getSegmentIcon = (mode: 'student' | 'staff' | 'class') => {
+    switch (mode) {
+      case 'student': return person;
+      case 'staff': return business;
+      case 'class': return people;
+    }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>School App</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
-        </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar color="primary">
+          <IonTitle>School App</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="login-content">
+        <div className="login-container">
+          {/* Header */}
+          <div className="header">
+            <h1 className="header-title">School App</h1>
+            <p className="header-subtitle">Sign in to continue</p>
+          </div>
 
-        {/* Login Mode Toggle */}
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[styles.toggleButton, loginMode === 'student' && styles.toggleButtonActive]}
-            onPress={() => setLoginMode('student')}
+          {/* Login Mode Toggle */}
+          <IonSegment
+            value={loginMode}
+            onIonChange={(e) => setLoginMode(e.detail.value as 'student' | 'staff' | 'class')}
+            className="segment-container"
           >
-            <Text style={[styles.toggleText, loginMode === 'student' && styles.toggleTextActive]}>
-              Student
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleButton, loginMode === 'staff' && styles.toggleButtonActive]}
-            onPress={() => setLoginMode('staff')}
-          >
-            <Text style={[styles.toggleText, loginMode === 'staff' && styles.toggleTextActive]}>
-              Staff
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleButton, loginMode === 'class' && styles.toggleButtonActive]}
-            onPress={() => setLoginMode('class')}
-          >
-            <Text style={[styles.toggleText, loginMode === 'class' && styles.toggleTextActive]}>
-              Class
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <IonSegmentButton value="student">
+              <IonIcon icon={person} />
+              <IonLabel>Student</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="staff">
+              <IonIcon icon={business} />
+              <IonLabel>Staff</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="class">
+              <IonIcon icon={people} />
+              <IonLabel>Class</IonLabel>
+            </IonSegmentButton>
+          </IonSegment>
 
-        {/* Student Login Form */}
-        {loginMode === 'student' && (
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Student ID</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your Student ID (e.g., STU-0001)"
-                value={studentId}
-                onChangeText={setStudentId}
-                keyboardType="default"
-                autoCapitalize="characters"
-                autoCorrect={false}
-                editable={!isLoading}
-              />
-              <Text style={styles.hintText}>
-                Your Student ID was provided by your teacher (format: STU-XXXX)
-              </Text>
-            </View>
+          {/* Error Message */}
+          {error && (
+            <div className="error-container">
+              <IonText color="danger">
+                <p>{error}</p>
+              </IonText>
+            </div>
+          )}
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                value={studentPassword}
-                onChangeText={setStudentPassword}
-                secureTextEntry
-                editable={!isLoading}
-              />
-            </View>
+          {/* Student Login Form */}
+          {loginMode === 'student' && (
+            <IonCard className="form-card">
+              <IonCardContent>
+                <h2 className="form-title">Student Login</h2>
+                
+                <IonInput
+                  label="Student ID"
+                  labelPlacement="stacked"
+                  placeholder="Enter your Student ID (e.g., STU-0001)"
+                  value={studentId}
+                  onIonInput={(e) => setStudentId(e.detail.value || '')}
+                  autocomplete="username"
+                  disabled={isLoading}
+                  className="ion-margin-bottom"
+                />
+                <p className="input-hint">
+                  Your Student ID was provided by your teacher (format: STU-XXXX)
+                </p>
 
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleStudentLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In as Student</Text>
-              )}
-            </TouchableOpacity>
+                <IonInput
+                  label="Password"
+                  labelPlacement="stacked"
+                  placeholder="Enter your password"
+                  value={studentPassword}
+                  onIonInput={(e) => setStudentPassword(e.detail.value || '')}
+                  type="password"
+                  disabled={isLoading}
+                  className="ion-margin-bottom"
+                />
 
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Default password: </Text>
-              <Text style={styles.passwordHint}>Student@123</Text>
-            </View>
-          </View>
-        )}
+                <IonButton
+                  expand="block"
+                  onClick={handleStudentLogin}
+                  disabled={isLoading}
+                  className="ion-margin-top"
+                >
+                  {isLoading ? <IonSpinner name="crescent" /> : 'Sign In as Student'}
+                </IonButton>
 
-        {/* Staff Login Form */}
-        {loginMode === 'staff' && (
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!isLoading}
-              />
-            </View>
+                <div className="password-hint-container">
+                  <p className="password-hint-text">
+                    Default password: <strong className="password-hint-value">Student@123</strong>
+                  </p>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          )}
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                value={staffPassword}
-                onChangeText={setStaffPassword}
-                secureTextEntry
-                editable={!isLoading}
-              />
-            </View>
+          {/* Staff Login Form */}
+          {loginMode === 'staff' && (
+            <IonCard className="form-card">
+              <IonCardContent>
+                <h2 className="form-title">Staff Login</h2>
+                
+                <IonInput
+                  label="Email"
+                  labelPlacement="stacked"
+                  placeholder="Enter your email"
+                  value={email}
+                  onIonInput={(e) => setEmail(e.detail.value || '')}
+                  type="email"
+                  autocomplete="email"
+                  disabled={isLoading}
+                  className="ion-margin-bottom"
+                />
 
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleStaffLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
+                <IonInput
+                  label="Password"
+                  labelPlacement="stacked"
+                  placeholder="Enter your password"
+                  value={staffPassword}
+                  onIonInput={(e) => setStaffPassword(e.detail.value || '')}
+                  type="password"
+                  disabled={isLoading}
+                  className="ion-margin-bottom"
+                />
 
-        {/* Class Login Form */}
-        {loginMode === 'class' && (
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Class ID</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Class ID (e.g., CLS-1)"
-                value={classCode}
-                onChangeText={setClassCode}
-                keyboardType="default"
-                autoCapitalize="characters"
-                autoCorrect={false}
-                editable={!isLoading}
-              />
-              <Text style={styles.hintText}>
-                {classCode.length > 0 
-                  ? `Logging in as Class: ${classCode.toUpperCase()}` 
-                  : 'Enter your class code (e.g., CLS-1, CLS-2)'}
-              </Text>
-            </View>
+                <IonButton
+                  expand="block"
+                  onClick={handleStaffLogin}
+                  disabled={isLoading}
+                  className="ion-margin-top"
+                >
+                  {isLoading ? <IonSpinner name="crescent" /> : 'Sign In'}
+                </IonButton>
+              </IonCardContent>
+            </IonCard>
+          )}
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Class Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter class password"
-                value={classPassword}
-                onChangeText={setClassPassword}
-                secureTextEntry
-                editable={!isLoading}
-              />
-            </View>
+          {/* Class Login Form */}
+          {loginMode === 'class' && (
+            <IonCard className="form-card">
+              <IonCardContent>
+                <h2 className="form-title">Class Login</h2>
+                
+                <IonInput
+                  label="Class ID"
+                  labelPlacement="stacked"
+                  placeholder="Enter Class ID (e.g., CLS-1)"
+                  value={classCode}
+                  onIonInput={(e) => setClassCode(e.detail.value || '')}
+                  autocomplete="username"
+                  disabled={isLoading}
+                  className="ion-margin-bottom"
+                />
+                <p className="input-hint">
+                  {classCode.length > 0 
+                    ? `Logging in as Class: ${classCode.toUpperCase()}` 
+                    : 'Enter your class code (e.g., CLS-1, CLS-2)'}
+                </p>
 
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleClassLogin}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In as Class</Text>
-              )}
-            </TouchableOpacity>
+                <IonInput
+                  label="Password"
+                  labelPlacement="stacked"
+                  placeholder="Enter class password"
+                  value={classPassword}
+                  onIonInput={(e) => setClassPassword(e.detail.value || '')}
+                  type="password"
+                  disabled={isLoading}
+                  className="ion-margin-bottom"
+                />
 
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Contact your administrator for class credentials</Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+                <IonButton
+                  expand="block"
+                  onClick={handleClassLogin}
+                  disabled={isLoading}
+                  className="ion-margin-top"
+                >
+                  {isLoading ? <IonSpinner name="crescent" /> : 'Sign In as Class'}
+                </IonButton>
+
+                <div className="password-hint-container">
+                  <p className="password-hint-text">
+                    Contact your administrator for class credentials
+                  </p>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          )}
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
-    marginBottom: 30,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  toggleButtonActive: {
-    backgroundColor: '#007AFF',
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  toggleTextActive: {
-    color: '#fff',
-  },
-  form: {
-    width: '100%',
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  hintText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 6,
-    fontStyle: 'italic',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-    alignItems: 'center',
-  },
-  registerText: {
-    fontSize: 13,
-    color: '#999',
-  },
-  passwordHint: {
-    fontSize: 13,
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-});
 
 export default LoginScreen;

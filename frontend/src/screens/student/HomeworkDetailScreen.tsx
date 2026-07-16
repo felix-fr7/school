@@ -1,23 +1,34 @@
 /**
- * Student Homework Detail Screen
+ * Student Homework Detail Screen (Ionic React Version)
  * Displays full homework details with sent date, due date, subject, and description
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { StudentStackParamList } from '../../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonBackButton,
+  IonButtons,
+  IonBadge,
+  IonText,
+  IonSpinner,
+  IonIcon,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+} from '@ionic/react';
+import { useParams } from 'react-router-dom';
+import { calendarOutline, personOutline, bookOutline, alertCircleOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
+import './HomeworkDetailScreen.css';
 
-type HomeworkDetailScreenProps = StackScreenProps<StudentStackParamList, 'StudentHomeworkDetail'>;
+interface HomeworkDetailParams {
+  homeworkId: string;
+}
 
 interface HomeworkItem {
   id: string;
@@ -25,9 +36,9 @@ interface HomeworkItem {
   description: string;
   subject: string;
   dueDate?: string;
-  due_date?: string; // snake_case fallback
+  due_date?: string;
   createdAt?: string;
-  created_at?: string; // snake_case fallback
+  created_at?: string;
   isPublished: boolean;
   class?: {
     id: string;
@@ -40,10 +51,8 @@ interface HomeworkItem {
   } | null;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ route, navigation }) => {
-  const { homeworkId } = route.params;
+const StudentHomeworkDetailScreen: React.FC = () => {
+  const { homeworkId } = useParams<HomeworkDetailParams>();
   const [homework, setHomework] = useState<HomeworkItem | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -80,7 +89,6 @@ const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ rout
   };
 
   const isOverdue = () => {
-    // Handle both camelCase and snake_case
     const dueDate = homework?.dueDate || homework?.due_date;
     if (!dueDate) return false;
     return new Date(dueDate) < new Date();
@@ -88,239 +96,127 @@ const StudentHomeworkDetailScreen: React.FC<HomeworkDetailScreenProps> = ({ rout
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1565c0" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/homework" />
+            </IonButtons>
+            <IonTitle>Homework Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
     );
   }
 
   if (!homework) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorIcon}>📚</Text>
-        <Text style={styles.errorText}>Homework not found</Text>
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/homework" />
+            </IonButtons>
+            <IonTitle>Homework Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="homework-detail-content">
+          <div className="error-container">
+            <IonIcon icon={bookOutline} className="error-icon" />
+            <IonText color="medium">
+              <h3>Homework not found</h3>
+            </IonText>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Subject Badge */}
-      <View style={styles.subjectBadge}>
-        <Text style={styles.subjectText}>{homework.subject}</Text>
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/student/homework" />
+          </IonButtons>
+          <IonTitle>Homework Details</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="homework-detail-content">
+        {/* Subject Badge */}
+        <div className="subject-badge">
+          <IonBadge color="primary">{homework.subject}</IonBadge>
+        </div>
 
-      {/* Title */}
-      <Text style={styles.title}>{homework.title}</Text>
+        {/* Title */}
+        <h1 className="homework-title">{homework.title}</h1>
 
-      {/* Dates Row */}
-      <View style={styles.datesRow}>
-        <View style={styles.dateCard}>
-          <Text style={styles.dateLabel}>Sent Date</Text>
-          <Text style={styles.dateValue}>{formatDate(homework.createdAt || homework.created_at || '')}</Text>
-        </View>
-        <View style={[styles.dateCard, isOverdue() && styles.dateCardOverdue]}>
-          <Text style={styles.dateLabel}>Due Date</Text>
-          <Text style={[styles.dateValue, isOverdue() && styles.dateValueOverdue]}>
-            {(homework.dueDate || homework.due_date) ? formatDate(homework.dueDate || homework.due_date || '') : 'No due date'}
-          </Text>
-        </View>
-      </View>
+        {/* Dates */}
+        <div className="dates-row">
+          <IonCard className="date-card">
+            <IonCardContent>
+              <IonText color="medium" className="date-label">
+                <IonIcon icon={calendarOutline} /> Sent Date
+              </IonText>
+              <p className="date-value">
+                {formatDate(homework.createdAt || homework.created_at || '')}
+              </p>
+            </IonCardContent>
+          </IonCard>
 
-      {/* Class Info */}
-      {homework.class && (
-        <View style={styles.classInfo}>
-          <Text style={styles.classLabel}>Class</Text>
-          <Text style={styles.classValue}>
-            {homework.class.name}{homework.class.section ? ` - ${homework.class.section}` : ''}
-          </Text>
-        </View>
-      )}
+          <IonCard className={`date-card ${isOverdue() ? 'overdue' : ''}`}>
+            <IonCardContent>
+              <IonText color={isOverdue() ? 'danger' : 'medium'} className="date-label">
+                <IonIcon icon={calendarOutline} /> Due Date
+              </IonText>
+              <p className={`date-value ${isOverdue() ? 'overdue-text' : ''}`}>
+                {(homework.dueDate || homework.due_date)
+                  ? formatDate(homework.dueDate || homework.due_date || '')
+                  : 'No due date'}
+              </p>
+            </IonCardContent>
+          </IonCard>
+        </div>
 
-      {/* Description */}
-      <View style={styles.descriptionContainer}>
-        <Text style={styles.descriptionLabel}>Description</Text>
-        <View style={styles.descriptionBox}>
-          <Text style={styles.descriptionText}>{homework.description}</Text>
-        </View>
-      </View>
+        {/* Class Info */}
+        {homework.class && (
+          <IonCard className="info-card">
+            <IonCardContent>
+              <IonText color="medium" className="info-label">Class</IonText>
+              <p className="info-value">
+                {homework.class.name}{homework.class.section ? ` - ${homework.class.section}` : ''}
+              </p>
+            </IonCardContent>
+          </IonCard>
+        )}
 
-      {/* Assigned By */}
-      {homework.assignedByUser && (
-        <View style={styles.assignedByContainer}>
-          <Text style={styles.assignedByLabel}>Assigned by</Text>
-          <Text style={styles.assignedByValue}>{homework.assignedByUser.name}</Text>
-        </View>
-      )}
-    </ScrollView>
+        {/* Description */}
+        <div className="description-section">
+          <h3 className="section-label">Description</h3>
+          <IonCard className="description-card">
+            <IonCardContent>
+              <p className="description-text">{homework.description}</p>
+            </IonCardContent>
+          </IonCard>
+        </div>
+
+        {/* Assigned By */}
+        {homework.assignedByUser && (
+          <IonCard className="info-card">
+            <IonCardContent>
+              <IonText color="medium" className="info-label">
+                <IonIcon icon={personOutline} /> Assigned by
+              </IonText>
+              <p className="info-value">{homework.assignedByUser.name}</p>
+            </IonCardContent>
+          </IonCard>
+        )}
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    paddingVertical: 60,
-  },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#64748B',
-    textAlign: 'center',
-  },
-
-  // Subject Badge
-  subjectBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#1565c0',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginLeft: 16,
-    marginTop: 16,
-  },
-  subjectText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-
-  // Title
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1E293B',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
-    lineHeight: 32,
-  },
-
-  // Dates Row
-  datesRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    gap: 12,
-    marginBottom: 16,
-  },
-  dateCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  dateCardOverdue: {
-    backgroundColor: '#FFF5F5',
-    borderColor: '#FED7D7',
-  },
-  dateLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  dateValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#334155',
-  },
-  dateValueOverdue: {
-    color: '#DC2626',
-  },
-
-  // Class Info
-  classInfo: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  classLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  classValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#334155',
-  },
-
-  // Description
-  descriptionContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  descriptionLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#475569',
-    marginBottom: 12,
-  },
-  descriptionBox: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    minHeight: 120,
-  },
-  descriptionText: {
-    fontSize: 16,
-    color: '#334155',
-    lineHeight: 26,
-    letterSpacing: 0.2,
-  },
-
-  // Assigned By
-  assignedByContainer: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  assignedByLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
-    marginRight: 8,
-  },
-  assignedByValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
-  },
-});
 
 export default StudentHomeworkDetailScreen;

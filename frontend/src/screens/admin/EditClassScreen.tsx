@@ -1,60 +1,65 @@
 /**
- * Edit Class Screen
- * Allows admin to edit class details including name, section, assigned teacher,
- * and update class login password.
+ * Edit Class Screen (Ionic React Version)
+ * Allows admin to edit class details
  */
 
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-  FlatList,
-  Modal,
-} from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { AdminStackParamList, User, Class } from '../../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonIcon,
+  IonInput,
+  IonText,
+  IonSpinner,
+  IonAlert,
+  IonModal,
+  IonList,
+  IonItem,
+  IonCard,
+  IonCardContent,
+} from '@ionic/react';
+import { useParams, useHistory } from 'react-router-dom';
+import { chevronForwardOutline, closeOutline, searchOutline, keyOutline, lockClosedOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
+import { User, Class } from '../../types';
+import './EditClassScreen.css';
 
-type RoutePropType = RouteProp<AdminStackParamList, 'ClassDetail'>;
-type NavigationProp = StackNavigationProp<AdminStackParamList, 'ClassDetail'>;
+interface EditClassParams {
+  classId: string;
+}
 
 const EditClassScreen: React.FC = () => {
-  const route = useRoute<RoutePropType>();
-  const navigation = useNavigation<NavigationProp>();
-  // Safely extract classId from params, handling both 'id' and 'classId' field names
-  const params = route.params;
-  const classId = params?.classId || (params as any)?.id;
+  const { classId } = useParams<EditClassParams>();
+  const history = useHistory();
 
-  // Class fields
   const [classData, setClassData] = useState<Class | null>(null);
   const [className, setClassName] = useState('');
   const [section, setSection] = useState('');
   const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
   const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
   const [teachers, setTeachers] = useState<User[]>([]);
-
-  // Class password management
   const [classPassword, setClassPassword] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
-
-  // UI state
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [fetchingTeachers, setFetchingTeachers] = useState(false);
   const [showTeacherPicker, setShowTeacherPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (!classId) {
-      Alert.alert('Error', 'No class ID provided');
-      navigation.goBack();
+      setAlertMessage('No class ID provided');
+      setIsSuccess(false);
+      setShowAlert(true);
       return;
     }
     fetchClassData();
@@ -76,8 +81,9 @@ const EditClassScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching class data:', error);
-      Alert.alert('Error', 'Failed to load class data');
-      navigation.goBack();
+      setAlertMessage('Failed to load class data');
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setLoading(false);
     }
@@ -97,7 +103,6 @@ const EditClassScreen: React.FC = () => {
     }
   };
 
-  // Set selected teacher once teachers are loaded
   useEffect(() => {
     if (teacherId && teachers.length > 0) {
       const teacher = teachers.find(t => t.id === teacherId);
@@ -127,7 +132,9 @@ const EditClassScreen: React.FC = () => {
 
   const handleUpdatePassword = async () => {
     if (!classPassword || classPassword.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      setAlertMessage('Password must be at least 6 characters long');
+      setIsSuccess(false);
+      setShowAlert(true);
       return;
     }
 
@@ -136,23 +143,30 @@ const EditClassScreen: React.FC = () => {
       const response = await adminAPI.resetClassPassword(classId, classPassword);
 
       if (response.success) {
-        Alert.alert('Success', 'Class password updated successfully!');
+        setAlertMessage('Class password updated successfully!');
+        setIsSuccess(true);
+        setShowAlert(true);
         setClassPassword('');
       } else {
-        Alert.alert('Error', response.error?.message || 'Failed to update password');
+        setAlertMessage(response.error?.message || 'Failed to update password');
+        setIsSuccess(false);
+        setShowAlert(true);
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || 'Failed to update password';
-      Alert.alert('Error', errorMessage);
+      setAlertMessage(errorMessage);
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setUpdatingPassword(false);
     }
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (!className.trim()) {
-      Alert.alert('Error', 'Please enter class name');
+      setAlertMessage('Please enter class name');
+      setIsSuccess(false);
+      setShowAlert(true);
       return;
     }
 
@@ -163,7 +177,6 @@ const EditClassScreen: React.FC = () => {
         section: section.trim() || undefined,
       };
 
-      // Only include teacherId if it was explicitly set
       if (teacherId !== undefined) {
         payload.teacherId = teacherId;
       }
@@ -171,506 +184,231 @@ const EditClassScreen: React.FC = () => {
       const response = await adminAPI.updateClass(classId, payload);
 
       if (response.success) {
-        // Refresh class data to get latest
-        fetchClassData();
-        Alert.alert('Success', 'Class updated successfully!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        setAlertMessage('Class updated successfully!');
+        setIsSuccess(true);
+        setShowAlert(true);
       } else {
-        Alert.alert('Error', response.error?.message || 'Failed to update class');
+        setAlertMessage(response.error?.message || 'Failed to update class');
+        setIsSuccess(false);
+        setShowAlert(true);
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.error?.message || 'Failed to update class';
-      Alert.alert('Error', errorMessage);
+      setAlertMessage(errorMessage);
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setSaving(false);
     }
   };
 
+  const handleAlertDismiss = () => {
+    setShowAlert(false);
+    if (isSuccess) {
+      history.goBack();
+    }
+  };
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading class data...</Text>
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/admin/classes" />
+            </IonButtons>
+            <IonTitle>Edit Class</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+          <IonText color="medium"><p>Loading class data...</p></IonText>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <View style={styles.form}>
-        {/* Class ID Display */}
-        <View style={styles.classIdCard}>
-          <Text style={styles.classIdLabel}>Class Login ID</Text>
-          <Text style={styles.classIdValue}>
-            {classData?.classCode || classData?.class_code || 'Not yet generated'}
-          </Text>
-          <Text style={styles.classIdNote}>
-            Share this ID with students/parents for class login
-          </Text>
-        </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/admin/classes" />
+          </IonButtons>
+          <IonTitle>Edit Class</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="edit-class-content">
+        <div className="form-container">
+          {/* Class ID Card */}
+          <IonCard className="class-id-card">
+            <IonCardContent>
+              <div className="bento-header">
+                <IonIcon icon={keyOutline} className="bento-icon" />
+                <span className="bento-title">Class Login ID</span>
+              </div>
+              <p className="class-id-value">{classData?.classCode || classData?.class_code || 'Not yet generated'}</p>
+              <IonText color="medium" className="class-id-note">Share this ID with students/parents for class login</IonText>
+            </IonCardContent>
+          </IonCard>
 
-        {/* Class Password Section */}
-        <View style={styles.passwordCard}>
-          <Text style={styles.passwordCardTitle}>Class Login Password</Text>
-          <Text style={styles.passwordCardNote}>
-            Set a password for students/parents to login to this class.
-          </Text>
+          {/* Password Card */}
+          <IonCard className="password-card">
+            <IonCardContent>
+              <h4 className="password-card-title">
+                <IonIcon icon={lockClosedOutline} /> Class Login Password
+              </h4>
+              <IonText color="medium" className="password-card-note">
+                Set a password for students/parents to login to this class.
+              </IonText>
+              <div className="password-input-row">
+                <IonInput
+                  type="password"
+                  placeholder="Enter new password (min 6 characters)"
+                  value={classPassword}
+                  onIonInput={(e) => setClassPassword(e.detail.value || '')}
+                  autocapitalize="off"
+                />
+                <IonButton
+                  color="primary"
+                  onClick={handleUpdatePassword}
+                  disabled={!classPassword || classPassword.length < 6 || updatingPassword}
+                >
+                  {updatingPassword ? <IonSpinner name="crescent" /> : 'Update'}
+                </IonButton>
+              </div>
+            </IonCardContent>
+          </IonCard>
 
-          <View style={styles.passwordInputRow}>
-            <TextInput
-              style={styles.passwordInputField}
-              placeholder="Enter new password (min 6 characters)"
-              value={classPassword}
-              onChangeText={setClassPassword}
-              secureTextEntry
-              autoCapitalize="none"
+          <IonText color="medium" className="description">
+            Edit class details below. Changes will be saved to the database.
+          </IonText>
+
+          <div className="input-group">
+            <label className="input-label">Class Name *</label>
+            <IonInput
+              placeholder="e.g., Class 10, Grade 5, MCA"
+              value={className}
+              onIonInput={(e) => setClassName(e.detail.value || '')}
+              autocapitalize="words"
+              disabled={saving}
             />
-            <TouchableOpacity
-              style={[
-                styles.updatePasswordButton,
-                (!classPassword || classPassword.length < 6 || updatingPassword) &&
-                  styles.updatePasswordButtonDisabled,
-              ]}
-              onPress={handleUpdatePassword}
-              disabled={!classPassword || classPassword.length < 6 || updatingPassword}
-            >
-              {updatingPassword ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.updatePasswordButtonText}>Update</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+          </div>
 
-        <Text style={styles.description}>
-          Edit class details below. Changes will be saved to the database.
-        </Text>
+          <div className="input-group">
+            <label className="input-label">Section (Optional)</label>
+            <IonInput
+              placeholder="e.g., A, B, C, -A, -B"
+              value={section}
+              onIonInput={(e) => setSection(e.detail.value || '')}
+              autocapitalize="characters"
+              maxlength={10}
+              disabled={saving}
+            />
+          </div>
 
-        <Text style={styles.label}>Class Name *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., Class 10, Grade 5, MCA"
-          value={className}
-          onChangeText={setClassName}
-          autoCapitalize="words"
-        />
-
-        <Text style={styles.label}>Section (Optional)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., A, B, C, -A, -B"
-          value={section}
-          onChangeText={setSection}
-          autoCapitalize="characters"
-          maxLength={10}
-        />
-
-        <Text style={styles.label}>Assigned Class Teacher (Optional)</Text>
-        {fetchingTeachers ? (
-          <View style={styles.teacherPickerButton}>
-            <ActivityIndicator size="small" />
-            <Text style={styles.teacherPickerText}>Loading available teachers...</Text>
-          </View>
-        ) : selectedTeacher ? (
-          <View style={styles.selectedTeacherContainer}>
-            <TouchableOpacity
-              style={styles.teacherPickerButton}
-              onPress={() => setShowTeacherPicker(true)}
-            >
-              <View style={styles.selectedTeacher}>
-                <Text style={styles.selectedTeacherName}>{selectedTeacher.name}</Text>
-                <Text style={styles.selectedTeacherEmail}>{selectedTeacher.email}</Text>
-              </View>
-              <Text style={styles.changeText}>Change</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.clearTeacherButton} onPress={handleClearTeacher}>
-              <Text style={styles.clearTeacherText}>✕ Remove</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.teacherPickerButton}
-            onPress={() => setShowTeacherPicker(true)}
-          >
-            <Text style={styles.teacherPickerText}>Select a teacher...</Text>
-            <Text style={styles.dropdownIcon}>▼</Text>
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-            disabled={saving}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.submitButton, saving && styles.submitButtonDisabled]}
-            onPress={handleSubmit}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#fff" />
+          <div className="input-group">
+            <label className="input-label">Assigned Class Teacher (Optional)</label>
+            {fetchingTeachers ? (
+              <div className="teacher-picker-loading">
+                <IonSpinner name="crescent" />
+                <IonText color="medium">Loading available teachers...</IonText>
+              </div>
+            ) : selectedTeacher ? (
+              <div className="selected-teacher-container">
+                <div className="teacher-picker-button" onClick={() => setShowTeacherPicker(true)}>
+                  <div className="selected-teacher">
+                    <span className="selected-teacher-name">{selectedTeacher.name}</span>
+                    <span className="selected-teacher-email">{selectedTeacher.email}</span>
+                  </div>
+                  <IonText color="primary" className="change-text">Change</IonText>
+                </div>
+                <IonButton fill="outline" color="danger" size="small" onClick={handleClearTeacher}>
+                  <IonIcon icon={closeOutline} /> Remove
+                </IonButton>
+              </div>
             ) : (
-              <Text style={styles.submitButtonText}>Save Changes</Text>
+              <div className="teacher-picker-button" onClick={() => setShowTeacherPicker(true)}>
+                <IonText color="medium">Select a teacher...</IonText>
+                <IonIcon icon={chevronForwardOutline} className="dropdown-icon" />
+              </div>
             )}
-          </TouchableOpacity>
-        </View>
-      </View>
+          </div>
 
-      {/* Teacher Selection Modal */}
-      <Modal
-        visible={showTeacherPicker}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowTeacherPicker(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Class Teacher</Text>
-              <TouchableOpacity onPress={() => setShowTeacherPicker(false)}>
-                <Text style={styles.modalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
+          <div className="button-row">
+            <IonButton expand="block" color="medium" onClick={() => history.goBack()} disabled={saving}>
+              Cancel
+            </IonButton>
+            <IonButton expand="block" color="primary" onClick={handleSubmit} disabled={saving}>
+              {saving ? <IonSpinner name="crescent" /> : 'Save Changes'}
+            </IonButton>
+          </div>
+        </div>
 
-            <Text style={styles.modalNote}>
+        {/* Teacher Selection Modal */}
+        <IonModal isOpen={showTeacherPicker} onDidDismiss={() => setShowTeacherPicker(false)}>
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3 className="modal-title">Select Class Teacher</h3>
+              <IonButton fill="clear" onClick={() => setShowTeacherPicker(false)}>
+                <IonIcon icon={closeOutline} slot="icon-only" />
+              </IonButton>
+            </div>
+
+            <IonText color="medium" className="modal-note">
               Only teachers without a class assignment are shown.
-            </Text>
+            </IonText>
 
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search teachers by name or email..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
+            <div className="search-container">
+              <IonInput
+                placeholder="Search teachers by name or email..."
+                value={searchQuery}
+                onIonInput={(e) => setSearchQuery(e.detail.value || '')}
+              >
+                <IonIcon icon={searchOutline} slot="start" />
+              </IonInput>
+            </div>
 
             {filteredTeachers.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No available teachers found</Text>
-              </View>
+              <div className="empty-state">
+                <IonText color="medium">No available teachers found</IonText>
+              </div>
             ) : (
-              <FlatList
-                data={filteredTeachers}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.teacherItem}
-                    onPress={() => handleSelectTeacher(item)}
+              <IonList>
+                {filteredTeachers.map((teacher) => (
+                  <IonItem
+                    key={teacher.id}
+                    button
+                    onClick={() => handleSelectTeacher(teacher)}
+                    className="teacher-item"
                   >
-                    <View style={styles.teacherItemInfo}>
-                      <Text style={styles.teacherItemName}>{item.name}</Text>
-                      <Text style={styles.teacherItemEmail}>{item.email}</Text>
-                      {item.class && (
-                        <Text style={styles.teacherItemClass}>
-                          Assigned: {item.class.name}{item.class.section ? ` - ${item.class.section}` : ''}
-                        </Text>
+                    <div className="teacher-item-info">
+                      <span className="teacher-item-name">{teacher.name}</span>
+                      <span className="teacher-item-email">{teacher.email}</span>
+                      {teacher.class && (
+                        <span className="teacher-item-class">
+                          Assigned: {teacher.class.name}{teacher.class.section ? ` - ${teacher.class.section}` : ''}
+                        </span>
                       )}
-                    </View>
-                    <Text style={styles.selectIcon}>→</Text>
-                  </TouchableOpacity>
-                )}
-              />
+                    </div>
+                    <IonIcon icon={chevronForwardOutline} className="select-icon" />
+                  </IonItem>
+                ))}
+              </IonList>
             )}
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
+          </div>
+        </IonModal>
+
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={handleAlertDismiss}
+          header={isSuccess ? 'Success' : 'Error'}
+          message={alertMessage}
+          buttons={['OK']}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  // Class ID Card
-  classIdCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#007AFF',
-    borderStyle: 'solid',
-  },
-  classIdLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#007AFF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  classIdValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#007AFF',
-    marginBottom: 4,
-  },
-  classIdNote: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-  },
-  // Password Card
-  passwordCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  passwordCardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
-  },
-  passwordCardNote: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 12,
-    lineHeight: 16,
-  },
-  passwordInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  passwordInputField: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  updatePasswordButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  updatePasswordButtonDisabled: {
-    opacity: 0.5,
-  },
-  updatePasswordButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  form: {
-    padding: 20,
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  teacherPickerButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  teacherPickerText: {
-    fontSize: 16,
-    color: '#999',
-  },
-  dropdownIcon: {
-    fontSize: 12,
-    color: '#999',
-  },
-  selectedTeacherContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  selectedTeacher: {
-    flex: 1,
-  },
-  selectedTeacherName: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: '500',
-  },
-  selectedTeacherEmail: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  changeText: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-  clearTeacherButton: {
-    backgroundColor: '#FF3B30',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  clearTeacherText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#e0e0e0',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#333',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  submitButton: {
-    flex: 1,
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '70%',
-    paddingBottom: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-  },
-  modalClose: {
-    fontSize: 24,
-    color: '#999',
-    padding: 4,
-  },
-  modalNote: {
-    fontSize: 12,
-    color: '#666',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f5f5f5',
-  },
-  searchInput: {
-    backgroundColor: '#f5f5f5',
-    margin: 16,
-    padding: 12,
-    borderRadius: 8,
-    fontSize: 16,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#999',
-  },
-  teacherItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-  },
-  teacherItemInfo: {
-    flex: 1,
-  },
-  teacherItemName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 2,
-  },
-  teacherItemEmail: {
-    fontSize: 12,
-    color: '#666',
-  },
-  teacherItemClass: {
-    fontSize: 11,
-    color: '#999',
-    marginTop: 2,
-  },
-  selectIcon: {
-    fontSize: 18,
-    color: '#007AFF',
-  },
-});
 
 export default EditClassScreen;

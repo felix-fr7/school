@@ -1,0 +1,220 @@
+.weekly-lessons-content {
+  --background: #f5f5f5;
+}
+
+.page-header {
+  background-color: #2196F3;
+  padding: 20px;
+  padding-top: 30px;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #bbdefb;
+  margin: 4px 0 0 0;
+}
+
+.day-section {
+  margin-top: 16px;
+  padding: 0 16px;
+}
+
+.day-header {
+  background-color: #2196F3;
+  padding: 10px 16px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.day-header IonIcon {
+  font-size: 18px;
+}
+
+.day-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.lessons-container {
+  background-color: #fff;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-card {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.lesson-card:last-child {
+  border-bottom: none;
+}
+
+.lesson-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.lesson-subject {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.attachment-badge {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lesson-preview {
+  font-size: 13px;
+  color: #666;
+  margin: 4px 0 0 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.lesson-empty {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+  margin: 4px 0 0 0;
+}
+
+.empty-day {
+  padding: 24px;
+  text-align: center;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+/* Modal Styles */
+.modal-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #2196F3;
+  padding: 20px;
+  padding-top: 40px;
+}
+
+.modal-header-content {
+  flex: 1;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0;
+}
+
+.modal-subtitle {
+  font-size: 14px;
+  color: #bbdefb;
+  margin: 2px 0 0 0;
+}
+
+.modal-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2196F3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px 0;
+}
+
+.section-content {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.attachment-item:hover {
+  background-color: #e3f2fd;
+}
+
+.attachment-info {
+  flex: 1;
+}
+
+.attachment-name {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.attachment-meta {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.download-icon {
+  font-size: 20px;
+  color: #2196F3;
+}

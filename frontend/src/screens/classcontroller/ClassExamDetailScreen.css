@@ -1,0 +1,261 @@
+/**
+ * Class Exam Detail Screen (Ionic React Styles)
+ * Displays exam details with PDF/Image viewer
+ */
+
+/* ============================================
+   Loading State
+   ============================================ */
+.exam-detail-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.exam-detail-loading .loading-text {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.exam-detail-content {
+  --background: #F8FAFC;
+  padding: 16px;
+}
+
+/* ============================================
+   Error State
+   ============================================ */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: #EF4444;
+  margin-bottom: 16px;
+}
+
+.error-state h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-danger);
+  margin: 0 0 20px 0;
+}
+
+/* ============================================
+   Exam Info Card
+   ============================================ */
+.exam-info-card {
+  --background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 16px;
+}
+
+.exam-info-card ion-card-header {
+  padding: 16px 16px 8px 16px;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.exam-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.published-badge {
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.exam-info-card ion-card-content {
+  padding: 16px;
+}
+
+/* ============================================
+   Info Row
+   ============================================ */
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.info-row:last-child {
+  margin-bottom: 16px;
+}
+
+.info-icon {
+  color: #64748B;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.info-label {
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+/* ============================================
+   Attachment Status
+   ============================================ */
+.attachment-status {
+  display: flex;
+  align-items: center;
+  background-color: #F8FAFC;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.attachment-icon {
+  font-size: 18px;
+  margin-right: 8px;
+  color: #475569;
+}
+
+.attachment-icon.warning {
+  color: #F59E0B;
+}
+
+.attachment-text {
+  font-weight: 500;
+}
+
+/* ============================================
+   Open Document Button
+   ============================================ */
+.open-doc-button {
+  --border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+/* ============================================
+   Preview Section
+   ============================================ */
+.preview-section {
+  margin-top: 20px;
+}
+
+.preview-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.preview-image {
+  width: 100%;
+  border-radius: 12px;
+  max-height: 200px;
+  object-fit: cover;
+}
+
+/* ============================================
+   Info Note
+   ============================================ */
+.info-note {
+  display: flex;
+  align-items: center;
+  background-color: #F0F9FF;
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.info-note-icon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.info-note-text {
+  font-size: 13px;
+  line-height: 18px;
+  flex: 1;
+  margin: 0;
+}
+
+/* ============================================
+   Back Button Container
+   ============================================ */
+.back-button-container {
+  margin-top: 16px;
+}
+
+.back-button {
+  --border-radius: 12px;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (min-width: 768px) {
+  .exam-detail-content {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .exam-detail-content {
+    --background: #121212;
+  }
+
+  .exam-info-card {
+    --background: #1e1e1e;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .exam-title {
+    color: #fff;
+  }
+
+  .info-icon {
+    color: #888;
+  }
+
+  .info-label {
+    color: #fff;
+  }
+
+  .attachment-status {
+    background-color: #2a2a2a;
+  }
+
+  .attachment-text {
+    color: #fff;
+  }
+
+  .info-note {
+    background-color: #1a237e;
+  }
+
+  .info-note-text {
+    color: #90caf9;
+  }
+}

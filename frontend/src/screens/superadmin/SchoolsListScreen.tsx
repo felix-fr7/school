@@ -1,33 +1,45 @@
 /**
- * Schools List Screen - Super Admin
+ * Schools List Screen - Super Admin (Ionic React Version)
  * Lists all schools/tenants with Edit and Delete functionality
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  Modal,
-  TextInput,
-  Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { SuperAdminStackParamList, Tenant } from '../../types';
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonButton,
+  IonIcon,
+  IonSpinner,
+  IonModal,
+  IonInput,
+  IonTextarea,
+  IonAlert,
+  IonList,
+  IonItem,
+  IonLabel,
+} from '@ionic/react';
+import {
+  schoolOutline,
+  createOutline,
+  trashOutline,
+  closeOutline,
+  businessOutline,
+  mailOutline,
+  callOutline,
+  locationOutline,
+} from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
-
-type NavigationProp = StackNavigationProp<SuperAdminStackParamList, 'SchoolsList'>;
+import { Tenant } from '../../types';
+import './SchoolsListScreen.css';
 
 const SchoolsListScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const history = useHistory();
   const [schools, setSchools] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,6 +56,17 @@ const SchoolsListScreen: React.FC = () => {
   });
   const [editLoading, setEditLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertHeader, setAlertHeader] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertButtons, setAlertButtons] = useState<any[]>(['OK']);
+
+  const showAlertMessage = (header: string, message: string, buttons = ['OK']) => {
+    setAlertHeader(header);
+    setAlertMessage(message);
+    setAlertButtons(buttons);
+    setShowAlert(true);
+  };
 
   const fetchSchools = async () => {
     try {
@@ -128,7 +151,6 @@ const SchoolsListScreen: React.FC = () => {
 
     setEditLoading(true);
     try {
-      // Trim all values before sending
       const updateData = {
         name: editForm.name.trim(),
         code: editForm.code.trim(),
@@ -140,18 +162,17 @@ const SchoolsListScreen: React.FC = () => {
       const response = await tenantsAPI.updateTenant(selectedSchool.id, updateData);
 
       if (response.success) {
-        // Update the school in the list
         setSchools(prevSchools =>
           prevSchools.map(s =>
             s.id === selectedSchool.id ? { ...s, ...updateData } : s
           )
         );
         closeEditModal();
-        Alert.alert('Success', 'School updated successfully');
+        showAlertMessage('Success', 'School updated successfully');
       }
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error?.message || 'Failed to update school';
-      Alert.alert('Error', errorMessage);
+      showAlertMessage('Error', errorMessage);
     } finally {
       setEditLoading(false);
     }
@@ -159,22 +180,17 @@ const SchoolsListScreen: React.FC = () => {
 
   // Handle delete with confirmation
   const handleDelete = (school: Tenant) => {
-    Alert.alert(
-      'Delete School',
-      `Are you sure you want to delete "${school.name}" and all its data?\n\nThis action cannot be undone. All users, classes, homework, marks, and other data associated with this school will be permanently deleted.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => performDelete(school),
-        },
-      ],
-      { cancelable: true }
-    );
+    setAlertHeader('Delete School');
+    setAlertMessage(`Are you sure you want to delete "${school.name}" and all its data? This action cannot be undone.`);
+    setAlertButtons([
+      { text: 'Cancel', role: 'cancel' },
+      {
+        text: 'Delete',
+        role: 'destructive',
+        handler: () => performDelete(school)
+      }
+    ]);
+    setShowAlert(true);
   };
 
   // Perform the actual delete operation
@@ -183,407 +199,226 @@ const SchoolsListScreen: React.FC = () => {
       const response = await tenantsAPI.deleteTenant(school.id);
 
       if (response.success) {
-        // Remove the school from the list
         setSchools(prevSchools => prevSchools.filter(s => s.id !== school.id));
-        Alert.alert(
-          'Success',
-          `School "${school.name}" and all associated data have been deleted successfully.`
-        );
+        showAlertMessage('Success', `School "${school.name}" and all associated data have been deleted.`);
       }
     } catch (error: any) {
       const errorMessage = error?.response?.data?.error?.message || 'Failed to delete school';
-      Alert.alert('Error', errorMessage);
+      showAlertMessage('Error', errorMessage);
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1a237e" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonTitle>Schools List</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="schools-list-content" fullscreen>
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <p>Loading schools...</p>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
-  const renderSchool = ({ item }: { item: Tenant }) => (
-    <View style={styles.schoolCard}>
-      <TouchableOpacity
-        style={styles.schoolInfo}
-        onPress={() => navigation.navigate('SchoolDetail', { tenantId: item.id })}
-      >
-        <Text style={styles.schoolName}>{item.name}</Text>
-        <Text style={styles.schoolCode}>Code: {item.code}</Text>
-        {item.email && <Text style={styles.schoolEmail}>{item.email}</Text>}
-      </TouchableOpacity>
-      
-      <View style={styles.actionsContainer}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => openEditModal(item)}
-          >
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDelete(item)}
-          >
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  );
-
   return (
-    <View style={styles.container}>
-      {schools.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No schools found</Text>
-          <Text style={styles.emptySubtext}>Create your first school to get started</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={schools}
-          renderItem={renderSchool}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={styles.listContent}
-        />
-      )}
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Schools List</IonTitle>
+        </IonToolbar>
+      </IonHeader>
 
-      {/* Edit Modal */}
-      <Modal
-        visible={editModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeEditModal}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
+      <IonContent className="schools-list-content" fullscreen>
+        <div className="container">
+          {/* Header */}
+          <div className="header-section">
+            <h1 className="header-title">🏫 Schools Management</h1>
+            <p className="header-subtitle">Manage all schools and tenants</p>
+          </div>
+
+          {/* Schools List */}
+          {schools.length === 0 ? (
+            <div className="empty-container">
+              <IonIcon icon={schoolOutline} className="empty-icon" />
+              <p className="empty-text">No schools found</p>
+              <p className="empty-subtext">Create your first school to get started</p>
+            </div>
+          ) : (
+            <div className="schools-grid">
+              {schools.map((school) => (
+                <IonCard key={school.id} className="school-card">
+                  <IonCardContent>
+                    <div className="school-header">
+                      <IonIcon icon={businessOutline} className="school-icon" />
+                      <h3 className="school-name">{school.name}</h3>
+                    </div>
+                    <div className="school-details">
+                      <p className="school-code">
+                        <IonIcon icon={schoolOutline} /> Code: {school.code}
+                      </p>
+                      {school.email && (
+                        <p className="school-email">
+                          <IonIcon icon={mailOutline} /> {school.email}
+                        </p>
+                      )}
+                      {school.phone && (
+                        <p className="school-phone">
+                          <IonIcon icon={callOutline} /> {school.phone}
+                        </p>
+                      )}
+                    </div>
+                    <div className="school-actions">
+                      <IonButton
+                        fill="outline"
+                        size="small"
+                        onClick={() => history.push(`/superadmin/schools/${school.id}`)}
+                      >
+                        View Details
+                      </IonButton>
+                      <IonButton
+                        fill="outline"
+                        size="small"
+                        color="primary"
+                        onClick={() => openEditModal(school)}
+                      >
+                        <IonIcon icon={createOutline} slot="icon-only" />
+                      </IonButton>
+                      <IonButton
+                        fill="outline"
+                        size="small"
+                        color="danger"
+                        onClick={() => handleDelete(school)}
+                      >
+                        <IonIcon icon={trashOutline} slot="icon-only" />
+                      </IonButton>
+                    </div>
+                  </IonCardContent>
+                </IonCard>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Edit Modal */}
+        <IonModal
+          isOpen={editModalVisible}
+          onDidDismiss={closeEditModal}
+          className="edit-modal"
         >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit School</Text>
-              <TouchableOpacity onPress={closeEditModal} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Edit School</h2>
+              <button className="modal-close" onClick={closeEditModal}>
+                <IonIcon icon={closeOutline} />
+              </button>
+            </div>
 
-            <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
+            <div className="modal-body">
               {/* Name Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>School Name *</Text>
-                <TextInput
-                  style={[styles.input, formErrors.name && styles.inputError]}
+              <div className="input-group">
+                <label className="input-label">School Name *</label>
+                <IonInput
                   value={editForm.name}
-                  onChangeText={(text) => {
-                    setEditForm({ ...editForm, name: text });
-                    if (formErrors.name) {
-                      setFormErrors({ ...formErrors, name: '' });
-                    }
+                  onIonInput={(e) => {
+                    setEditForm({ ...editForm, name: e.detail.value || '' });
+                    if (formErrors.name) setFormErrors({ ...formErrors, name: '' });
                   }}
                   placeholder="Enter school name"
-                  placeholderTextColor="#999"
-                  autoCapitalize="words"
+                  className={formErrors.name ? 'input-error' : ''}
                 />
-                {formErrors.name ? (
-                  <Text style={styles.errorText}>{formErrors.name}</Text>
-                ) : null}
-              </View>
+                {formErrors.name && <span className="error-text">{formErrors.name}</span>}
+              </div>
 
               {/* Code Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>School Code *</Text>
-                <TextInput
-                  style={[styles.input, formErrors.code && styles.inputError]}
+              <div className="input-group">
+                <label className="input-label">School Code *</label>
+                <IonInput
                   value={editForm.code}
-                  onChangeText={(text) => {
-                    setEditForm({ ...editForm, code: text.toUpperCase() });
-                    if (formErrors.code) {
-                      setFormErrors({ ...formErrors, code: '' });
-                    }
+                  onIonInput={(e) => {
+                    setEditForm({ ...editForm, code: (e.detail.value || '').toUpperCase() });
+                    if (formErrors.code) setFormErrors({ ...formErrors, code: '' });
                   }}
                   placeholder="Enter school code"
-                  placeholderTextColor="#999"
-                  autoCapitalize="characters"
+                  className={formErrors.code ? 'input-error' : ''}
                 />
-                {formErrors.code ? (
-                  <Text style={styles.errorText}>{formErrors.code}</Text>
-                ) : null}
-              </View>
+                {formErrors.code && <span className="error-text">{formErrors.code}</span>}
+              </div>
 
               {/* Email Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email</Text>
-                <TextInput
-                  style={[styles.input, formErrors.email && styles.inputError]}
+              <div className="input-group">
+                <label className="input-label">Email</label>
+                <IonInput
+                  type="email"
                   value={editForm.email}
-                  onChangeText={(text) => {
-                    setEditForm({ ...editForm, email: text });
-                    if (formErrors.email) {
-                      setFormErrors({ ...formErrors, email: '' });
-                    }
+                  onIonInput={(e) => {
+                    setEditForm({ ...editForm, email: e.detail.value || '' });
+                    if (formErrors.email) setFormErrors({ ...formErrors, email: '' });
                   }}
                   placeholder="Enter school email"
-                  placeholderTextColor="#999"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                  className={formErrors.email ? 'input-error' : ''}
                 />
-                {formErrors.email ? (
-                  <Text style={styles.errorText}>{formErrors.email}</Text>
-                ) : null}
-              </View>
+                {formErrors.email && <span className="error-text">{formErrors.email}</span>}
+              </div>
 
               {/* Phone Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Phone</Text>
-                <TextInput
-                  style={styles.input}
+              <div className="input-group">
+                <label className="input-label">Phone</label>
+                <IonInput
+                  type="tel"
                   value={editForm.phone}
-                  onChangeText={(text) => setEditForm({ ...editForm, phone: text })}
+                  onIonInput={(e) => setEditForm({ ...editForm, phone: e.detail.value || '' })}
                   placeholder="Enter phone number"
-                  placeholderTextColor="#999"
-                  keyboardType="phone-pad"
                 />
-              </View>
+              </div>
 
               {/* Address Field */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Address</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
+              <div className="input-group">
+                <label className="input-label">Address</label>
+                <IonTextarea
                   value={editForm.address}
-                  onChangeText={(text) => setEditForm({ ...editForm, address: text })}
+                  onIonInput={(e) => setEditForm({ ...editForm, address: e.detail.value || '' })}
                   placeholder="Enter school address"
-                  placeholderTextColor="#999"
-                  multiline
-                  numberOfLines={3}
+                  rows={3}
                 />
-              </View>
-            </ScrollView>
+              </div>
+            </div>
 
-            <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={closeEditModal}
+            <div className="modal-footer">
+              <IonButton
+                fill="outline"
+                onClick={closeEditModal}
                 disabled={editLoading}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.saveButton, editLoading && styles.saveButtonDisabled]}
-                onPress={handleUpdate}
+                Cancel
+              </IonButton>
+              <IonButton
+                color="primary"
+                onClick={handleUpdate}
                 disabled={editLoading}
               >
-                {editLoading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save Changes</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </View>
+                {editLoading ? <IonSpinner name="crescent" /> : 'Save Changes'}
+              </IonButton>
+            </div>
+          </div>
+        </IonModal>
+
+        {/* Alert */}
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={alertHeader}
+          message={alertMessage}
+          buttons={alertButtons}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    padding: 16,
-  },
-  schoolCard: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
-    elevation: 2,
-  },
-  schoolInfo: {
-    flex: 1,
-    marginBottom: 12,
-  },
-  schoolName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  schoolCode: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 4,
-  },
-  schoolEmail: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 2,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  editButton: {
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    backgroundColor: '#f44336',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 4,
-  },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '85%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: '#666',
-  },
-  modalScrollView: {
-    padding: 20,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fafafa',
-  },
-  inputError: {
-    borderColor: '#f44336',
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#f44336',
-    marginTop: 4,
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    padding: 20,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#1a237e',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    opacity: 0.7,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-});
 
 export default SchoolsListScreen;

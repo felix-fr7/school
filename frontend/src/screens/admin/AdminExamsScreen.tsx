@@ -1,128 +1,142 @@
 /**
- * Admin Exams Screen (Exam Timetables)
- * Premium minimalist 2-column bento style
- * Features: Exam Name, Class selector, File Picker for PDF/Image (no manual URL input)
- * Publicly visible to all roles upon creation
+ * Admin Exams Screen (Ionic React Version)
+ * Exam Timetables management using ExamSchedule API
+ * Manages structured exam schedules with subject, date, time, room number
  */
 
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  Image,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { AdminStackParamList, Class, Exam, CreateExamInput } from '../../types';
-import { adminContentAPI, adminAPI } from '../../services/api';
-
-type NavigationProp = StackNavigationProp<AdminStackParamList, 'CreateExamSchedule'>;
-
-type ExamMode = 'PDF' | 'IMAGE';
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonButton,
+  IonSpinner,
+  IonAlert,
+  IonIcon,
+  IonChip,
+  IonBadge,
+  IonText,
+  IonDatetime,
+} from '@ionic/react';
+import { 
+  calendarOutline, 
+  trashOutline, 
+  createOutline,
+  informationCircleOutline,
+  timeOutline,
+  locationOutline,
+} from 'ionicons/icons';
+import { adminAPI } from '../../services/api';
+import { Class, ExamSchedule, CreateExamScheduleInput } from '../../types';
+import './AdminExamsScreen.css';
 
 interface ExamItemProps {
-  item: Exam;
+  item: ExamSchedule;
   onDelete: (id: string) => void;
-  onEdit: (item: Exam) => void;
+  onEdit: (item: ExamSchedule) => void;
 }
 
-const ExamItem: React.FC<ExamItemProps> = ({ item, onDelete, onEdit }) => (
-  <View style={styles.examCard}>
-    <View style={styles.examCardContent}>
-      <Text style={styles.examTitle} numberOfLines={1}>
-        {item.examName}
-      </Text>
-      <Text style={styles.examClass}>
-        {item.class ? `${item.class.name}${item.class.section ? '-' + item.class.section : ''}` : '🏫 School-wide'}
-      </Text>
-      <View style={styles.examMetaRow}>
-        {(item.pdfUrl || item.imageUrl) && (
-          <View style={styles.attachmentsRow}>
-            {item.pdfUrl && (
-              <View style={styles.attachmentBadge}>
-                <Text style={styles.attachmentBadgeText}>📄 PDF</Text>
-              </View>
+const ExamItem: React.FC<ExamItemProps> = ({ item, onDelete, onEdit }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  return (
+    <>
+      <div className="exam-card" onDoubleClick={() => onEdit(item)}>
+        <div className="exam-card-content">
+          <h3 className="exam-title">{item.title}</h3>
+          <p className="exam-subject">{item.subject}</p>
+          <div className="exam-meta-row">
+            <span className="exam-date">
+              <IonIcon icon={calendarOutline} />
+              {new Date(item.date).toLocaleDateString()}
+            </span>
+            <span className="exam-time">
+              <IonIcon icon={timeOutline} />
+              {item.time}
+            </span>
+            {item.roomNo && (
+              <span className="exam-room">
+                <IonIcon icon={locationOutline} />
+                {item.roomNo}
+              </span>
             )}
-            {item.imageUrl && (
-              <View style={styles.attachmentBadge}>
-                <Text style={styles.attachmentBadgeText}>🖼️ Image</Text>
-              </View>
-            )}
-          </View>
-        )}
-        <Text style={styles.examDate}>
-          {new Date(item.createdAt).toLocaleDateString()}
-        </Text>
-      </View>
-    </View>
-    <View style={styles.examCardActions}>
-      <TouchableOpacity style={styles.actionButton} onPress={() => onEdit(item)}>
-        <Text style={styles.actionButtonText}>✏️</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.actionButton}
-        onPress={() => Alert.alert(
-          'Delete Exam',
-          `Are you sure you want to delete "${item.examName}"?`,
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Delete', style: 'destructive', onPress: () => onDelete(item.id) }
-          ]
-        )}
-      >
-        <Text style={styles.actionButtonText}>🗑️</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-);
+          </div>
+          <p className="exam-class">
+            {item.class ? `${item.class.name}${item.class.section ? '-' + item.class.section : ''}` : 'School-wide'}
+          </p>
+        </div>
+        <div className="exam-card-actions">
+          <button className="action-button edit" onClick={() => onEdit(item)} title="Edit">
+            <IonIcon icon={createOutline} />
+          </button>
+          <button className="action-button delete" onClick={() => setShowDeleteConfirm(true)} title="Delete">
+            <IonIcon icon={trashOutline} />
+          </button>
+        </div>
+      </div>
+
+      <IonAlert
+        isOpen={showDeleteConfirm}
+        onDidDismiss={() => setShowDeleteConfirm(false)}
+        header="Delete Exam Schedule"
+        message={`Are you sure you want to delete "${item.title}"?`}
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          { 
+            text: 'Delete', 
+            role: 'destructive',
+            handler: () => {
+              onDelete(item.id);
+              setShowDeleteConfirm(false);
+            }
+          }
+        ]}
+      />
+    </>
+  );
+};
 
 const AdminExamsScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const [examList, setExamList] = useState<Exam[]>([]);
+  const [examList, setExamList] = useState<ExamSchedule[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [examName, setExamName] = useState('');
+  const [title, setTitle] = useState('');
+  const [subject, setSubject] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [duration, setDuration] = useState<number | ''>('');
+  const [roomNo, setRoomNo] = useState('');
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
-  const [pdfUrl, setPdfUrl] = useState('');
-  const [pdfName, setPdfName] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageName, setImageName] = useState('');
-  const [mode, setMode] = useState<ExamMode>('PDF');
   const [submitting, setSubmitting] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertHeader, setAlertHeader] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [editingExamId, setEditingExamId] = useState<string | null>(null);
 
-  const fetchExams = async (refresh = false) => {
+  useEffect(() => {
+    fetchExams();
+    fetchClasses();
+  }, []);
+
+  const fetchExams = async () => {
     try {
-      if (refresh) {
-        setRefreshing(true);
-        setPage(1);
-      }
-      const response = await adminContentAPI.getExams(refresh ? 1 : page, 10);
+      const response = await adminAPI.getExamSchedules(1, 50);
       if (response.success && response.data) {
-        const examsData = response.data;
-        if (refresh) {
-          setExamList(examsData.exams);
-          setTotalPages(examsData.pagination.pages);
-        } else {
-          setExamList(prev => [...prev, ...examsData.exams]);
-        }
+        setExamList(response.data.examSchedules || []);
       }
     } catch (error) {
       console.error('Error fetching exams:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -137,109 +151,70 @@ const AdminExamsScreen: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchExams();
-    fetchClasses();
-  }, []);
+  const showAlertMessage = (header: string, message: string) => {
+    setAlertHeader(header);
+    setAlertMessage(message);
+    setShowAlert(true);
+  };
 
-  const onRefresh = () => fetchExams(true);
-
-  // Request permissions
-  const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permission Required',
-        'Please grant permission to access your photos.'
-      );
+  const validateForm = () => {
+    if (!title.trim()) {
+      showAlertMessage('Validation Error', 'Exam title is required');
+      return false;
+    }
+    if (!subject.trim()) {
+      showAlertMessage('Validation Error', 'Subject is required');
+      return false;
+    }
+    if (!date) {
+      showAlertMessage('Validation Error', 'Exam date is required');
+      return false;
+    }
+    if (!time) {
+      showAlertMessage('Validation Error', 'Exam time is required');
       return false;
     }
     return true;
   };
 
-  // Pick PDF document
-  const pickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf'],
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const asset = result.assets[0];
-        if (asset) {
-          setPdfUrl(asset.uri);
-          setPdfName(asset.name || 'Selected PDF');
-        }
-      }
-    } catch (error) {
-      console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document');
-    }
-  };
-
-  // Pick image from gallery
-  const pickImage = async () => {
-    const hasPermission = await requestPermissions();
-    if (!hasPermission) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      if (asset) {
-        setImageUrl(asset.uri);
-        setImageName(asset.fileName || 'Selected Image');
-      }
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!examName.trim()) {
-      Alert.alert('Validation Error', 'Exam name is required');
-      return;
-    }
-
-    if (mode === 'PDF' && !pdfUrl.trim()) {
-      Alert.alert('Validation Error', 'Please select a PDF file');
-      return;
-    }
-
-    if (mode === 'IMAGE' && !imageUrl.trim()) {
-      Alert.alert('Validation Error', 'Please select an image file');
-      return;
-    }
+    if (!validateForm()) return;
 
     setSubmitting(true);
     try {
-      const data: CreateExamInput = {
-        examName: examName.trim(),
-        classId: selectedClassId,
-        pdfUrl: mode === 'PDF' ? pdfUrl.trim() : undefined,
-        imageUrl: mode === 'IMAGE' ? imageUrl.trim() : undefined,
+      // Find a class to use its tenantId - use first class or selected class
+      const classForTenant = classes.find(c => c.id === selectedClassId) || classes[0];
+      if (!classForTenant) {
+        showAlertMessage('Error', 'No classes available. Please create a class first.');
+        setSubmitting(false);
+        return;
+      }
+
+      const data: CreateExamScheduleInput = {
+        title: title.trim(),
+        subject: subject.trim(),
+        date: date,
+        time: time,
+        classId: selectedClassId || '',
+        duration: duration || undefined,
+        roomNo: roomNo || undefined,
       };
 
-      const response = await adminContentAPI.createExam(data);
+      let response;
+      if (editingExamId) {
+        // Update existing exam schedule
+        response = await adminAPI.updateClass(editingExamId, data as any);
+      } else {
+        response = await adminAPI.createExamSchedule(data);
+      }
+
       if (response.success) {
-        Alert.alert('Success', 'Exam timetable created successfully');
-        // Reset form
-        setExamName('');
-        setSelectedClassId(undefined);
-        setPdfUrl('');
-        setPdfName('');
-        setImageUrl('');
-        setImageName('');
-        setMode('PDF');
-        // Refresh list
-        fetchExams(true);
+        showAlertMessage('Success', editingExamId ? 'Exam schedule updated successfully' : 'Exam schedule created successfully');
+        resetForm();
+        fetchExams();
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to create exam');
+      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to save exam schedule');
     } finally {
       setSubmitting(false);
     }
@@ -247,483 +222,227 @@ const AdminExamsScreen: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await adminContentAPI.deleteExam(id);
+      const response = await adminAPI.deleteExamSchedule(id);
       if (response.success) {
         setExamList(prev => prev.filter(item => item.id !== id));
-        Alert.alert('Success', 'Exam deleted successfully');
+        showAlertMessage('Success', 'Exam schedule deleted successfully');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete exam');
+      showAlertMessage('Error', 'Failed to delete exam schedule');
     }
   };
 
-  const handleEdit = (item: Exam) => {
-    setExamName(item.examName);
+  const handleEdit = (item: ExamSchedule) => {
+    setTitle(item.title);
+    setSubject(item.subject);
+    setDate(item.date);
+    setTime(item.time);
+    setDuration(item.duration || '');
+    setRoomNo(item.roomNo || '');
     setSelectedClassId(item.classId);
-    if (item.pdfUrl) {
-      setMode('PDF');
-      setPdfUrl(item.pdfUrl);
-      setPdfName('Current PDF');
-      setImageUrl('');
-      setImageName('');
-    } else if (item.imageUrl) {
-      setMode('IMAGE');
-      setImageUrl(item.imageUrl);
-      setImageName('Current Image');
-      setPdfUrl('');
-      setPdfName('');
-    }
+    setEditingExamId(item.id);
   };
 
-  if (loading && examList.length === 0) {
+  const resetForm = () => {
+    setTitle('');
+    setSubject('');
+    setDate('');
+    setTime('');
+    setDuration('');
+    setRoomNo('');
+    setSelectedClassId(undefined);
+    setEditingExamId(null);
+  };
+
+  if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2e7d32" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonTitle>Exam Schedules</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="admin-exams-content" fullscreen>
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <p>Loading exam schedules...</p>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>📅 Exam Timetables</Text>
-        <Text style={styles.headerSubtitle}>Manage exam schedules and timetables</Text>
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Exam Schedules</IonTitle>
+        </IonToolbar>
+      </IonHeader>
 
-      {/* Create Form - Bento Card */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Create New Exam</Text>
+      <IonContent className="admin-exams-content" fullscreen>
+        <div className="container">
+          {/* Header */}
+          <div className="header-section">
+            <h1 className="header-title">📅 Exam Schedules</h1>
+            <p className="header-subtitle">Manage exam timetables and schedules</p>
+          </div>
 
-        {/* Exam Name Input */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Exam Name *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Midterm Exam 2024"
-            value={examName}
-            onChangeText={setExamName}
-            numberOfLines={1}
-          />
-        </View>
+          {/* Create Form */}
+          <IonCard className="form-card">
+            <IonCardHeader>
+              <IonCardTitle>{editingExamId ? 'Edit Exam Schedule' : 'Create New Exam Schedule'}</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              {/* Title Input */}
+              <div className="input-group">
+                <label className="input-label">Exam Title *</label>
+                <IonInput
+                  value={title}
+                  onIonInput={(e) => setTitle(e.detail.value || '')}
+                  placeholder="e.g., Mathematics Final Exam"
+                />
+              </div>
 
-        {/* Class Selector */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Class (Optional - leave empty for school-wide)</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.classSelector}>
-              <TouchableOpacity
-                style={[
-                  styles.classOption,
-                  !selectedClassId && styles.classOptionActive
-                ]}
-                onPress={() => setSelectedClassId(undefined)}
-              >
-                <Text style={[
-                  styles.classOptionText,
-                  !selectedClassId && styles.classOptionTextActive
-                ]}>
-                  🏫 All Classes
-                </Text>
-              </TouchableOpacity>
-              {classes.map((cls) => (
-                <TouchableOpacity
-                  key={cls.id}
-                  style={[
-                    styles.classOption,
-                    selectedClassId === cls.id && styles.classOptionActive
-                  ]}
-                  onPress={() => setSelectedClassId(cls.id)}
+              {/* Subject Input */}
+              <div className="input-group">
+                <label className="input-label">Subject *</label>
+                <IonInput
+                  value={subject}
+                  onIonInput={(e) => setSubject(e.detail.value || '')}
+                  placeholder="e.g., Mathematics, Science, English"
+                />
+              </div>
+
+              {/* Date and Time Row */}
+              <div className="input-row">
+                <div className="input-group">
+                  <label className="input-label">Date *</label>
+                  <IonInput
+                    type="date"
+                    value={date}
+                    onIonInput={(e) => setDate(e.detail.value || '')}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Time *</label>
+                  <IonInput
+                    type="time"
+                    value={time}
+                    onIonInput={(e) => setTime(e.detail.value || '')}
+                  />
+                </div>
+              </div>
+
+              {/* Duration and Room Row */}
+              <div className="input-row">
+                <div className="input-group">
+                  <label className="input-label">Duration (minutes)</label>
+                  <IonInput
+                    type="number"
+                    value={duration}
+                    onIonInput={(e) => setDuration(e.detail.value ? parseInt(e.detail.value) : '')}
+                    placeholder="e.g., 90"
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Room Number</label>
+                  <IonInput
+                    value={roomNo}
+                    onIonInput={(e) => setRoomNo(e.detail.value || '')}
+                    placeholder="e.g., Room 101"
+                  />
+                </div>
+              </div>
+
+              {/* Class Selector */}
+              <div className="input-group">
+                <label className="input-label">Class (Optional - leave empty for school-wide)</label>
+                <div className="class-selector">
+                  <IonChip
+                    className={`class-option ${!selectedClassId ? 'active' : ''}`}
+                    onClick={() => setSelectedClassId(undefined)}
+                  >
+                    🏫 All Classes
+                  </IonChip>
+                  {classes.map((cls) => (
+                    <IonChip
+                      key={cls.id}
+                      className={`class-option ${selectedClassId === cls.id ? 'active' : ''}`}
+                      onClick={() => setSelectedClassId(cls.id)}
+                    >
+                      {cls.name}{cls.section ? `-${cls.section}` : ''}
+                    </IonChip>
+                  ))}
+                </div>
+              </div>
+
+              {/* Info Note */}
+              <div className="info-note">
+                <IonIcon icon={informationCircleOutline} className="info-icon" />
+                <span>Exam schedules are visible to ALL teachers and students upon creation.</span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="button-group">
+                <IonButton
+                  expand="block"
+                  className="submit-button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
                 >
-                  <Text style={[
-                    styles.classOptionText,
-                    selectedClassId === cls.id && styles.classOptionTextActive
-                  ]}>
-                    {cls.name}{cls.section ? `-${cls.section}` : ''}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
+                  {submitting ? <IonSpinner name="crescent" /> : (editingExamId ? 'Update Exam' : 'Publish Exam Schedule')}
+                </IonButton>
+                {editingExamId && (
+                  <IonButton
+                    expand="block"
+                    color="medium"
+                    className="cancel-button"
+                    onClick={resetForm}
+                  >
+                    Cancel Edit
+                  </IonButton>
+                )}
+              </div>
+            </IonCardContent>
+          </IonCard>
 
-        {/* Mode Selector */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Timetable Format</Text>
-          <View style={styles.modeContainer}>
-            <TouchableOpacity
-              style={[styles.modeOption, mode === 'PDF' && styles.modeOptionActive]}
-              onPress={() => setMode('PDF')}
-            >
-              <Text style={[styles.modeIcon, mode === 'PDF' && styles.modeIconActive]}>📄</Text>
-              <Text style={[styles.modeText, mode === 'PDF' && styles.modeTextActive]}>
-                PDF Document
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modeOption, mode === 'IMAGE' && styles.modeOptionActive]}
-              onPress={() => setMode('IMAGE')}
-            >
-              <Text style={[styles.modeIcon, mode === 'IMAGE' && styles.modeIconActive]}>🖼️</Text>
-              <Text style={[styles.modeText, mode === 'IMAGE' && styles.modeTextActive]}>
-                Image File
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+          {/* Exams List */}
+          <IonCard className="list-card">
+            <IonCardHeader>
+              <IonCardTitle>Published Exam Schedules ({examList.length})</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              {examList.length === 0 ? (
+                <div className="empty-state">
+                  <IonIcon icon={calendarOutline} className="empty-icon" />
+                  <p>No exam schedules published yet</p>
+                </div>
+              ) : (
+                examList.map((item) => (
+                  <ExamItem
+                    key={item.id}
+                    item={item}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                  />
+                ))
+              )}
+            </IonCardContent>
+          </IonCard>
+        </div>
 
-        {/* File Picker based on mode */}
-        {mode === 'PDF' ? (
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Select PDF File *</Text>
-            <TouchableOpacity style={styles.filePickerButton} onPress={pickDocument}>
-              <Text style={styles.filePickerIcon}>📄</Text>
-              <Text style={styles.filePickerText}>
-                {pdfName || 'Browse and select PDF file'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Select Image File *</Text>
-            <TouchableOpacity style={styles.filePickerButton} onPress={pickImage}>
-              <Text style={styles.filePickerIcon}>🖼️</Text>
-              <Text style={styles.filePickerText}>
-                {imageName || 'Browse and select image from gallery'}
-              </Text>
-            </TouchableOpacity>
-            {imageUrl && (
-              <Image source={{ uri: imageUrl }} style={styles.imagePreview} resizeMode="cover" />
-            )}
-          </View>
-        )}
-
-        {/* Info Note */}
-        <View style={styles.infoNote}>
-          <Text style={styles.infoNoteIcon}>ℹ️</Text>
-          <Text style={styles.infoNoteText}>
-            Exam timetables are visible to ALL teachers and students upon creation.
-          </Text>
-        </View>
-
-        {/* Submit Button */}
-        <TouchableOpacity
-          style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Publish Exam</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Exams List */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Published Exams ({examList.length})</Text>
-        {examList.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateIcon}>📅</Text>
-            <Text style={styles.emptyStateText}>No exam timetables published yet</Text>
-          </View>
-        ) : (
-          examList.map((item) => (
-            <ExamItem
-              key={item.id}
-              item={item}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-            />
-          ))
-        )}
-        {page < totalPages && (
-          <TouchableOpacity
-            style={styles.loadMoreButton}
-            onPress={() => {
-              setPage(prev => prev + 1);
-              fetchExams();
-            }}
-          >
-            <Text style={styles.loadMoreButtonText}>Load More</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+        {/* Alert */}
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={alertHeader}
+          message={alertMessage}
+          buttons={['OK']}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    paddingTop: 30,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1E293B',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    margin: 16,
-    marginTop: 0,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#475569',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
-    color: '#1E293B',
-  },
-  classSelector: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  classOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
-    marginRight: 8,
-  },
-  classOptionActive: {
-    borderColor: '#2e7d32',
-    backgroundColor: '#F0FDF4',
-  },
-  classOptionText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#64748B',
-  },
-  classOptionTextActive: {
-    color: '#2e7d32',
-    fontWeight: '600',
-  },
-  modeContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modeOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
-  },
-  modeOptionActive: {
-    borderColor: '#2e7d32',
-    backgroundColor: '#F0FDF4',
-  },
-  modeIcon: {
-    fontSize: 20,
-    marginRight: 8,
-    color: '#64748B',
-  },
-  modeIconActive: {
-    color: '#2e7d32',
-  },
-  modeText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#64748B',
-  },
-  modeTextActive: {
-    color: '#2e7d32',
-    fontWeight: '600',
-  },
-  filePickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 2,
-    borderColor: '#CBD5E1',
-    borderStyle: 'dashed',
-    borderRadius: 12,
-    padding: 16,
-  },
-  filePickerIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  filePickerText: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500',
-    flex: 1,
-  },
-  imagePreview: {
-    width: '100%',
-    height: 150,
-    borderRadius: 12,
-    marginTop: 12,
-  },
-  infoNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0F9FF',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  infoNoteIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  infoNoteText: {
-    fontSize: 13,
-    color: '#0369A1',
-    flex: 1,
-  },
-  submitButton: {
-    backgroundColor: '#2e7d32',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  submitButtonDisabled: {
-    opacity: 0.7,
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyState: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyStateIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  emptyStateText: {
-    fontSize: 15,
-    color: '#94A3B8',
-    fontWeight: '500',
-  },
-  examCard: {
-    flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  examCardContent: {
-    flex: 1,
-    marginRight: 12,
-  },
-  examTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 4,
-  },
-  examClass: {
-    fontSize: 13,
-    color: '#64748B',
-    marginBottom: 8,
-  },
-  examMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  attachmentsRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  attachmentBadge: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  attachmentBadgeText: {
-    fontSize: 11,
-    color: '#1565C0',
-  },
-  examDate: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
-  examCardActions: {
-    justifyContent: 'center',
-    gap: 8,
-  },
-  actionButton: {
-    padding: 8,
-  },
-  actionButtonText: {
-    fontSize: 18,
-  },
-  loadMoreButton: {
-    backgroundColor: '#F1F5F9',
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  loadMoreButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
-  },
-});
 
 export default AdminExamsScreen;

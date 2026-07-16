@@ -1,0 +1,141 @@
+.teacher-detail-content {
+  --background: #f5f5f5;
+}
+
+/* Header Card */
+.header-card {
+  background-color: #fff;
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.avatar {
+  width: 70px;
+  height: 70px;
+  background-color: #007AFF;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.header-info {
+  margin-left: 16px;
+  flex: 1;
+}
+
+.teacher-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.teacher-role {
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Sections */
+.section {
+  padding: 20px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+}
+
+.info-card {
+  margin: 0;
+  border-radius: 12px;
+}
+
+IonCardContent {
+  padding: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.info-row:first-child {
+  padding-top: 0;
+}
+
+.info-row:last-child {
+  padding-bottom: 0;
+}
+
+.info-label {
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Metrics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #007AFF;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #666;
+  display: block;
+}
+
+/* Actions */
+.actions-section {
+  padding: 20px;
+  padding-bottom: 40px;
+}
+
+/* Error Container */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+  gap: 16px;
+}

@@ -1,59 +1,64 @@
 /**
- * Register Screen
+ * Register Screen (Ionic React Version)
  * User registration form with name, email and password
  */
 
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { AuthStackParamList } from '../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButton,
+  IonInput,
+  IonText,
+  IonSpinner,
+  IonCard,
+  IonCardContent,
+  IonIcon,
+} from '@ionic/react';
+import { useHistory } from 'react-router-dom';
+import { arrowBack } from 'ionicons/icons';
 import { useAuth } from '../contexts/AuthContext';
+import './RegisterScreen.css';
 
-type RegisterScreenProps = StackScreenProps<AuthStackParamList, 'Register'>;
-
-const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
+const RegisterScreen: React.FC = () => {
+  const history = useHistory();
   const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRegister = async () => {
+    setError(null);
+    
     // Basic validation
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
 
     if (name.trim().length < 2) {
-      Alert.alert('Error', 'Name must be at least 2 characters');
+      setError('Name must be at least 2 characters');
       return;
     }
 
     if (!email.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      setError('Please enter a valid email address');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      setError('Password must be at least 6 characters');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
 
@@ -61,174 +66,120 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
     try {
       await register(name.trim(), email.trim(), password);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      Alert.alert('Registration Error', errorMessage);
+    } catch (err: any) {
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
-        </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar color="primary">
+          <IonButton slot="start" fill="clear" onClick={() => history.goBack()}>
+            <IonIcon icon={arrowBack} slot="icon-only" />
+          </IonButton>
+          <IonTitle>Create Account</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="register-content">
+        <div className="register-container">
+          {/* Header */}
+          <div className="header">
+            <h1 className="header-title">Create Account</h1>
+            <p className="header-subtitle">Sign up to get started</p>
+          </div>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              editable={!isLoading}
-            />
-          </View>
+          {/* Error Message */}
+          {error && (
+            <div className="error-container">
+              <IonText color="danger">
+                <p>{error}</p>
+              </IonText>
+            </div>
+          )}
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isLoading}
-            />
-          </View>
+          {/* Registration Form */}
+          <IonCard className="form-card">
+            <IonCardContent>
+              <div className="input-container">
+                <IonInput
+                  label="Full Name"
+                  labelPlacement="stacked"
+                  placeholder="Enter your name"
+                  value={name}
+                  onIonInput={(e) => setName(e.detail.value || '')}
+                  autocomplete="name"
+                  disabled={isLoading}
+                />
+              </div>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!isLoading}
-            />
-          </View>
+              <div className="input-container">
+                <IonInput
+                  label="Email"
+                  labelPlacement="stacked"
+                  placeholder="Enter your email"
+                  value={email}
+                  onIonInput={(e) => setEmail(e.detail.value || '')}
+                  type="email"
+                  autocomplete="email"
+                  disabled={isLoading}
+                />
+              </div>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              editable={!isLoading}
-            />
-          </View>
+              <div className="input-container">
+                <IonInput
+                  label="Password"
+                  labelPlacement="stacked"
+                  placeholder="Enter your password"
+                  value={password}
+                  onIonInput={(e) => setPassword(e.detail.value || '')}
+                  type="password"
+                  autocomplete="new-password"
+                  disabled={isLoading}
+                />
+              </div>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
+              <div className="input-container">
+                <IonInput
+                  label="Confirm Password"
+                  labelPlacement="stacked"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onIonInput={(e) => setConfirmPassword(e.detail.value || '')}
+                  type="password"
+                  autocomplete="new-password"
+                  disabled={isLoading}
+                />
+              </div>
 
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              <IonButton
+                expand="block"
+                onClick={handleRegister}
+                disabled={isLoading}
+                className="ion-margin-top"
+              >
+                {isLoading ? <IonSpinner name="crescent" /> : 'Sign Up'}
+              </IonButton>
+
+              <div className="login-container">
+                <IonText color="medium">
+                  <p className="login-text">Already have an account? </p>
+                </IonText>
+                <IonButton fill="clear" onClick={() => history.goBack()}>
+                  <IonText color="primary">
+                    <strong>Sign In</strong>
+                  </IonText>
+                </IonButton>
+              </div>
+            </IonCardContent>
+          </IonCard>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
-    marginBottom: 40,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  form: {
-    width: '100%',
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  loginText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  loginLink: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-});
 
 export default RegisterScreen;

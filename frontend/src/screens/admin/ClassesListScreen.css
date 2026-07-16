@@ -1,0 +1,63 @@
+.classes-list-content {
+  --background: #f5f5f5;
+}
+
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+.class-item {
+  --inner-padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --background: transparent;
+}
+
+.class-card {
+  margin: 0 16px 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+IonCardContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+}
+
+.class-info {
+  flex: 1;
+}
+
+.class-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.class-date {
+  font-size: 12px;
+  color: #999;
+  margin: 0;
+}
+
+.class-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}

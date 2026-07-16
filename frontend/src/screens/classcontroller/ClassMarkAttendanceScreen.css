@@ -1,0 +1,271 @@
+/**
+ * Class Mark Attendance Screen (Ionic React Styles)
+ * Mark attendance for all students in the class
+ */
+
+/* ============================================
+   Loading State
+   ============================================ */
+.attendance-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.attendance-loading .loading-text {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.mark-attendance-content {
+  --background: #FFF5F0;
+}
+
+/* ============================================
+   Header Section
+   ============================================ */
+.header-section {
+  padding: 16px;
+  padding-top: 8px;
+}
+
+.header-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px 0;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0;
+  text-transform: capitalize;
+}
+
+/* ============================================
+   Quick Actions
+   ============================================ */
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 16px 16px 16px;
+}
+
+.quick-action-button {
+  flex: 1;
+  --border-radius: 12px;
+  --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+   Summary Row
+   ============================================ */
+.summary-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 16px 16px;
+}
+
+.summary-badge {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  border-top: 3px solid transparent;
+}
+
+.summary-badge.present {
+  border-top-color: #4CAF50;
+}
+
+.summary-badge.absent {
+  border-top-color: #F44336;
+}
+
+.summary-badge.total {
+  border-top-color: #FF6B35;
+}
+
+.summary-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ion-color-dark);
+}
+
+.summary-label {
+  font-size: 11px;
+  color: var(--ion-color-medium);
+  margin-top: 2px;
+}
+
+/* ============================================
+   Student Item
+   ============================================ */
+.student-item {
+  --background: #FFFFFF;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  margin: 0 16px 8px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --min-height: 60px;
+}
+
+.student-info {
+  flex: 1;
+}
+
+.student-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 2px;
+}
+
+.student-id {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-label {
+  font-size: 12px;
+  font-weight: 600;
+  width: 50px;
+  text-align: right;
+}
+
+.toggle-label.present {
+  color: #4CAF50;
+}
+
+.toggle-label.absent {
+  color: #F44336;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* ============================================
+   Save Button Container
+   ============================================ */
+.save-button-container {
+  padding: 16px;
+  padding-bottom: 32px;
+}
+
+.save-button {
+  --border-radius: 16px;
+  --box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (min-width: 768px) {
+  .quick-actions {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .summary-row {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .mark-attendance-content {
+    --background: #121212;
+  }
+
+  .header-title {
+    color: #fff;
+  }
+
+  .header-subtitle {
+    color: #888;
+  }
+
+  .quick-action-button {
+    --background: #1e1e1e;
+    --color: #fff;
+    --border-color: #333;
+  }
+
+  .summary-badge {
+    background: #1e1e1e;
+  }
+
+  .summary-value {
+    color: #fff;
+  }
+
+  .summary-label {
+    color: #888;
+  }
+
+  .student-item {
+    --background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .student-name {
+    color: #fff;
+  }
+
+  .student-id {
+    color: #888;
+  }
+
+  .empty-state h3 {
+    color: #fff;
+  }
+
+  .empty-subtext {
+    color: #888;
+  }
+}

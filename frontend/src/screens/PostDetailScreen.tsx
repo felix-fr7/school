@@ -1,31 +1,41 @@
 /**
- * Post Detail Screen
+ * Post Detail Screen (Ionic React Version)
  * Displays full post content with edit and delete options
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  TouchableOpacity,
-} from 'react-native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { MainStackParamList } from '../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonIcon,
+  IonText,
+  IonSpinner,
+  IonAlert,
+} from '@ionic/react';
+import { useParams, useHistory } from 'react-router-dom';
+import { createOutline, trashOutline, personOutline, calendarOutline } from 'ionicons/icons';
 import { usePosts } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Post } from '../types';
+import './PostDetailScreen.css';
 
-type PostDetailScreenProps = StackScreenProps<MainStackParamList, 'PostDetail'>;
+interface PostDetailParams {
+  postId: string;
+}
 
-const PostDetailScreen: React.FC<PostDetailScreenProps> = ({ navigation, route }) => {
-  const { postId } = route.params;
+const PostDetailScreen: React.FC = () => {
+  const { postId } = useParams<PostDetailParams>();
+  const history = useHistory();
   const { fetchPost, deletePost, isLoading } = usePosts();
   const { user } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
   useEffect(() => {
     loadPost();
@@ -36,26 +46,15 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({ navigation, route }
     setPost(fetchedPost);
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete Post',
-      'Are you sure you want to delete this post? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const success = await deletePost(postId);
-            if (success) {
-              navigation.goBack();
-            } else {
-              Alert.alert('Error', 'Failed to delete post');
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async () => {
+    try {
+      const success = await deletePost(postId);
+      if (success) {
+        history.goBack();
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -73,132 +72,99 @@ const PostDetailScreen: React.FC<PostDetailScreenProps> = ({ navigation, route }
 
   if (isLoading && !post) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/posts" />
+            </IonButtons>
+            <IonTitle>Post Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
     );
   }
 
   if (!post) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Post not found</Text>
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/posts" />
+            </IonButtons>
+            <IonTitle>Post Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonText color="medium">
+            <h3>Post not found</h3>
+          </IonText>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>{post.title}</Text>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/posts" />
+          </IonButtons>
+          <IonTitle>Post Details</IonTitle>
+          {isOwner && (
+            <IonButtons slot="end">
+              <IonButton onClick={() => history.push(`/posts/${postId}/edit`)}>
+                <IonIcon icon={createOutline} />
+              </IonButton>
+              <IonButton onClick={() => setShowDeleteAlert(true)} color="danger">
+                <IonIcon icon={trashOutline} />
+              </IonButton>
+            </IonButtons>
+          )}
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="post-detail-content">
+        <div className="post-container">
+          <h1 className="post-title">{post.title}</h1>
 
-        <View style={styles.metaContainer}>
-          <Text style={styles.author}>By {post.user.name}</Text>
-          <Text style={styles.date}>{formatDate(post.createdAt)}</Text>
-        </View>
+          <div className="post-meta">
+            <div className="meta-item">
+              <IonIcon icon={personOutline} />
+              <span>By {post.user.name}</span>
+            </div>
+            <div className="meta-item">
+              <IonIcon icon={calendarOutline} />
+              <span>{formatDate(post.createdAt)}</span>
+            </div>
+          </div>
 
-        <View style={styles.divider} />
+          <div className="post-divider" />
 
-        <Text style={styles.contentText}>{post.content}</Text>
+          <div className="post-content-text">{post.content}</div>
+        </div>
 
-        {isOwner && (
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.editButton]}
-              onPress={() => navigation.navigate('EditPost', { postId })}
-            >
-              <Text style={styles.actionButtonText}>Edit</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.deleteButton]}
-              onPress={handleDelete}
-            >
-              <Text style={styles.actionButtonText}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+        <IonAlert
+          isOpen={showDeleteAlert}
+          onDidDismiss={() => setShowDeleteAlert(false)}
+          header="Delete Post"
+          message="Are you sure you want to delete this post? This action cannot be undone."
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Delete',
+              role: 'destructive',
+              handler: handleDelete,
+            },
+          ]}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  content: {
-    padding: 20,
-    paddingTop: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
-    lineHeight: 36,
-  },
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  author: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-  date: {
-    fontSize: 14,
-    color: '#999',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 20,
-  },
-  contentText: {
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 26,
-    marginBottom: 30,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  editButton: {
-    backgroundColor: '#007AFF',
-  },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default PostDetailScreen;

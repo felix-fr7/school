@@ -1,0 +1,45 @@
+.create-teacher-content {
+  --background: #f5f5f5;
+}
+
+.form-container {
+  padding: 20px;
+}
+
+.description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 20px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.picker-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.class-select {
+  width: 100%;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}

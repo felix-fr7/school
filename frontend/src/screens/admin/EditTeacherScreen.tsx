@@ -1,23 +1,37 @@
+/**
+ * Edit Teacher Screen (Ionic React Version)
+ * Allows admin to edit teacher details and assign classes
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { useRoute, useNavigation } from '@react-navigation/native';
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonBackButton,
+  IonContent,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonButton,
+  IonSpinner,
+  IonAlert,
+  IonSelect,
+  IonSelectOption,
+} from '@ionic/react';
+import { useHistory, useParams } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import { Class } from '../../types';
+import './EditTeacherScreen.css';
+
+interface RouteParams {
+  teacherId: string;
+}
 
 const EditTeacherScreen: React.FC = () => {
-  const route = useRoute<any>();
-  const navigation = useNavigation<any>();
-  const { teacherId } = route.params;
+  const history = useHistory();
+  const { teacherId } = useParams<RouteParams>();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -26,7 +40,10 @@ const EditTeacherScreen: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [fetchingClasses, setFetchingClasses] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertHeader, setAlertHeader] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertCallback, setAlertCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -53,19 +70,26 @@ const EditTeacherScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching teacher data:', error);
-      Alert.alert('Error', 'Failed to load teacher data');
+      showAlertMessage('Error', 'Failed to load teacher data');
     } finally {
       setLoading(false);
     }
   };
 
+  const showAlertMessage = (header: string, message: string, callback?: () => void) => {
+    setAlertHeader(header);
+    setAlertMessage(message);
+    setAlertCallback(() => callback || null);
+    setShowAlert(true);
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter teacher name');
+      showAlertMessage('Error', 'Please enter teacher name');
       return;
     }
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter teacher email');
+      showAlertMessage('Error', 'Please enter teacher email');
       return;
     }
 
@@ -79,14 +103,14 @@ const EditTeacherScreen: React.FC = () => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Teacher updated successfully', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        showAlertMessage('Success', 'Teacher updated successfully', () => {
+          history.goBack();
+        });
       } else {
-        Alert.alert('Error', response.error?.message || 'Failed to update teacher');
+        showAlertMessage('Error', response.error?.message || 'Failed to update teacher');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to update teacher');
+      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update teacher');
     } finally {
       setSaving(false);
     }
@@ -94,142 +118,116 @@ const EditTeacherScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Loading teacher data...</Text>
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonBackButton defaultHref="/admin/teachers" />
+            <IonTitle>Edit Teacher</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="edit-teacher-content" fullscreen>
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <p className="loading-text">Loading teacher data...</p>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <View style={styles.form}>
-        <Text style={styles.label}>Teacher Name *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter teacher name"
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonBackButton defaultHref="/admin/teachers" />
+          <IonTitle>Edit Teacher</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent className="edit-teacher-content" fullscreen>
+        <div className="form-container">
+          <div className="form-section">
+            <h2 className="section-title">Teacher Information</h2>
+
+            <IonItem className="input-item">
+              <IonLabel position="stacked">Teacher Name *</IonLabel>
+              <IonInput
+                value={name}
+                onIonInput={(e) => setName(e.detail.value || '')}
+                placeholder="Enter teacher name"
+                autocomplete="name"
+                autocapitalize="words"
+              />
+            </IonItem>
+
+            <IonItem className="input-item">
+              <IonLabel position="stacked">Email *</IonLabel>
+              <IonInput
+                value={email}
+                onIonInput={(e) => setEmail(e.detail.value || '')}
+                placeholder="Enter teacher email"
+                type="email"
+                autocomplete="email"
+                autocapitalize="none"
+              />
+            </IonItem>
+
+            <IonItem className="input-item">
+              <IonLabel position="stacked">Phone Number</IonLabel>
+              <IonInput
+                value={phone}
+                onIonInput={(e) => setPhone(e.detail.value || '')}
+                placeholder="Enter phone number"
+                type="tel"
+                autocomplete="tel"
+              />
+            </IonItem>
+
+            <IonItem className="input-item">
+              <IonLabel position="stacked">Assigned Class</IonLabel>
+              <IonSelect
+                value={classId}
+                onIonChange={(e) => setClassId(e.detail.value || undefined)}
+                placeholder="Select a class"
+                interface="action-sheet"
+              >
+                <IonSelectOption value="">No class assigned</IonSelectOption>
+                {classes.map((cls) => (
+                  <IonSelectOption key={cls.id} value={cls.id}>
+                    {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
+                  </IonSelectOption>
+                ))}
+              </IonSelect>
+            </IonItem>
+          </div>
+
+          <IonButton
+            expand="block"
+            className="save-button"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? <IonSpinner name="crescent" /> : 'Save Changes'}
+          </IonButton>
+        </div>
+
+        {/* Alert */}
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => {
+            setShowAlert(false);
+            if (alertCallback) {
+              alertCallback();
+              setAlertCallback(null);
+            }
+          }}
+          header={alertHeader}
+          message={alertMessage}
+          buttons={['OK']}
         />
-
-        <Text style={styles.label}>Email *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter teacher email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Text style={styles.label}>Phone Number</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter phone number"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-
-        <Text style={styles.label}>Assigned Class</Text>
-        {fetchingClasses ? (
-          <View style={styles.pickerContainer}>
-            <ActivityIndicator size="small" />
-          </View>
-        ) : (
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={classId}
-              onValueChange={(itemValue: string) => setClassId(itemValue || undefined)}
-              style={styles.picker}
-            >
-              <Picker.Item label="No class assigned" value="" />
-              {classes.map((cls) => (
-                <Picker.Item
-                  key={cls.id}
-                  label={cls.section ? `${cls.name} - ${cls.section}` : cls.name}
-                  value={cls.id}
-                />
-              ))}
-            </Picker>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  form: {
-    padding: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  pickerContainer: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default EditTeacherScreen;

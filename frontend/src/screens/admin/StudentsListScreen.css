@@ -1,0 +1,97 @@
+.students-list-content {
+  --background: #f5f5f5;
+}
+
+.filter-bar {
+  padding: 16px;
+  background-color: #fff;
+}
+
+.search-container {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+.student-item {
+  --inner-padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --background: transparent;
+}
+
+.student-card {
+  margin: 0 16px 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+IonCardContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+}
+
+.student-info {
+  flex: 1;
+}
+
+.student-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.student-email {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.student-id {
+  font-size: 12px;
+  color: #999;
+  margin: 2px 0;
+}
+
+.class-badge {
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.student-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 16px;
+}
+
+.pagination-info {
+  padding: 16px;
+  text-align: center;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+}
+
+.pagination-info p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}

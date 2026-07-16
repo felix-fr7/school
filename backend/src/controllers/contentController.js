@@ -297,6 +297,31 @@ const getCircularById = async (req, res, next) => {
  * - Teachers: See school-wide exams + their class's specific exams (including TEACHERS_ONLY)
  * - Admins: See all exams (no class filtering)
  */
+// Helper to map DB row to API response model
+const mapExamRow = (row) => {
+  if (!row) return null;
+  const examName = row.title || row.examName || row.name || 'Exam Timetable';
+  const fileUrl = row.file_url || row.pdfUrl || row.imageUrl;
+  return {
+    id: row.id,
+    title: examName,
+    examName: examName, // backward compatibility
+    classId: row.class_id,
+    tenantId: row.tenant_id,
+    fileUrl: fileUrl,
+    pdfUrl: fileUrl, // fallback
+    imageUrl: fileUrl, // fallback
+    dueDate: row.due_date,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    class: row.classId ? {
+      id: row.classId,
+      name: row.className,
+      section: row.classSection,
+    } : null,
+  };
+};
+
 const getExams = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
@@ -309,15 +334,9 @@ const getExams = async (req, res, next) => {
 
     // Build where clause with proper isolation
     // Students, teachers, and class controllers only see: school-wide (class_id IS NULL) OR their class's content
-    let whereClause = 'e."tenantId" = $1';
+    let whereClause = 'e."tenant_id" = $1';
     let params = [tenantId];
     let paramIndex = 2;
-
-    // Apply visibility filtering for students - they only see 'ALL' visibility content
-    if (userRole === 'STUDENT') {
-      whereClause += ` AND (e."visibility" IS NULL OR e."visibility" = 'ALL')`;
-    }
-    // Teachers and Class Controllers see all visibility levels
 
     // Apply class-based isolation for students, teachers, and class controllers
     if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
@@ -339,21 +358,14 @@ const getExams = async (req, res, next) => {
       FROM "Exam" e
       LEFT JOIN "Class" c ON e."class_id" = c.id
       WHERE ${whereClause}
-      ORDER BY e."createdAt" DESC
+      ORDER BY e."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
     const examsParams = [...params, take, skip];
     const examsResult = await db.query(examsQuery, examsParams);
 
-    const exams = examsResult.rows.map(item => ({
-      ...item,
-      class: item.classId ? {
-        id: item.classId,
-        name: item.className,
-        section: item.classSection,
-      } : null,
-    }));
+    const exams = examsResult.rows.map(mapExamRow);
 
     res.status(200).json({
       success: true,
@@ -384,7 +396,7 @@ const getExamById = async (req, res, next) => {
       SELECT e.*, c.id as "classId", c.name as "className", c.section as "classSection"
       FROM "Exam" e
       LEFT JOIN "Class" c ON e."class_id" = c.id
-      WHERE e.id = $1 AND e."tenantId" = $2
+      WHERE e.id = $1 AND e."tenant_id" = $2
     `;
 
     const examResult = await db.query(examQuery, [id, tenantId]);
@@ -398,18 +410,11 @@ const getExamById = async (req, res, next) => {
       });
     }
 
-    const exam = examResult.rows[0];
+    const exam = mapExamRow(examResult.rows[0]);
 
     res.status(200).json({
       success: true,
-      data: {
-        ...exam,
-        class: exam.classId ? {
-          id: exam.classId,
-          name: exam.className,
-          section: exam.classSection,
-        } : null,
-      },
+      data: exam,
     });
   } catch (error) {
     next(error);

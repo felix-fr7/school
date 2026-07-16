@@ -1,35 +1,46 @@
 /**
- * Class Controller Dashboard Screen
+ * Class Controller Dashboard Screen (Ionic React Version)
  * Management dashboard for Class ID (CLS-X) login users
  * Full control over their specific class only
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  TouchableOpacity,
-  RefreshControl,
-  Alert,
-  Dimensions,
-  SafeAreaView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { ClassControllerStackParamList } from '../../types';
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonSpinner,
+  IonText,
+  IonButton,
+  IonIcon,
+  IonBadge,
+  IonCard,
+  IonCardContent,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonRefresher,
+  IonRefresherContent,
+  IonAlert,
+} from '@ionic/react';
+import {
+  peopleOutline,
+  bookOutline,
+  calendarOutline,
+  newspaperOutline,
+  documentTextOutline,
+  personAddOutline,
+  settingsOutline,
+  logOutOutline,
+  refreshCircleOutline,
+  informationCircleOutline,
+} from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { classControllerAPI } from '../../services/api';
-
-const { width } = Dimensions.get('window');
-const PADDING = 16;
-const GAP = 12;
-const CARD_WIDTH = (width - PADDING * 2 - GAP) / 2;
-const CARD_HEIGHT = CARD_WIDTH * 0.85;
-
-type NavigationProp = StackNavigationProp<ClassControllerStackParamList, 'ClassControllerDashboard'>;
+import './ClassControllerDashboardScreen.css';
 
 interface DashboardData {
   class: {
@@ -41,20 +52,29 @@ interface DashboardData {
       name: string;
       email: string;
     } | null;
+    studentCount?: number;
+    homeworkCount?: number;
+    examCount?: number;
   };
-  stats: {
+  stats?: {
     totalStudents: number;
     totalHomework: number;
     upcomingExams: number;
     attendanceRate: number;
   };
-  recentActivity: Array<{
+  recentActivity?: Array<{
     id: string;
     type: string;
     title: string;
     description: string;
     createdAt: string;
   }>;
+  students?: any[];
+  homework?: any[];
+  exams?: any[];
+  news?: any[];
+  circulars?: any[];
+  weeklyLessons?: any[] | null;
 }
 
 interface MenuItem {
@@ -62,28 +82,47 @@ interface MenuItem {
   title: string;
   subtitle: string;
   icon: string;
+  iconIon: string;
   color: string;
-  route: keyof ClassControllerStackParamList;
+  route: string;
   badge?: number;
 }
 
 const ClassControllerDashboardScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const history = useHistory();
   const { currentClass, logout } = useAuth();
   
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
       const response = await classControllerAPI.getDashboard();
       if (response.success && response.data) {
-        setDashboardData(response.data);
+        const data = response.data;
+        // Transform API response to match our DashboardData structure
+        const transformedData: DashboardData = {
+          class: data.class,
+          stats: {
+            totalStudents: data.class.studentCount || 0,
+            totalHomework: data.class.homeworkCount || 0,
+            upcomingExams: data.class.examCount || 0,
+            attendanceRate: 0, // Not available in API response
+          },
+          recentActivity: [],
+          students: data.students || [],
+          homework: data.homework || [],
+          exams: data.exams || [],
+          news: data.news || [],
+          circulars: data.circulars || [],
+          weeklyLessons: data.weeklyLessons || null,
+        };
+        setDashboardData(transformedData);
       }
     } catch (error) {
       console.error('Error fetching class controller dashboard:', error);
-      Alert.alert('Error', 'Failed to load dashboard data');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -94,449 +133,269 @@ const ClassControllerDashboardScreen: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const onRefresh = () => {
+  const onRefresh = async (event: CustomEvent) => {
     setRefreshing(true);
-    fetchDashboardData();
+    await fetchDashboardData();
+    event.detail.complete();
   };
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF6B35" />
-        <Text style={styles.loadingText}>Loading class dashboard...</Text>
-      </View>
-    );
-  }
 
   // Menu items for class management
   const menuItems: MenuItem[] = [
     {
       id: '1',
       title: 'Students',
-      subtitle: `${dashboardData?.stats.totalStudents ?? 0} students`,
+      subtitle: `${dashboardData?.stats?.totalStudents ?? 0} students`,
       icon: '👥',
+      iconIon: peopleOutline,
       color: '#4CAF50',
-      route: 'ClassStudentsList',
+      route: '/class-controller/students',
     },
     {
       id: '2',
       title: 'Homework',
-      subtitle: `${dashboardData?.stats.totalHomework ?? 0} assigned`,
+      subtitle: `${dashboardData?.stats?.totalHomework ?? 0} assigned`,
       icon: '📚',
+      iconIon: bookOutline,
       color: '#2196F3',
-      route: 'ClassHomeworkList',
+      route: '/class-controller/homework',
     },
     {
       id: '3',
       title: 'Exams',
-      subtitle: `${dashboardData?.stats.upcomingExams ?? 0} upcoming`,
+      subtitle: `${dashboardData?.stats?.upcomingExams ?? 0} upcoming`,
       icon: '📅',
+      iconIon: calendarOutline,
       color: '#9C27B0',
-      route: 'ClassExamSchedulesList',
+      route: '/class-controller/exams',
     },
     {
       id: '4',
       title: 'News',
       subtitle: 'School updates',
       icon: '📰',
+      iconIon: newspaperOutline,
       color: '#FF5722',
-      route: 'ClassNewsList',
+      route: '/class-controller/news',
     },
     {
       id: '5',
       title: 'Circulars',
       subtitle: 'Class notices',
       icon: '📋',
+      iconIon: documentTextOutline,
       color: '#00BCD4',
-      route: 'ClassCircularsList',
+      route: '/class-controller/circulars',
     },
     {
       id: '6',
       title: 'Add Student',
       subtitle: 'New enrollment',
       icon: '➕',
+      iconIon: personAddOutline,
       color: '#E91E63',
-      route: 'ClassAddStudent',
+      route: '/class-controller/students/add',
     },
     {
       id: '7',
       title: 'Profile',
       subtitle: 'Class settings',
       icon: '⚙️',
+      iconIon: settingsOutline,
       color: '#607D8B',
-      route: 'ClassProfile',
+      route: '/class-controller/profile',
     },
   ];
 
-  const handleMenuItemPress = (route: keyof ClassControllerStackParamList) => {
-    navigation.navigate(route as any, { classId: currentClass?.id } as any);
+  const handleMenuItemPress = (route: string) => {
+    history.push(route);
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => logout() },
-      ]
-    );
+    logout();
+    history.push('/login');
   };
 
+  if (loading) {
+    return (
+      <IonPage>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center class-controller-loading">
+          <IonSpinner name="crescent" />
+          <IonText color="medium">
+            <p className="loading-text">Loading class dashboard...</p>
+          </IonText>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.container}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh}
-            tintColor="#FF6B35"
-            colors={['#FF6B35']}
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Class Dashboard</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent className="class-controller-dashboard" fullscreen>
+        <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
+          <IonRefresherContent
+            pullingIcon={refreshCircleOutline}
+            refreshingSpinner="crescent"
           />
-        }
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+        </IonRefresher>
+
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">Class Dashboard</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         {/* Header Section */}
-        <View style={styles.headerSection}>
-          <View style={styles.headerContent}>
-            <View style={styles.classCodeBadge}>
-              <Text style={styles.classCodeText}>
+        <div className="header-section">
+          <div className="header-content">
+            <div className="class-code-badge">
+              <span className="class-code-text">
                 {dashboardData?.class.classCode || currentClass?.classCode || 'CLS-X'}
-              </Text>
-            </View>
-            <View style={styles.classInfo}>
-              <Text style={styles.className}>
+              </span>
+            </div>
+            <div className="class-info">
+              <h2 className="class-name">
                 {dashboardData?.class.name || currentClass?.name || 'Class'}
-              </Text>
+              </h2>
               {dashboardData?.class.section && (
-                <Text style={styles.classSection}>
+                <p className="class-section">
                   Section: {dashboardData.class.section}
-                </Text>
+                </p>
               )}
-            </View>
-          </View>
-        </View>
+            </div>
+          </div>
+        </div>
 
         {/* Quick Stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{dashboardData?.stats.totalStudents ?? 0}</Text>
-            <Text style={styles.statLabel}>Students</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{dashboardData?.stats.totalHomework ?? 0}</Text>
-            <Text style={styles.statLabel}>Homework</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{dashboardData?.stats.upcomingExams ?? 0}</Text>
-            <Text style={styles.statLabel}>Exams</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{dashboardData?.stats.attendanceRate ?? 0}%</Text>
-            <Text style={styles.statLabel}>Attendance</Text>
-          </View>
-        </View>
+        <div className="stats-row">
+          <IonCard className="stat-card">
+            <IonCardContent>
+              <div className="stat-value">{dashboardData?.stats?.totalStudents ?? 0}</div>
+              <div className="stat-label">Students</div>
+            </IonCardContent>
+          </IonCard>
+          <IonCard className="stat-card">
+            <IonCardContent>
+              <div className="stat-value">{dashboardData?.stats?.totalHomework ?? 0}</div>
+              <div className="stat-label">Homework</div>
+            </IonCardContent>
+          </IonCard>
+          <IonCard className="stat-card">
+            <IonCardContent>
+              <div className="stat-value">{dashboardData?.stats?.upcomingExams ?? 0}</div>
+              <div className="stat-label">Exams</div>
+            </IonCardContent>
+          </IonCard>
+          <IonCard className="stat-card">
+            <IonCardContent>
+              <div className="stat-value">{dashboardData?.stats?.attendanceRate ?? 0}%</div>
+              <div className="stat-label">Attendance</div>
+            </IonCardContent>
+          </IonCard>
+        </div>
 
         {/* Class ID Display */}
-        <View style={styles.classIdCard}>
-          <Text style={styles.classIdLabel}>Class Login ID</Text>
-          <Text style={styles.classIdValue}>
-            {dashboardData?.class.classCode || currentClass?.classCode || 'Not available'}
-          </Text>
-          <Text style={styles.classIdNote}>
-            Share this ID with students for class access
-          </Text>
-        </View>
+        <IonCard className="class-id-card">
+          <IonCardContent>
+            <IonText color="secondary">
+              <small className="class-id-label">Class Login ID</small>
+            </IonText>
+            <h2 className="class-id-value">
+              {dashboardData?.class.classCode || currentClass?.classCode || 'Not available'}
+            </h2>
+            <IonText color="medium">
+              <small className="class-id-note">
+                <IonIcon icon={informationCircleOutline} slot="start" />
+                Share this ID with students for class access
+              </small>
+            </IonText>
+          </IonCardContent>
+        </IonCard>
 
         {/* Management Menu Grid */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Class Management</Text>
-          <View style={styles.gridContainer}>
-            {menuItems.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={[styles.gridItem, { borderLeftColor: item.color }]}
-                onPress={() => handleMenuItemPress(item.route)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.gridItemContent}>
-                  <View style={[styles.iconContainer, { backgroundColor: `${item.color}15` }]}>
-                    <Text style={styles.iconText}>{item.icon}</Text>
-                  </View>
-                  <Text style={styles.itemTitle} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text style={styles.itemSubtitle} numberOfLines={1}>
-                    {item.subtitle}
-                  </Text>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <View style={[styles.badge, { backgroundColor: item.color }]}>
-                      <Text style={styles.badgeText}>{item.badge}</Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        <div className="section">
+          <h3 className="section-title">Class Management</h3>
+          <IonGrid fixed>
+            <IonRow>
+              {menuItems.map((item) => (
+                <IonCol size="6" sizeMd="3" key={item.id}>
+                  <IonCard
+                    className={`menu-card menu-card-${item.id}`}
+                    onClick={() => handleMenuItemPress(item.route)}
+                  >
+                    <IonCardContent>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <IonBadge
+                          color="danger"
+                          className="menu-badge"
+                          style={{ '--background': item.color }}
+                        >
+                          {item.badge}
+                        </IonBadge>
+                      )}
+                      <div
+                        className="menu-icon-container"
+                        style={{ backgroundColor: `${item.color}15` }}
+                      >
+                        <IonIcon
+                          icon={item.iconIon}
+                          className="menu-icon"
+                          style={{ color: item.color }}
+                        />
+                      </div>
+                      <h4 className="menu-title">{item.title}</h4>
+                      <p className="menu-subtitle">{item.subtitle}</p>
+                    </IonCardContent>
+                  </IonCard>
+                </IonCol>
+              ))}
+            </IonRow>
+          </IonGrid>
+        </div>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutIcon}>🚪</Text>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <div className="logout-section">
+          <IonButton
+            expand="block"
+            className="logout-button"
+            color="danger"
+            fill="outline"
+            onClick={() => setShowLogoutAlert(true)}
+          >
+            <IonIcon icon={logOutOutline} slot="start" />
+            Logout
+          </IonButton>
+        </div>
 
         {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Class Controller Dashboard</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        <div className="footer">
+          <IonText color="medium">
+            <small>Class Controller Dashboard</small>
+          </IonText>
+        </div>
+      </IonContent>
+
+      <IonAlert
+        isOpen={showLogoutAlert}
+        onDidDismiss={() => setShowLogoutAlert(false)}
+        header="Logout"
+        message="Are you sure you want to logout?"
+        buttons={[
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Logout',
+            role: 'destructive',
+            handler: handleLogout,
+          },
+        ]}
+      />
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FFF5F0',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF5F0',
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF5F0',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 15,
-    color: '#666',
-    fontWeight: '500',
-  },
-
-  // Header Section
-  headerSection: {
-    backgroundColor: '#FF6B35',
-    paddingHorizontal: PADDING,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  classCodeBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  classCodeText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: 1,
-  },
-  classInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  className: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  classSection: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 2,
-  },
-
-  // Stats Row
-  statsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: PADDING,
-    marginTop: 16,
-    gap: GAP,
-  },
-  statCard: {
-    width: CARD_WIDTH,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#FF6B35',
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#666',
-    marginTop: 4,
-  },
-
-  // Class ID Card
-  classIdCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: PADDING,
-    marginTop: 16,
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FF6B35',
-    shadowColor: '#FF6B35',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  classIdLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FF6B35',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  classIdValue: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#FF6B35',
-    letterSpacing: 2,
-    marginVertical: 8,
-  },
-  classIdNote: {
-    fontSize: 12,
-    color: '#999',
-    fontStyle: 'italic',
-  },
-
-  // Section
-  section: {
-    marginTop: 24,
-    paddingHorizontal: PADDING,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 12,
-  },
-
-  // Grid Container
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: GAP,
-  },
-  gridItem: {
-    width: CARD_WIDTH,
-    minHeight: CARD_HEIGHT * 1.1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  gridItemContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  iconText: {
-    fontSize: 24,
-  },
-  itemTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  itemSubtitle: {
-    fontSize: 11,
-    color: '#666',
-    textAlign: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-
-  // Logout Button
-  logoutButton: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: PADDING,
-    marginTop: 24,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#FF6B35',
-  },
-  logoutIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FF6B35',
-  },
-
-  // Footer
-  footer: {
-    marginTop: 28,
-    padding: 16,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 11,
-    color: '#999',
-    fontWeight: '400',
-  },
-});
 
 export default ClassControllerDashboardScreen;

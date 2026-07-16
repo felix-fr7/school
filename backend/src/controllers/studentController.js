@@ -22,7 +22,7 @@ const getDashboardStats = async (req, res, next) => {
         (SELECT COUNT(*) FROM "Mark" WHERE "studentId" = $2 AND "isPublished" = true) as "totalMarks",
         (SELECT COUNT(*) FROM "News" WHERE "tenantId" = $3 AND "isPublished" = true AND visibility = 'ALL') as "totalNews",
         (SELECT COUNT(*) FROM "Circular" WHERE "tenantId" = $4 AND "isPublished" = true AND visibility = 'ALL') as "totalCirculars",
-        (SELECT COUNT(*) FROM "ExamSchedule" WHERE "classId" = $5 AND "isPublished" = true AND date >= NOW()) as "upcomingExams"
+        (SELECT COUNT(*) FROM "ExamSchedule" WHERE ("classId" = $5 OR "classId" IS NULL) AND "isPublished" = true AND date >= NOW()) as "upcomingExams"
     `;
 
     const statsResult = await db.query(statsQuery, [classId, studentId, tenantId, tenantId, classId]);
@@ -57,15 +57,22 @@ const getDashboardStats = async (req, res, next) => {
     let upcomingExamList = [];
     if (classId) {
       const examsQuery = `
-        SELECT es.*, c.name as "className", c.section as "classSection"
+        SELECT es.*, c.id as "classId", c.name as "className", c.section as "classSection"
         FROM "ExamSchedule" es
         LEFT JOIN "Class" c ON es."classId" = c.id
-        WHERE es."classId" = $1 AND es."isPublished" = true AND es.date >= NOW()
+        WHERE (es."classId" = $1 OR es."classId" IS NULL) AND es."isPublished" = true AND es.date >= NOW()
         ORDER BY es.date ASC
         LIMIT 3
       `;
       const examsResult = await db.query(examsQuery, [classId]);
-      upcomingExamList = examsResult.rows;
+      upcomingExamList = examsResult.rows.map(item => ({
+        ...item,
+        class: item.classId ? {
+          id: item.classId,
+          name: item.className,
+          section: item.classSection,
+        } : null
+      }));
     }
 
     res.status(200).json({
@@ -568,7 +575,7 @@ const getCircularById = async (req, res, next) => {
 };
 
 /**
- * Get all exam schedules for student's class
+ * Get all exam schedules for student's class (Legacy ExamSchedule table)
  * GET /api/student/exam-schedules
  */
 const getExamSchedules = async (req, res, next) => {
@@ -588,20 +595,20 @@ const getExamSchedules = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Get total count
+    // Get total count - include both class-specific AND global (NULL class_id) exams
     const countQuery = `
       SELECT COUNT(*) as total FROM "ExamSchedule"
-      WHERE "classId" = $1 AND "isPublished" = true
+      WHERE ("classId" = $1 OR "classId" IS NULL) AND "isPublished" = true
     `;
     const countResult = await db.query(countQuery, [classId]);
     const total = parseInt(countResult.rows[0].total);
 
-    // Get exam schedules
+    // Get exam schedules - include global exams (class_id IS NULL)
     const examsQuery = `
       SELECT es.*, c.id as "classId", c.name as "className", c.section as "classSection"
       FROM "ExamSchedule" es
       LEFT JOIN "Class" c ON es."classId" = c.id
-      WHERE es."classId" = $1 AND es."isPublished" = true
+      WHERE (es."classId" = $1 OR es."classId" IS NULL) AND es."isPublished" = true
       ORDER BY es.date ASC
       LIMIT $2 OFFSET $3
     `;
@@ -610,11 +617,11 @@ const getExamSchedules = async (req, res, next) => {
 
     const examSchedules = examsResult.rows.map(item => ({
       ...item,
-      class: {
+      class: item.classId ? {
         id: item.classId,
         name: item.className,
         section: item.classSection,
-      },
+      } : null,
     }));
 
     res.status(200).json({
@@ -635,7 +642,7 @@ const getExamSchedules = async (req, res, next) => {
 };
 
 /**
- * Get single exam schedule details
+ * Get single exam schedule details (Legacy ExamSchedule table)
  * GET /api/student/exam-schedules/:id
  */
 const getExamScheduleById = async (req, res, next) => {
@@ -647,7 +654,7 @@ const getExamScheduleById = async (req, res, next) => {
       SELECT es.*, c.id as "classId", c.name as "className", c.section as "classSection"
       FROM "ExamSchedule" es
       LEFT JOIN "Class" c ON es."classId" = c.id
-      WHERE es.id = $1 AND es."classId" = $2 AND es."isPublished" = true
+      WHERE es.id = $1 AND (es."classId" = $2 OR es."classId" IS NULL) AND es."isPublished" = true
     `;
 
     const examResult = await db.query(examQuery, [id, classId]);
@@ -675,6 +682,151 @@ const getExamScheduleById = async (req, res, next) => {
       },
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+// ============================================
+// New Exam Table (PDF/Image based timetables)
+// Global publishing support: class_id IS NULL
+// ============================================
+
+/**
+ * Get all exams for student's class (New Exam table with PDF/Image support)
+ * GET /api/student/exams
+ * Simplified: Fetches all published exams for the tenant
+ */
+const getExams = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { page = 1, limit = 10 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count - fetch all published exams
+    const countQuery = `
+      SELECT COUNT(*) as total FROM "Exam"
+      WHERE "is_published" = true
+    `;
+    const countResult = await db.query(countQuery);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get exams - fetch all published exams, ordered by creation date
+    const examsQuery = `
+      SELECT 
+        e.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "Exam" e
+      LEFT JOIN "Class" c ON e."class_id" = c.id
+      WHERE e."is_published" = true
+      ORDER BY e."created_at" DESC
+      LIMIT $1 OFFSET $2
+    `;
+
+    const examsResult = await db.query(examsQuery, [take, skip]);
+
+    const exams = examsResult.rows.map(item => ({
+      id: item.id,
+      title: item.title || item.exam_name || 'Exam',
+      examName: item.title || item.exam_name || 'Exam',
+      classId: item.class_id,
+      tenantId: item.tenant_id,
+      fileUrl: item.file_url || item.pdf_url || item.image_url,
+      pdfUrl: item.pdf_url || item.file_url,
+      imageUrl: item.image_url || item.file_url,
+      dueDate: item.due_date,
+      isPublished: item.is_published,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      class: item.classId ? {
+        id: item.classId,
+        name: item.className,
+        section: item.classSection,
+      } : null,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        exams,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error in getExams (studentController):', error);
+    next(error);
+  }
+};
+
+/**
+ * Get single exam details (New Exam table with PDF/Image support)
+ * GET /api/student/exams/:id
+ */
+const getExamById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const classId = req.user.classId;
+    const tenantId = req.user.tenantId;
+
+    // Get exam - include global exams (class_id IS NULL)
+    const examQuery = `
+      SELECT 
+        e.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "Exam" e
+      LEFT JOIN "Class" c ON e."class_id" = c.id
+      WHERE e.id = $1 AND e."tenant_id" = $2 AND (e."class_id" = $3 OR e."class_id" IS NULL) AND e."is_published" = true
+    `;
+
+    const examResult = await db.query(examQuery, [id, tenantId, classId]);
+
+    if (examResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Exam not found',
+        },
+      });
+    }
+
+    const item = examResult.rows[0];
+
+    const exam = {
+      id: item.id,
+      title: item.title || item.exam_name || 'Exam',
+      examName: item.title || item.exam_name || 'Exam',
+      classId: item.class_id,
+      tenantId: item.tenant_id,
+      fileUrl: item.file_url || item.pdf_url || item.image_url,
+      pdfUrl: item.pdf_url || item.file_url,
+      imageUrl: item.image_url || item.file_url,
+      dueDate: item.due_date,
+      isPublished: item.is_published,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      class: item.classId ? {
+        id: item.classId,
+        name: item.className,
+        section: item.classSection,
+      } : null,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: exam,
+    });
+  } catch (error) {
+    console.error('Error in getExamById (studentController):', error);
     next(error);
   }
 };
@@ -916,6 +1068,9 @@ module.exports = {
   getCircularById,
   getExamSchedules,
   getExamScheduleById,
+  // New Exam table endpoints (PDF/Image based timetables)
+  getExams,
+  getExamById,
   getProfile,
   updateProfile,
 };

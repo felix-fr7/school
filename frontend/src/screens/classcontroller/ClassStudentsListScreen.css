@@ -1,0 +1,192 @@
+/**
+ * Class Students List Screen (Ionic React Styles)
+ * View and manage students for the class
+ */
+
+/* ============================================
+   Loading State
+   ============================================ */
+.students-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.students-loading .loading-text {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--ion-color-medium);
+}
+
+/* ============================================
+   Content Container
+   ============================================ */
+.students-list-content {
+  --background: #FFF5F0;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 16px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+}
+
+.empty-subtext {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* ============================================
+   Student Card
+   ============================================ */
+.student-card {
+  --background: #FFFFFF;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --min-height: auto;
+}
+
+.student-card::part(native) {
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-radius: 16px;
+}
+
+.student-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: var(--ion-color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  --border-radius: 24px;
+}
+
+.student-avatar span {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.student-info {
+  flex: 1;
+}
+
+.student-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0;
+}
+
+.student-email {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 4px 0;
+}
+
+.student-id-badge {
+  font-size: 11px;
+  font-weight: 600;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  --padding-top: 4px;
+  --padding-bottom: 4px;
+  border-radius: 6px;
+}
+
+/* ============================================
+   Student Actions
+   ============================================ */
+.student-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.student-actions ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+/* ============================================
+   FAB Button
+   ============================================ */
+ion-fab {
+  --bottom: 20px;
+  --right: 20px;
+}
+
+ion-fab-button {
+  --box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (min-width: 768px) {
+  .student-card {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .students-list-content {
+    --background: #121212;
+  }
+
+  .student-card {
+    --background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .student-name {
+    color: #fff;
+  }
+
+  .student-email {
+    color: #888;
+  }
+
+  .empty-state h3 {
+    color: #fff;
+  }
+
+  .empty-subtext {
+    color: #888;
+  }
+}

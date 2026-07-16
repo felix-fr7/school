@@ -1,19 +1,32 @@
+/**
+ * Create Teacher Screen (Ionic React Version)
+ * Form to create a new teacher with optional class assignment
+ */
+
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButtons,
+  IonBackButton,
+  IonButton,
+  IonInput,
+  IonText,
+  IonSpinner,
+  IonAlert,
+  IonSelect,
+  IonSelectOption,
+} from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import { Class } from '../../types';
+import './CreateTeacherScreen.css';
 
 const CreateTeacherScreen: React.FC = () => {
+  const history = useHistory();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,6 +35,9 @@ const CreateTeacherScreen: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchingClasses, setFetchingClasses] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     fetchClasses();
@@ -44,19 +60,27 @@ const CreateTeacherScreen: React.FC = () => {
   const handleSubmit = async () => {
     // Validation
     if (!name.trim()) {
-      Alert.alert('Error', 'Please enter teacher name');
+      setAlertMessage('Please enter teacher name');
+      setIsSuccess(false);
+      setShowAlert(true);
       return;
     }
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter teacher email');
+      setAlertMessage('Please enter teacher email');
+      setIsSuccess(false);
+      setShowAlert(true);
       return;
     }
     if (!password.trim()) {
-      Alert.alert('Error', 'Please enter password');
+      setAlertMessage('Please enter password');
+      setIsSuccess(false);
+      setShowAlert(true);
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      setAlertMessage('Password must be at least 6 characters');
+      setIsSuccess(false);
+      setShowAlert(true);
       return;
     }
 
@@ -71,166 +95,145 @@ const CreateTeacherScreen: React.FC = () => {
       });
 
       if (response.success) {
-        Alert.alert('Success', 'Teacher created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              setName('');
-              setEmail('');
-              setPassword('');
-              setPhone('');
-              setClassId(undefined);
-            },
-          },
-        ]);
+        setAlertMessage('Teacher created successfully!');
+        setIsSuccess(true);
+        setShowAlert(true);
+        // Reset form
+        setName('');
+        setEmail('');
+        setPassword('');
+        setPhone('');
+        setClassId(undefined);
       } else {
-        Alert.alert('Error', response.error?.message || 'Failed to create teacher');
+        setAlertMessage(response.error?.message || 'Failed to create teacher');
+        setIsSuccess(false);
+        setShowAlert(true);
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to create teacher');
+      const errorMessage = error.response?.data?.error?.message || 'Failed to create teacher';
+      setAlertMessage(errorMessage);
+      setIsSuccess(false);
+      setShowAlert(true);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleAlertDismiss = () => {
+    setShowAlert(false);
+    if (isSuccess) {
+      history.push('/admin/teachers');
+    }
+  };
+
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <View style={styles.form}>
-        <Text style={styles.description}>
-          Create a new teacher account. The teacher will be able to log in and manage their assigned class.
-        </Text>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/admin/teachers" />
+          </IonButtons>
+          <IonTitle>Create Teacher</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="create-teacher-content">
+        <div className="form-container">
+          <IonText color="medium" className="description">
+            Create a new teacher account. The teacher will be able to log in and manage their assigned class.
+          </IonText>
 
-        <Text style={styles.label}>Teacher Name *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter teacher's full name"
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
+          <div className="input-group">
+            <label className="input-label">Teacher Name *</label>
+            <IonInput
+              placeholder="Enter teacher's full name"
+              value={name}
+              onIonInput={(e) => setName(e.detail.value || '')}
+              autocapitalize="words"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Email / Login ID *</label>
+            <IonInput
+              placeholder="Enter teacher's email address"
+              value={email}
+              onIonInput={(e) => setEmail(e.detail.value || '')}
+              type="email"
+              autocapitalize="none"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Password *</label>
+            <IonInput
+              type="password"
+              placeholder="Enter password (min 6 characters)"
+              value={password}
+              onIonInput={(e) => setPassword(e.detail.value || '')}
+              autocapitalize="off"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Phone Number</label>
+            <IonInput
+              placeholder="Enter phone number"
+              value={phone}
+              onIonInput={(e) => setPhone(e.detail.value || '')}
+              type="tel"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Assign to Class</label>
+            {fetchingClasses ? (
+              <div className="picker-loading">
+                <IonSpinner name="crescent" />
+                <IonText color="medium">Loading classes...</IonText>
+              </div>
+            ) : (
+              <IonSelect
+                value={classId}
+                placeholder="No class assigned (optional)"
+                interface="popover"
+                onIonChange={(e) => setClassId(e.detail.value || undefined)}
+                disabled={loading}
+                className="class-select"
+              >
+                <IonSelectOption value="">No class assigned (optional)</IonSelectOption>
+                {classes.map((cls) => (
+                  <IonSelectOption key={cls.id} value={cls.id}>
+                    {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
+                  </IonSelectOption>
+                ))}
+              </IonSelect>
+            )}
+          </div>
+
+          <div className="button-row">
+            <IonButton expand="block" color="medium" onClick={() => history.goBack()} disabled={loading}>
+              Cancel
+            </IonButton>
+            <IonButton expand="block" color="primary" onClick={handleSubmit} disabled={loading}>
+              {loading ? <IonSpinner name="crescent" /> : 'Create Teacher'}
+            </IonButton>
+          </div>
+        </div>
+
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={handleAlertDismiss}
+          header={isSuccess ? 'Success' : 'Error'}
+          message={alertMessage}
+          buttons={['OK']}
         />
-
-        <Text style={styles.label}>Email / Login ID *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter teacher's email address"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <Text style={styles.label}>Password *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter password (min 6 characters)"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <Text style={styles.label}>Phone Number</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter phone number"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
-
-        <Text style={styles.label}>Assign to Class</Text>
-        {fetchingClasses ? (
-          <View style={styles.pickerContainer}>
-            <ActivityIndicator size="small" />
-          </View>
-        ) : (
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={classId}
-              onValueChange={(itemValue: string) => setClassId(itemValue || undefined)}
-              style={styles.picker}
-            >
-              <Picker.Item label="No class assigned (optional)" value="" />
-              {classes.map((cls) => (
-                <Picker.Item
-                  key={cls.id}
-                  label={cls.section ? `${cls.name} - ${cls.section}` : cls.name}
-                  value={cls.id}
-                />
-              ))}
-            </Picker>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Create Teacher</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  form: {
-    padding: 20,
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-  },
-  pickerContainer: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
-  submitButton: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default CreateTeacherScreen;

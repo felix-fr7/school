@@ -1,28 +1,52 @@
 /**
- * Admin Dashboard Screen
+ * Admin Dashboard Screen (Ionic React Version)
  * Main dashboard for School Admin
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { AdminStackParamList } from '../../types';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonButton,
+  IonIcon,
+  IonBadge,
+  IonText,
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent,
+  IonCard,
+  IonCardContent,
+} from '@ionic/react';
+import { useHistory } from 'react-router-dom';
+import {
+  bookOutline,
+  peopleOutline,
+  personOutline,
+  documentTextOutline,
+  statsChartOutline,
+  newspaperOutline,
+  clipboardOutline,
+  calendarOutline,
+  logOutOutline,
+  refreshOutline,
+} from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI } from '../../services/api';
+import './DashboardScreen.css';
 
-type NavigationProp = StackNavigationProp<AdminStackParamList, 'AdminDashboard'>;
+interface MenuItem {
+  id: string;
+  title: string;
+  icon: any;
+  route: string;
+  count?: number;
+}
 
 const AdminDashboardScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const history = useHistory();
   const { user, logout } = useAuth();
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -35,7 +59,6 @@ const AdminDashboardScreen: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch data from various endpoints
       const [classesRes, studentsRes, homeworkRes, newsRes] = await Promise.all([
         adminAPI.getClasses(),
         adminAPI.getStudents(1, 1),
@@ -61,170 +84,84 @@ const AdminDashboardScreen: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const onRefresh = () => {
+  const onRefresh = async (event: CustomEvent) => {
     setRefreshing(true);
-    fetchDashboardData();
+    await fetchDashboardData();
+    event.detail.complete();
   };
+
+  const handleLogout = async () => {
+    await logout();
+    history.push('/login');
+  };
+
+  const menuItems: MenuItem[] = [
+    { id: '1', title: 'Classes', icon: bookOutline, route: '/admin/classes', count: stats.totalClasses },
+    { id: '2', title: 'Teachers', icon: personOutline, route: '/admin/teachers' },
+    { id: '3', title: 'Students', icon: peopleOutline, route: '/admin/students', count: stats.totalStudents },
+    { id: '4', title: 'Homework', icon: documentTextOutline, route: '/admin/homework', count: stats.totalHomework },
+    { id: '5', title: 'Marks', icon: statsChartOutline, route: '/admin/marks' },
+    { id: '6', title: 'News', icon: newspaperOutline, route: '/admin/admin-news', count: stats.totalNews },
+    { id: '7', title: 'Circulars', icon: clipboardOutline, route: '/admin/admin-circulars' },
+    { id: '8', title: 'Exams', icon: calendarOutline, route: '/admin/admin-exams' },
+  ];
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2e7d32" />
-      </View>
+      <IonPage>
+        <IonContent className="admin-dashboard-loading ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
     );
   }
 
-  const menuItems = [
-    { id: 'ClassesList', title: 'Classes', icon: '📚', count: stats.totalClasses },
-    { id: 'TeachersList', title: 'Teachers', icon: '👨‍🏫', count: 0 },
-    { id: 'StudentsList', title: 'Students', icon: '👨‍🎓', count: stats.totalStudents },
-    { id: 'HomeworkList', title: 'Homework', icon: '📝', count: stats.totalHomework },
-    { id: 'MarksList', title: 'Marks', icon: '📊', count: 0 },
-    { id: 'AdminNews', title: 'News', icon: '📰', count: stats.totalNews },
-    { id: 'AdminCirculars', title: 'Circulars', icon: '📋', count: 0 },
-    { id: 'AdminExams', title: 'Exams', icon: '📅', count: 0 },
-  ];
-
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>Welcome, {user?.name}</Text>
-        <Text style={styles.roleText}>School Administrator</Text>
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar color="primary">
+          <IonTitle>Admin Dashboard</IonTitle>
+          <IonButton slot="end" fill="clear" onClick={handleLogout}>
+            <IonIcon icon={logOutOutline} slot="icon-only" />
+          </IonButton>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="admin-dashboard">
+        <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
+          <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
+        </IonRefresher>
 
+        {/* Header */}
+        <div className="dashboard-header">
+          <h2 className="welcome-text">Welcome, {user?.name}</h2>
+          <p className="role-text">School Administrator</p>
+        </div>
 
-      {/* Menu Grid */}
-      <View style={styles.menuGrid}>
-        {menuItems.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={styles.menuItem}
-            onPress={() => navigation.navigate(item.id as any)}
-          >
-            <Text style={styles.menuIcon}>{item.icon}</Text>
-            <Text style={styles.menuTitle}>{item.title}</Text>
-            {item.count > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.count}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <Text style={styles.logoutText}>Logout</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* Menu Grid */}
+        <div className="menu-grid">
+          {menuItems.map((item) => (
+            <IonCard
+              key={item.id}
+              className="menu-item"
+              onClick={() => history.push(item.route)}
+            >
+              <IonCardContent>
+                <div className="menu-icon">
+                  <IonIcon icon={item.icon} />
+                </div>
+                <h3 className="menu-title">{item.title}</h3>
+                {item.count !== undefined && item.count > 0 && (
+                  <IonBadge color="primary" className="menu-badge">
+                    {item.count}
+                  </IonBadge>
+                )}
+              </IonCardContent>
+            </IonCard>
+          ))}
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    backgroundColor: '#2e7d32',
-    padding: 20,
-    paddingTop: 30,
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  roleText: {
-    fontSize: 14,
-    color: '#c8e6c9',
-    marginTop: 4,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-  },
-  quickActionButton: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    elevation: 2,
-  },
-  quickActionIcon: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  quickActionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  menuGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  menuItem: {
-    width: '47%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    elevation: 2,
-    position: 'relative',
-  },
-  menuIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  menuTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  badge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#2e7d32',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-    paddingHorizontal: 4,
-  },
-  logoutButton: {
-    backgroundColor: '#f44336',
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default AdminDashboardScreen;

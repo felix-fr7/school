@@ -1,27 +1,58 @@
 /**
- * School Detail Screen - Super Admin
- * Shows details of a specific school
+ * School Detail Screen - Super Admin (Ionic React Version)
+ * Shows details of a specific school/tenant
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
-import { SuperAdminStackParamList } from '../../types';
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonBackButton,
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonIcon,
+  IonSpinner,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonBadge,
+} from '@ionic/react';
+import {
+  businessOutline,
+  mailOutline,
+  callOutline,
+  locationOutline,
+  peopleOutline,
+  personOutline,
+  bookOutline,
+  documentTextOutline,
+} from 'ionicons/icons';
+import { useParams } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
+import './SchoolDetailScreen.css';
 
-type RoutePropType = RouteProp<SuperAdminStackParamList, 'SchoolDetail'>;
+interface SchoolStats {
+  totalStudents: number;
+  totalAdmins: number;
+  totalClasses: number;
+  totalHomeworks: number;
+}
+
+interface SchoolUser {
+  id: string;
+  name: string;
+  email: string;
+}
 
 const SchoolDetailScreen: React.FC = () => {
-  const route = useRoute<RoutePropType>();
-  const { tenantId } = route.params;
+  const { tenantId } = useParams<{ tenantId: string }>();
   const [school, setSchool] = useState<any>(null);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<SchoolStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +62,7 @@ const SchoolDetailScreen: React.FC = () => {
           tenantsAPI.getTenant(tenantId),
           tenantsAPI.getTenantStats(tenantId),
         ]);
-        
+
         if (schoolRes.success && schoolRes.data) {
           setSchool(schoolRes.data);
         }
@@ -50,165 +81,162 @@ const SchoolDetailScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1a237e" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonBackButton defaultHref="/superadmin/schools" />
+            <IonTitle>School Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="school-detail-content" fullscreen>
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <p>Loading school details...</p>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   if (!school) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>School not found</Text>
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonBackButton defaultHref="/superadmin/schools" />
+            <IonTitle>School Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="school-detail-content" fullscreen>
+          <div className="empty-container">
+            <IonIcon icon={businessOutline} className="empty-icon" />
+            <p className="empty-text">School not found</p>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.schoolName}>{school.name}</Text>
-        <Text style={styles.schoolCode}>{school.code}</Text>
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonBackButton defaultHref="/superadmin/schools" />
+          <IonTitle>{school.name}</IonTitle>
+        </IonToolbar>
+      </IonHeader>
 
-      {school.address || school.phone || school.email ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-          {school.address && <Text style={styles.infoText}>📍 {school.address}</Text>}
-          {school.phone && <Text style={styles.infoText}>📞 {school.phone}</Text>}
-          {school.email && <Text style={styles.infoText}>📧 {school.email}</Text>}
-        </View>
-      ) : null}
+      <IonContent className="school-detail-content" fullscreen>
+        <div className="container">
+          {/* Header Card */}
+          <IonCard className="header-card">
+            <IonCardContent>
+              <div className="header-content">
+                <IonIcon icon={businessOutline} className="header-icon" />
+                <div className="header-info">
+                  <h1 className="school-name">{school.name}</h1>
+                  <p className="school-code">{school.code}</p>
+                </div>
+              </div>
+            </IonCardContent>
+          </IonCard>
 
-      {stats && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Statistics</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats.totalStudents}</Text>
-              <Text style={styles.statLabel}>Students</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats.totalAdmins}</Text>
-              <Text style={styles.statLabel}>Admins</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats.totalClasses}</Text>
-              <Text style={styles.statLabel}>Classes</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats.totalHomeworks}</Text>
-              <Text style={styles.statLabel}>Homework</Text>
-            </View>
-          </View>
-        </View>
-      )}
+          {/* Contact Information */}
+          {(school.address || school.phone || school.email) && (
+            <IonCard className="info-card">
+              <IonCardHeader>
+                <IonCardTitle>Contact Information</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                <IonList lines="none">
+                  {school.address && (
+                    <IonItem>
+                      <IonIcon icon={locationOutline} slot="start" color="primary" />
+                      <IonLabel>{school.address}</IonLabel>
+                    </IonItem>
+                  )}
+                  {school.phone && (
+                    <IonItem>
+                      <IonIcon icon={callOutline} slot="start" color="primary" />
+                      <IonLabel>{school.phone}</IonLabel>
+                    </IonItem>
+                  )}
+                  {school.email && (
+                    <IonItem>
+                      <IonIcon icon={mailOutline} slot="start" color="primary" />
+                      <IonLabel>{school.email}</IonLabel>
+                    </IonItem>
+                  )}
+                </IonList>
+              </IonCardContent>
+            </IonCard>
+          )}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Admins</Text>
-        {school.users && school.users.length > 0 ? (
-          school.users.map((admin: any) => (
-            <View key={admin.id} style={styles.adminCard}>
-              <Text style={styles.adminName}>{admin.name}</Text>
-              <Text style={styles.adminEmail}>{admin.email}</Text>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>No admins assigned</Text>
-        )}
-      </View>
-    </ScrollView>
+          {/* Statistics */}
+          {stats && (
+            <IonCard className="stats-card">
+              <IonCardHeader>
+                <IonCardTitle>Statistics</IonCardTitle>
+              </IonCardHeader>
+              <IonCardContent>
+                <div className="stats-grid">
+                  <div className="stat-item">
+                    <IonIcon icon={peopleOutline} className="stat-icon" />
+                    <div className="stat-number">{stats.totalStudents}</div>
+                    <div className="stat-label">Students</div>
+                  </div>
+                  <div className="stat-item">
+                    <IonIcon icon={personOutline} className="stat-icon" />
+                    <div className="stat-number">{stats.totalAdmins}</div>
+                    <div className="stat-label">Admins</div>
+                  </div>
+                  <div className="stat-item">
+                    <IonIcon icon={bookOutline} className="stat-icon" />
+                    <div className="stat-number">{stats.totalClasses}</div>
+                    <div className="stat-label">Classes</div>
+                  </div>
+                  <div className="stat-item">
+                    <IonIcon icon={documentTextOutline} className="stat-icon" />
+                    <div className="stat-number">{stats.totalHomeworks}</div>
+                    <div className="stat-label">Homework</div>
+                  </div>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          )}
+
+          {/* Admins */}
+          <IonCard className="admins-card">
+            <IonCardHeader>
+              <IonCardTitle>Administrators</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              {school.users && school.users.length > 0 ? (
+                <IonList lines="none">
+                  {school.users.map((admin: SchoolUser) => (
+                    <IonItem key={admin.id} className="admin-item">
+                      <div className="admin-avatar">
+                        {admin.name.charAt(0).toUpperCase()}
+                      </div>
+                      <IonLabel>
+                        <h3 className="admin-name">{admin.name}</h3>
+                        <p className="admin-email">{admin.email}</p>
+                      </IonLabel>
+                      <IonBadge slot="end" color="primary">Admin</IonBadge>
+                    </IonItem>
+                  ))}
+                </IonList>
+              ) : (
+                <div className="empty-admins">
+                  <p>No admins assigned to this school</p>
+                </div>
+              )}
+            </IonCardContent>
+          </IonCard>
+        </div>
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    backgroundColor: '#1a237e',
-    padding: 20,
-    alignItems: 'center',
-  },
-  schoolName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  schoolCode: {
-    fontSize: 14,
-    color: '#c5cae9',
-    marginTop: 4,
-  },
-  section: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 16,
-    borderRadius: 8,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  statItem: {
-    width: '50%',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a237e',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  adminCard: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  adminName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  adminEmail: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-});
 
 export default SchoolDetailScreen;

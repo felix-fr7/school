@@ -1,27 +1,33 @@
 /**
- * Student News Detail Screen
+ * Student News Detail Screen (Ionic React Version)
  * Displays full news article with content, images, and PDF attachments
  */
 
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-  Linking,
-  Image,
-  Dimensions,
-  Alert,
-} from 'react-native';
-import * as Sharing from 'expo-sharing';
-import { StackScreenProps } from '@react-navigation/stack';
-import { StudentStackParamList } from '../../types';
-import { contentAPI } from '../../services/api';
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonBackButton,
+  IonButtons,
+  IonBadge,
+  IonText,
+  IonSpinner,
+  IonIcon,
+  IonButton,
+  IonImg,
+  IonAlert,
+} from '@ionic/react';
+import { useParams } from 'react-router-dom';
+import { documentOutline, imageOutline, personOutline, calendarOutline, downloadOutline } from 'ionicons/icons';
+import { studentAPI } from '../../services/api';
+import './NewsDetailScreen.css';
 
-type NewsDetailScreenProps = StackScreenProps<StudentStackParamList, 'StudentNewsDetail'>;
+interface NewsDetailParams {
+  newsId: string;
+}
 
 interface NewsItem {
   id: string;
@@ -35,13 +41,11 @@ interface NewsItem {
   postedByUser?: { name: string };
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const IMAGE_HEIGHT = SCREEN_WIDTH * 0.5;
-
-const StudentNewsDetailScreen: React.FC<NewsDetailScreenProps> = ({ route, navigation }) => {
-  const { newsId } = route.params;
+const StudentNewsDetailScreen: React.FC = () => {
+  const { newsId } = useParams<NewsDetailParams>();
   const [news, setNews] = useState<NewsItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPdfAlert, setShowPdfAlert] = useState(false);
 
   useEffect(() => {
     fetchNewsDetail();
@@ -50,7 +54,7 @@ const StudentNewsDetailScreen: React.FC<NewsDetailScreenProps> = ({ route, navig
   const fetchNewsDetail = async () => {
     try {
       setLoading(true);
-      const response = await contentAPI.getNews(1, 20, '');
+      const response = await studentAPI.getNews(1, 20, '');
       if (response.success && response.data) {
         const foundNews = response.data.news.find((n: NewsItem) => n.id === newsId);
         if (foundNews) {
@@ -73,311 +77,135 @@ const StudentNewsDetailScreen: React.FC<NewsDetailScreenProps> = ({ route, navig
     });
   };
 
-  const handleOpenPdf = async () => {
+  const handleOpenPdf = () => {
     if (!news?.pdfUrl) return;
-
-    const url = news.pdfUrl;
-
-    try {
-      if (url.startsWith('file://')) {
-        // Handle local cache files safely via sharing/viewing sheets
-        const isAvailable = await Sharing.isAvailableAsync();
-        if (isAvailable) {
-          await Sharing.shareAsync(url);
-        } else {
-          Alert.alert(
-            'File Not Supported',
-            'Local file sharing is not available on this device. Please try opening the PDF from a web browser.'
-          );
-        }
-      } else if (url.startsWith('http://') || url.startsWith('https://')) {
-        const supported = await Linking.canOpenURL(url);
-        if (supported) {
-          await Linking.openURL(url);
-        } else {
-          Alert.alert(
-            'Cannot Open URL',
-            'This device cannot open the PDF link. Please try using a different browser or app.'
-          );
-        }
-      } else {
-        Alert.alert(
-          'Invalid Format',
-          'The document format is not supported. Please contact support if this issue persists.'
-        );
-      }
-    } catch (error) {
-      console.error('Error opening file:', error);
-      Alert.alert(
-        'Error',
-        'Could not open the PDF file. Please try again later or contact support.'
-      );
-    }
+    // Open PDF in new tab (web) or show alert for mobile
+    window.open(news.pdfUrl, '_blank');
   };
 
-  const handleOpenImage = async () => {
+  const handleOpenImage = () => {
     if (!news?.imageUrl) return;
-
-    const url = news.imageUrl;
-
-    try {
-      if (url.startsWith('file://')) {
-        // Handle local cache files safely via sharing/viewing sheets
-        const isAvailable = await Sharing.isAvailableAsync();
-        if (isAvailable) {
-          await Sharing.shareAsync(url);
-        } else {
-          Alert.alert(
-            'File Not Supported',
-            'Local image sharing is not available on this device.'
-          );
-        }
-      } else if (url.startsWith('http://') || url.startsWith('https://')) {
-        const supported = await Linking.canOpenURL(url);
-        if (supported) {
-          await Linking.openURL(url);
-        } else {
-          Alert.alert(
-            'Cannot Open URL',
-            'This device cannot open the image link. Please try using a different browser or app.'
-          );
-        }
-      } else {
-        Alert.alert(
-          'Invalid Format',
-          'The image format is not supported. Please contact support if this issue persists.'
-        );
-      }
-    } catch (error) {
-      console.error('Error opening image:', error);
-      Alert.alert(
-        'Error',
-        'Could not open the image file. Please try again later or contact support.'
-      );
-    }
+    // Open image in new tab
+    window.open(news.imageUrl, '_blank');
   };
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E3A8A" />
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/news" />
+            </IonButtons>
+            <IonTitle>News Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+        </IonContent>
+      </IonPage>
     );
   }
 
   if (!news) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorIcon}>📰</Text>
-        <Text style={styles.errorText}>News article not found</Text>
-      </View>
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/news" />
+            </IonButtons>
+            <IonTitle>News Details</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="news-detail-content">
+          <div className="error-container">
+            <IonIcon icon={documentOutline} className="error-icon" />
+            <IonText color="medium">
+              <h3>News article not found</h3>
+            </IonText>
+          </div>
+        </IonContent>
+      </IonPage>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Category Badge */}
-      {news.category && (
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{news.category}</Text>
-        </View>
-      )}
-
-      {/* Title */}
-      <Text style={styles.title}>{news.title}</Text>
-
-      {/* Meta Information */}
-      <View style={styles.metaContainer}>
-        <Text style={styles.date}>{formatDate(news.createdAt)}</Text>
-        {news.postedByUser && (
-          <Text style={styles.author}>By: {news.postedByUser.name}</Text>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/student/news" />
+          </IonButtons>
+          <IonTitle>News Details</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent className="news-detail-content">
+        {/* Category Badge */}
+        {news.category && (
+          <div className="category-badge">
+            <IonBadge color="secondary">{news.category}</IonBadge>
+          </div>
         )}
-      </View>
 
-      {/* Image */}
-      {news.imageUrl && (
-        <TouchableOpacity onPress={handleOpenImage} activeOpacity={0.8}>
-          <Image
-            source={{ uri: news.imageUrl }}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      )}
+        {/* Title */}
+        <h1 className="news-title">{news.title}</h1>
 
-      {/* Content */}
-      <View style={styles.contentContainer}>
-        <Text style={styles.content}>{news.content}</Text>
-      </View>
+        {/* Meta Information */}
+        <div className="meta-container">
+          <IonText color="medium" className="meta-date">
+            <IonIcon icon={calendarOutline} /> {formatDate(news.createdAt)}
+          </IonText>
+          {news.postedByUser && (
+            <IonText color="medium" className="meta-author">
+              <IonIcon icon={personOutline} /> By: {news.postedByUser.name}
+            </IonText>
+          )}
+        </div>
 
-      {/* PDF Attachment */}
-      {news.pdfUrl && (
-        <View style={styles.pdfContainer}>
-          <Text style={styles.pdfLabel}>📎 Attachment</Text>
-          <TouchableOpacity
-            style={styles.pdfButton}
-            onPress={handleOpenPdf}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.pdfButtonText}>📄 Open PDF Document</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        {/* Image */}
+        {news.imageUrl && (
+          <div className="image-container" onClick={handleOpenImage}>
+            <IonImg src={news.imageUrl} className="news-image" />
+            <div className="image-overlay">
+              <IonIcon icon={imageOutline} />
+              <span>Click to view full image</span>
+            </div>
+          </div>
+        )}
 
-      {/* Summary (if different from content) */}
-      {news.summary && news.summary !== news.content && (
-        <View style={styles.summaryContainer}>
-          <Text style={styles.summaryLabel}>Summary</Text>
-          <Text style={styles.summaryText}>{news.summary}</Text>
-        </View>
-      )}
-    </ScrollView>
+        {/* Content */}
+        <div className="content-container">
+          <p className="news-content">{news.content}</p>
+        </div>
+
+        {/* PDF Attachment */}
+        {news.pdfUrl && (
+          <div className="pdf-container">
+            <h4 className="pdf-label">
+              <IonIcon icon={documentOutline} /> Attachment
+            </h4>
+            <IonButton
+              expand="block"
+              color="secondary"
+              onClick={handleOpenPdf}
+              className="pdf-button"
+            >
+              <IonIcon icon={downloadOutline} /> Open PDF Document
+            </IonButton>
+          </div>
+        )}
+
+        {/* Summary */}
+        {news.summary && news.summary !== news.content && (
+          <div className="summary-container">
+            <h4 className="summary-label">Summary</h4>
+            <p className="summary-text">{news.summary}</p>
+          </div>
+        )}
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    paddingVertical: 60,
-  },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#64748B',
-    textAlign: 'center',
-  },
-
-  // Category Badge
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#1E3A8A',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginLeft: 16,
-    marginTop: 16,
-  },
-  categoryText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-
-  // Title
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1E293B',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-    lineHeight: 32,
-  },
-
-  // Meta Information
-  metaContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  date: {
-    fontSize: 13,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  author: {
-    fontSize: 13,
-    color: '#64748B',
-    fontStyle: 'italic',
-  },
-
-  // Image
-  image: {
-    width: SCREEN_WIDTH - 32,
-    height: IMAGE_HEIGHT,
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    backgroundColor: '#E2E8F0',
-  },
-
-  // Content
-  contentContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  content: {
-    fontSize: 16,
-    color: '#334155',
-    lineHeight: 26,
-    letterSpacing: 0.2,
-  },
-
-  // PDF Attachment
-  pdfContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 20,
-  },
-  pdfLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
-    marginBottom: 12,
-  },
-  pdfButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pdfButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1E3A8A',
-  },
-
-  // Summary
-  summaryContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 24,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
-    marginBottom: 8,
-  },
-  summaryText: {
-    fontSize: 14,
-    color: '#64748B',
-    lineHeight: 22,
-  },
-});
 
 export default StudentNewsDetailScreen;

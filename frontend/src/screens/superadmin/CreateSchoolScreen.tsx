@@ -1,28 +1,32 @@
 /**
- * Create School Screen - Super Admin
+ * Create School Screen - Super Admin (Ionic React Version)
  * Form to create a new school and assign admin
  */
 
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { SuperAdminStackParamList } from '../../types';
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonInput,
+  IonButton,
+  IonSpinner,
+  IonAlert,
+  IonIcon,
+} from '@ionic/react';
+import { schoolOutline } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
-
-type NavigationProp = StackNavigationProp<SuperAdminStackParamList, 'CreateSchool'>;
+import './CreateSchoolScreen.css';
 
 const CreateSchoolScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const history = useHistory();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -34,11 +38,20 @@ const CreateSchoolScreen: React.FC = () => {
     adminEmail: '',
     adminPassword: '',
   });
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertHeader, setAlertHeader] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const showAlertMessage = (header: string, message: string) => {
+    setAlertHeader(header);
+    setAlertMessage(message);
+    setShowAlert(true);
+  };
 
   const handleCreate = async () => {
     // Validation
     if (!formData.name || !formData.code || !formData.adminName || !formData.adminEmail || !formData.adminPassword) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      showAlertMessage('Error', 'Please fill in all required fields');
       return;
     }
 
@@ -46,146 +59,153 @@ const CreateSchoolScreen: React.FC = () => {
     try {
       const response = await tenantsAPI.createTenant(formData);
       if (response.success) {
-        Alert.alert('Success', 'School created successfully', [
-          { text: 'OK', onPress: () => navigation.navigate('SuperAdminDashboard') }
-        ]);
+        showAlertMessage('Success', 'School created successfully');
+        setTimeout(() => {
+          history.push('/superadmin/dashboard');
+        }, 1500);
       } else {
-        Alert.alert('Error', response.error?.message || 'Failed to create school');
+        showAlertMessage('Error', response.error?.message || 'Failed to create school');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.error?.message || 'Failed to create school');
+      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to create school');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>School Information</Text>
-        
-        <TextInput
-          style={styles.input}
-          placeholder="School Name *"
-          value={formData.name}
-          onChangeText={(text) => setFormData({ ...formData, name: text })}
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="School Code * (e.g., SCH001)"
-          value={formData.code}
-          onChangeText={(text) => setFormData({ ...formData, code: text })}
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Address"
-          value={formData.address}
-          onChangeText={(text) => setFormData({ ...formData, address: text })}
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          value={formData.phone}
-          onChangeText={(text) => setFormData({ ...formData, phone: text })}
-          keyboardType="phone-pad"
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={formData.email}
-          onChangeText={(text) => setFormData({ ...formData, email: text })}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </View>
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Create School</IonTitle>
+        </IonToolbar>
+      </IonHeader>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Admin Credentials</Text>
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Admin Name *"
-          value={formData.adminName}
-          onChangeText={(text) => setFormData({ ...formData, adminName: text })}
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Admin Email *"
-          value={formData.adminEmail}
-          onChangeText={(text) => setFormData({ ...formData, adminEmail: text })}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Admin Password * (min 6 chars, 1 number)"
-          value={formData.adminPassword}
-          onChangeText={(text) => setFormData({ ...formData, adminPassword: text })}
-          secureTextEntry
-        />
-      </View>
+      <IonContent className="create-school-content" fullscreen>
+        <div className="container">
+          {/* Header */}
+          <div className="header-section">
+            <IonIcon icon={schoolOutline} className="header-icon" />
+            <h1 className="header-title">Create New School</h1>
+            <p className="header-subtitle">Set up a new school and assign an administrator</p>
+          </div>
 
-      <TouchableOpacity
-        style={[styles.createButton, loading && styles.createButtonDisabled]}
-        onPress={handleCreate}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.createButtonText}>Create School</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+          {/* School Information */}
+          <IonCard className="form-card">
+            <IonCardHeader>
+              <IonCardTitle>School Information</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <div className="input-group">
+                <label className="input-label">School Name *</label>
+                <IonInput
+                  value={formData.name}
+                  onIonInput={(e) => setFormData({ ...formData, name: e.detail.value || '' })}
+                  placeholder="Enter school name"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">School Code * (e.g., SCH001)</label>
+                <IonInput
+                  value={formData.code}
+                  onIonInput={(e) => setFormData({ ...formData, code: e.detail.value || '' })}
+                  placeholder="Enter unique school code"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Address</label>
+                <IonInput
+                  value={formData.address}
+                  onIonInput={(e) => setFormData({ ...formData, address: e.detail.value || '' })}
+                  placeholder="Enter school address"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Phone</label>
+                <IonInput
+                  type="tel"
+                  value={formData.phone}
+                  onIonInput={(e) => setFormData({ ...formData, phone: e.detail.value || '' })}
+                  placeholder="Enter phone number"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Email</label>
+                <IonInput
+                  type="email"
+                  value={formData.email}
+                  onIonInput={(e) => setFormData({ ...formData, email: e.detail.value || '' })}
+                  placeholder="Enter school email"
+                />
+              </div>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Admin Credentials */}
+          <IonCard className="form-card">
+            <IonCardHeader>
+              <IonCardTitle>Admin Credentials</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <div className="input-group">
+                <label className="input-label">Admin Name *</label>
+                <IonInput
+                  value={formData.adminName}
+                  onIonInput={(e) => setFormData({ ...formData, adminName: e.detail.value || '' })}
+                  placeholder="Enter admin full name"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Admin Email *</label>
+                <IonInput
+                  type="email"
+                  value={formData.adminEmail}
+                  onIonInput={(e) => setFormData({ ...formData, adminEmail: e.detail.value || '' })}
+                  placeholder="Enter admin email"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Admin Password * (min 6 chars, 1 number)</label>
+                <IonInput
+                  type="password"
+                  value={formData.adminPassword}
+                  onIonInput={(e) => setFormData({ ...formData, adminPassword: e.detail.value || '' })}
+                  placeholder="Enter admin password"
+                />
+              </div>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Submit Button */}
+          <div className="button-container">
+            <IonButton
+              expand="block"
+              className="submit-button"
+              onClick={handleCreate}
+              disabled={loading}
+            >
+              {loading ? <IonSpinner name="crescent" /> : 'Create School'}
+            </IonButton>
+          </div>
+        </div>
+
+        {/* Alert */}
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={alertHeader}
+          message={alertMessage}
+          buttons={['OK']}
+        />
+      </IonContent>
+    </IonPage>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 14,
-  },
-  createButton: {
-    backgroundColor: '#1a237e',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  createButtonDisabled: {
-    opacity: 0.6,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export default CreateSchoolScreen;

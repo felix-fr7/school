@@ -1,0 +1,70 @@
+.exam-schedules-content {
+  --background: #f5f5f5;
+}
+
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+.exam-item {
+  --inner-padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --background: transparent;
+}
+
+.exam-card {
+  margin: 0 16px 12px 16px;
+  border-radius: 12px;
+  border-left: 4px solid #7b1fa2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.exam-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.exam-subject {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.exam-date {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.exam-detail {
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.exam-class {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+  margin-top: 4px;
+}

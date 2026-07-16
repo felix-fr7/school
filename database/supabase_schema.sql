@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS "Class" (
   section VARCHAR(10) NOT NULL, -- e.g., "A", "B"
   "teacherId" UUID REFERENCES "User"(id) ON DELETE SET NULL,
   "tenantId" UUID REFERENCES "Tenant"(id) ON DELETE CASCADE NOT NULL,
+  "class_code" VARCHAR(50) UNIQUE, -- Auto-generated class code (e.g., CLS-1)
+  "password" VARCHAR(255), -- Password for class-based login
   "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE("tenantId", "name", "section") -- Class name+section unique per school

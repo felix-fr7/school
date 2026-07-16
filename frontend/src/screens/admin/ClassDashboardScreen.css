@@ -1,0 +1,326 @@
+.class-dashboard-content {
+  --background: #f5f5f5;
+}
+
+.header-card {
+  background-color: #2e7d32;
+  padding: 24px 20px;
+}
+
+.class-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+  margin: 0 0 16px 0;
+}
+
+.teacher-info {
+  background-color: rgba(255, 255, 255, 0.15);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.teacher-label {
+  font-size: 12px;
+  color: #a5d6a7;
+  margin: 0 0 4px 0;
+}
+
+.teacher-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.teacher-email {
+  font-size: 13px;
+  color: #c8e6c9;
+  margin: 2px 0 0 0;
+}
+
+/* Bento Cards */
+.class-id-bento-card {
+  margin: 16px;
+  border-radius: 16px;
+  border: 2px solid #007AFF;
+}
+
+.class-id-bento-card IonCardContent {
+  padding: 20px;
+}
+
+.password-bento-card {
+  margin: 16px;
+  border-radius: 16px;
+}
+
+.password-bento-card IonCardContent {
+  padding: 20px;
+}
+
+.bento-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bento-icon {
+  font-size: 20px;
+  color: #007AFF;
+}
+
+.bento-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #007AFF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bento-value-container {
+  background-color: #F0F7FF;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.bento-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #007AFF;
+  letter-spacing: 2px;
+}
+
+.bento-note {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  margin: 0;
+}
+
+.password-bento-card .bento-icon {
+  color: #333;
+}
+
+.password-bento-card .bento-title {
+  color: #333;
+}
+
+.password-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.password-input-field {
+  flex: 1;
+}
+
+.reset-password-button {
+  min-width: 120px;
+}
+
+/* Edit Class Card */
+.edit-class-card {
+  margin: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.edit-class-card IonCardContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+}
+
+.edit-icon {
+  font-size: 18px;
+  color: #007AFF;
+}
+
+.edit-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #007AFF;
+}
+
+/* Section Cards */
+.section {
+  margin: 16px;
+  border-radius: 12px;
+}
+
+.section IonCardContent {
+  padding: 16px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2e7d32;
+  display: block;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #666;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Actions Grid */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.action-button {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.action-icon {
+  font-size: 28px;
+  color: #2e7d32;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.action-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+}
+
+/* List Items */
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item-content {
+  flex: 1;
+}
+
+.list-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+
+.list-item-subtitle {
+  font-size: 13px;
+  color: #666;
+  display: block;
+  margin-top: 2px;
+}
+
+.list-item-meta {
+  font-size: 12px;
+  color: #999;
+  display: block;
+  margin-top: 2px;
+}
+
+/* Announcement Items */
+.announcement-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.announcement-item:last-child {
+  border-bottom: none;
+}
+
+.announcement-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  display: block;
+}
+
+.announcement-summary {
+  font-size: 13px;
+  color: #666;
+  display: block;
+  margin-top: 4px;
+}
+
+.announcement-date {
+  font-size: 12px;
+  color: #999;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 20px;
+}
+
+.empty-icon {
+  font-size: 32px;
+  color: #999;
+  display: block;
+  margin-bottom: 8px;
+}
+
+/* Error Container */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+  gap: 16px;
+}
