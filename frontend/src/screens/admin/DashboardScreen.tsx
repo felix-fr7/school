@@ -1,6 +1,6 @@
 /**
- * Admin Dashboard Screen (Ionic React Version)
- * Main dashboard for School Admin
+ * Admin Dashboard Screen (Premium UI Version)
+ * Main dashboard for School Admin - Redesigned with modern, premium aesthetics
  */
 
 import React, { useEffect, useState } from 'react';
@@ -13,12 +13,14 @@ import {
   IonButton,
   IonIcon,
   IonBadge,
-  IonText,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonCard,
+  IonCardContent,
   IonSpinner,
   IonRefresher,
   IonRefresherContent,
-  IonCard,
-  IonCardContent,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import {
@@ -32,6 +34,8 @@ import {
   calendarOutline,
   logOutOutline,
   refreshOutline,
+  schoolOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -40,9 +44,11 @@ import './DashboardScreen.css';
 interface MenuItem {
   id: string;
   title: string;
+  subtitle: string;
   icon: any;
   route: string;
   count?: number;
+  color: string;
 }
 
 const AdminDashboardScreen: React.FC = () => {
@@ -96,21 +102,84 @@ const AdminDashboardScreen: React.FC = () => {
   };
 
   const menuItems: MenuItem[] = [
-    { id: '1', title: 'Classes', icon: bookOutline, route: '/admin/classes', count: stats.totalClasses },
-    { id: '2', title: 'Teachers', icon: personOutline, route: '/admin/teachers' },
-    { id: '3', title: 'Students', icon: peopleOutline, route: '/admin/students', count: stats.totalStudents },
-    { id: '4', title: 'Homework', icon: documentTextOutline, route: '/admin/homework', count: stats.totalHomework },
-    { id: '5', title: 'Marks', icon: statsChartOutline, route: '/admin/marks' },
-    { id: '6', title: 'News', icon: newspaperOutline, route: '/admin/admin-news', count: stats.totalNews },
-    { id: '7', title: 'Circulars', icon: clipboardOutline, route: '/admin/admin-circulars' },
-    { id: '8', title: 'Exams', icon: calendarOutline, route: '/admin/admin-exams' },
+    { 
+      id: '1', 
+      title: 'Classes', 
+      subtitle: 'Manage all classes',
+      icon: bookOutline, 
+      route: '/admin/classes', 
+      count: stats.totalClasses,
+      color: 'primary'
+    },
+    { 
+      id: '2', 
+      title: 'Teachers', 
+      subtitle: 'Faculty management',
+      icon: personOutline, 
+      route: '/admin/teachers',
+      color: 'secondary'
+    },
+    { 
+      id: '3', 
+      title: 'Students', 
+      subtitle: 'Student records',
+      icon: peopleOutline, 
+      route: '/admin/students', 
+      count: stats.totalStudents,
+      color: 'tertiary'
+    },
+    { 
+      id: '4', 
+      title: 'Homework', 
+      subtitle: 'Assignments & tracking',
+      icon: documentTextOutline, 
+      route: '/admin/homework', 
+      count: stats.totalHomework,
+      color: 'success'
+    },
+    { 
+      id: '5', 
+      title: 'Marks', 
+      subtitle: 'Grades & analytics',
+      icon: statsChartOutline, 
+      route: '/admin/marks',
+      color: 'warning'
+    },
+    { 
+      id: '6', 
+      title: 'News', 
+      subtitle: 'Announcements',
+      icon: newspaperOutline, 
+      route: '/admin/admin-news', 
+      count: stats.totalNews,
+      color: 'danger'
+    },
+    { 
+      id: '7', 
+      title: 'Circulars', 
+      subtitle: 'Official communications',
+      icon: clipboardOutline, 
+      route: '/admin/admin-circulars',
+      color: 'light'
+    },
+    { 
+      id: '8', 
+      title: 'Exams', 
+      subtitle: 'Schedule & management',
+      icon: calendarOutline, 
+      route: '/admin/admin-exams',
+      color: 'dark'
+    },
   ];
 
   if (loading) {
     return (
       <IonPage>
         <IonContent className="admin-dashboard-loading ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
-          <IonSpinner name="crescent" />
+          <div className="loading-container">
+            <IonSpinner name="crescent" />
+            <p className="loading-text">Loading dashboard...</p>
+          </div>
         </IonContent>
       </IonPage>
     );
@@ -118,46 +187,103 @@ const AdminDashboardScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar color="primary">
+      <IonHeader collapse="condense">
+        <IonToolbar className="premium-toolbar">
           <IonTitle>Admin Dashboard</IonTitle>
-          <IonButton slot="end" fill="clear" onClick={handleLogout}>
+          <IonButton slot="end" fill="clear" onClick={handleLogout} className="logout-button">
             <IonIcon icon={logOutOutline} slot="icon-only" />
           </IonButton>
         </IonToolbar>
       </IonHeader>
+
       <IonContent className="admin-dashboard">
         <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
           <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
         </IonRefresher>
 
-        {/* Header */}
-        <div className="dashboard-header">
-          <h2 className="welcome-text">Welcome, {user?.name}</h2>
-          <p className="role-text">School Administrator</p>
+        {/* Profile Summary Banner */}
+        <div className="profile-banner">
+          <div className="profile-icon-wrapper">
+            <IonIcon icon={schoolOutline} className="profile-icon" />
+          </div>
+          <div className="profile-info">
+            <h2 className="welcome-text">Welcome, {user?.name}</h2>
+            <p className="role-text">School Administrator</p>
+          </div>
+          <div className="profile-stats">
+            <div className="stat-item">
+              <span className="stat-value">{stats.totalClasses}</span>
+              <span className="stat-label">Classes</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{stats.totalStudents}</span>
+              <span className="stat-label">Students</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions Grid */}
+        <div className="quick-actions">
+          <IonButton fill="outline" className="quick-action-btn" onClick={() => history.push('/admin/teachers/create')}>
+            <IonIcon icon={personOutline} slot="start" />
+            Add Teacher
+          </IonButton>
+          <IonButton fill="outline" className="quick-action-btn" onClick={() => history.push('/admin/students/create')}>
+            <IonIcon icon={peopleOutline} slot="start" />
+            Add Student
+          </IonButton>
+          <IonButton fill="outline" className="quick-action-btn" onClick={() => history.push('/admin/classes/create')}>
+            <IonIcon icon={bookOutline} slot="start" />
+            Create Class
+          </IonButton>
         </div>
 
         {/* Menu Grid */}
-        <div className="menu-grid">
-          {menuItems.map((item) => (
-            <IonCard
-              key={item.id}
-              className="menu-item"
-              onClick={() => history.push(item.route)}
-            >
+        <IonGrid className="menu-grid-container">
+          <IonRow>
+            {menuItems.map((item) => (
+              <IonCol size="12" size-md="6" size-lg="3" key={item.id}>
+                <IonCard 
+                  className={`menu-item menu-item-${item.color}`}
+                  onClick={() => history.push(item.route)}
+                >
+                  <IonCardContent>
+                    <div className="menu-item-content">
+                      <div className="menu-icon-wrapper">
+                        <IonIcon icon={item.icon} className="menu-icon" />
+                        {item.count !== undefined && item.count > 0 && (
+                          <span className="count-badge">{item.count}</span>
+                        )}
+                      </div>
+                      <div className="menu-text">
+                        <h3 className="menu-title">{item.title}</h3>
+                        <p className="menu-subtitle">{item.subtitle}</p>
+                      </div>
+                    </div>
+                  </IonCardContent>
+                </IonCard>
+              </IonCol>
+            ))}
+          </IonRow>
+        </IonGrid>
+
+        {/* Recent Activity Section */}
+        <div className="recent-section">
+          <h3 className="section-title">Recent Activity</h3>
+          <div className="activity-cards">
+            <IonCard className="activity-card">
               <IonCardContent>
-                <div className="menu-icon">
-                  <IonIcon icon={item.icon} />
+                <div className="activity-icon">
+                  <IonIcon icon={timeOutline} />
                 </div>
-                <h3 className="menu-title">{item.title}</h3>
-                {item.count !== undefined && item.count > 0 && (
-                  <IonBadge color="primary" className="menu-badge">
-                    {item.count}
-                  </IonBadge>
-                )}
+                <div className="activity-content">
+                  <h4>System Status</h4>
+                  <p>All systems operational</p>
+                  <span className="activity-time">Last updated: {new Date().toLocaleTimeString()}</span>
+                </div>
               </IonCardContent>
             </IonCard>
-          ))}
+          </div>
         </div>
       </IonContent>
     </IonPage>

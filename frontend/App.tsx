@@ -4,10 +4,10 @@
  * Multi-Tenant School Management System
  */
 
-import React, { Suspense } from 'react';
-import { IonApp } from '@ionic/react';
+import React, { Suspense, useEffect } from 'react';
+import { IonApp, IonSpinner, IonPage, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { Route, Redirect, Switch, RouteProps } from 'react-router-dom';
+import { Route, Redirect, Switch, RouteProps, useHistory } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { PostProvider } from './src/contexts/PostContext';
@@ -104,6 +104,7 @@ interface ProtectedRouteProps extends RouteProps {
   component: React.ComponentType<any>;
   isAuthenticated: boolean;
   isClass: boolean;
+  isLoading: boolean;
   redirectPath?: string;
 }
 
@@ -111,6 +112,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   component: Component, 
   isAuthenticated, 
   isClass,
+  isLoading,
   redirectPath = '/login',
   ...rest 
 }) => {
@@ -118,7 +120,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     <Route
       {...rest}
       render={(props) => {
-        // Allow access if user is authenticated OR if class is logged in
+        if (isLoading) {
+          return (
+            <div className="ion-page ion-padding ion-text-center">
+              <IonSpinner name="crescent" />
+              <p>Loading...</p>
+            </div>
+          );
+        }
         if (!isAuthenticated && !isClass) {
           return <Redirect to={redirectPath} />;
         }
@@ -129,51 +138,100 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 };
 
 // Loading component for lazy-loaded routes
+// Wrapped in IonPage to ensure visibility inside IonApp
 const RouteLoadingFallback = () => (
-  <div className="loading-container">
-    <div>Loading...</div>
-  </div>
+  <IonPage>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      width: '100vw',
+      backgroundColor: '#f5f5f5',
+      flexDirection: 'column',
+      fontFamily: 'sans-serif',
+    }}>
+      <div style={{
+        width: '40px',
+        height: '40px',
+        border: '4px solid #ddd',
+        borderTop: '4px solid #007AFF',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+      }} />
+      <p style={{ marginTop: '16px', color: '#666', fontSize: '14px' }}>Loading...</p>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  </IonPage>
 );
 
-// Main App Component
-const App: React.FC = () => {
-  return (
-    <ErrorBoundary>
-      <IonApp>
-        <IonReactRouter>
-          <AuthProvider>
-            <PostProvider>
-              <AppRoutes />
-            </PostProvider>
-          </AuthProvider>
-        </IonReactRouter>
-      </IonApp>
-    </ErrorBoundary>
-  );
+// Auth Redirect component - redirects authenticated users away from login/register pages
+// and redirects unauthenticated users to login
+const AuthRedirect: React.FC = () => {
+  const { isAuthenticated, isSuperAdmin, isAdmin, isStudent, isTeacher, isClass, isLoading } = useAuth();
+  const history = useHistory();
+
+  useEffect(() => {
+    // Skip redirect logic while auth state is still loading
+    if (isLoading) {
+      return;
+    }
+    
+    const currentPath = window.location.pathname;
+    
+    if (isAuthenticated || isClass) {
+      // If authenticated and on login/register, redirect to appropriate dashboard
+      if (currentPath === '/login' || currentPath === '/register') {
+        if (isSuperAdmin) {
+          history.push('/superadmin/dashboard');
+        } else if (isAdmin) {
+          history.push('/admin/dashboard');
+        } else if (isTeacher) {
+          history.push('/teacher/dashboard');
+        } else if (isStudent) {
+          history.push('/student/dashboard');
+        } else if (isClass) {
+          history.push('/class-controller/dashboard');
+        }
+      }
+    } else {
+      // If NOT authenticated and NOT on login/register, redirect to login
+      if (currentPath !== '/login' && currentPath !== '/register') {
+        history.push('/login');
+      }
+    }
+  }, [isAuthenticated, isClass, isSuperAdmin, isAdmin, isStudent, isTeacher, isLoading, history]);
+
+  return <></>;
 };
 
-// Internal component to access auth context
-const AppRoutes: React.FC = () => {
+// Internal component to access auth context and render routes
+const AppContent: React.FC = () => {
   const { isAuthenticated, isLoading, isSuperAdmin, isAdmin, isStudent, isTeacher, isClass } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="loading-container">
-        <div>Loading...</div>
-      </div>
-    );
+    return <RouteLoadingFallback />;
   }
 
   return (
-    <Suspense fallback={
-      <div className="loading-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <div>Loading...</div>
-      </div>
-    }>
+    <Suspense fallback={<RouteLoadingFallback />}>
+      {/* AuthRedirect is always mounted to watch auth state changes */}
+      <AuthRedirect />
+      
       <Switch>
-        {/* Auth Routes */}
+        {/* Auth Routes - placed first for priority */}
         <Route exact path="/login" component={LoginScreen} />
         <Route exact path="/register" component={RegisterScreen} />
+
+        {/* Root path redirect - redirect to login */}
+        <Route exact path="/">
+          <Redirect to="/login" />
+        </Route>
 
         {/* Legacy Post Routes */}
         <Route exact path="/posts" component={HomeScreen} />
@@ -181,110 +239,137 @@ const AppRoutes: React.FC = () => {
         <Route exact path="/posts/create" component={CreatePostScreen} />
         <Route exact path="/posts/:postId/edit" component={EditPostScreen} />
 
-      {/* Super Admin Routes */}
-      {isSuperAdmin && (
-        <>
-          <ProtectedRoute exact path="/superadmin/dashboard" component={SuperAdminDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/superadmin/schools" component={SchoolsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/superadmin/schools/create" component={CreateSchoolScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/superadmin/schools/:tenantId" component={SchoolDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-        </>
-      )}
+        {/* Super Admin Routes */}
+        {isSuperAdmin && (
+          <>
+            <ProtectedRoute exact path="/superadmin/dashboard" component={SuperAdminDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/superadmin/schools" component={SchoolsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/superadmin/schools/create" component={CreateSchoolScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/superadmin/schools/:tenantId" component={SchoolDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+          </>
+        )}
 
-      {/* Admin Routes */}
-      {isAdmin && (
-        <>
-          <ProtectedRoute exact path="/admin/dashboard" component={AdminDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/classes" component={ClassesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/classes/create" component={CreateClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/classes/:classId" component={ClassDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/classes/:classId/edit" component={EditClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/teachers" component={TeachersListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/teachers/:teacherId" component={TeacherDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/teachers/:teacherId/edit" component={EditTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/teachers/create" component={CreateTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/students" component={StudentsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/students/create" component={CreateStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/homework" component={HomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/homework/create" component={CreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/marks" component={MarksListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/marks/add" component={AddMarksScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/news" component={NewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/news/create" component={CreateNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/circulars" component={CircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/circulars/create" component={CreateCircularScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/exams" component={ExamSchedulesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/exams/create" component={CreateExamScheduleScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/admin-news" component={AdminNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/admin-circulars" component={AdminCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/admin/admin-exams" component={AdminExamsScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-        </>
-      )}
+        {/* Admin Routes */}
+        {isAdmin && (
+          <>
+            <ProtectedRoute exact path="/admin/dashboard" component={AdminDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/classes" component={ClassesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/classes/create" component={CreateClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/classes/:classId" component={ClassDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/classes/:classId/edit" component={EditClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/teachers" component={TeachersListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/teachers/:teacherId" component={TeacherDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/teachers/:teacherId/edit" component={EditTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/teachers/create" component={CreateTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/students" component={StudentsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/students/create" component={CreateStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/homework" component={HomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/homework/create" component={CreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/marks" component={MarksListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/marks/add" component={AddMarksScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/news" component={NewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/news/create" component={CreateNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/circulars" component={CircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/circulars/create" component={CreateCircularScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/exams" component={ExamSchedulesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/exams/create" component={CreateExamScheduleScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/admin-news" component={AdminNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/admin-circulars" component={AdminCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/admin-exams" component={AdminExamsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+          </>
+        )}
 
-      {/* Teacher Routes */}
-      {isTeacher && (
-        <>
-          <ProtectedRoute exact path="/teacher/dashboard" component={TeacherDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/students" component={TeacherStudentsScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/homework" component={TeacherHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/marks" component={TeacherMarksScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/news" component={TeacherNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/circulars" component={TeacherCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/weekly-lessons" component={WeeklyLessonGridScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/attendance" component={TeacherAttendanceScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/teacher/timetable" component={WeeklyTimetableScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-        </>
-      )}
+        {/* Teacher Routes */}
+        {isTeacher && (
+          <>
+            <ProtectedRoute exact path="/teacher/dashboard" component={TeacherDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/students" component={TeacherStudentsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/homework" component={TeacherHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/marks" component={TeacherMarksScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/news" component={TeacherNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/circulars" component={TeacherCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/weekly-lessons" component={WeeklyLessonGridScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/attendance" component={TeacherAttendanceScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/teacher/timetable" component={WeeklyTimetableScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+          </>
+        )}
 
-      {/* Student Routes */}
-      {isStudent && (
-        <>
-          <ProtectedRoute exact path="/student/dashboard" component={StudentDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/homework" component={StudentHomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/homework/:homeworkId" component={StudentHomeworkDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/marks" component={StudentMarksListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/news" component={StudentNewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/news/:newsId" component={StudentNewsDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/circulars" component={StudentCircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/exams" component={StudentExamSchedulesScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/exams/:examId" component={StudentExamDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/profile" component={StudentProfileScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/student/weekly-lessons" component={WeeklyLessonViewScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-        </>
-      )}
+        {/* Student Routes */}
+        {isStudent && (
+          <>
+            <ProtectedRoute exact path="/student/dashboard" component={StudentDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/homework" component={StudentHomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/homework/:homeworkId" component={StudentHomeworkDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/marks" component={StudentMarksListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/news" component={StudentNewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/news/:newsId" component={StudentNewsDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/circulars" component={StudentCircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/exams" component={StudentExamSchedulesScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/exams/:examId" component={StudentExamDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/profile" component={StudentProfileScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/weekly-lessons" component={WeeklyLessonViewScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+          </>
+        )}
 
-      {/* Class Controller Routes */}
-      {isClass && (
-        <>
-          <ProtectedRoute exact path="/class-controller/dashboard" component={ClassControllerDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/students" component={ClassStudentsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/students/add" component={ClassAddStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/students/:studentId/edit" component={ClassEditStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/homework" component={ClassHomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/homework/:homeworkId" component={ClassHomeworkDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/homework/create" component={ClassCreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/attendance" component={ClassAttendanceListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/attendance/mark" component={ClassMarkAttendanceScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/news" component={ClassNewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/news/:newsId" component={ClassNewsDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/circulars" component={ClassCircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/circulars/create" component={ClassCreateCircularScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/exams" component={ClassExamSchedulesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/exams/create" component={ClassCreateExamScheduleScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/exams/:examId" component={ClassExamDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-          <ProtectedRoute exact path="/class-controller/profile" component={ClassProfileScreen} isAuthenticated={isAuthenticated} isClass={isClass} />
-        </>
-      )}
+        {/* Class Controller Routes */}
+        {isClass && (
+          <>
+            <ProtectedRoute exact path="/class-controller/dashboard" component={ClassControllerDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/students" component={ClassStudentsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/students/add" component={ClassAddStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/students/:studentId/edit" component={ClassEditStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/homework" component={ClassHomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/homework/:homeworkId" component={ClassHomeworkDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/homework/create" component={ClassCreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/attendance" component={ClassAttendanceListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/attendance/mark" component={ClassMarkAttendanceScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/news" component={ClassNewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/news/:newsId" component={ClassNewsDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/circulars" component={ClassCircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/circulars/create" component={ClassCreateCircularScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/exams" component={ClassExamSchedulesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/exams/create" component={ClassCreateExamScheduleScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/exams/:examId" component={ClassExamDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/profile" component={ClassProfileScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+          </>
+        )}
 
-        {/* Default redirect */}
-        <Route exact path="/">
-          <Redirect to={isAuthenticated || isClass ? "/dashboard" : "/login"} />
-        </Route>
-
-        {/* Fallback redirect */}
+        {/* Fallback redirect - catches all unmatched routes */}
         <Redirect to="/login" />
       </Switch>
     </Suspense>
+  );
+};
+
+// Main App Component - handles loading state outside IonRouterOutlet
+const App: React.FC = () => {
+  return (
+    <ErrorBoundary>
+      <IonApp>
+        <AuthProvider>
+          <AppWithAuth />
+        </AuthProvider>
+      </IonApp>
+    </ErrorBoundary>
+  );
+};
+
+// Component that checks auth loading state before rendering router
+const AppWithAuth: React.FC = () => {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return <RouteLoadingFallback />;
+  }
+
+  return (
+    <IonReactRouter>
+      <IonRouterOutlet>
+        <PostProvider>
+          <AppContent />
+        </PostProvider>
+      </IonRouterOutlet>
+    </IonReactRouter>
   );
 };
 

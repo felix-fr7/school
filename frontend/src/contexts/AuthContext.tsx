@@ -26,21 +26,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const initializeAuth = async () => {
     try {
-      const [storedToken, storedUser, storedClass] = await Promise.all([
-        storage.getToken(),
-        storage.getUser(),
-        storage.getClass(),
-      ]);
+      // TEMPORARY: Clear stored auth on boot for testing login flow
+      // This ensures we always start fresh to test the login screen
+      await storage.clearAuth();
+      await storage.clearClass();
+      
+      const storedToken = await storage.getToken();
+      const storedUser = await storage.getUser();
+      const storedClass = await storage.getClass();
 
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(storedUser);
-      }
-      if (storedClass) {
-        setCurrentClass(storedClass);
+      // If we have a stored token, verify it with the backend
+      if (storedToken) {
+        try {
+          // Verify token by fetching current user
+          const response = await authAPI.getMe();
+          
+          if (response.success && response.data) {
+            // Token is valid, update with fresh user data
+            setUser(response.data);
+            setToken(storedToken);
+            if (storedClass) {
+              setCurrentClass(storedClass);
+            }
+          } else {
+            // Token invalid or response failed - clear storage
+            await storage.clearAuth();
+            await storage.clearClass();
+            setUser(null);
+            setToken(null);
+            setCurrentClass(null);
+          }
+        } catch (verifyError) {
+          // Token verification failed - clear storage
+          console.log('Token verification failed, clearing stored auth');
+          await storage.clearAuth();
+          await storage.clearClass();
+          setUser(null);
+          setToken(null);
+          setCurrentClass(null);
+        }
+      } else {
+        // No stored token - ensure clean state
+        setUser(null);
+        setToken(null);
+        setCurrentClass(null);
       }
     } catch (error) {
       console.error('Error initializing auth:', error);
+      // On any error, ensure clean state
+      setUser(null);
+      setToken(null);
+      setCurrentClass(null);
     } finally {
       setIsLoading(false);
     }

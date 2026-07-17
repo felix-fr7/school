@@ -1,0 +1,287 @@
+/* Admin Exams Screen Styles */
+
+.admin-exams-content {
+  --background: #F8FAFC;
+}
+
+.admin-exams-content .container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Header Section */
+.header-section {
+  margin-bottom: 24px;
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 4px 0;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #64748B;
+  margin: 0;
+}
+
+/* Form Card */
+.form-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.form-card ion-card-header {
+  padding-bottom: 8px;
+}
+
+.form-card ion-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.form-card ion-card-content {
+  padding: 16px 0;
+}
+
+/* Input Groups */
+.input-group {
+  margin-bottom: 16px;
+}
+
+.input-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+/* Input Row */
+.input-row {
+  display: flex;
+  gap: 16px;
+}
+
+.input-row .input-group {
+  flex: 1;
+}
+
+/* Class Selector */
+.class-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.class-option {
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.class-option.active {
+  --background: #2e7d32;
+  color: white;
+}
+
+/* Info Note */
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: #F0F9FF;
+  border-radius: 8px;
+  margin: 16px 0;
+  border-left: 4px solid #0284C7;
+}
+
+.info-icon {
+  font-size: 20px;
+  color: #0284C7;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-note span {
+  font-size: 13px;
+  color: #0369A1;
+  line-height: 1.4;
+}
+
+/* Button Group */
+.button-group {
+  margin-top: 16px;
+}
+
+.submit-button {
+  --background: #2e7d32;
+  --background-activated: #1b5e20;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.cancel-button {
+  margin-top: 8px;
+  border-radius: 12px;
+}
+
+/* List Card */
+.list-card {
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.list-card ion-card-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+/* Exam Card */
+.exam-card {
+  display: flex;
+  background: #F8FAFC;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border: 1px solid #E2E8F0;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.exam-card:hover {
+  border-color: #0284C7;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
+}
+
+.exam-card-content {
+  flex: 1;
+  margin-right: 12px;
+}
+
+.exam-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E293B;
+  margin: 0 0 4px 0;
+}
+
+.exam-subject {
+  font-size: 13px;
+  color: #0284C7;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.exam-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.exam-date,
+.exam-time,
+.exam-room {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748B;
+}
+
+.exam-date ion-icon,
+.exam-time ion-icon,
+.exam-room ion-icon {
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+.exam-class {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0;
+}
+
+/* Exam Card Actions */
+.exam-card-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-button.edit:hover {
+  background: #E3F2FD;
+}
+
+.action-button.delete:hover {
+  background: #FFEBEE;
+}
+
+.action-button ion-icon {
+  font-size: 18px;
+  color: #64748B;
+}
+
+.action-button.edit:hover ion-icon {
+  color: #1565C0;
+}
+
+.action-button.delete:hover ion-icon {
+  color: #C62828;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 32px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #CBD5E1;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  font-size: 15px;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #64748B;
+}

@@ -39,8 +39,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console (in production, send to error tracking service like Sentry)
-    console.error('Uncaught error:', error, errorInfo);
+    // ALWAYS log errors to console - never swallow silently
+    console.error('═══════════════════════════════════════════');
+    console.error('ErrorBoundary caught an error:');
+    console.error('  Error:', error);
+    console.error('  Error stack:', error.stack);
+    console.error('  Component stack:', errorInfo.componentStack);
+    console.error('═══════════════════════════════════════════');
 
     // In production, you might want to send errors to a monitoring service
     // if (process.env.NODE_ENV === 'production') {
@@ -184,6 +189,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // If no error, render children normally
+    // Add a debug wrapper to catch render-time issues
     return this.props.children;
   }
 }

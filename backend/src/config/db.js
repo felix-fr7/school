@@ -45,12 +45,16 @@ if (!connectionString) {
 }
 
 // Create a connection pool with configuration
+// Optimized for Supabase Transaction Pooler (port 6543) and cross-region latency
 const pool = new Pool({
   connectionString,
-  // Connection pool settings
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-  connectionTimeoutMillis: 10000, // How long to wait when connecting a new client
+  // Connection pool settings - optimized for Supabase transaction pooler mode
+  max: 10, // Reduced from 20 - transaction pooler doesn't need many connections
+  idleTimeoutMillis: 10000, // Reduced from 30000 - transaction pooler benefits from shorter idle
+  connectionTimeoutMillis: 15000, // Increased from 10000 - cross-region latency tolerance
+  // Important for Supabase transaction pooler mode:
+  // Disable prepared statements (transaction pooler doesn't support them)
+  // Note: This is handled in query() below
 });
 
 // Event handlers for pool monitoring
@@ -65,35 +69,68 @@ pool.on('error', (err) => {
 
 /**
  * Execute a raw SQL query with parameters
+ * Includes retry logic for transient connection errors
+ * Disables prepared statements for Supabase transaction pooler compatibility
  * @param {string} text - SQL query text with placeholders ($1, $2, etc.)
  * @param {Array} params - Array of parameters to bind to the query
+ * @param {number} retries - Number of retry attempts for transient errors (default: 2)
  * @returns {Promise<Object>} Query result
  */
-const query = async (text, params) => {
-  const start = Date.now();
-  try {
-    const result = await pool.query(text, params);
-    const duration = Date.now() - start;
-    
-    // Log slow queries in development
-    if (process.env.NODE_ENV === 'development' && duration > 1000) {
-      console.log('Slow query:', { text, duration, rows: result.rowCount });
+const query = async (text, params, retries = 2) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const start = Date.now();
+    try {
+      // Important: Disable prepared statements for Supabase transaction pooler mode
+      // The pooler doesn't support named prepared statements, so we use nameless ones
+      const result = await pool.query({ text, values: params, name: undefined });
+      const duration = Date.now() - start;
+      
+      // Log slow queries in development
+      if (process.env.NODE_ENV === 'development' && duration > 1000) {
+        console.log('Slow query:', { text, duration, rows: result.rowCount, attempt });
+      }
+      
+      return result;
+    } catch (error) {
+      lastError = error;
+      
+      // Only retry on transient connection errors
+      const isTransientError = 
+        error.code === '08006' ||  // connection_failure
+        error.code === '08003' ||  // connection_does_not_exist
+        error.code === '08000' ||  // connection_exception
+        error.code === '57014' ||  // query_canceled (timeout)
+        error.message.includes('Connection terminated') ||
+        error.message.includes('Connection timeout') ||
+        error.message.includes('ECONNRESET') ||
+        error.message.includes('ETIMEDOUT');
+      
+      if (isTransientError && attempt < retries) {
+        // Exponential backoff: 100ms, 200ms, 400ms...
+        const delay = Math.min(100 * Math.pow(2, attempt), 1000);
+        console.log(`Query retry ${attempt + 1}/${retries} after ${delay}ms (transient error: ${error.code || error.message})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // Log error on final attempt
+      if (attempt === retries) {
+        console.error('═══════════════════════════════════════════════════════════');
+        console.error('DATABASE QUERY ERROR (after ${retries + 1} attempts)');
+        console.error(`Database Host: ${dbHostInfo}:${dbPortInfo}`);
+        console.error(`Database User: ${dbUserInfo}`);
+        console.error(`Error Code: ${error.code || 'N/A'}`);
+        console.error(`Error Message: ${error.message}`);
+        if (error.detail) console.error(`Detail: ${error.detail}`);
+        if (error.hint) console.error(`Hint: ${error.hint}`);
+        console.error('═══════════════════════════════════════════════════════════');
+      }
     }
-    
-    return result;
-  } catch (error) {
-    // Enhanced error logging with database host info
-    console.error('═══════════════════════════════════════════════════════════');
-    console.error('DATABASE QUERY ERROR');
-    console.error(`Database Host: ${dbHostInfo}:${dbPortInfo}`);
-    console.error(`Database User: ${dbUserInfo}`);
-    console.error(`Error Code: ${error.code || 'N/A'}`);
-    console.error(`Error Message: ${error.message}`);
-    if (error.detail) console.error(`Detail: ${error.detail}`);
-    if (error.hint) console.error(`Hint: ${error.hint}`);
-    console.error('═══════════════════════════════════════════════════════════');
-    throw error;
   }
+  
+  throw lastError;
 };
 
 /**

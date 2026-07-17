@@ -463,11 +463,7 @@ export const adminAPI = {
   async bulkImportStudents(file: File): Promise<ApiResponse<{ totalProcessed: number; successfullyCreated: number; duplicates: number; students: User[] }>> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post<ApiResponse<{ totalProcessed: number; successfullyCreated: number; duplicates: number; students: User[] }>>('/admin/students/bulk', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.post<ApiResponse<{ totalProcessed: number; successfullyCreated: number; duplicates: number; students: User[] }>>('/admin/students/bulk', formData);
     return response.data;
   },
 
@@ -485,11 +481,7 @@ export const adminAPI = {
       successfullyCreated: number;
       duplicates: number;
       students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
-    }>>('/admin/students/bulk-upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    }>>('/admin/students/bulk-upload', formData);
     return response.data;
   },
 
@@ -936,11 +928,7 @@ export const teacherAPI = {
       successfullyCreated: number;
       duplicates: number;
       students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
-    }>>('/teacher/students/bulk-upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    }>>('/teacher/students/bulk-upload', formData);
     return response.data;
   },
 
@@ -1034,11 +1022,7 @@ export const weeklyLessonsAPI = {
   async uploadAttachment(lessonId: string, file: File): Promise<ApiResponse<LessonAttachment>> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post<ApiResponse<LessonAttachment>>(`/weekly-lessons/${lessonId}/attachments`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.post<ApiResponse<LessonAttachment>>(`/weekly-lessons/${lessonId}/attachments`, formData);
     return response.data;
   },
 

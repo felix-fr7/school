@@ -1,75 +1,457 @@
-.admin-dashboard {
-  --background: #f5f5f5;
-}
+/* Premium Admin Dashboard Styles */
 
+/* Loading State */
 .admin-dashboard-loading {
-  --background: #f5f5f5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.dashboard-header {
-  background-color: #2e7d32;
-  padding: 30px 20px 20px 20px;
-  text-align: center;
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-text {
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Premium Toolbar */
+.premium-toolbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  --background: rgba(255, 255, 255, 0.95);
+}
+
+.premium-toolbar IonTitle {
+  font-weight: 700;
+  font-size: 20px;
+  color: #1a1a2e;
+  letter-spacing: -0.5px;
+}
+
+.logout-button {
+  --color: #6b7280;
+  margin-right: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  --color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Profile Banner */
+.profile-banner {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 50%, #1e3a5f 100%);
+  padding: 24px;
+  margin: 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 32px rgba(30, 58, 95, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30%, -30%); }
+}
+
+.profile-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+}
+
+.profile-icon {
+  font-size: 28px;
+  color: #60a5fa;
+}
+
+.profile-info {
+  flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .welcome-text {
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
   margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .role-text {
   font-size: 14px;
-  color: #c8e6c9;
+  color: rgba(255, 255, 255, 0.7);
   margin: 4px 0 0 0;
+  font-weight: 500;
 }
 
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  padding: 16px;
-}
-
-.menu-item {
-  margin: 0;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.menu-item:active {
-  transform: scale(0.98);
-}
-
-.menu-icon {
-  font-size: 32px;
-  color: #2e7d32;
-  margin-bottom: 8px;
+.profile-stats {
   display: flex;
-  justify-content: center;
-}
-
-.menu-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  text-align: center;
-  margin: 0;
-}
-
-.menu-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 12px;
-}
-
-IonCardContent {
+  gap: 20px;
   position: relative;
-  padding: 20px;
+  z-index: 1;
+}
+
+.stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quick-action-btn {
+  --border-color: rgba(30, 58, 95, 0.2);
+  --color: #1e3a5f;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 12px;
+  padding: 12px 20px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.quick-action-btn:hover {
+  --background: rgba(30, 58, 95, 0.08);
+  --border-color: rgba(30, 58, 95, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Menu Grid */
+.menu-grid-container {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.menu-item {
+  margin: 8px 0;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.menu-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.menu-item:active {
+  transform: translateY(-2px);
+}
+
+.menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px;
+}
+
+.menu-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.menu-icon {
+  font-size: 24px;
+  color: white;
+}
+
+/* Color variations for menu items */
+.menu-item-primary .menu-icon-wrapper {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.menu-item-secondary .menu-icon-wrapper {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.menu-item-tertiary .menu-icon-wrapper {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.menu-item-success .menu-icon-wrapper {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.menu-item-warning .menu-icon-wrapper {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.menu-item-danger .menu-icon-wrapper {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.menu-item-light .menu-icon-wrapper {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.menu-item-dark .menu-icon-wrapper {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+.count-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
+}
+
+.menu-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.2px;
+}
+
+.menu-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Recent Activity Section */
+.recent-section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.3px;
+}
+
+.activity-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activity-card {
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.activity-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.activity-card IonCardContent {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.activity-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.activity-icon IonIcon {
+  font-size: 22px;
+  color: white;
+}
+
+.activity-content h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+}
+
+.activity-content p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.activity-time {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .profile-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .profile-stats {
+    margin-top: 12px;
+  }
+
+  .quick-actions {
+    padding: 0 16px;
+  }
+
+  .quick-action-btn {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-item-content {
+    padding: 12px;
+  }
+
+  .menu-icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .menu-icon {
+    font-size: 20px;
+  }
+
+  .menu-title {
+    font-size: 14px;
+  }
+
+  .menu-subtitle {
+    font-size: 11px;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .premium-toolbar {
+    background: rgba(30, 30, 40, 0.95) !important;
+    --background: rgba(30, 30, 40, 0.95);
+  }
+
+  .premium-toolbar IonTitle {
+    color: #f3f4f6;
+  }
+
+  .menu-item {
+    background: rgba(40, 40, 50, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .menu-title {
+    color: #f3f4f6;
+  }
+
+  .menu-subtitle {
+    color: #9ca3af;
+  }
+
+  .section-title {
+    color: #f3f4f6;
+  }
+
+  .activity-card {
+    background: rgba(40, 40, 50, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .activity-content h4 {
+    color: #f3f4f6;
+  }
+
+  .activity-content p {
+    color: #9ca3af;
+  }
 }

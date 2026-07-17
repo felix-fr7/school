@@ -8,6 +8,10 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { setupIonicReact } from '@ionic/react';
+
+// Initialize Ionic framework (adds 'hydrated' class to <html> element)
+setupIonicReact();
 
 // Ionic CSS - Core styles (must be imported first)
 import '@ionic/react/css/core.css';
