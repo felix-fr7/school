@@ -10,6 +10,8 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButtons,
+  IonBackButton,
   IonIcon,
 } from '@ionic/react';
 import { constructOutline } from 'ionicons/icons';
@@ -25,6 +27,9 @@ const PlaceholderScreen: React.FC<PlaceholderScreenProps> = ({ title, descriptio
     <IonPage>
       <IonHeader>
         <IonToolbar color="primary">
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/admin/dashboard" />
+          </IonButtons>
           <IonTitle>{title}</IonTitle>
         </IonToolbar>
       </IonHeader>

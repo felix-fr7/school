@@ -26,11 +26,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const initializeAuth = async () => {
     try {
-      // TEMPORARY: Clear stored auth on boot for testing login flow
-      // This ensures we always start fresh to test the login screen
-      await storage.clearAuth();
-      await storage.clearClass();
-      
       const storedToken = await storage.getToken();
       const storedUser = await storage.getUser();
       const storedClass = await storage.getClass();

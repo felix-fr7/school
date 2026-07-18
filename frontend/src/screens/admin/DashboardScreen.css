@@ -38,16 +38,75 @@
   letter-spacing: -0.5px;
 }
 
+/* Logout Button - High Visibility */
 .logout-button {
-  --color: #6b7280;
-  margin-right: 8px;
+  --color: #dc2626;
+  --color-hover: #b91c1c;
+  margin-inline-end: 8px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  padding: 8px 16px;
 }
 
 .logout-button:hover {
-  --color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  --color: #dc2626;
+  background: rgba(220, 38, 38, 0.12);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
+}
+
+.logout-button:active {
+  transform: scale(0.95);
+  background: rgba(220, 38, 38, 0.18);
+}
+
+/* Mobile: icon only, but still visible */
+@media (max-width: 576px) {
+  .logout-button {
+    --padding-start: 12px;
+    --padding-end: 12px;
+    margin-inline-end: 4px;
+  }
+  
+  .logout-button ion-icon {
+    font-size: 22px;
+  }
+}
+
+/* Ensure toolbar content is properly aligned */
+.premium-toolbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  --background: rgba(255, 255, 255, 0.95);
+  min-height: 56px;
+}
+
+.premium-toolbar IonTitle {
+  font-weight: 700;
+  font-size: 18px;
+  color: #1a1a2e;
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+
+/* Mobile optimizations for toolbar */
+@media (max-width: 576px) {
+  .premium-toolbar IonTitle {
+    font-size: 16px;
+  }
+  
+  .logout-button .logout-text {
+    display: none;
+  }
+  
+  .logout-button {
+    margin-right: 0;
+    --padding-start: 12px;
+    --padding-end: 12px;
+  }
 }
 
 /* Profile Banner */

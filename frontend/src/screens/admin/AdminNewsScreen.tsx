@@ -30,6 +30,8 @@ import {
   IonList,
   IonSegment,
   IonSegmentButton,
+  IonButtons,
+  IonBackButton,
 } from '@ionic/react';
 import {
   newspaperOutline,
@@ -281,13 +283,16 @@ const AdminNewsScreen: React.FC = () => {
   };
 
   if (loading && newsList.length === 0) {
-    return (
-      <IonPage>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>News Manager</IonTitle>
-          </IonToolbar>
-        </IonHeader>
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/admin/dashboard" />
+          </IonButtons>
+          <IonTitle>News Manager</IonTitle>
+        </IonToolbar>
+      </IonHeader>
         <IonContent className="admin-news-content" fullscreen>
           <div className="loading-container">
             <IonSpinner name="crescent" />
@@ -302,6 +307,9 @@ const AdminNewsScreen: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/admin/dashboard" />
+          </IonButtons>
           <IonTitle>News Manager</IonTitle>
         </IonToolbar>
       </IonHeader>

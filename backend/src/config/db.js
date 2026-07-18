@@ -57,9 +57,19 @@ const pool = new Pool({
   // Note: This is handled in query() below
 });
 
-// Event handlers for pool monitoring
+// Event handlers for pool monitoring (only log in development)
 pool.on('connect', () => {
-  console.log('Connected to PostgreSQL database');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Connected to PostgreSQL database');
+  }
+});
+
+pool.on('acquire', () => {
+  // Connection acquired from pool - silent in production
+});
+
+pool.on('remove', () => {
+  // Connection removed from pool - silent in production
 });
 
 pool.on('error', (err) => {

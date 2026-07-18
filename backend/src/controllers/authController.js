@@ -97,9 +97,6 @@ const register = async (req, res, next) => {
  */
 const login = async (req, res, next) => {
   try {
-    // DEBUG: Log the entire request body to see exactly what frontend is sending
-    console.log("Login Input:", JSON.stringify(req.body, null, 2));
-
     const { password, usernameOrEmailOrId } = req.body;
 
     // The login identifier from the request body
@@ -151,30 +148,10 @@ const login = async (req, res, next) => {
 
     const user = userResult.rows[0];
 
-    // Check password with detailed debugging
-    console.log(`Password verification for user ${user.email} (ID: ${user.id})`);
-    console.log(`Password hash in DB starts with: ${user.password.substring(0, 20)}...`);
-    console.log(`Full stored hash: ${user.password}`);
-    console.log(`Incoming password: "${password}"`);
-    console.log(`Incoming password length: ${password ? password.length : 0}`);
-    console.log(`Incoming password type: ${typeof password}`);
-    console.log(`Stored hash type: ${typeof user.password}`);
-    console.log(`Stored hash length: ${user.password.length}`);
-    
-    // Generate a test hash to verify bcrypt is working
-    const testHash = await bcrypt.hash(password, 10);
-    console.log(`Test hash of incoming password: ${testHash}`);
-    console.log(`Does test hash start same as stored? ${testHash.startsWith(user.password.substring(0, 7))}`);
-    
+    // Verify password using bcrypt.compare (secure comparison)
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(`Password match result: ${isPasswordValid}`);
 
     if (!isPasswordValid) {
-      // DEBUG: Log more details about the failure
-      console.log(`Authentication failed for user: ${user.email}`);
-      console.log(`Attempted password length: ${password ? password.length : 0}`);
-      console.log(`Stored hash: ${user.password}`);
-      
       return res.status(401).json({
         success: false,
         error: {

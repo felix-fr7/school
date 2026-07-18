@@ -23,6 +23,8 @@ import {
   IonIcon,
   IonBadge,
   IonModal,
+  IonButtons,
+  IonBackButton,
 } from '@ionic/react';
 import {
   documentTextOutline,
@@ -297,6 +299,9 @@ const AdminCircularsScreen: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/admin/dashboard" />
+          </IonButtons>
           <IonTitle>Circulars Manager</IonTitle>
         </IonToolbar>
       </IonHeader>

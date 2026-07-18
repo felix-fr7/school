@@ -26,6 +26,8 @@ import {
   IonBadge,
   IonText,
   IonDatetime,
+  IonButtons,
+  IonBackButton,
 } from '@ionic/react';
 import { 
   calendarOutline, 
@@ -259,6 +261,9 @@ const AdminExamsScreen: React.FC = () => {
       <IonPage>
         <IonHeader>
           <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/admin/dashboard" />
+            </IonButtons>
             <IonTitle>Exam Schedules</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -276,6 +281,9 @@ const AdminExamsScreen: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/admin/dashboard" />
+          </IonButtons>
           <IonTitle>Exam Schedules</IonTitle>
         </IonToolbar>
       </IonHeader>

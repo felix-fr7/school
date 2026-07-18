@@ -10,6 +10,7 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButtons,
   IonButton,
   IonIcon,
   IonBadge,
@@ -187,11 +188,20 @@ const AdminDashboardScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader collapse="condense">
+      <IonHeader>
         <IonToolbar className="premium-toolbar">
           <IonTitle>Admin Dashboard</IonTitle>
-          <IonButton slot="end" fill="clear" onClick={handleLogout} className="logout-button">
-            <IonIcon icon={logOutOutline} slot="icon-only" />
+          <IonButton 
+            slot="end"
+            fill="clear" 
+            onClick={handleLogout} 
+            className="logout-button"
+            color="danger"
+            aria-label="Logout"
+            style={{ fontWeight: 'bold', textTransform: 'none' }}
+          >
+            <IonIcon icon={logOutOutline} slot="start" />
+            Logout
           </IonButton>
         </IonToolbar>
       </IonHeader>
