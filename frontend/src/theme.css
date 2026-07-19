@@ -1,56 +1,97 @@
 /**
  * International School Platform - Premium Design System
  * Ultra-modern, mobile-first, 60fps optimized CSS framework
+ * Vercel/Linear-inspired Slate-Dark corporate aesthetic
  */
 
 /* ============================================
    CSS CUSTOM PROPERTIES - DESIGN TOKENS
+   Premium Slate-Dark Palette (Vercel/Linear Style)
    ============================================ */
 :root {
-  /* Primary Colors - Sophisticated Navy/Slate Palette */
-  --color-primary: #1e3a5f;
-  --color-primary-light: #2d4a6f;
-  --color-primary-dark: #152945;
-  --color-primary-accent: #3b82f6;
+  /* Primary Colors - Premium Corporate Slate Palette */
+  --color-primary: #0F172A;
+  --color-primary-light: #1E293B;
+  --color-primary-dark: #020617;
+  --color-primary-accent: #3B82F6;
+  --color-primary-accent-hover: #2563EB;
   
-  /* Secondary Colors */
-  --color-secondary: #7c3aed;
-  --color-secondary-light: #8b5cf6;
-  --color-secondary-dark: #6d28d9;
+  /* Secondary Colors - Corporate Slate */
+  --color-secondary: #475569;
+  --color-secondary-light: #64748B;
+  --color-secondary-dark: #334155;
   
-  /* Accent Colors */
-  --color-accent-cyan: #06b6d4;
-  --color-accent-teal: #0891b2;
-  --color-accent-green: #10b981;
-  --color-accent-yellow: #f59e0b;
-  --color-accent-red: #ef4444;
-  --color-accent-orange: #f97316;
+  /* Accent Colors - Premium Sharp Colors */
+  --color-accent-cyan: #06B6D4;
+  --color-accent-cyan-hover: #0891B2;
+  --color-accent-teal: #0891B2;
+  --color-accent-green: #10B981;
+  --color-accent-yellow: #F59E0B;
+  --color-accent-red: #EF4444;
+  --color-accent-orange: #F97316;
   
-  /* Neutral Colors */
+  /* Neutral Colors - Refined Slate Scale */
   --color-neutral-900: #111827;
-  --color-neutral-800: #1f2937;
+  --color-neutral-800: #1F2937;
   --color-neutral-700: #374151;
-  --color-neutral-600: #4b5563;
-  --color-neutral-500: #6b7280;
-  --color-neutral-400: #9ca3af;
-  --color-neutral-300: #d1d5db;
-  --color-neutral-200: #e5e7eb;
-  --color-neutral-100: #f3f4f6;
-  --color-neutral-50: #f9fafb;
+  --color-neutral-600: #4B5563;
+  --color-neutral-500: #6B7280;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-300: #CBD5E1;
+  --color-neutral-200: #E5E7EB;
+  --color-neutral-100: #F3F4F6;
+  --color-neutral-50: #F9FAFB;
   
-  /* Background Colors */
-  --bg-primary: #f8f9fa;
-  --bg-secondary: #f4f6f9;
-  --bg-card: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.85);
-  --bg-glass-dark: rgba(30, 30, 40, 0.85);
+  /* ===== DARK MODE SURFACES (Superadmin Premium) ===== */
+  --bg-canvas: #0B0F19;           /* Deep Canvas Background - Ultra-dark slate */
+  --bg-surface: #1E293B;          /* Card/Panel Surfaces - Slate 800 */
+  --bg-surface-hover: #243347;    /* Slightly lighter for hover states */
+  --bg-surface-active: #2A3850;   /* Active/focused states */
+  --bg-elevated: #213045;         /* Elevated panels (modals, dropdowns) */
   
-  /* Typography */
+  /* Border System - Razor-thin, precise lines */
+  --border-subtle: 1px solid rgba(255, 255, 255, 0.05);
+  --border-light: 1px solid rgba(255, 255, 255, 0.08);
+  --border-medium: 1px solid rgba(255, 255, 255, 0.12);
+  --border-strong: 1px solid #334155;  /* Slate 700 for emphasis */
+  --border-accent: 1px solid rgba(59, 130, 246, 0.3);
+  --border-focus: 1px solid rgba(59, 130, 246, 0.5);
+  
+  /* Text Colors - Premium Hierarchy */
+  --text-primary: #FFFFFF;
+  --text-secondary: #F8FAFC;
+  --text-tertiary: #94A3B8;       /* Clean muted descriptions */
+  --text-quaternary: #64748B;     /* Subtle labels */
+  --text-disabled: #475569;
+  
+  /* Icon Colors */
+  --icon-primary: #60A5FA;        /* Light blue for primary icons */
+  --icon-secondary: #64748B;      /* Muted for secondary icons */
+  --icon-accent: #3B82F6;         /* Royal blue for accent icons */
+  
+  /* Status Colors - Micro-sized pills with subtle backgrounds */
+  --status-active-bg: rgba(16, 185, 129, 0.1);
+  --status-active-text: #10B981;
+  --status-warning-bg: rgba(245, 158, 11, 0.1);
+  --status-warning-text: #F59E0B;
+  --status-critical-bg: rgba(239, 68, 68, 0.1);
+  --status-critical-text: #EF4444;
+  --status-offline-bg: rgba(100, 116, 139, 0.15);
+  --status-offline-text: #64748B;
+  
+  /* Background Colors - Light Mode (for non-superadmin) */
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-glass-dark: rgba(15, 23, 42, 0.9);
+  
+  /* Typography - Inter font family */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-size-xs: 11px;
+  --font-size-xs: 10px;
   --font-size-sm: 12px;
-  --font-size-base: 14px;
-  --font-size-md: 15px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
   --font-size-lg: 16px;
   --font-size-xl: 18px;
   --font-size-2xl: 20px;
@@ -62,42 +103,47 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   
-  --letter-spacing-tight: -0.5px;
+  --letter-spacing-tight: -0.02em;
   --letter-spacing-normal: 0;
-  --letter-spacing-wide: 0.5px;
+  --letter-spacing-wide: 0.025em;
   
-  /* Spacing */
+  /* Spacing - Uniform grid system (24px primary gap) */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 12px;
   --spacing-lg: 16px;
   --spacing-xl: 20px;
-  --spacing-2xl: 24px;
+  --spacing-2xl: 24px;            /* Primary grid gap */
   --spacing-3xl: 32px;
   --spacing-4xl: 48px;
+  --spacing-5xl: 64px;
   
-  /* Border Radius */
+  /* Border Radius - Unified elegant 16px */
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 16px;              /* Primary radius for cards */
   --radius-xl: 20px;
   --radius-2xl: 24px;
   --radius-full: 9999px;
   
-  /* Shadows - Micro shadows for premium feel */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.1);
+  /* Shadows - Premium Corporate Depth (Subtle, refined) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.3);
+  --shadow-2xl: 0 20px 60px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.18);
   
-  /* Borders */
-  --border-subtle: 1px solid rgba(0, 0, 0, 0.04);
-  --border-light: 1px solid rgba(0, 0, 0, 0.06);
-  --border-medium: 1px solid rgba(0, 0, 0, 0.1);
+  /* Glass Effects - Modern blur */
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px) saturate(180%);
   
-  /* Transitions - 60fps optimized */
+  /* Transitions - 60fps optimized, hardware accelerated */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -112,74 +158,80 @@
   --z-modal: 500;
   --z-popover: 600;
   --z-tooltip: 700;
+  --z-toast: 800;
 }
 
 /* ============================================
-   IONIC COLOR OVERRIDES
+   IONIC COLOR OVERRIDES - Premium Palette
    ============================================ */
 :root {
   --ion-color-primary: var(--color-primary-accent);
   --ion-color-primary-rgb: 59, 130, 246;
-  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast: #FFFFFF;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #2563eb;
-  --ion-color-primary-tint: #60a5fa;
+  --ion-color-primary-shade: #2563EB;
+  --ion-color-primary-tint: #60A5FA;
 
   --ion-color-secondary: var(--color-secondary-light);
-  --ion-color-secondary-rgb: 139, 92, 246;
-  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-rgb: 100, 116, 139;
+  --ion-color-secondary-contrast: #FFFFFF;
   --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #7c3aed;
-  --ion-color-secondary-tint: #a78bfa;
+  --ion-color-secondary-shade: #475569;
+  --ion-color-secondary-tint: #818CF8;
 
   --ion-color-tertiary: var(--color-accent-cyan);
   --ion-color-tertiary-rgb: 6, 182, 212;
-  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast: #FFFFFF;
   --ion-color-tertiary-contrast-rgb: 255, 255, 255;
-  --ion-color-tertiary-shade: #0891b2;
-  --ion-color-tertiary-tint: #22d3ee;
+  --ion-color-tertiary-shade: #0891B2;
+  --ion-color-tertiary-tint: #22D3EE;
 
-  --ion-color-success: var(--color-accent-green);
+  --ion-color-success: #10B981;
   --ion-color-success-rgb: 16, 185, 129;
-  --ion-color-success-contrast: #000000;
-  --ion-color-success-contrast-rgb: 0, 0, 0;
+  --ion-color-success-contrast: #FFFFFF;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
   --ion-color-success-shade: #059669;
-  --ion-color-success-tint: #34d399;
+  --ion-color-success-tint: #34D399;
 
   --ion-color-warning: var(--color-accent-yellow);
   --ion-color-warning-rgb: 245, 158, 11;
-  --ion-color-warning-contrast: #000000;
-  --ion-color-warning-contrast-rgb: 0, 0, 0;
-  --ion-color-warning-shade: #d97706;
-  --ion-color-warning-tint: #fbbf24;
+  --ion-color-warning-contrast: #FFFFFF;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #D97706;
+  --ion-color-warning-tint: #FBBF24;
 
   --ion-color-danger: var(--color-accent-red);
-  --ion-color-danger-rgb: 239, 68, 90;
-  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-rgb: 239, 68, 68;
+  --ion-color-danger-contrast: #FFFFFF;
   --ion-color-danger-contrast-rgb: 255, 255, 255;
-  --ion-color-danger-shade: #dc2626;
-  --ion-color-danger-tint: #f87171;
+  --ion-color-danger-shade: #DC2626;
+  --ion-color-danger-tint: #F87171;
 
   --ion-color-dark: var(--color-neutral-800);
   --ion-color-dark-rgb: 31, 41, 55;
-  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast: #FFFFFF;
   --ion-color-dark-contrast-rgb: 255, 255, 255;
-  --ion-color-dark-shade: #1f2937;
-  --ion-color-dark-tint: #4b5563;
+  --ion-color-dark-shade: #1F2937;
+  --ion-color-dark-tint: #4B5563;
 
   --ion-color-medium: var(--color-neutral-500);
   --ion-color-medium-rgb: 107, 114, 128;
-  --ion-color-medium-contrast: #000000;
+  --ion-color-medium-contrast: #FFFFFF;
   --ion-color-medium-contrast-rgb: 0, 0, 0;
-  --ion-color-medium-shade: #4b5563;
-  --ion-color-medium-tint: #9ca3af;
+  --ion-color-medium-shade: #4B5563;
+  --ion-color-medium-tint: #9CA3AF;
 
   --ion-color-light: var(--color-neutral-100);
   --ion-color-light-rgb: 243, 244, 246;
-  --ion-color-light-contrast: #000000;
+  --ion-color-light-contrast: #111827;
   --ion-color-light-contrast-rgb: 0, 0, 0;
-  --ion-color-light-shade: #d1d5db;
-  --ion-color-light-tint: #f5f6f9;
+  --ion-color-light-shade: #D1D5DB;
+  --ion-color-light-tint: #F5F6F9;
+  
+  /* Ionic Toolbar & Header Overrides */
+  --ion-toolbar-background: var(--bg-surface);
+  --ion-toolbar-border-color: rgba(255, 255, 255, 0.05);
+  --ion-header-border-color: rgba(255, 255, 255, 0.05);
 }
 
 /* ============================================
@@ -197,6 +249,7 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -204,11 +257,21 @@ body {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-normal);
   line-height: 1.5;
-  color: var(--color-neutral-800);
-  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  background-color: var(--bg-canvas);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Remove default focus outline, use custom */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary-accent);
+  outline-offset: 2px;
 }
 
 /* ============================================
@@ -216,7 +279,7 @@ body {
    ============================================ */
 h1, h2, h3, h4, h5, h6 {
   font-weight: var(--font-weight-bold);
-  color: var(--color-neutral-900);
+  color: var(--text-primary);
   letter-spacing: var(--letter-spacing-tight);
   line-height: 1.2;
 }
@@ -229,27 +292,30 @@ h5 { font-size: var(--font-size-lg); }
 h6 { font-size: var(--font-size-md); }
 
 p {
-  color: var(--color-neutral-600);
+  color: var(--text-tertiary);
   line-height: 1.6;
 }
 
 /* ============================================
-   PREMIUM TOOLBAR STYLES
+   PREMIUM TOOLBAR STYLES - Clean Integrated
    ============================================ */
-.premium-toolbar {
-  background: var(--bg-glass) !important;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: var(--shadow-sm);
-  --background: var(--bg-glass);
+.premium-toolbar,
+ion-toolbar {
+  background: var(--bg-surface) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-xs);
+  --background: var(--bg-surface);
+  --border-color: rgba(255, 255, 255, 0.05);
   min-height: 56px;
-  border-bottom: var(--border-subtle);
+  border-bottom: var(--border-light);
 }
 
-.premium-toolbar ion-title {
-  font-weight: var(--font-weight-bold);
+.premium-toolbar ion-title,
+ion-toolbar ion-title {
+  font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-lg);
-  color: var(--color-neutral-900);
+  color: var(--text-primary);
   letter-spacing: var(--letter-spacing-tight);
   text-align: center;
 }
@@ -258,14 +324,14 @@ p {
    BACK BUTTON STYLING
    ============================================ */
 ion-back-button {
-  --color: var(--color-neutral-700);
+  --color: var(--text-tertiary);
   --icon-font-size: 24px;
   font-weight: var(--font-weight-semibold);
   transition: all var(--transition-fast);
 }
 
 ion-back-button:hover {
-  --color: var(--color-primary);
+  --color: var(--text-primary);
 }
 
 ion-back-button:active {
@@ -273,68 +339,201 @@ ion-back-button:active {
 }
 
 /* ============================================
-   CARD SYSTEM - Premium Design
+   CARD SYSTEM - Premium Corporate Glass
+   Unified 16px border radius
    ============================================ */
+ion-card,
 .premium-card {
-  background: var(--bg-card);
+  background: var(--bg-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: var(--border-subtle);
   transition: all var(--transition-normal);
   overflow: hidden;
+  --background: var(--bg-surface);
 }
 
+ion-card:hover,
 .premium-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-card-hover);
   transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
+ion-card:active,
 .premium-card:active {
   transform: translateY(0);
   box-shadow: var(--shadow-sm);
 }
 
+/* Remove default Ionic card margins */
+ion-card {
+  margin: 0;
+}
+
 /* ============================================
-   BUTTON SYSTEM
+   BUTTON SYSTEM - Premium Interactive
    ============================================ */
+ion-button,
 .premium-button {
-  border-radius: var(--radius-sm);
-  font-weight: var(--font-weight-semibold);
-  transition: all var(--transition-fast);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-  font-size: var(--font-size-sm);
+  --border-radius: var(--radius-md);
+  --font-weight: var(--font-weight-semibold);
+  --letter-spacing: var(--letter-spacing-wide);
+  transition: all var(--transition-normal);
 }
 
-.premium-button:hover {
-  transform: translateY(-1px);
-}
-
-.premium-button:active {
-  transform: scale(0.97);
-}
-
-/* ============================================
-   INPUT SYSTEM
-   ============================================ */
-.premium-input {
-  --border-radius: var(--radius-sm);
-  --border-color: var(--color-neutral-200);
-  --border-style: solid;
-  --border-width: 1px;
-  --background: var(--bg-card);
-  --color: var(--color-neutral-800);
-  --placeholder-color: var(--color-neutral-400);
+ion-button {
   --padding-start: var(--spacing-lg);
   --padding-end: var(--spacing-lg);
   --padding-top: var(--spacing-md);
   --padding-bottom: var(--spacing-md);
+  font-size: var(--font-size-base);
+}
+
+ion-button:hover,
+.premium-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+ion-button:active,
+.premium-button:active {
+  transform: scale(0.97);
+}
+
+/* Primary button variant */
+.premium-button-primary {
+  --background: var(--color-primary-accent);
+  --color: #FFFFFF;
+}
+
+.premium-button-primary:hover {
+  --background: var(--color-primary-accent-hover);
+}
+
+/* ============================================
+   INPUT SYSTEM - Clean Integrated Fields
+   Zero-radius or clean custom borders
+   ============================================ */
+ion-input,
+.premium-input {
+  --border-radius: var(--radius-md);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-style: solid;
+  --border-width: 1px;
+  --background: var(--bg-canvas);
+  --color: var(--text-primary);
+  --placeholder-color: var(--text-quaternary);
+  --padding-start: var(--spacing-lg);
+  --padding-end: var(--spacing-lg);
+  --padding-top: var(--spacing-md);
+  --padding-bottom: var(--spacing-md);
+  --highlight-height: 0;
   transition: all var(--transition-fast);
 }
 
+ion-input:hover,
+.premium-input:hover {
+  --border-color: rgba(255, 255, 255, 0.2);
+}
+
+ion-input.has-focus,
 .premium-input:focus {
   --border-color: var(--color-primary-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+ion-input.input-error,
+.premium-input-error {
+  --border-color: var(--color-accent-red);
+}
+
+ion-input.input-error.has-focus {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+}
+
+/* ============================================
+   LIST SYSTEM - Remove default Ionic styling
+   ============================================ */
+ion-list {
+  padding: 0;
+  margin: 0;
+}
+
+ion-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: var(--spacing-md);
+  --padding-bottom: var(--spacing-md);
+  --inner-padding-top: var(--spacing-md);
+  --inner-padding-bottom: var(--spacing-md);
+  --background: transparent;
+  --border-color: transparent;
+  --border-width: 0;
+  --border-style: none;
+  --min-height: auto;
+  --ion-item-background: transparent;
+}
+
+ion-item::part(native) {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Remove item dividers */
+ion-list[lines] ion-item,
+ion-list[lines="full"] ion-item,
+ion-list[lines="inset"] ion-item {
+  --inner-border-width: 0;
+}
+
+/* ============================================
+   BADGE SYSTEM - Micro-sized pills
+   ============================================ */
+ion-badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+/* Status badge variants */
+.badge-active {
+  background: var(--status-active-bg);
+  color: var(--status-active-text);
+}
+
+.badge-warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
+}
+
+.badge-critical {
+  background: var(--status-critical-bg);
+  color: var(--status-critical-text);
+}
+
+.badge-offline {
+  background: var(--status-offline-bg);
+  color: var(--status-offline-text);
+}
+
+/* ============================================
+   TOGGLE SYSTEM - Premium Accent
+   ============================================ */
+ion-toggle {
+  --background: rgba(255, 255, 255, 0.1);
+  --background-checked: var(--color-primary-accent);
+  --handle-background: #FFFFFF;
+  --handle-width: 20px;
+  --handle-height: 20px;
+  transition: all var(--transition-fast);
+}
+
+ion-toggle:checked {
+  --background: var(--color-primary-accent);
 }
 
 /* ============================================
@@ -352,13 +551,17 @@ ion-back-button:active {
 .skeleton-loader {
   background: linear-gradient(
     90deg,
-    var(--color-neutral-100) 25%,
-    var(--color-neutral-200) 50%,
-    var(--color-neutral-100) 75%
+    var(--bg-surface) 25%,
+    var(--bg-surface-hover) 50%,
+    var(--bg-surface) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+}
+
+ion-spinner {
+  --color: var(--color-primary-accent);
 }
 
 /* ============================================
@@ -379,6 +582,7 @@ ion-back-button:active {
 .gap-md { gap: var(--spacing-md); }
 .gap-lg { gap: var(--spacing-lg); }
 .gap-xl { gap: var(--spacing-xl); }
+.gap-2xl { gap: var(--spacing-2xl); }
 
 /* Spacing utilities */
 .m-0 { margin: 0; }
@@ -386,13 +590,17 @@ ion-back-button:active {
 .mt-sm { margin-top: var(--spacing-sm); }
 .mt-md { margin-top: var(--spacing-md); }
 .mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+.mt-2xl { margin-top: var(--spacing-2xl); }
 .mb-sm { margin-bottom: var(--spacing-sm); }
 .mb-md { margin-bottom: var(--spacing-md); }
 .mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
 .p-0 { padding: 0; }
 .p-sm { padding: var(--spacing-sm); }
 .p-md { padding: var(--spacing-md); }
 .p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
 
 /* Text utilities */
 .text-center { text-align: center; }
@@ -401,13 +609,25 @@ ion-back-button:active {
 .text-xs { font-size: var(--font-size-xs); }
 .text-sm { font-size: var(--font-size-sm); }
 .text-base { font-size: var(--font-size-base); }
+.text-md { font-size: var(--font-size-md); }
 .text-lg { font-size: var(--font-size-lg); }
 .text-xl { font-size: var(--font-size-xl); }
+.text-2xl { font-size: var(--font-size-2xl); }
+.font-normal { font-weight: var(--font-weight-normal); }
 .font-medium { font-weight: var(--font-weight-medium); }
 .font-semibold { font-weight: var(--font-weight-semibold); }
 .font-bold { font-weight: var(--font-weight-bold); }
-.text-muted { color: var(--color-neutral-500); }
-.text-primary { color: var(--color-primary); }
+.text-muted { color: var(--text-tertiary); }
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-quaternary { color: var(--text-quaternary); }
+
+/* Truncation utilities */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ============================================
    RESPONSIVE GRID SYSTEM
@@ -429,12 +649,8 @@ ion-back-button:active {
    ANIMATION KEYFRAMES - 60fps optimized
    ============================================ */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeInUp {
@@ -492,6 +708,11 @@ ion-back-button:active {
   }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* Animation utility classes */
 .animate-fade-in {
   animation: fadeIn var(--transition-normal) forwards;
@@ -510,22 +731,35 @@ ion-back-button:active {
 }
 
 /* ============================================
+   HARDWARE ACCELERATION - Performance
+   ============================================ */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+.transform-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ============================================
    MOBILE-FIRST RESPONSIVE BREAKPOINTS
    ============================================ */
 /* Small devices (landscape phones, 576px and up) */
-@media (min-width: 576px) {
+@media (max-width: 575px) {
   :root {
-    --font-size-base: 14px;
+    --font-size-base: 13px;
   }
 }
 
 /* Medium devices (tablets, 768px and up) */
 @media (min-width: 768px) {
   :root {
-    --font-size-base: 15px;
+    --font-size-base: 14px;
   }
   
-  .premium-toolbar ion-title {
+  .premium-toolbar ion-title,
+  ion-toolbar ion-title {
     font-size: var(--font-size-xl);
   }
 }
@@ -533,71 +767,8 @@ ion-back-button:active {
 /* Large devices (desktops, 992px and up) */
 @media (min-width: 992px) {
   :root {
-    --font-size-base: 16px;
+    --font-size-base: 14px;
   }
-}
-
-/* ============================================
-   DARK MODE SUPPORT
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: #0f0f1a;
-    --bg-secondary: #1a1a2e;
-    --bg-card: #1f1f30;
-    --bg-glass: rgba(30, 30, 50, 0.85);
-    
-    --color-neutral-900: #f3f4f6;
-    --color-neutral-800: #e5e7eb;
-    --color-neutral-700: #d1d5db;
-    --color-neutral-600: #9ca3af;
-    --color-neutral-500: #6b7280;
-    --color-neutral-400: #4b5563;
-    --color-neutral-300: #374151;
-    --color-neutral-200: #1f2937;
-    --color-neutral-100: #111827;
-    --color-neutral-50: #0f0f1a;
-    
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.5);
-    
-    --border-subtle: 1px solid rgba(255, 255, 255, 0.06);
-    --border-light: 1px solid rgba(255, 255, 255, 0.1);
-    --border-medium: 1px solid rgba(255, 255, 255, 0.15);
-  }
-}
-
-/* ============================================
-   PERFORMANCE OPTIMIZATIONS
-   ============================================ */
-/* GPU acceleration for animations */
-.will-animate {
-  will-change: transform, opacity;
-}
-
-/* Prevent layout shift */
-.img-responsive {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Remove default focus outline, use custom */
-:focus {
-  outline: none;
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-primary-accent);
-  outline-offset: 2px;
 }
 
 /* ============================================
@@ -617,8 +788,39 @@ html {
 /* High contrast mode */
 @media (prefers-contrast: high) {
   :root {
-    --border-subtle: 1px solid rgba(0, 0, 0, 0.2);
-    --border-light: 1px solid rgba(0, 0, 0, 0.3);
-    --border-medium: 1px solid rgba(0, 0, 0, 0.4);
+    --border-subtle: 1px solid rgba(255, 255, 255, 0.2);
+    --border-light: 1px solid rgba(255, 255, 255, 0.3);
+    --border-medium: 1px solid rgba(255, 255, 255, 0.4);
   }
+}
+
+/* ============================================
+   IMAGE UTILITIES
+   ============================================ */
+.img-responsive {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================
+   SCROLLBAR STYLING - Premium Dark
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface-hover);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-canvas);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-quaternary);
 }

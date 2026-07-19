@@ -1,228 +1,733 @@
-/* Super Admin Dashboard Styles */
+/**
+ * Super Admin Dashboard - Luxury Corporate Light Theme
+ * Ultra-premium, modern "Luxury Corporate Light Hub" design
+ * White, Corporate Blue, and Royal Gold color palette
+ * High-end premium animations, 60fps optimized
+ * Stacked single-column layout with perfect vertical alignment
+ */
 
+/* ============================================
+   BASE CONTAINER - Clean Bright Canvas
+   ============================================ */
 .super-admin-dashboard {
   --background: #F8FAFC;
+  background: #F8FAFC;
+  min-height: 100vh;
 }
 
-.super-admin-dashboard .container {
-  max-width: 800px;
+/* Unified single-column container */
+.dashboard-container {
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
-/* Welcome Header */
-.welcome-header {
-  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-  border-radius: 16px;
-  padding: 32px 24px;
-  margin-bottom: 24px;
-  text-align: center;
-  color: white;
+/* ============================================
+   PREMIUM HEADER - Clean White Top Bar
+   Razor-thin border, subtle shadow
+   ============================================ */
+.premium-header {
+  --background: #FFFFFF;
+  --border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
-.welcome-text {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
+.premium-header ion-toolbar {
+  --background: #FFFFFF;
+  --border-color: transparent;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: none;
 }
 
-.role-text {
-  font-size: 14px;
-  opacity: 0.9;
-  margin: 0;
+.premium-header ion-title {
+  color: #0F172A;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.02em;
 }
 
-/* Stats Container */
-.stats-container {
+/* Logout Button - Sleek, minimal */
+.logout-btn-header {
+  --color: #64748B;
+  --background: transparent;
+  margin-right: 8px;
+  border-radius: 12px;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logout-btn-header:hover {
+  --color: #EF4444;
+  --background: rgba(239, 68, 68, 0.08);
+}
+
+.logout-btn-header:active {
+  transform: scale(0.95);
+}
+
+.logout-btn-header ion-icon {
+  font-size: 20px;
+}
+
+/* User Badge - Flush within header */
+.user-badge {
+  --color: #0F172A;
+  --background: #F1F5F9;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-badge:hover {
+  --background: #E2E8F0;
+}
+
+.user-badge ion-icon {
+  font-size: 16px;
+  color: #2563EB;
+}
+
+/* ============================================
+   METRICS ROW - Top Cards
+   Uniform 24px gap, equal baseline alignment
+   ============================================ */
+.metrics-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 24px;
 }
 
-.stat-card {
-  text-align: center;
-  padding: 20px 16px;
+.metric-card {
+  background: #FFFFFF;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+  --background: #FFFFFF;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
 }
 
-.stat-icon {
-  font-size: 32px;
-  color: #2e7d32;
-  margin-bottom: 8px;
+.metric-card:nth-child(1) { animation-delay: 0.05s; }
+.metric-card:nth-child(2) { animation-delay: 0.1s; }
+.metric-card:nth-child(3) { animation-delay: 0.15s; }
+
+.metric-card:hover {
+  border-color: #BFDBFE;
+  box-shadow: 0 8px 30px -4px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(37, 99, 235, 0.06);
+  transform: translateY(-4px);
 }
 
-.stat-number {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1E293B;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #64748B;
-  margin-top: 4px;
-}
-
-/* Section Title */
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E293B;
-  margin: 24px 0 12px 0;
-}
-
-/* Actions Container */
-.actions-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.action-card {
+.metric-card ion-card-content {
+  padding: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  text-align: center;
 }
 
+.metric-icon {
+  font-size: 28px;
+  color: #2563EB;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0F172A;
+  line-height: 1.2;
+  margin: 4px 0;
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.metric-label {
+  font-size: 10px;
+  color: #64748B;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-spinner {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  --color: #2563EB;
+}
+
+.metric-error {
+  font-size: 10px;
+  color: #DC2626;
+  margin-top: 4px;
+}
+
+/* Status colors for metric values */
+.metric-value.status-success {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.metric-value.status-warning {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.metric-value.status-danger {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   SECTION PANELS - Unified Single Column
+   Perfect vertical alignment, 32px gap
+   ============================================ */
+.section-panel {
+  width: 100%;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   ACTIONS GRID - Quick Actions
+   Perfect 2-column grid, 24px gap
+   ============================================ */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.action-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --background: transparent;
+  margin: 0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.action-card:nth-child(1) { animation-delay: 0.2s; }
+.action-card:nth-child(2) { animation-delay: 0.25s; }
+
 .action-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #2563EB;
+  box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.06);
+  transform: translateY(-4px);
+}
+
+.action-card:active {
+  transform: translateY(0);
+}
+
+.action-card ion-card-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .action-icon {
-  font-size: 36px;
-  color: #2e7d32;
-  margin-bottom: 12px;
+  font-size: 28px;
+  color: #2563EB;
 }
 
 .action-text {
   font-size: 14px;
   font-weight: 600;
-  color: #1E293B;
+  color: #0F172A;
 }
 
-/* Schools List */
-.schools-list {
+/* ============================================
+   TENANT LIST - Light Theme
+   Micro-sized status badges, perfect alignment
+   ============================================ */
+.tenant-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-.school-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s;
+.tenant-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --background: transparent;
+  margin: 0;
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
 }
 
-.school-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.tenant-card:nth-child(1) { animation-delay: 0.3s; }
+.tenant-card:nth-child(2) { animation-delay: 0.33s; }
+.tenant-card:nth-child(3) { animation-delay: 0.36s; }
+.tenant-card:nth-child(4) { animation-delay: 0.39s; }
+.tenant-card:nth-child(5) { animation-delay: 0.42s; }
+
+.tenant-card:hover {
+  border-color: #BFDBFE;
+  box-shadow: 0 8px 25px -4px rgba(37, 99, 235, 0.12), 0 4px 10px -4px rgba(37, 99, 235, 0.06);
+  transform: translateY(-2px);
 }
 
-.school-card ion-card-content {
+.tenant-card ion-card-content {
+  padding: 16px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
 }
 
-.school-info {
+.tenant-info {
   flex: 1;
+  min-width: 0;
 }
 
-.school-name {
-  font-size: 16px;
+.tenant-name {
+  font-size: 14px;
   font-weight: 600;
-  color: #1E293B;
-  margin: 0 0 4px 0;
+  color: #0F172A;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.school-code {
-  font-size: 12px;
-  color: #64748B;
+.tenant-code {
+  font-size: 11px;
+  color: #94A3B8;
   margin: 0;
+  font-family: 'SF Mono', 'Fira Code', monospace;
 }
 
-.school-status {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 20px;
+/* Status Badge - Micro-sized pill */
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 
-.school-status.active {
-  background: #F0FDF4;
-  color: #2e7d32;
+.status-badge.active {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
 }
 
-.school-status.inactive {
-  background: #FFEBEE;
-  color: #C62828;
+.status-badge.inactive {
+  background: rgba(239, 68, 68, 0.08);
+  color: #DC2626;
 }
 
-/* Empty State */
-.empty-container {
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.empty-state {
   text-align: center;
   padding: 48px 24px;
-  background: white;
+  background: #FFFFFF;
   border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
 }
 
 .empty-icon {
   font-size: 48px;
   color: #CBD5E1;
   margin-bottom: 16px;
+  display: block;
 }
 
 .empty-text {
-  font-size: 16px;
+  font-size: 14px;
   color: #64748B;
-  font-weight: 500;
+  font-weight: 600;
   margin: 0 0 4px 0;
 }
 
 .empty-subtext {
-  font-size: 14px;
+  font-size: 12px;
   color: #94A3B8;
   margin: 0;
 }
 
-/* Logout Button */
-.logout-button {
-  margin-top: 32px;
-  border-radius: 12px;
+/* ============================================
+   CONFIG PANEL - Clean White Design
+   Pure white with soft hover on toggles
+   ============================================ */
+.config-panel {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  --background: #FFFFFF;
+  margin: 0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  animation-delay: 0.35s;
 }
 
-/* Loading Container */
+.config-panel ion-card-content {
+  padding: 20px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.panel-icon {
+  font-size: 18px;
+  color: #2563EB;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.config-list {
+  padding: 0;
+  margin: 0;
+}
+
+/* Config Toggle Items - Perfect alignment with soft hover */
+.config-toggle-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --inner-padding-top: 12px;
+  --inner-padding-bottom: 12px;
+  --background: transparent;
+  background: transparent;
+  border-radius: 10px;
+  --min-height: auto;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s ease;
+  margin: -4px 0;
+  padding: 4px 0;
+}
+
+.config-toggle-item:hover {
+  background: #F8FAFC;
+}
+
+.config-toggle-item:last-child {
+  border-bottom: none;
+}
+
+.config-icon {
+  font-size: 18px;
+  color: #64748B;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.config-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+  margin-bottom: 2px;
+}
+
+.config-description {
+  font-size: 11px;
+  color: #94A3B8;
+  line-height: 1.3;
+}
+
+/* Premium Toggle Styling - Corporate Blue accent */
+.config-toggle-item ion-toggle {
+  --background: #CBD5E1;
+  --background-checked: #2563EB;
+  --handle-background: #FFFFFF;
+  --handle-width: 20px;
+  --handle-height: 20px;
+  --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.config-toggle-item ion-toggle::part(handle) {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   HEALTH PANEL - System Health
+   ============================================ */
+.health-panel {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  --background: #FFFFFF;
+  margin: 0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  animation-delay: 0.4s;
+}
+
+.health-panel ion-card-content {
+  padding: 20px;
+}
+
+.health-panel .panel-header {
+  justify-content: space-between;
+}
+
+.health-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #CBD5E1;
+  flex-shrink: 0;
+}
+
+.health-indicator.online {
+  background: #10B981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+  animation: pulse 2s infinite;
+}
+
+.health-indicator.offline {
+  background: #EF4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.health-indicator.warning {
+  background: #F59E0B;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.health-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.health-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #F8FAFC;
+}
+
+.health-metric:last-child {
+  border-bottom: none;
+}
+
+.health-label {
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 400;
+}
+
+.health-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.health-value.success {
+  color: #047857;
+}
+
+.health-value.warning {
+  color: #D97706;
+}
+
+.health-value.danger {
+  color: #DC2626;
+}
+
+.health-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F1F5F9;
+  font-size: 11px;
+  color: #94A3B8;
+  text-align: center;
+}
+
+/* ============================================
+   LOADING STATE
+   ============================================ */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 40px;
+  padding: 48px;
 }
 
 .loading-container p {
   margin-top: 16px;
-  font-size: 14px;
+  font-size: 13px;
   color: #64748B;
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-  .stats-container {
+.loading-container ion-spinner {
+  --color: #2563EB;
+}
+
+/* ============================================
+   ANIMATION KEYFRAMES - 60fps optimized
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 992px) {
+  .dashboard-container {
+    padding: 16px;
+    gap: 24px;
+  }
+
+  .metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .metric-card ion-card-content {
+    padding: 20px;
+  }
+
+  .metric-value {
+    font-size: 24px;
+  }
+
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .metrics-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .actions-grid {
     grid-template-columns: 1fr;
   }
-  
-  .actions-container {
-    grid-template-columns: 1fr;
+
+  .dashboard-container {
+    padding: 12px;
+    gap: 20px;
   }
+
+  .metric-card ion-card-content {
+    padding: 16px;
+  }
+
+  .metric-value {
+    font-size: 22px;
+  }
+}
+
+/* ============================================
+   HARDWARE ACCELERATION - 60fps
+   ============================================ */
+.metric-card,
+.action-card,
+.tenant-card,
+.config-panel,
+.health-panel,
+.logout-btn-header,
+.user-badge {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, box-shadow;
+}
+
+/* ============================================
+   IONIC FRAMEWORK OVERRIDES FOR LIGHT THEME
+   ============================================ */
+.super-admin-dashboard ion-content {
+  --background: #F8FAFC;
+}
+
+.super-admin-dashboard ion-header {
+  --background: #FFFFFF;
+}
+
+.super-admin-dashboard ion-toolbar {
+  --background: #FFFFFF;
+  --border-color: #E2E8F0;
+}
+
+/* Ensure IonToggle uses our custom styling */
+ion-toggle {
+  --background: #CBD5E1;
+  --background-checked: #2563EB;
+  --handle-background: #FFFFFF;
+  --handle-width: 20px;
+  --handle-height: 20px;
 }

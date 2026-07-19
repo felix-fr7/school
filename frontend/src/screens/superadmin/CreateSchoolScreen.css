@@ -1,64 +1,125 @@
-/* Create School Screen Styles */
+/**
+ * Create School Screen - Luxury Corporate Light Theme
+ * Ultra-premium, modern "Luxury Corporate Light Hub" design
+ * White, Corporate Blue, and Royal Gold color palette
+ * High-end premium animations, 60fps optimized
+ */
 
+/* ============================================
+   BASE CONTAINER - Clean Bright Canvas
+   ============================================ */
 .create-school-content {
   --background: #F8FAFC;
+  background: #F8FAFC;
+  min-height: 100vh;
 }
 
 .create-school-content .container {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 24px;
 }
 
-/* Header Section */
+/* ============================================
+   HEADER SECTION - Clean White Typography
+   Pure white background, Corporate Blue accent
+   ============================================ */
 .header-section {
   text-align: center;
   margin-bottom: 32px;
+  padding: 32px 24px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .header-icon {
   font-size: 48px;
-  color: #2e7d32;
+  color: #2563EB;
   margin-bottom: 16px;
+  display: block;
+  position: relative;
+  z-index: 1;
 }
 
 .header-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: #1E293B;
-  margin: 0 0 8px 0;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
 }
 
 .header-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748B;
   margin: 0;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
 }
 
-/* Form Cards */
+/* ============================================
+   FORM CARD - Premium White Container
+   Unified 16px border radius, soft shadow
+   ============================================ */
 .form-card {
-  margin-bottom: 24px;
+  background: #FFFFFF;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  margin-bottom: 24px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --inner-padding-top: 0;
+  --inner-padding-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+  overflow: hidden;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.form-card:nth-of-type(1) { animation-delay: 0.1s; }
+.form-card:nth-of-type(2) { animation-delay: 0.2s; }
+
+.form-card:last-of-type {
+  margin-bottom: 0;
 }
 
 .form-card ion-card-header {
-  padding-bottom: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FAFBFC;
 }
 
 .form-card ion-card-title {
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 600;
-  color: #1E293B;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .form-card ion-card-content {
-  padding: 16px 0;
+  padding: 24px 20px;
 }
 
-/* Input Groups */
+/* ============================================
+   INPUT GROUPS - Premium Light Form Fields
+   Clean integrated borders with Corporate Blue focus
+   ============================================ */
 .input-group {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .input-group:last-child {
@@ -67,21 +128,241 @@
 
 .input-label {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0F172A;
   margin-bottom: 8px;
+  letter-spacing: 0.025em;
 }
 
-/* Button Container */
+.input-group ion-input {
+  --border-radius: 10px;
+  --border-color: #E2E8F0;
+  --border-style: solid;
+  --border-width: 1px;
+  --background: #F8FAFC;
+  --color: #0F172A;
+  --placeholder-color: #94A3B8;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --highlight-height: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group ion-input:hover {
+  --border-color: #CBD5E1;
+  --background: #FFFFFF;
+}
+
+.input-group ion-input.has-focus {
+  --border-color: #2563EB;
+  --background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-group ion-input.input-error {
+  --border-color: #DC2626;
+}
+
+.input-group ion-input.input-error.has-focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* ============================================
+   BUTTON CONTAINER - Premium Styling
+   ============================================ */
 .button-container {
-  margin-top: 24px;
+  margin-top: 32px;
+  margin-bottom: 24px;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
 }
 
 .submit-button {
-  --background: #2e7d32;
-  --background-activated: #1b5e20;
-  border-radius: 12px;
+  --border-radius: 12px;
+  --font-weight: 600;
+  --letter-spacing: 0.025em;
+  --background: #2563EB;
+  --color: #FFFFFF;
+  font-size: 14px;
+  padding: 14px 32px;
+  box-shadow: 0 4px 14px -2px rgba(37, 99, 235, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 48px;
+}
+
+.submit-button:hover {
+  --background: #1D4ED8;
+  box-shadow: 0 8px 25px -4px rgba(37, 99, 235, 0.35);
+  transform: translateY(-2px);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+.submit-button:disabled {
+  --background: #94A3B8;
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ============================================
+   FORM VALIDATION STYLES - Error & Success States
+   Light theme colors
+   ============================================ */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.06);
+  border-radius: 8px;
+  font-size: 11px;
+  color: #DC2626;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.error-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  font-size: 11px;
+  color: #047857;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.success-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  color: #10B981;
+}
+
+.helper-text {
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 400;
+  background: #F8FAFC;
+  border-radius: 8px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Alert custom styling */
+.alert-success .alert-message,
+.alert-error .alert-message {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ============================================
+   ANIMATION KEYFRAMES - 60fps Optimized
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - Mobile First
+   ============================================ */
+@media (max-width: 600px) {
+  .create-school-content .container {
+    padding: 16px;
+  }
+  
+  .header-section {
+    padding: 24px 16px;
+  }
+  
+  .header-icon {
+    font-size: 36px;
+  }
+  
+  .header-title {
+    font-size: 18px;
+  }
+  
+  .form-card ion-card-content {
+    padding: 20px 16px;
+  }
+  
+  .form-card ion-card-header {
+    padding: 14px 16px;
+  }
+  
+  .submit-button {
+    height: 44px;
+    font-size: 13px;
+  }
+}
+
+/* ============================================
+   HARDWARE ACCELERATION - Performance
+   ============================================ */
+.form-card,
+.submit-button,
+ion-input {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* ============================================
+   IONIC FRAMEWORK OVERRIDES FOR LIGHT THEME
+   ============================================ */
+.create-school-content ion-content {
+  --background: #F8FAFC;
+}
+
+.create-school-content ion-header {
+  --background: #FFFFFF;
+}
+
+.create-school-content ion-toolbar {
+  --background: #FFFFFF;
+  --border-color: #E2E8F0;
+}
+
+.create-school-content ion-back-button {
+  --color: #64748B;
+}
+
+.create-school-content ion-back-button:hover {
+  --color: #0F172A;
+}
+
+.create-school-content ion-title {
+  color: #0F172A;
   font-weight: 600;
-  padding: 16px;
+  font-size: 16px;
 }

@@ -1,63 +1,124 @@
-/* School Detail Screen Styles */
+/**
+ * School Detail Screen - Luxury Corporate Light Theme
+ * Ultra-premium, modern "Luxury Corporate Light Hub" design
+ * White, Corporate Blue, and Royal Gold color palette
+ * High-end premium animations, 60fps optimized
+ * Fixed header constraints and back-button Shadow DOM piercing
+ */
 
+/* ============================================
+   BASE CONTAINER - Clean Bright Canvas
+   ============================================ */
 .school-detail-content {
   --background: #F8FAFC;
+  background: #F8FAFC;
+  min-height: 100vh;
 }
 
-.school-detail-content .container {
-  max-width: 800px;
+/* Detail Container - Constrained, centered layout */
+.detail-container {
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 0;
+  width: 100%;
 }
 
-/* Loading Container */
-.loading-container {
+/* ============================================
+   FIXED & BOUNDED HEADER - Laptop + Mobile Symmetry
+   Pure white background, elegant border
+   ============================================ */
+.detail-header {
+  --background: #FFFFFF;
+  background: #FFFFFF !important;
+}
+
+.detail-header ion-toolbar {
+  --background: #FFFFFF !important;
+  --border-color: #E2E8F0 !important;
+  padding: 0 16px !important;
+  min-height: 56px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 40px;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
-.loading-container p {
-  margin-top: 16px;
-  font-size: 14px;
-  color: #64748B;
-}
-
-/* Empty Container */
-.empty-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 40px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  color: #CBD5E1;
-  margin-bottom: 16px;
-}
-
-.empty-text {
+.detail-header ion-title {
+  color: #0F172A;
+  font-weight: 600;
   font-size: 16px;
-  color: #64748B;
-  font-weight: 500;
-  margin: 0;
+  letter-spacing: -0.01em;
+  text-align: left;
+  padding-left: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Header Card */
+/* ============================================
+   SLEEK BACK BUTTON - Shadow DOM Piercing
+   Definitive fix using ::part() and !important
+   ============================================ */
+.detail-header ion-back-button {
+  --color: #2563EB !important;
+  --color-activated: #1D4ED8 !important;
+  --color-focused: #1D4ED8 !important;
+  --padding-start: 8px !important;
+  --padding-end: 8px !important;
+  --icon-font-size: 20px !important;
+  width: auto !important;
+  height: 40px !important;
+  max-width: 100px !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Force pierce the native button container inside the shadow root */
+.detail-header ion-back-button::part(native) {
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  height: 100% !important;
+  width: auto !important;
+  min-height: unset !important;
+}
+
+/* Force pierce the icon element inside the shadow root */
+.detail-header ion-back-button::part(icon) {
+  font-size: 20px !important;
+  margin: 0 !important;
+}
+
+/* ============================================
+   HEADER CARD - Clean White Hero Section
+   No dark gradients, pure white elegance
+   ============================================ */
 .header-card {
+  background: #FFFFFF;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  margin-bottom: 24px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --inner-padding-top: 0;
+  --inner-padding-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+  overflow: hidden;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .header-card ion-card-content {
-  padding: 24px;
+  padding: 28px 24px;
+  position: relative;
 }
 
 .header-content {
@@ -67,87 +128,206 @@
 }
 
 .header-icon {
-  font-size: 48px;
-  color: #2e7d32;
+  font-size: 40px;
+  color: #2563EB;
+  flex-shrink: 0;
 }
 
 .header-info {
   flex: 1;
+  min-width: 0;
 }
 
-.school-name {
-  font-size: 24px;
+.header-info .school-name {
+  font-size: 22px;
   font-weight: 700;
-  color: #1E293B;
+  color: #0F172A;
   margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.school-code {
-  font-size: 14px;
-  color: #64748B;
+.header-info .school-code {
+  font-size: 12px;
+  color: #94A3B8;
   margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  font-family: 'SF Mono', 'Fira Code', monospace;
 }
 
-/* Info Card */
+/* ============================================
+   INFO CARD - Clean Container Design
+   Unified 16px border radius, pure white
+   ============================================ */
 .info-card,
 .stats-card,
 .admins-card {
+  background: #FFFFFF;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  margin-bottom: 24px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --inner-padding-top: 0;
+  --inner-padding-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+  overflow: hidden;
+}
+
+.info-card:last-child,
+.stats-card:last-child,
+.admins-card:last-child {
+  margin-bottom: 0;
 }
 
 .info-card ion-card-header,
 .stats-card ion-card-header,
 .admins-card ion-card-header {
-  padding-bottom: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FAFBFC;
 }
 
 .info-card ion-card-title,
 .stats-card ion-card-title,
 .admins-card ion-card-title {
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 600;
-  color: #1E293B;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-/* Stats Grid */
+.info-card ion-card-content,
+.stats-card ion-card-content,
+.admins-card ion-card-content {
+  padding: 20px;
+}
+
+/* ============================================
+   CONTACT LIST - Clean IonItem Styling
+   Perfect vertical alignment
+   ============================================ */
+.info-card ion-list {
+  padding: 0;
+  margin: 0;
+}
+
+.info-card ion-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --inner-padding-top: 12px;
+  --inner-padding-bottom: 12px;
+  background: transparent;
+  border-bottom: 1px solid #F8FAFC;
+  --min-height: auto;
+  display: flex;
+  align-items: center;
+}
+
+.info-card ion-item:last-child {
+  border-bottom: none;
+}
+
+.info-card ion-icon[slot="start"] {
+  font-size: 18px;
+  color: #2563EB;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.info-card ion-label {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 400;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+/* ============================================
+   STATS GRID - Metric Cards Layout
+   Uniform gap, equal baseline alignment
+   ============================================ */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  margin-top: 8px;
 }
 
 .stat-item {
-  text-align: center;
-  padding: 16px;
   background: #F8FAFC;
   border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.stat-icon {
+.stat-item:hover {
+  background: #F1F5F9;
+  border-color: #BFDBFE;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.08);
+}
+
+.stat-item .stat-icon {
   font-size: 24px;
-  color: #2e7d32;
+  color: #2563EB;
   margin-bottom: 8px;
+  display: block;
 }
 
-.stat-number {
-  font-size: 28px;
+.stat-item .stat-number {
+  font-size: 24px;
   font-weight: 700;
-  color: #1E293B;
+  color: #0F172A;
+  line-height: 1.2;
+  margin: 4px 0;
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.stat-label {
-  font-size: 12px;
+.stat-item .stat-label {
+  font-size: 10px;
   color: #64748B;
-  margin-top: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Admins List */
+/* ============================================
+   ADMINS LIST - User Cards
+   Perfect vertical centering
+   ============================================ */
+.admins-card ion-list {
+  padding: 0;
+  margin: 0;
+}
+
 .admin-item {
-  padding: 12px 0;
-  border-bottom: 1px solid #F1F5F9;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --inner-padding-top: 12px;
+  --inner-padding-bottom: 12px;
+  background: transparent;
+  border-bottom: 1px solid #F8FAFC;
+  --min-height: auto;
+  display: flex;
+  align-items: center;
 }
 
 .admin-item:last-child {
@@ -157,39 +337,236 @@
 .admin-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-  color: white;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 14px;
   font-weight: 600;
-  font-size: 16px;
+  color: #FFFFFF;
   margin-right: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.admin-item ion-label {
+  flex: 1;
+  min-width: 0;
 }
 
 .admin-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #1E293B;
+  color: #0F172A;
   margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-email {
-  font-size: 12px;
-  color: #64748B;
+  font-size: 11px;
+  color: #94A3B8;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-item ion-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  margin-left: 8px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
 }
 
 .empty-admins {
   text-align: center;
   padding: 24px;
-  color: #64748B;
+  color: #94A3B8;
+  font-size: 13px;
 }
 
-/* Responsive */
+/* ============================================
+   EMPTY STATE - Clean & Professional
+   ============================================ */
+.empty-container {
+  text-align: center;
+  padding: 48px 24px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  border: 1px solid #E2E8F0;
+}
+
+.empty-icon {
+  font-size: 56px;
+  color: #CBD5E1;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #64748B;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ============================================
+   LOADING STATE - Professional Spinner
+   ============================================ */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 48px;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.loading-container ion-spinner {
+  --color: #2563EB;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - Mobile First
+   Ensures symmetry between mobile and laptop
+   ============================================ */
 @media (max-width: 600px) {
+  .detail-header ion-toolbar {
+    --padding-start: 8px !important;
+    --padding-end: 8px !important;
+  }
+
+  .detail-header ion-title {
+    font-size: 14px;
+    padding-left: 4px;
+  }
+
+  .detail-container {
+    padding: 0 4px;
+  }
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .stat-item {
+    padding: 16px;
+  }
+  
+  .stat-item .stat-number {
+    font-size: 20px;
+  }
+  
+  .header-card ion-card-content {
+    padding: 24px 20px;
+  }
+  
+  .header-info .school-name {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Laptop/desktop centering - elegant split-grid */
+@media (min-width: 992px) {
+  .detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+}
+
+/* ============================================
+   ANIMATION KEYFRAMES - 60fps Optimized
+   ============================================ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header-card {
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.info-card {
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.stats-card {
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.admins-card {
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+/* ============================================
+   HARDWARE ACCELERATION - Performance
+   ============================================ */
+.header-card,
+.info-card,
+.stats-card,
+.admins-card,
+.stat-item {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* ============================================
+   IONIC FRAMEWORK OVERRIDES FOR LIGHT THEME
+   ============================================ */
+.school-detail-content {
+  --background: #F8FAFC;
+}
+
+/* Ensure ion-content padding works correctly */
+.school-detail-content.ion-padding {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .school-detail-content.ion-padding {
+    --padding-start: 24px;
+    --padding-end: 24px;
+    --padding-top: 24px;
+    --padding-bottom: 24px;
   }
 }

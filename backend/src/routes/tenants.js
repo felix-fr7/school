@@ -1,6 +1,9 @@
 /**
  * Tenant (School) Routes
  * Handles school/tenant CRUD operations - Super Admin only
+ * 
+ * IMPORTANT: Static routes MUST be defined before dynamic parameter routes
+ * to prevent "create" from being interpreted as an ID parameter
  */
 
 const express = require('express');
@@ -23,24 +26,13 @@ router.use(requireSuperAdmin);
 router.get('/', tenantController.getAllTenants);
 
 /**
- * @route   GET /api/tenants/:id
- * @desc    Get single tenant by ID
- * @access  Super Admin
- * @params  id (UUID)
- */
-router.get(
-  '/:id',
-  [
-    param('id').isUUID().withMessage('Invalid tenant ID format'),
-  ],
-  tenantController.getTenantById
-);
-
-/**
  * @route   POST /api/tenants
  * @desc    Create a new tenant (school) with admin credentials
  * @access  Super Admin
  * @body    { name, code, address, phone, email, adminEmail, adminPassword, adminName }
+ * 
+ * NOTE: This POST route is defined BEFORE the /:id routes to prevent
+ * "create" or other static paths from being interpreted as UUID parameters
  */
 router.post(
   '/',
@@ -83,6 +75,22 @@ router.post(
       .withMessage('Admin name must be less than 100 characters'),
   ],
   tenantController.createTenant
+);
+
+/**
+ * @route   GET /api/tenants/:id
+ * @desc    Get single tenant by ID
+ * @access  Super Admin
+ * @params  id (UUID)
+ * 
+ * NOTE: Dynamic parameter routes MUST come after static routes
+ */
+router.get(
+  '/:id',
+  [
+    param('id').isUUID().withMessage('Invalid tenant ID format'),
+  ],
+  tenantController.getTenantById
 );
 
 /**

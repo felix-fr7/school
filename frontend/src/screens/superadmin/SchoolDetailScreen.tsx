@@ -1,6 +1,7 @@
 /**
  * School Detail Screen - Super Admin (Ionic React Version)
  * Shows details of a specific school/tenant
+ * Luxury Corporate Light Hub - Ultra-premium modern design
  */
 
 import React, { useEffect, useState } from 'react';
@@ -32,7 +33,7 @@ import {
   bookOutline,
   documentTextOutline,
 } from 'ionicons/icons';
-import { useParams } from 'react-router-dom';
+import { useParams, Redirect } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
 import './SchoolDetailScreen.css';
 
@@ -51,6 +52,19 @@ interface SchoolUser {
 
 const SchoolDetailScreen: React.FC = () => {
   const { tenantId } = useParams<{ tenantId: string }>();
+  
+  // UUID guard - redirect non-UUID paths (like 'create') to the correct route
+  // This prevents "School not found" when React Router accidentally matches /:tenantId
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (tenantId && !uuidRegex.test(tenantId)) {
+    // If it's a known static path like 'create' or 'new', redirect to that route
+    if (tenantId === 'create' || tenantId === 'new') {
+      return <Redirect to="/superadmin/schools/create" />;
+    }
+    // For any other non-UUID, redirect to schools list
+    return <Redirect to="/superadmin/schools" />;
+  }
+  
   const [school, setSchool] = useState<any>(null);
   const [stats, setStats] = useState<SchoolStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,13 +96,13 @@ const SchoolDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonHeader>
+        <IonHeader className="detail-header">
           <IonToolbar>
             <IonBackButton defaultHref="/superadmin/schools" />
             <IonTitle>School Details</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="school-detail-content" fullscreen>
+        <IonContent className="school-detail-content ion-padding" fullscreen>
           <div className="loading-container">
             <IonSpinner name="crescent" />
             <p>Loading school details...</p>
@@ -101,13 +115,13 @@ const SchoolDetailScreen: React.FC = () => {
   if (!school) {
     return (
       <IonPage>
-        <IonHeader>
+        <IonHeader className="detail-header">
           <IonToolbar>
             <IonBackButton defaultHref="/superadmin/schools" />
             <IonTitle>School Details</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="school-detail-content" fullscreen>
+        <IonContent className="school-detail-content ion-padding" fullscreen>
           <div className="empty-container">
             <IonIcon icon={businessOutline} className="empty-icon" />
             <p className="empty-text">School not found</p>
@@ -119,15 +133,15 @@ const SchoolDetailScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="detail-header">
         <IonToolbar>
           <IonBackButton defaultHref="/superadmin/schools" />
           <IonTitle>{school.name}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="school-detail-content" fullscreen>
-        <div className="container">
+      <IonContent className="school-detail-content ion-padding" fullscreen>
+        <div className="detail-container">
           {/* Header Card */}
           <IonCard className="header-card">
             <IonCardContent>
@@ -211,7 +225,7 @@ const SchoolDetailScreen: React.FC = () => {
               <IonCardTitle>Administrators</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              {school.users && school.users.length > 0 ? (
+          {school.users && school.users.length > 0 ? (
                 <IonList lines="none">
                   {school.users.map((admin: SchoolUser) => (
                     <IonItem key={admin.id} className="admin-item">
@@ -222,7 +236,7 @@ const SchoolDetailScreen: React.FC = () => {
                         <h3 className="admin-name">{admin.name}</h3>
                         <p className="admin-email">{admin.email}</p>
                       </IonLabel>
-                      <IonBadge slot="end" color="primary">Admin</IonBadge>
+                      <IonBadge slot="end" className="admin-badge">Admin</IonBadge>
                     </IonItem>
                   ))}
                 </IonList>

@@ -18,6 +18,7 @@ const db = require('./config/db');
 const authRoutes = require('./routes/auth');
 const postRoutes = require('./routes/posts');
 const tenantRoutes = require('./routes/tenants');
+const superadminRoutes = require('./routes/superadmin');
 const adminRoutes = require('./routes/admin');
 const adminContentRoutes = require('./routes/adminContent');
 const contentRoutes = require('./routes/content'); // Shared content routes for students/teachers
@@ -29,6 +30,7 @@ const utilsRoutes = require('./routes/utils');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
+const { maintenanceGuard, rateLimiter } = require('./middleware/maintenanceGuard');
 
 // Initialize Express app
 const app = express();
@@ -37,6 +39,12 @@ const PORT = process.env.PORT || 3000;
 // ============================================
 // Middleware Setup
 // ============================================
+
+// Apply global rate limiting (configurable via system config)
+app.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 100 }));
+
+// Apply maintenance guard to all routes except health checks
+app.use(maintenanceGuard);
 
 // CORS Configuration - Dynamic origin matching for localhost, local IPs, and ngrok
 // This allows seamless access from desktop browsers, mobile devices on local network, and ngrok tunnels
@@ -108,6 +116,9 @@ app.use('/api/posts', postRoutes);
 
 // Tenant management routes (Super Admin only)
 app.use('/api/tenants', tenantRoutes);
+
+// Super Admin routes (Telemetry, System Config)
+app.use('/api/superadmin', superadminRoutes);
 
 // Admin routes (School Admin)
 app.use('/api/admin', adminRoutes);

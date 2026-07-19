@@ -32,6 +32,7 @@ import {
   mailOutline,
   callOutline,
   locationOutline,
+  arrowBackOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
@@ -211,7 +212,7 @@ const SchoolsListScreen: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonHeader>
+        <IonHeader className="premium-header">
           <IonToolbar>
             <IonTitle>Schools List</IonTitle>
           </IonToolbar>
@@ -228,9 +229,12 @@ const SchoolsListScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="premium-header">
         <IonToolbar>
-          <IonTitle>Schools List</IonTitle>
+          <IonButton fill="clear" onClick={() => history.push('/superadmin/dashboard')} slot="start">
+            <IonIcon icon={arrowBackOutline} slot="icon-only" />
+          </IonButton>
+          <IonTitle>Schools Directory</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -238,7 +242,8 @@ const SchoolsListScreen: React.FC = () => {
         <div className="container">
           {/* Header */}
           <div className="header-section">
-            <h1 className="header-title">🏫 Schools Management</h1>
+            <IonIcon icon={businessOutline} className="header-icon" />
+            <h1 className="header-title">Schools Directory</h1>
             <p className="header-subtitle">Manage all schools and tenants</p>
           </div>
 

@@ -118,6 +118,18 @@ const getTenantById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // UUID regex guard - reject non-UUID values before database query
+    // This prevents PostgreSQL errors like "22P02: invalid input syntax for type uuid"
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid Tenant ID format. Expected UUID (e.g., 550e8400-e29b-41d4-a716-446655440000).',
+        },
+      });
+    }
+
     // Get tenant with stats and admin users
     const tenantQuery = `
       SELECT 
@@ -549,6 +561,18 @@ const deleteTenant = async (req, res, next) => {
 const getTenantStats = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    // UUID regex guard - reject non-UUID values before database query
+    // This prevents PostgreSQL errors like "22P02: invalid input syntax for type uuid"
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid Tenant ID format. Expected UUID (e.g., 550e8400-e29b-41d4-a716-446655440000).',
+        },
+      });
+    }
 
     // Check if tenant exists
     const checkQuery = 'SELECT id, name, code FROM "Tenant" WHERE id = $1';
