@@ -1,84 +1,503 @@
-.login-content {
-  --background: #f5f5f5;
+/**
+ * Login Screen - Superadmin Gold Accent Theme (Final)
+ * Ultra-clean, international-grade UI with uniform dimensions
+ * Luxury Corporate design with Gold (#D4AF37) accent color
+ */
+
+/* ============================================
+   CSS VARIABLES - Superadmin Gold Theme
+   ============================================ */
+:root {
+  --superadmin-gold: #D4AF37;
+  --superadmin-gold-dark: #B8960C;
+  --superadmin-gold-light: #E8C84A;
+  --superadmin-gold-bg: rgba(212, 175, 55, 0.08);
+  --uniform-height: 48px;
+  --uniform-radius: 8px;
 }
 
-.login-container {
+/* ============================================
+   LOGIN PAGE BACKGROUND
+   ============================================ */
+.login-page {
+  --background: #F8FAFC;
+  background: #F8FAFC;
+  min-height: 100vh;
+}
+
+/* ============================================
+   PREMIUM HEADER - White with Gold accent
+   ============================================ */
+.login-header {
+  --background: #FFFFFF;
+  --border-bottom: 2px solid var(--superadmin-gold);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.login-header ion-toolbar {
+  --background: #FFFFFF;
+  --border-color: transparent;
+  border-bottom: 2px solid var(--superadmin-gold);
+  box-shadow: none;
+}
+
+.login-header ion-title {
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================
+   LOGIN CARD - Gold accent styling
+   Relative positioning for watermark
+   ============================================ */
+.login-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  border-top: 3px solid var(--superadmin-gold);
+  --background: #FFFFFF;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card:hover {
+  box-shadow: 0 8px 30px -4px rgba(212, 175, 55, 0.15), 0 4px 12px -2px rgba(212, 175, 55, 0.08);
+  border-color: var(--superadmin-gold-light);
+}
+
+.login-card ion-card-content {
+  padding: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================
+   GOLDEN BOOK WATERMARK - Subtle background crest
+   ============================================ */
+.login-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 20px;
-  max-width: 500px;
-  margin: 0 auto;
+  justify-content: center;
 }
 
-.header {
-  text-align: center;
-  margin-bottom: 30px;
-  width: 100%;
-}
-
-.header-title {
-  font-size: 32px;
-  font-weight: bold;
-  color: #333;
-  margin: 0;
-}
-
-.header-subtitle {
-  font-size: 16px;
-  color: #666;
-  margin: 8px 0 0 0;
-}
-
-.segment-container {
-  width: 100%;
-  margin-bottom: 20px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.error-container {
-  width: 100%;
-  background-color: #FFEBEE;
-  border-left: 4px solid #FFCDD2;
-  padding: 12px;
-  margin-bottom: 16px;
+.login-watermark::before {
+  content: '';
+  width: 120px;
+  height: 150px;
+  background: var(--superadmin-gold);
+  clip-path: polygon(50% 0%, 100% 15%, 100% 85%, 50% 100%, 0% 85%, 0% 15%);
   border-radius: 4px;
 }
 
-.form-card {
+.login-watermark::after {
+  content: '📖';
+  font-size: 64px;
+  position: absolute;
+  filter: grayscale(100%) sepia(100%) hue-rotate(5deg) saturate(300%);
+}
+
+/* ============================================
+   CARD HEADINGS - Gold accent
+   ============================================ */
+.login-card h2 {
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+}
+
+.login-card h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: var(--superadmin-gold);
+  border-radius: 2px;
+}
+
+/* ============================================
+   REMOVE INNER FOCUS BOXES - Clean input experience
+   ============================================ */
+ion-input,
+ion-item,
+input {
+  outline: none !important;
+  box-shadow: none !important;
+  --highlight-color-focused: transparent !important;
+  --padding-start: 12px !important;
+}
+
+input:focus,
+ion-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.login-page ion-item::part(native) {
+  --highlight-background: transparent !important;
+  --highlight-color-focused: transparent !important;
+  --highlight-height: 0 !important;
+}
+
+.login-page ion-item .native-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ============================================
+   SLEEK INPUT BOXES - 48px height, 8px radius
+   Placeholder-only, no labels
+   Modern minimalist design
+   ============================================ */
+.login-page ion-item[fill="outline"] {
+  --border-color: var(--superadmin-gold);
+  --border-radius: var(--uniform-radius);
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: var(--uniform-height);
+  --highlight-height: 0;
+  --highlight-color-focused: transparent;
+  --background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 16px;
+  border: 1.5px solid var(--superadmin-gold);
+  height: var(--uniform-height);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.login-page ion-item[fill="outline"]::part(native) {
+  border-color: transparent;
+  border-width: 0;
+  border-style: none;
+  border-radius: var(--uniform-radius);
+  padding: 0;
+  min-height: var(--uniform-height);
+  --highlight-background: transparent;
+  --highlight-color-focused: transparent;
+  display: flex;
+  align-items: center;
+}
+
+.login-page ion-item[fill="outline"]:hover {
+  border-color: var(--superadmin-gold-dark);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Focused state - Gold border with subtle glow */
+.login-page ion-item[fill="outline"].item-has-focus {
+  border-color: var(--superadmin-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* Input text - White, crisp */
+.login-page ion-item[fill="outline"] ion-input {
+  --color: #FFFFFF !important;
+  --placeholder-color: #94A3B8;
+  font-size: 14px;
+  font-weight: 400;
   width: 100%;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.form-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 16px 0;
+/* Native input - vertically centered */
+.login-page ion-item[fill="outline"] .native-input {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0;
 }
 
-.input-hint {
-  font-size: 12px;
-  color: #666;
-  font-style: italic;
-  margin: 0 0 16px 0;
+/* Remove all animations */
+.login-page ion-item[fill="outline"] .label-text-wrapper,
+.login-page ion-item[fill="outline"] .native-input {
+  transition: none !important;
+  transform: none !important;
 }
 
-.password-hint-container {
-  margin-top: 24px;
-  text-align: center;
+/* Hide any remaining labels */
+.login-page ion-item[fill="outline"] ion-label {
+  display: none !important;
 }
 
-.password-hint-text {
+/* ============================================
+   UNIFORM PRIMARY BUTTON - White with Gold text
+   48px height, 8px radius, gold border
+   ============================================ */
+.login-page ion-button {
+  --background: #FFFFFF !important;
+  --background-hover: #F8FAFC !important;
+  --background-activated: #F1F5F9 !important;
+  --color: var(--superadmin-gold) !important;
+  --border-radius: var(--uniform-radius);
+  --font-weight: 600;
+  --letter-spacing: 0.05em;
+  --box-shadow: none;
+  height: var(--uniform-height);
   font-size: 13px;
-  color: #666;
-  margin: 0;
+  text-transform: uppercase;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 8px;
+  margin-bottom: 16px;
+  border: 1.5px solid var(--superadmin-gold);
 }
 
-.password-hint-value {
-  color: #007AFF;
+.login-page ion-button:hover {
+  --background: #FFFBF0 !important;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+  transform: translateY(-1px);
+}
+
+.login-page ion-button:active {
+  --background: #FFF8E1 !important;
+  transform: translateY(0);
+}
+
+.login-page ion-button ion-spinner {
+  --color: var(--superadmin-gold);
+}
+
+/* ============================================
+   SEGMENT TABS - Aligned with card width
+   Larger icons
+   ============================================ */
+.login-page ion-segment {
+  --background: #F1F5F9;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+  padding: 3px;
+  margin-bottom: 20px;
+  height: 44px;
+}
+
+.login-page ion-segment-button {
+  --background: transparent;
+  --color: #64748B;
+  --color-checked: var(--superadmin-gold-dark);
+  --indicator-color: var(--superadmin-gold);
+  --border-radius: 7px;
   font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 38px;
+}
+
+.login-page ion-segment-button ion-icon {
+  color: #64748B;
+  font-size: 24px;
+  transition: color 0.2s ease;
+}
+
+.login-page ion-segment-button.button-checked {
+  --background: var(--superadmin-gold-bg);
+}
+
+.login-page ion-segment-button.button-checked ion-icon {
+  color: var(--superadmin-gold-dark);
+}
+
+/* ============================================
+   INFO BOX - Gold accent
+   ============================================ */
+.login-info-box {
+  background: var(--superadmin-gold-bg);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--uniform-radius);
+  padding: 12px 16px;
+}
+
+.login-info-box p {
+  color: #64748B;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login-info-box strong {
+  color: var(--superadmin-gold-dark);
+  font-weight: 700;
+}
+
+/* ============================================
+   HELPER TEXT - Small muted text
+   ============================================ */
+.login-helper-text {
+  color: #94A3B8;
+  font-size: 11px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: block;
+}
+
+/* ============================================
+   ERROR MESSAGE
+   ============================================ */
+.login-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--uniform-radius);
+  padding: 12px 16px;
+}
+
+.login-error p {
+  color: #DC2626;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ============================================
+   PAGE TITLE AREA
+   ============================================ */
+.login-title-area {
+  margin-bottom: 24px;
+}
+
+.login-title-area h1 {
+  color: #0F172A;
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+
+.login-title-area h1::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--superadmin-gold);
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+.login-title-area p {
+  color: #64748B;
+  font-size: 14px;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+@media (max-width: 768px) {
+  .login-card ion-card-content {
+    padding: 20px;
+  }
+  
+  .login-title-area h1 {
+    font-size: 24px;
+  }
+  
+  .login-page ion-item[fill="outline"] {
+    --min-height: 46px;
+    height: 46px;
+  }
+  
+  .login-page ion-button {
+    height: 46px;
+  }
+  
+  .login-watermark {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .login-watermark::before {
+    width: 90px;
+    height: 110px;
+  }
+  
+  .login-watermark::after {
+    font-size: 48px;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .login-page {
+    --background: #0F172A;
+    background: #0F172A;
+  }
+  
+  .login-header {
+    --background: #1E293B;
+    --border-bottom: 2px solid var(--superadmin-gold);
+  }
+  
+  .login-header ion-toolbar {
+    --background: #1E293B;
+    --border-color: transparent;
+    border-bottom: 2px solid var(--superadmin-gold);
+  }
+  
+  .login-header ion-title {
+    color: #F8FAFC;
+  }
+  
+  .login-card {
+    background: #1E293B;
+    border-color: #334155;
+  }
+  
+  .login-card h2 {
+    color: #F8FAFC;
+  }
+  
+  .login-page ion-item[fill="outline"] {
+    --border-color: var(--superadmin-gold);
+    background: #1E293B;
+  }
+  
+  .login-page ion-item[fill="outline"]::part(native) {
+    border-color: var(--superadmin-gold);
+    background: #1E293B;
+  }
+  
+  .login-page ion-item[fill="outline"] ion-label {
+    color: var(--superadmin-gold);
+  }
+  
+  .login-page ion-item[fill="outline"] ion-input {
+    --color: #FFFFFF;
+    --placeholder-color: #64748B;
+  }
+  
+  .login-helper-text {
+    color: #94A3B8;
+  }
+  
+  .login-info-box {
+    background: rgba(212, 175, 55, 0.1);
+    border-color: rgba(212, 175, 55, 0.3);
+  }
+  
+  .login-info-box p {
+    color: #94A3B8;
+  }
+  
+  .login-page ion-button {
+    --background: #1E293B !important;
+    --background-hover: #243347 !important;
+    --background-activated: #2A3850 !important;
+  }
 }
