@@ -1,7 +1,7 @@
 /**
  * School Detail Screen - Super Admin (Ionic React Version)
  * Shows details of a specific school/tenant
- * Luxury Corporate Light Hub - Ultra-premium modern design
+ * Refined Layout & Structure
  */
 
 import React, { useEffect, useState } from 'react';
@@ -11,6 +11,7 @@ import {
   IonToolbar,
   IonTitle,
   IonBackButton,
+  IonButtons,
   IonContent,
   IonCard,
   IonCardContent,
@@ -18,9 +19,6 @@ import {
   IonCardTitle,
   IonIcon,
   IonSpinner,
-  IonList,
-  IonItem,
-  IonLabel,
   IonBadge,
 } from '@ionic/react';
 import {
@@ -52,19 +50,16 @@ interface SchoolUser {
 
 const SchoolDetailScreen: React.FC = () => {
   const { tenantId } = useParams<{ tenantId: string }>();
-  
+
   // UUID guard - redirect non-UUID paths (like 'create') to the correct route
-  // This prevents "School not found" when React Router accidentally matches /:tenantId
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (tenantId && !uuidRegex.test(tenantId)) {
-    // If it's a known static path like 'create' or 'new', redirect to that route
     if (tenantId === 'create' || tenantId === 'new') {
       return <Redirect to="/superadmin/schools/create" />;
     }
-    // For any other non-UUID, redirect to schools list
     return <Redirect to="/superadmin/schools" />;
   }
-  
+
   const [school, setSchool] = useState<any>(null);
   const [stats, setStats] = useState<SchoolStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,7 +93,9 @@ const SchoolDetailScreen: React.FC = () => {
       <IonPage>
         <IonHeader className="detail-header">
           <IonToolbar>
-            <IonBackButton defaultHref="/superadmin/schools" />
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/superadmin/schools" className="gold-back-btn" />
+            </IonButtons>
             <IonTitle>School Details</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -117,7 +114,9 @@ const SchoolDetailScreen: React.FC = () => {
       <IonPage>
         <IonHeader className="detail-header">
           <IonToolbar>
-            <IonBackButton defaultHref="/superadmin/schools" />
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/superadmin/schools" className="gold-back-btn" />
+            </IonButtons>
             <IonTitle>School Details</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -135,21 +134,25 @@ const SchoolDetailScreen: React.FC = () => {
     <IonPage>
       <IonHeader className="detail-header">
         <IonToolbar>
-          <IonBackButton defaultHref="/superadmin/schools" />
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/superadmin/schools" className="gold-back-btn" />
+          </IonButtons>
           <IonTitle>{school.name}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="school-detail-content ion-padding" fullscreen>
+      <IonContent className="school-detail-content" fullscreen>
         <div className="detail-container">
           {/* Header Card */}
           <IonCard className="header-card">
             <IonCardContent>
               <div className="header-content">
-                <IonIcon icon={businessOutline} className="header-icon" />
+                <div className="header-icon-wrapper">
+                  <IonIcon icon={businessOutline} className="header-icon" />
+                </div>
                 <div className="header-info">
                   <h1 className="school-name">{school.name}</h1>
-                  <p className="school-code">{school.code}</p>
+                  <span className="school-code-badge">{school.code}</span>
                 </div>
               </div>
             </IonCardContent>
@@ -162,26 +165,26 @@ const SchoolDetailScreen: React.FC = () => {
                 <IonCardTitle>Contact Information</IonCardTitle>
               </IonCardHeader>
               <IonCardContent>
-                <IonList lines="none">
+                <div className="contact-list">
                   {school.address && (
-                    <IonItem>
-                      <IonIcon icon={locationOutline} slot="start" color="primary" />
-                      <IonLabel>{school.address}</IonLabel>
-                    </IonItem>
+                    <div className="contact-row">
+                      <IonIcon icon={locationOutline} className="contact-icon" />
+                      <span className="contact-text">{school.address}</span>
+                    </div>
                   )}
                   {school.phone && (
-                    <IonItem>
-                      <IonIcon icon={callOutline} slot="start" color="primary" />
-                      <IonLabel>{school.phone}</IonLabel>
-                    </IonItem>
+                    <div className="contact-row">
+                      <IonIcon icon={callOutline} className="contact-icon" />
+                      <span className="contact-text">{school.phone}</span>
+                    </div>
                   )}
                   {school.email && (
-                    <IonItem>
-                      <IonIcon icon={mailOutline} slot="start" color="primary" />
-                      <IonLabel>{school.email}</IonLabel>
-                    </IonItem>
+                    <div className="contact-row">
+                      <IonIcon icon={mailOutline} className="contact-icon" />
+                      <span className="contact-text">{school.email}</span>
+                    </div>
                   )}
-                </IonList>
+                </div>
               </IonCardContent>
             </IonCard>
           )}
@@ -225,21 +228,21 @@ const SchoolDetailScreen: React.FC = () => {
               <IonCardTitle>Administrators</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-          {school.users && school.users.length > 0 ? (
-                <IonList lines="none">
+              {school.users && school.users.length > 0 ? (
+                <div className="admins-list">
                   {school.users.map((admin: SchoolUser) => (
-                    <IonItem key={admin.id} className="admin-item">
+                    <div key={admin.id} className="admin-row">
                       <div className="admin-avatar">
                         {admin.name.charAt(0).toUpperCase()}
                       </div>
-                      <IonLabel>
+                      <div className="admin-info">
                         <h3 className="admin-name">{admin.name}</h3>
                         <p className="admin-email">{admin.email}</p>
-                      </IonLabel>
-                      <IonBadge slot="end" className="admin-badge">Admin</IonBadge>
-                    </IonItem>
+                      </div>
+                      <IonBadge className="admin-badge">Admin</IonBadge>
+                    </div>
                   ))}
-                </IonList>
+                </div>
               ) : (
                 <div className="empty-admins">
                   <p>No admins assigned to this school</p>

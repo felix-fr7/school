@@ -49,12 +49,14 @@ if (!connectionString) {
 const pool = new Pool({
   connectionString,
   // Connection pool settings - optimized for Supabase transaction pooler mode
-  max: 10, // Reduced from 20 - transaction pooler doesn't need many connections
-  idleTimeoutMillis: 10000, // Reduced from 30000 - transaction pooler benefits from shorter idle
-  connectionTimeoutMillis: 15000, // Increased from 10000 - cross-region latency tolerance
+  max: 20, // Increased for better concurrency
+  idleTimeoutMillis: 30000, // Standard idle timeout
+  connectionTimeoutMillis: 10000, // Connection timeout
   // Important for Supabase transaction pooler mode:
   // Disable prepared statements (transaction pooler doesn't support them)
   // Note: This is handled in query() below
+  // Application name for better monitoring
+  application_name: 'school-backend',
 });
 
 // Event handlers for pool monitoring (only log in development)

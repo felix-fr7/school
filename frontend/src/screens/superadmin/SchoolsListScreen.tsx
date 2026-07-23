@@ -1,6 +1,7 @@
 /**
  * Schools List Screen - Super Admin (Ionic React Version)
  * Lists all schools/tenants with Edit and Delete functionality
+ * Redesigned Layout
  */
 
 import React, { useEffect, useState } from 'react';
@@ -19,9 +20,6 @@ import {
   IonInput,
   IonTextarea,
   IonAlert,
-  IonList,
-  IonItem,
-  IonLabel,
 } from '@ionic/react';
 import {
   schoolOutline,
@@ -31,8 +29,8 @@ import {
   businessOutline,
   mailOutline,
   callOutline,
-  locationOutline,
   arrowBackOutline,
+  eyeOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
@@ -43,8 +41,7 @@ const SchoolsListScreen: React.FC = () => {
   const history = useHistory();
   const [schools, setSchools] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  
+
   // Edit modal state
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<Tenant | null>(null);
@@ -79,7 +76,6 @@ const SchoolsListScreen: React.FC = () => {
       console.error('Error fetching schools:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -87,12 +83,6 @@ const SchoolsListScreen: React.FC = () => {
     fetchSchools();
   }, []);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchSchools();
-  };
-
-  // Open edit modal with pre-filled data
   const openEditModal = (school: Tenant) => {
     setSelectedSchool(school);
     setEditForm({
@@ -106,7 +96,6 @@ const SchoolsListScreen: React.FC = () => {
     setEditModalVisible(true);
   };
 
-  // Close edit modal
   const closeEditModal = () => {
     setEditModalVisible(false);
     setSelectedSchool(null);
@@ -120,7 +109,6 @@ const SchoolsListScreen: React.FC = () => {
     setFormErrors({});
   };
 
-  // Validate edit form
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
@@ -144,7 +132,6 @@ const SchoolsListScreen: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Handle update submission
   const handleUpdate = async () => {
     if (!validateForm() || !selectedSchool) {
       return;
@@ -163,8 +150,8 @@ const SchoolsListScreen: React.FC = () => {
       const response = await tenantsAPI.updateTenant(selectedSchool.id, updateData);
 
       if (response.success) {
-        setSchools(prevSchools =>
-          prevSchools.map(s =>
+        setSchools((prevSchools) =>
+          prevSchools.map((s) =>
             s.id === selectedSchool.id ? { ...s, ...updateData } : s
           )
         );
@@ -172,39 +159,46 @@ const SchoolsListScreen: React.FC = () => {
         showAlertMessage('Success', 'School updated successfully');
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.error?.message || 'Failed to update school';
+      const errorMessage =
+        error?.response?.data?.error?.message || 'Failed to update school';
       showAlertMessage('Error', errorMessage);
     } finally {
       setEditLoading(false);
     }
   };
 
-  // Handle delete with confirmation
   const handleDelete = (school: Tenant) => {
     setAlertHeader('Delete School');
-    setAlertMessage(`Are you sure you want to delete "${school.name}" and all its data? This action cannot be undone.`);
+    setAlertMessage(
+      `Are you sure you want to delete "${school.name}" and all its data? This action cannot be undone.`
+    );
     setAlertButtons([
       { text: 'Cancel', role: 'cancel' },
       {
         text: 'Delete',
         role: 'destructive',
-        handler: () => performDelete(school)
-      }
+        handler: () => performDelete(school),
+      },
     ]);
     setShowAlert(true);
   };
 
-  // Perform the actual delete operation
   const performDelete = async (school: Tenant) => {
     try {
       const response = await tenantsAPI.deleteTenant(school.id);
 
       if (response.success) {
-        setSchools(prevSchools => prevSchools.filter(s => s.id !== school.id));
-        showAlertMessage('Success', `School "${school.name}" and all associated data have been deleted.`);
+        setSchools((prevSchools) =>
+          prevSchools.filter((s) => s.id !== school.id)
+        );
+        showAlertMessage(
+          'Success',
+          `School "${school.name}" and all associated data have been deleted.`
+        );
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.error?.message || 'Failed to delete school';
+      const errorMessage =
+        error?.response?.data?.error?.message || 'Failed to delete school';
       showAlertMessage('Error', errorMessage);
     }
   };
@@ -217,7 +211,7 @@ const SchoolsListScreen: React.FC = () => {
             <IonTitle>Schools List</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="schools-list-content" fullscreen>
+        <IonContent className="schools-list-content ion-padding" fullscreen>
           <div className="loading-container">
             <IonSpinner name="crescent" />
             <p>Loading schools...</p>
@@ -231,7 +225,12 @@ const SchoolsListScreen: React.FC = () => {
     <IonPage>
       <IonHeader className="premium-header">
         <IonToolbar>
-          <IonButton fill="clear" onClick={() => history.push('/superadmin/dashboard')} slot="start">
+          <IonButton
+            fill="clear"
+            onClick={() => history.push('/superadmin/dashboard')}
+            slot="start"
+            className="gold-back-btn"
+          >
             <IonIcon icon={arrowBackOutline} slot="icon-only" />
           </IonButton>
           <IonTitle>Schools Directory</IonTitle>
@@ -240,19 +239,25 @@ const SchoolsListScreen: React.FC = () => {
 
       <IonContent className="schools-list-content" fullscreen>
         <div className="container">
-          {/* Header */}
+          {/* Top Hero Section */}
           <div className="header-section">
-            <IonIcon icon={businessOutline} className="header-icon" />
-            <h1 className="header-title">Schools Directory</h1>
-            <p className="header-subtitle">Manage all schools and tenants</p>
+            <div className="header-icon-wrapper">
+              <IonIcon icon={businessOutline} className="header-icon" />
+            </div>
+            <div className="header-text">
+              <h1 className="header-title">Schools Directory</h1>
+              <p className="header-subtitle">Manage all active schools and tenant organizations</p>
+            </div>
           </div>
 
-          {/* Schools List */}
+          {/* Schools Grid */}
           {schools.length === 0 ? (
             <div className="empty-container">
               <IonIcon icon={schoolOutline} className="empty-icon" />
               <p className="empty-text">No schools found</p>
-              <p className="empty-subtext">Create your first school to get started</p>
+              <p className="empty-subtext">
+                Create your first school from the admin portal to get started
+              </p>
             </div>
           ) : (
             <div className="schools-grid">
@@ -260,48 +265,54 @@ const SchoolsListScreen: React.FC = () => {
                 <IonCard key={school.id} className="school-card">
                   <IonCardContent>
                     <div className="school-header">
-                      <IonIcon icon={businessOutline} className="school-icon" />
-                      <h3 className="school-name">{school.name}</h3>
+                      <div className="school-avatar">
+                        <IonIcon icon={businessOutline} />
+                      </div>
+                      <div className="school-title-area">
+                        <h3 className="school-name">{school.name}</h3>
+                        <span className="school-code-pill">{school.code}</span>
+                      </div>
                     </div>
+
                     <div className="school-details">
-                      <p className="school-code">
-                        <IonIcon icon={schoolOutline} /> Code: {school.code}
-                      </p>
                       {school.email && (
-                        <p className="school-email">
-                          <IonIcon icon={mailOutline} /> {school.email}
-                        </p>
+                        <div className="detail-row">
+                          <IonIcon icon={mailOutline} />
+                          <span>{school.email}</span>
+                        </div>
                       )}
                       {school.phone && (
-                        <p className="school-phone">
-                          <IonIcon icon={callOutline} /> {school.phone}
-                        </p>
+                        <div className="detail-row">
+                          <IonIcon icon={callOutline} />
+                          <span>{school.phone}</span>
+                        </div>
                       )}
                     </div>
+
                     <div className="school-actions">
-                      <IonButton
-                        fill="outline"
-                        size="small"
-                        onClick={() => history.push(`/superadmin/schools/${school.id}`)}
+                      <button
+                        className="action-btn btn-view"
+                        onClick={() =>
+                          history.push(`/superadmin/schools/${school.id}`)
+                        }
                       >
-                        View Details
-                      </IonButton>
-                      <IonButton
-                        fill="outline"
-                        size="small"
-                        color="primary"
+                        <IonIcon icon={eyeOutline} />
+                        <span>View</span>
+                      </button>
+                      <button
+                        className="action-btn btn-edit"
                         onClick={() => openEditModal(school)}
                       >
-                        <IonIcon icon={createOutline} slot="icon-only" />
-                      </IonButton>
-                      <IonButton
-                        fill="outline"
-                        size="small"
-                        color="danger"
+                        <IonIcon icon={createOutline} />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        className="action-btn btn-delete"
                         onClick={() => handleDelete(school)}
                       >
-                        <IonIcon icon={trashOutline} slot="icon-only" />
-                      </IonButton>
+                        <IonIcon icon={trashOutline} />
+                        <span>Delete</span>
+                      </button>
                     </div>
                   </IonCardContent>
                 </IonCard>
@@ -337,7 +348,9 @@ const SchoolsListScreen: React.FC = () => {
                   placeholder="Enter school name"
                   className={formErrors.name ? 'input-error' : ''}
                 />
-                {formErrors.name && <span className="error-text">{formErrors.name}</span>}
+                {formErrors.name && (
+                  <span className="error-text">{formErrors.name}</span>
+                )}
               </div>
 
               {/* Code Field */}
@@ -346,13 +359,18 @@ const SchoolsListScreen: React.FC = () => {
                 <IonInput
                   value={editForm.code}
                   onIonInput={(e) => {
-                    setEditForm({ ...editForm, code: (e.detail.value || '').toUpperCase() });
+                    setEditForm({
+                      ...editForm,
+                      code: (e.detail.value || '').toUpperCase(),
+                    });
                     if (formErrors.code) setFormErrors({ ...formErrors, code: '' });
                   }}
                   placeholder="Enter school code"
                   className={formErrors.code ? 'input-error' : ''}
                 />
-                {formErrors.code && <span className="error-text">{formErrors.code}</span>}
+                {formErrors.code && (
+                  <span className="error-text">{formErrors.code}</span>
+                )}
               </div>
 
               {/* Email Field */}
@@ -368,7 +386,9 @@ const SchoolsListScreen: React.FC = () => {
                   placeholder="Enter school email"
                   className={formErrors.email ? 'input-error' : ''}
                 />
-                {formErrors.email && <span className="error-text">{formErrors.email}</span>}
+                {formErrors.email && (
+                  <span className="error-text">{formErrors.email}</span>
+                )}
               </div>
 
               {/* Phone Field */}
@@ -377,7 +397,9 @@ const SchoolsListScreen: React.FC = () => {
                 <IonInput
                   type="tel"
                   value={editForm.phone}
-                  onIonInput={(e) => setEditForm({ ...editForm, phone: e.detail.value || '' })}
+                  onIonInput={(e) =>
+                    setEditForm({ ...editForm, phone: e.detail.value || '' })
+                  }
                   placeholder="Enter phone number"
                 />
               </div>
@@ -387,7 +409,9 @@ const SchoolsListScreen: React.FC = () => {
                 <label className="input-label">Address</label>
                 <IonTextarea
                   value={editForm.address}
-                  onIonInput={(e) => setEditForm({ ...editForm, address: e.detail.value || '' })}
+                  onIonInput={(e) =>
+                    setEditForm({ ...editForm, address: e.detail.value || '' })
+                  }
                   placeholder="Enter school address"
                   rows={3}
                 />
@@ -395,20 +419,20 @@ const SchoolsListScreen: React.FC = () => {
             </div>
 
             <div className="modal-footer">
-              <IonButton
-                fill="outline"
+              <button
+                className="modal-btn modal-btn-cancel"
                 onClick={closeEditModal}
                 disabled={editLoading}
               >
                 Cancel
-              </IonButton>
-              <IonButton
-                color="primary"
+              </button>
+              <button
+                className="modal-btn modal-btn-save"
                 onClick={handleUpdate}
                 disabled={editLoading}
               >
                 {editLoading ? <IonSpinner name="crescent" /> : 'Save Changes'}
-              </IonButton>
+              </button>
             </div>
           </div>
         </IonModal>

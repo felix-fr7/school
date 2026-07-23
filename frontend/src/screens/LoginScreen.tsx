@@ -1,101 +1,67 @@
 /**
- * Login Screen (Ionic React Version)
- * Supports Student login (Student ID/password), Staff login (email/password), 
- * and Class login (class code/password)
- * 
- * Multi-Tenant School Management System
- * Superadmin Theme - Luxury Corporate Light (White, Corporate Blue, Royal Gold)
+ * Ultra-Luxury World-Class Login Screen
+ * Tailored for Enterprise School Management System
  */
 
 import React, { useState } from 'react';
 import {
   IonPage,
   IonContent,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonButton,
   IonInput,
   IonSpinner,
   IonSegment,
   IonSegmentButton,
   IonLabel,
-  IonIcon,
-  IonCard,
-  IonCardContent,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonItem,
 } from '@ionic/react';
-import { person, business, people } from 'ionicons/icons';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginScreen.css';
+
+// 🔹 Login modes: Student, CLS (Teacher), and Admin (covers Admin & Super Admin)
+type LoginMode = 'student' | 'cls' | 'admin';
 
 const LoginScreen: React.FC = () => {
   const { login, classLogin } = useAuth();
   
-  const [loginMode, setLoginMode] = useState<'student' | 'staff' | 'class'>('student');
+  const [loginMode, setLoginMode] = useState<LoginMode>('student');
   
-  // Student login state (Student ID + Password)
-  const [studentId, setStudentId] = useState('');
-  const [studentPassword, setStudentPassword] = useState('');
-  
-  // Staff login state (Email + Password)
+  // Form state
   const [email, setEmail] = useState('');
-  const [staffPassword, setStaffPassword] = useState('');
-  
-  // Class login state
-  const [classCode, setClassCode] = useState('');
-  const [classPassword, setClassPassword] = useState('');
+  const [password, setPassword] = useState('');
+  const [studentId, setStudentId] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleStudentLogin = async () => {
-    if (!studentId.trim() || !studentPassword.trim()) {
-      setError('Please enter Student ID and Password');
-      return;
+  const handleLogin = async () => {
+    let identifier = '';
+    let pass = '';
+
+    if (loginMode === 'student') {
+      if (!studentId.trim() || !password.trim()) {
+        setError('Please enter Student ID and Password');
+        return;
+      }
+      identifier = studentId.trim();
+      pass = password;
+    } else {
+      // Handles both CLS and Admin/Super Admin via Email & Password
+      if (!email.trim() || !password.trim()) {
+        setError('Please enter Email and Password');
+        return;
+      }
+      identifier = email.trim();
+      pass = password;
     }
 
     setError(null);
     setIsLoading(true);
     try {
-      await login(studentId.trim(), studentPassword);
-    } catch (err: any) {
-      handleError(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStaffLogin = async () => {
-    if (!email.trim() || !staffPassword.trim()) {
-      setError('Please enter Email and Password');
-      return;
-    }
-
-    setError(null);
-    setIsLoading(true);
-    try {
-      await login(email.trim(), staffPassword);
-    } catch (err: any) {
-      handleError(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClassLogin = async () => {
-    if (!classCode.trim() || !classPassword.trim()) {
-      setError('Please enter Class ID and Password');
-      return;
-    }
-
-    setError(null);
-    setIsLoading(true);
-    try {
-      await classLogin(classCode.trim().toUpperCase(), classPassword);
+      if (loginMode === 'cls') {
+        await classLogin(identifier.toUpperCase(), pass);
+      } else {
+        await login(identifier, pass);
+      }
     } catch (err: any) {
       handleError(err);
     } finally {
@@ -104,7 +70,7 @@ const LoginScreen: React.FC = () => {
   };
 
   const handleError = (err: any) => {
-    let message = 'Login failed. Please try again.';
+    let message = 'Login failed. Please verify your credentials.';
     
     if (err?.response?.data?.error?.message) {
       message = err.response.data.error.message;
@@ -117,213 +83,135 @@ const LoginScreen: React.FC = () => {
     setError(message);
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleLogin();
+  };
+
   return (
-    <IonPage className="login-page">
-      <IonHeader className="login-header">
-        <IonToolbar>
-          <IonTitle className="ion-text-center">School App</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent className="ion-padding ion-text-center login-page">
-        <div className="ion-padding-top login-title-area">
-          <h1 className="ion-no-margin">School App</h1>
-          <p>Sign in to continue</p>
+    <IonPage className="luxury-login-page">
+      <IonContent className="luxury-login-content" scrollY={true}>
+        {/* Background Decorative Elements */}
+        <div className="bg-glow-top"></div>
+        <div className="bg-glow-bottom"></div>
+        
+        {/* School Crest / Background Logo Watermark */}
+        <div className="bg-logo-watermark">
+          <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M100 20L20 60V120C20 160 100 180 100 180C100 180 180 160 180 120V60L100 20Z" stroke="#D4AF37" strokeWidth="2" strokeOpacity="0.15" fill="none"/>
+            <path d="M100 40L40 70V115C40 145 100 160 100 160C100 160 160 145 160 115V70L100 40Z" stroke="#D4AF37" strokeWidth="1.5" strokeOpacity="0.1" fill="none"/>
+            <circle cx="100" cy="100" r="30" stroke="#D4AF37" strokeWidth="1" strokeOpacity="0.12"/>
+          </svg>
         </div>
 
-        {/* Login Mode Toggle - Aligned with card width */}
-        <IonGrid>
-          <IonRow className="ion-justify-content-center">
-            <IonCol size="12" size-md="5">
-              <IonSegment
-                value={loginMode}
-                onIonChange={(e) => setLoginMode(e.detail.value as 'student' | 'staff' | 'class')}
-                className="ion-margin-vertical"
+        <div className="luxury-login-wrapper">
+          <div className="luxury-login-card">
+            
+            {/* Header Section */}
+            <div className="brand-header">
+              <div className="brand-logo-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h1 className="brand-title">EXCELLENCE ACADEMY</h1>
+              <p className="brand-subtitle">Enterprise School Management Portal</p>
+            </div>
+
+            {/* Role Switcher Tabs */}
+            <IonSegment
+              value={loginMode}
+              onIonChange={(e) => {
+                setError(null);
+                setLoginMode(e.detail.value as LoginMode);
+              }}
+              className="luxury-segment"
+            >
+              <IonSegmentButton value="student">
+                <IonLabel>Student</IonLabel>
+              </IonSegmentButton>
+              <IonSegmentButton value="cls">
+                <IonLabel>CLS</IonLabel>
+              </IonSegmentButton>
+              <IonSegmentButton value="admin">
+                <IonLabel>Admin</IonLabel>
+              </IonSegmentButton>
+            </IonSegment>
+
+            {/* Error Notification */}
+            {error && (
+              <div className="luxury-error-box">
+                <span className="error-icon">⚠️</span>
+                <p>{error}</p>
+              </div>
+            )}
+
+            {/* Form Fields */}
+            <form onSubmit={handleSubmit} className="luxury-form">
+              {loginMode === 'student' ? (
+                <div className="input-field-group">
+                  <label className="field-label">Student ID</label>
+                  <div className="input-box-wrapper">
+                    <IonInput
+                      placeholder="e.g. STU-2026-001"
+                      value={studentId}
+                      onIonInput={(e) => setStudentId(e.detail.value || '')}
+                      disabled={isLoading}
+                      className="luxury-input"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="input-field-group">
+                  <label className="field-label">Email Address</label>
+                  <div className="input-box-wrapper">
+                    <IonInput
+                      type="email"
+                      placeholder="name@school.com"
+                      value={email}
+                      onIonInput={(e) => setEmail(e.detail.value || '')}
+                      disabled={isLoading}
+                      className="luxury-input"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="input-field-group">
+                <label className="field-label">Password</label>
+                <div className="input-box-wrapper">
+                  <IonInput
+                    type="password"
+                    placeholder="••••••••••••"
+                    value={password}
+                    onIonInput={(e) => setPassword(e.detail.value || '')}
+                    disabled={isLoading}
+                    className="luxury-input"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <IonButton
+                type="submit"
+                expand="block"
+                disabled={isLoading}
+                className="luxury-gold-button"
               >
-                <IonSegmentButton value="student">
-                  <IonIcon icon={person} />
-                  <IonLabel>Student</IonLabel>
-                </IonSegmentButton>
-                <IonSegmentButton value="staff">
-                  <IonIcon icon={business} />
-                  <IonLabel>Staff</IonLabel>
-                </IonSegmentButton>
-                <IonSegmentButton value="class">
-                  <IonIcon icon={people} />
-                  <IonLabel>Class</IonLabel>
-                </IonSegmentButton>
-              </IonSegment>
-            </IonCol>
-          </IonRow>
-        </IonGrid>
+                {isLoading ? (
+                  <IonSpinner name="crescent" color="dark" />
+                ) : (
+                  <span>Access Portal</span>
+                )}
+              </IonButton>
+            </form>
 
-        {/* Error Message */}
-        {error && (
-          <div className="login-error ion-margin-bottom">
-            <p className="ion-no-margin">{error}</p>
           </div>
-        )}
-
-        {/* Student Login Form */}
-        {loginMode === 'student' && (
-          <IonGrid>
-            <IonRow className="ion-justify-content-center">
-              <IonCol size="12" size-md="5">
-                <IonCard className="login-card">
-                  <div className="login-watermark"></div>
-                  <IonCardContent>
-                    <h2 className="ion-no-margin ion-margin-bottom ion-text-start">Student Login</h2>
-                    
-                    <IonItem fill="outline" mode="md" className="ion-margin-bottom">
-                      <IonInput
-                        placeholder="Student ID (e.g. STU-0001)"
-                        value={studentId}
-                        onIonInput={(e) => setStudentId(e.detail.value || '')}
-                        autocomplete="off"
-                        aria-autocomplete="none"
-                        disabled={isLoading}
-                      />
-                    </IonItem>
-                    <p className="login-helper-text ion-margin-bottom">
-                      Your Student ID was provided by your teacher (format: STU-XXXX)
-                    </p>
-
-                    <IonItem fill="outline" mode="md" className="ion-margin-bottom">
-                      <IonInput
-                        placeholder="Password"
-                        value={studentPassword}
-                        onIonInput={(e) => setStudentPassword(e.detail.value || '')}
-                        type="password"
-                        autocomplete="off"
-                        aria-autocomplete="none"
-                        disabled={isLoading}
-                      />
-                    </IonItem>
-
-                    <IonButton
-                      expand="block"
-                      onClick={handleStudentLogin}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? <IonSpinner name="crescent" /> : 'Sign In as Student'}
-                    </IonButton>
-
-                    <div className="login-info-box ion-margin-top">
-                      <p className="ion-no-margin">
-                        Default password: <strong>Student@123</strong>
-                      </p>
-                    </div>
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-            </IonRow>
-          </IonGrid>
-        )}
-
-        {/* Staff Login Form */}
-        {loginMode === 'staff' && (
-          <IonGrid>
-            <IonRow className="ion-justify-content-center">
-              <IonCol size="12" size-md="5">
-                <IonCard className="login-card">
-                  <div className="login-watermark"></div>
-                  <IonCardContent>
-                    <h2 className="ion-no-margin ion-margin-bottom ion-text-start">Staff Login</h2>
-                    
-                    <IonItem fill="outline" mode="md" className="ion-margin-bottom">
-                      <IonInput
-                        placeholder="Email"
-                        value={email}
-                        onIonInput={(e) => setEmail(e.detail.value || '')}
-                        type="email"
-                        autocomplete="off"
-                        aria-autocomplete="none"
-                        disabled={isLoading}
-                      />
-                    </IonItem>
-
-                    <IonItem fill="outline" mode="md" className="ion-margin-bottom">
-                      <IonInput
-                        placeholder="Password"
-                        value={staffPassword}
-                        onIonInput={(e) => setStaffPassword(e.detail.value || '')}
-                        type="password"
-                        autocomplete="off"
-                        aria-autocomplete="none"
-                        disabled={isLoading}
-                      />
-                    </IonItem>
-
-                    <IonButton
-                      expand="block"
-                      onClick={handleStaffLogin}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? <IonSpinner name="crescent" /> : 'Sign In'}
-                    </IonButton>
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-            </IonRow>
-          </IonGrid>
-        )}
-
-        {/* Class Login Form */}
-        {loginMode === 'class' && (
-          <IonGrid>
-            <IonRow className="ion-justify-content-center">
-              <IonCol size="12" size-md="5">
-                <IonCard className="login-card">
-                  <div className="login-watermark"></div>
-                  <IonCardContent>
-                    <h2 className="ion-no-margin ion-margin-bottom ion-text-start">Class Login</h2>
-                    
-                    <IonItem fill="outline" mode="md" className="ion-margin-bottom">
-                      <IonInput
-                        placeholder="Class ID (e.g. CLS-1)"
-                        value={classCode}
-                        onIonInput={(e) => setClassCode(e.detail.value || '')}
-                        autocomplete="off"
-                        aria-autocomplete="none"
-                        disabled={isLoading}
-                      />
-                    </IonItem>
-                    <p className="login-helper-text ion-margin-bottom">
-                      {classCode.length > 0 
-                        ? `Logging in as Class: ${classCode.toUpperCase()}` 
-                        : 'Enter your class code (e.g., CLS-1, CLS-2)'}
-                    </p>
-
-                    <IonItem fill="outline" mode="md" className="ion-margin-bottom">
-                      <IonInput
-                        placeholder="Password"
-                        value={classPassword}
-                        onIonInput={(e) => setClassPassword(e.detail.value || '')}
-                        type="password"
-                        autocomplete="off"
-                        aria-autocomplete="none"
-                        disabled={isLoading}
-                      />
-                    </IonItem>
-
-                    <IonButton
-                      expand="block"
-                      onClick={handleClassLogin}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? <IonSpinner name="crescent" /> : 'Sign In as Class'}
-                    </IonButton>
-
-                    <div className="login-info-box ion-margin-top">
-                      <p className="ion-no-margin">
-                        Contact your administrator for class credentials
-                      </p>
-                    </div>
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-            </IonRow>
-          </IonGrid>
-        )}
+          
+          <div className="portal-footer-note">
+            Protected by Enterprise Multi-Tenant Encryption &bull; v2.4
+          </div>
+        </div>
       </IonContent>
     </IonPage>
   );

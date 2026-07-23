@@ -1,733 +1,453 @@
 /**
- * Super Admin Dashboard - Luxury Corporate Light Theme
- * Ultra-premium, modern "Luxury Corporate Light Hub" design
- * White, Corporate Blue, and Royal Gold color palette
- * High-end premium animations, 60fps optimized
- * Stacked single-column layout with perfect vertical alignment
+ * Super Admin Dashboard Screen - Ultra-Luxury World-Class Gold Theme
+ * Perfectly tailored for SuperAdminDashboardScreen.tsx
  */
 
 /* ============================================
-   BASE CONTAINER - Clean Bright Canvas
+   1. DESIGN SYSTEM TOKENS & BASE SETTINGS
    ============================================ */
-.super-admin-dashboard {
-  --background: #F8FAFC;
-  background: #F8FAFC;
-  min-height: 100vh;
+.super-admin-dashboard,
+.dashboard-screen {
+  --bg-app: #070A10;
+  --bg-surface: rgba(15, 23, 38, 0.75);
+  --bg-surface-hover: rgba(28, 41, 64, 0.85);
+  --border-glass: rgba(255, 255, 255, 0.08);
+
+  /* Gold & Accent Palettes */
+  --gold-primary: #D4AF37;
+  --gold-light: #F3E5AB;
+  --gold-glow: rgba(212, 175, 55, 0.25);
+  --gold-gradient: linear-gradient(135deg, #FFE082 0%, #D4AF37 50%, #B28D27 100%);
+
+  /* Text Palettes */
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-subtle: #64748B;
+
+  /* Latency & Telemetry Colors */
+  --status-optimal: #10B981;
+  --status-warning: #F59E0B;
+  --status-critical: #EF4444;
+
+  /* FIX 1: Ionic IonContent Viewport Scroll Fix */
+  --background: var(--bg-app);
+  --padding-bottom: 60px; /* Kadaisi card cut aagama irukka bottom padding */
+  background: var(--bg-app);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", sans-serif;
 }
 
-/* Unified single-column container */
+/* FIX 2: Container Overflow Cleanup */
 .dashboard-container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 32px 20px 80px 20px; /* Bottom padding increased for clear view */
   display: flex;
   flex-direction: column;
   gap: 32px;
 }
-
 /* ============================================
-   PREMIUM HEADER - Clean White Top Bar
-   Razor-thin border, subtle shadow
+   2. GOLD TYPOGRAPHY & HEADINGS
    ============================================ */
-.premium-header {
-  --background: #FFFFFF;
-  --border-bottom: 1px solid #E2E8F0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+.gold-text {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
 }
 
-.premium-header ion-toolbar {
-  --background: #FFFFFF;
-  --border-color: transparent;
-  border-bottom: 1px solid #E2E8F0;
-  box-shadow: none;
-}
-
-.premium-header ion-title {
-  color: #0F172A;
-  font-weight: 600;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-}
-
-/* Logout Button - Sleek, minimal */
-.logout-btn-header {
-  --color: #64748B;
-  --background: transparent;
-  margin-right: 8px;
-  border-radius: 12px;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logout-btn-header:hover {
-  --color: #EF4444;
-  --background: rgba(239, 68, 68, 0.08);
-}
-
-.logout-btn-header:active {
-  transform: scale(0.95);
-}
-
-.logout-btn-header ion-icon {
-  font-size: 20px;
-}
-
-/* User Badge - Flush within header */
-.user-badge {
-  --color: #0F172A;
-  --background: #F1F5F9;
-  border-radius: 9999px;
+.section-title-gold {
   font-size: 13px;
-  font-weight: 500;
-  padding: 4px 16px;
+  font-weight: 700;
+  color: var(--gold-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.user-badge:hover {
-  --background: #E2E8F0;
-}
-
-.user-badge ion-icon {
-  font-size: 16px;
-  color: #2563EB;
+.section-title-gold ion-icon {
+  font-size: 18px;
 }
 
 /* ============================================
-   METRICS ROW - Top Cards
-   Uniform 24px gap, equal baseline alignment
+   2. HEADER & TOOLBAR
+   ============================================ */
+.luxury-header {
+  --background: #111827 !important;
+  background: #111827 !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+.luxury-toolbar {
+  --background: transparent !important;
+  --border-color: transparent !important;
+  padding: 4px 12px;
+}
+
+.luxury-title {
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+  font-size: 16px;
+  letter-spacing: 1px !important;
+}
+
+.user-badge-gold {
+  color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.15) !important;
+  border: 1px solid #f59e0b !important;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-badge-gold .user-icon {
+  font-size: 16px;
+  color: #fbbf24 !important;
+}
+
+.luxury-icon-btn {
+  --color: #f59e0b !important;
+  --background: transparent !important;
+  transition: all 0.2s ease;
+}
+
+.luxury-icon-btn.logout-btn:hover {
+  --color: #fbbf24 !important;
+}
+
+/* ============================================
+   4. METRICS CARDS GRID
    ============================================ */
 .metrics-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 20px;
 }
 
-.metric-card {
-  background: #FFFFFF;
+.luxury-metric-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  --background: #FFFFFF;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
+  border: 1px solid var(--border-glass);
+  --background: transparent;
+  margin: 0;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.metric-card:nth-child(1) { animation-delay: 0.05s; }
-.metric-card:nth-child(2) { animation-delay: 0.1s; }
-.metric-card:nth-child(3) { animation-delay: 0.15s; }
-
-.metric-card:hover {
-  border-color: #BFDBFE;
-  box-shadow: 0 8px 30px -4px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(37, 99, 235, 0.06);
-  transform: translateY(-4px);
+.luxury-metric-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px -10px var(--gold-glow);
 }
 
-.metric-card ion-card-content {
-  padding: 24px;
+.luxury-metric-card ion-card-content {
+  padding: 22px;
   display: flex;
   flex-direction: column;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.metric-icon {
-  font-size: 28px;
-  color: #2563EB;
-  margin-bottom: 8px;
-}
-
-.metric-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0F172A;
-  line-height: 1.2;
-  margin: 4px 0;
-  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .metric-label {
-  font-size: 10px;
-  color: #64748B;
-  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
-.metric-spinner {
-  width: 28px;
-  height: 28px;
-  margin-bottom: 8px;
-  --color: #2563EB;
+.icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-primary);
+  font-size: 18px;
 }
+
+.metric-value-gold {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 12px 0 4px 0;
+  letter-spacing: -0.03em;
+}
+
+.metric-subtext {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.status-highlight {
+  font-weight: 600;
+  color: var(--gold-light);
+}
+
+/* Status Latency Classes */
+.status-optimal { color: var(--status-optimal) !important; }
+.status-warning { color: var(--status-warning) !important; }
+.status-critical { color: var(--status-critical) !important; }
+.status-unknown { color: var(--text-subtle) !important; }
 
 .metric-error {
-  font-size: 10px;
-  color: #DC2626;
-  margin-top: 4px;
-}
-
-/* Status colors for metric values */
-.metric-value.status-success {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.metric-value.status-warning {
-  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.metric-value.status-danger {
-  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 11px;
+  color: var(--status-critical);
+  margin-top: 6px;
 }
 
 /* ============================================
-   SECTION PANELS - Unified Single Column
-   Perfect vertical alignment, 32px gap
+   5. QUICK ACTIONS & PANELS
    ============================================ */
 .section-panel {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #0F172A;
-  margin: 0 0 16px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* ============================================
-   ACTIONS GRID - Quick Actions
-   Perfect 2-column grid, 24px gap
-   ============================================ */
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  gap: 20px;
 }
 
-.action-card {
-  background: #FFFFFF;
+.luxury-action-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
   border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-glass);
   --background: transparent;
   margin: 0;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
   cursor: pointer;
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.action-card:nth-child(1) { animation-delay: 0.2s; }
-.action-card:nth-child(2) { animation-delay: 0.25s; }
-
-.action-card:hover {
-  border-color: #2563EB;
-  box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.06);
-  transform: translateY(-4px);
+.luxury-action-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: var(--bg-surface-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -8px var(--gold-glow);
 }
 
-.action-card:active {
-  transform: translateY(0);
-}
-
-.action-card ion-card-content {
-  padding: 24px;
+.luxury-action-card ion-card-content {
+  padding: 20px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 16px;
 }
 
-.action-icon {
-  font-size: 28px;
-  color: #2563EB;
+.action-icon-gold {
+  font-size: 26px;
+  color: var(--gold-primary);
 }
 
 .action-text {
   font-size: 14px;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--text-main);
 }
 
 /* ============================================
-   TENANT LIST - Light Theme
-   Micro-sized status badges, perfect alignment
+   6. TENANT DIRECTORY & RECENT SCHOOLS
    ============================================ */
 .tenant-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.tenant-card {
-  background: #FFFFFF;
-  border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.luxury-tenant-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  border-radius: 14px;
+  border: 1px solid var(--border-glass);
   --background: transparent;
   margin: 0;
-  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04);
   cursor: pointer;
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
+  transition: all 0.2s ease;
 }
 
-.tenant-card:nth-child(1) { animation-delay: 0.3s; }
-.tenant-card:nth-child(2) { animation-delay: 0.33s; }
-.tenant-card:nth-child(3) { animation-delay: 0.36s; }
-.tenant-card:nth-child(4) { animation-delay: 0.39s; }
-.tenant-card:nth-child(5) { animation-delay: 0.42s; }
-
-.tenant-card:hover {
-  border-color: #BFDBFE;
-  box-shadow: 0 8px 25px -4px rgba(37, 99, 235, 0.12), 0 4px 10px -4px rgba(37, 99, 235, 0.06);
-  transform: translateY(-2px);
+.luxury-tenant-card:hover {
+  border-color: rgba(212, 175, 55, 0.35);
+  background: var(--bg-surface-hover);
 }
 
-.tenant-card ion-card-content {
-  padding: 16px 20px;
+.luxury-tenant-card ion-card-content {
+  padding: 18px 22px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .tenant-info {
-  flex: 1;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .tenant-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: #0F172A;
-  margin: 0 0 2px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-main);
+  margin: 0;
 }
 
 .tenant-code {
   font-size: 11px;
-  color: #94A3B8;
+  color: var(--text-subtle);
   margin: 0;
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: 'SF Mono', monospace;
 }
 
-/* Status Badge - Micro-sized pill */
-.status-badge {
+.tenant-code span {
+  color: var(--gold-primary);
+  font-weight: 600;
+}
+
+.tenant-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.luxury-status-badge {
+  --background: rgba(16, 185, 129, 0.15);
+  --color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   font-size: 10px;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 9999px;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
-  flex-shrink: 0;
-  margin-left: 8px;
 }
 
-.status-badge.active {
-  background: rgba(16, 185, 129, 0.1);
-  color: #047857;
-}
-
-.status-badge.inactive {
-  background: rgba(239, 68, 68, 0.08);
-  color: #DC2626;
-}
-
-/* ============================================
-   EMPTY STATE
-   ============================================ */
-.empty-state {
-  text-align: center;
-  padding: 48px 24px;
-  background: #FFFFFF;
-  border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
-}
-
-.empty-icon {
-  font-size: 48px;
-  color: #CBD5E1;
-  margin-bottom: 16px;
-  display: block;
-}
-
-.empty-text {
-  font-size: 14px;
-  color: #64748B;
-  font-weight: 600;
-  margin: 0 0 4px 0;
-}
-
-.empty-subtext {
-  font-size: 12px;
-  color: #94A3B8;
-  margin: 0;
-}
-
-/* ============================================
-   CONFIG PANEL - Clean White Design
-   Pure white with soft hover on toggles
-   ============================================ */
-.config-panel {
-  background: #FFFFFF;
-  border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  --background: #FFFFFF;
-  margin: 0;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
-  animation-delay: 0.35s;
-}
-
-.config-panel ion-card-content {
-  padding: 20px;
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #F1F5F9;
-}
-
-.panel-icon {
+.arrow-icon {
   font-size: 18px;
-  color: #2563EB;
+  color: var(--text-subtle);
+  transition: transform 0.2s ease;
 }
 
-.panel-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #0F172A;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.luxury-tenant-card:hover .arrow-icon {
+  color: var(--gold-primary);
+  transform: translateX(3px);
 }
 
-.config-list {
-  padding: 0;
-  margin: 0;
+/* ============================================
+   7. CONFIG TOGGLES (Re-usable Component)
+   ============================================ */
+.luxury-config-item {
+  --background: rgba(255, 255, 255, 0.02);
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --inner-padding-end: 0;
+  border: 1px solid var(--border-glass);
+  margin-bottom: 8px;
 }
 
-/* Config Toggle Items - Perfect alignment with soft hover */
-.config-toggle-item {
-  --padding-start: 0;
-  --padding-end: 0;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --inner-padding-top: 12px;
-  --inner-padding-bottom: 12px;
-  --background: transparent;
-  background: transparent;
+.config-icon-wrapper {
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
-  --min-height: auto;
+  background: rgba(212, 175, 55, 0.08);
   display: flex;
   align-items: center;
-  transition: background 0.15s ease;
-  margin: -4px 0;
-  padding: 4px 0;
-}
-
-.config-toggle-item:hover {
-  background: #F8FAFC;
-}
-
-.config-toggle-item:last-child {
-  border-bottom: none;
+  justify-content: center;
+  margin-right: 14px;
 }
 
 .config-icon {
   font-size: 18px;
-  color: #64748B;
-  margin-right: 12px;
-  flex-shrink: 0;
+  color: var(--gold-primary);
 }
 
 .config-text {
   flex: 1;
-  min-width: 0;
 }
 
 .config-label {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
-  color: #0F172A;
-  margin-bottom: 2px;
+  color: var(--text-main);
 }
 
 .config-description {
-  font-size: 11px;
-  color: #94A3B8;
-  line-height: 1.3;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
-/* Premium Toggle Styling - Corporate Blue accent */
-.config-toggle-item ion-toggle {
-  --background: #CBD5E1;
-  --background-checked: #2563EB;
-  --handle-background: #FFFFFF;
-  --handle-width: 20px;
-  --handle-height: 20px;
-  --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.config-toggle-item ion-toggle::part(handle) {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+.luxury-gold-toggle {
+  --handle-background-checked: var(--gold-primary);
+  --track-background-checked: rgba(212, 175, 55, 0.3);
 }
 
 /* ============================================
-   HEALTH PANEL - System Health
+   8. LOADING & EMPTY STATES
    ============================================ */
-.health-panel {
-  background: #FFFFFF;
-  border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  --background: #FFFFFF;
-  margin: 0;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  opacity: 0;
-  animation-delay: 0.4s;
-}
-
-.health-panel ion-card-content {
-  padding: 20px;
-}
-
-.health-panel .panel-header {
-  justify-content: space-between;
-}
-
-.health-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background: #CBD5E1;
-  flex-shrink: 0;
-}
-
-.health-indicator.online {
-  background: #10B981;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-  animation: pulse 2s infinite;
-}
-
-.health-indicator.offline {
-  background: #EF4444;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-}
-
-.health-indicator.warning {
-  background: #F59E0B;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
-}
-
-.health-metrics {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.health-metric {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #F8FAFC;
-}
-
-.health-metric:last-child {
-  border-bottom: none;
-}
-
-.health-label {
-  font-size: 12px;
-  color: #64748B;
-  font-weight: 400;
-}
-
-.health-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: #0F172A;
-}
-
-.health-value.success {
-  color: #047857;
-}
-
-.health-value.warning {
-  color: #D97706;
-}
-
-.health-value.danger {
-  color: #DC2626;
-}
-
-.health-footer {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #F1F5F9;
-  font-size: 11px;
-  color: #94A3B8;
-  text-align: center;
-}
-
-/* ============================================
-   LOADING STATE
-   ============================================ */
-.loading-container {
+.luxury-loading-container,
+.luxury-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  padding: 48px;
+  padding: 80px 20px;
+  text-align: center;
 }
 
-.loading-container p {
+.gold-spinner {
+  --color: var(--gold-primary);
+  width: 44px;
+  height: 44px;
+}
+
+.loading-text {
   margin-top: 16px;
-  font-size: 13px;
-  color: #64748B;
+  color: var(--gold-light);
+  font-size: 14px;
+  letter-spacing: 0.05em;
 }
 
-.loading-container ion-spinner {
-  --color: #2563EB;
+.empty-icon-gold {
+  font-size: 44px;
+  color: var(--gold-primary);
+  opacity: 0.8;
 }
 
-/* ============================================
-   ANIMATION KEYFRAMES - 60fps optimized
-   ============================================ */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.empty-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 12px 0 4px 0;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.empty-subtext {
+  font-size: 12px;
+  color: var(--text-subtle);
+  margin: 0;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
-@media (max-width: 992px) {
-  .dashboard-container {
-    padding: 16px;
-    gap: 24px;
-  }
-
-  .metrics-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  .metric-card ion-card-content {
-    padding: 20px;
-  }
-
-  .metric-value {
-    font-size: 24px;
-  }
-
-  .actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .metrics-row {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .actions-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-container {
-    padding: 12px;
-    gap: 20px;
-  }
-
-  .metric-card ion-card-content {
-    padding: 16px;
-  }
-
-  .metric-value {
-    font-size: 22px;
-  }
-}
-
-/* ============================================
-   HARDWARE ACCELERATION - 60fps
-   ============================================ */
-.metric-card,
-.action-card,
-.tenant-card,
-.config-panel,
-.health-panel,
-.logout-btn-header,
-.user-badge {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform, box-shadow;
-}
-
-/* ============================================
-   IONIC FRAMEWORK OVERRIDES FOR LIGHT THEME
-   ============================================ */
-.super-admin-dashboard ion-content {
-  --background: #F8FAFC;
-}
-
-.super-admin-dashboard ion-header {
-  --background: #FFFFFF;
-}
-
-.super-admin-dashboard ion-toolbar {
-  --background: #FFFFFF;
-  --border-color: #E2E8F0;
-}
-
-/* Ensure IonToggle uses our custom styling */
-ion-toggle {
-  --background: #CBD5E1;
-  --background-checked: #2563EB;
-  --handle-background: #FFFFFF;
-  --handle-width: 20px;
-  --handle-height: 20px;
+/* Responsive Styles */
+@media (max-width: 868px) {
+  .metrics-row { grid-template-columns: 1fr; }
+  .actions-grid { grid-template-columns: 1fr; }
+  .dashboard-container { padding: 20px 14px; }
 }

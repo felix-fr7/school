@@ -1,7 +1,7 @@
 /**
  * Create School Screen - Super Admin (Ionic React Version)
  * Form to create a new school and assign admin
- * Enhanced with robust validation and state management
+ * Enhanced with robust validation, state management, and back navigation
  */
 
 import React, { useState } from 'react';
@@ -20,7 +20,8 @@ import {
   IonSpinner,
   IonAlert,
   IonIcon,
-  IonText,
+  IonButtons,
+  IonBackButton,
 } from '@ionic/react';
 import { schoolOutline, checkmarkCircleOutline, alertCircleOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -141,8 +142,6 @@ const CreateSchoolScreen: React.FC = () => {
 
   /**
    * Handle input change with validation
-   * Note: Ionic IonInput onIonInput provides value via e.detail.value
-   * The name must be captured from the target element
    */
   const handleInputChange = (e: CustomEvent, name: string) => {
     const value = e.detail.value ?? '';
@@ -252,11 +251,19 @@ const CreateSchoolScreen: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar className="premium-toolbar">
+          {/* Back Button added to navigate back to SuperAdmin Dashboard */}
+          <IonButtons slot="start">
+            <IonBackButton 
+              defaultHref="/superadmin/dashboard" 
+              text="Dashboard" 
+              className="gold-back-btn" 
+            />
+          </IonButtons>
           <IonTitle>Create School</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="create-school-content" fullscreen>
+      <IonContent className="create-school-content" fullscreen scrollY={true}>
         <div className="container">
           {/* Header */}
           <div className="header-section">

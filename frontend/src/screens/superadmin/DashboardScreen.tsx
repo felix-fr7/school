@@ -1,9 +1,7 @@
 /**
  * Super Admin Dashboard Screen (Ionic React Version)
  * Main dashboard for Super Admin to manage schools
- * Luxury Corporate Light Hub - Ultra-premium modern design
- * White, Corporate Blue, and Royal Gold color palette
- * High-end premium animations, 60fps optimized
+ * Ultra-Luxury World-Class Gold Theme
  */
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
@@ -19,9 +17,6 @@ import {
   IonCardContent,
   IonIcon,
   IonSpinner,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonToggle,
   IonList,
   IonItem,
@@ -38,7 +33,9 @@ import {
   settingsOutline,
   shieldCheckmarkOutline,
   timeOutline,
-  refreshOutline,
+  pulseOutline,
+  flashOutline,
+  chevronForwardOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -60,10 +57,10 @@ interface SystemConfig {
   autoBackup: boolean;
 }
 
-// API Base URL for superadmin endpoints (using Vite env vars)
+// API Base URL for superadmin endpoints
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// System Configuration Toggle Component with loading state
+// System Configuration Toggle Component
 interface ConfigToggleProps {
   icon: string;
   label: string;
@@ -81,8 +78,10 @@ const ConfigToggle: React.FC<ConfigToggleProps> = ({
   loading,
   onToggle,
 }) => (
-  <IonItem lines="none" className="config-toggle-item">
-    <IonIcon icon={icon as any} slot="start" className="config-icon" />
+  <IonItem lines="none" className="luxury-config-item">
+    <div className="config-icon-wrapper">
+      <IonIcon icon={icon as any} className="config-icon" />
+    </div>
     <div className="config-text">
       <div className="config-label">{label}</div>
       <div className="config-description">{description}</div>
@@ -92,6 +91,7 @@ const ConfigToggle: React.FC<ConfigToggleProps> = ({
       checked={enabled}
       onIonChange={onToggle}
       disabled={loading}
+      className="luxury-gold-toggle"
     />
   </IonItem>
 );
@@ -125,18 +125,18 @@ const SuperAdminDashboardScreen: React.FC = () => {
     autoBackup: false,
   });
   
-  // Config loading states for optimistic UI
+  // Config loading states
   const [configLoading, setConfigLoading] = useState<Record<string, boolean>>({});
   
-  // Toast state for error messages
+  // Toast state
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastColor, setToastColor] = useState('danger');
   
-  // Refs for cleanup
+  // Refs
   const telemetryIntervalRef = useRef<number | null>(null);
 
-  // Helper function to get auth headers
+  // Auth headers helper
   const getAuthHeaders = useCallback(() => {
     return {
       'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ const SuperAdminDashboardScreen: React.FC = () => {
     };
   }, [token]);
 
-  // Fetch telemetry data from backend
+  // Fetch telemetry
   const fetchTelemetry = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/superadmin/db-latency`, {
@@ -181,7 +181,7 @@ const SuperAdminDashboardScreen: React.FC = () => {
     }
   }, [getAuthHeaders]);
 
-  // Fetch system configuration from backend
+  // Fetch system config
   const fetchSystemConfig = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/superadmin/system-config`, {
@@ -203,7 +203,7 @@ const SuperAdminDashboardScreen: React.FC = () => {
     }
   }, [getAuthHeaders]);
 
-  // Fetch dashboard data (tenants)
+  // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
     try {
       const response = await tenantsAPI.getAllTenants(1, 5);
@@ -222,7 +222,7 @@ const SuperAdminDashboardScreen: React.FC = () => {
     }
   }, []);
 
-  // Handle config toggle with optimistic UI updates
+  // Handle config toggle
   const handleConfigToggle = useCallback(async (key: keyof SystemConfig) => {
     const previousValue = config[key];
     const newValue = !previousValue;
@@ -286,7 +286,7 @@ const SuperAdminDashboardScreen: React.FC = () => {
     }
   }, [config, getAuthHeaders]);
 
-  // Initial data fetch on mount
+  // Mount logic
   useEffect(() => {
     const initializeDashboard = async () => {
       await Promise.all([
@@ -299,7 +299,7 @@ const SuperAdminDashboardScreen: React.FC = () => {
     initializeDashboard();
   }, [fetchDashboardData, fetchTelemetry, fetchSystemConfig]);
 
-  // Set up telemetry polling interval
+  // Polling interval
   useEffect(() => {
     telemetryIntervalRef.current = window.setInterval(() => {
       fetchTelemetry();
@@ -317,36 +317,24 @@ const SuperAdminDashboardScreen: React.FC = () => {
     history.push('/login');
   };
 
-  // Get status color for telemetry display
-  const getStatusColor = (status: string): string => {
+  const getStatusClass = (status: string): string => {
     switch (status) {
-      case 'Optimal':
-        return 'success';
+      case 'Optimal': return 'status-optimal';
       case 'Warning':
-        return 'warning';
-      case 'Degraded':
-        return 'warning';
+      case 'Degraded': return 'status-warning';
       case 'Critical':
-        return 'danger';
-      case 'Error':
-        return 'danger';
-      default:
-        return 'medium';
+      case 'Error': return 'status-critical';
+      default: return 'status-unknown';
     }
   };
 
   if (loading || telemetryLoading) {
     return (
       <IonPage>
-        <IonHeader className="premium-header">
-          <IonToolbar>
-            <IonTitle>Super Admin Dashboard</IonTitle>
-          </IonToolbar>
-        </IonHeader>
         <IonContent className="super-admin-dashboard" fullscreen>
-          <div className="loading-container">
-            <IonSpinner name="crescent" />
-            <p>Loading dashboard...</p>
+          <div className="luxury-loading-container">
+            <IonSpinner name="crescent" className="gold-spinner" />
+            <p className="loading-text">Initializing Ultra-Luxury Hub...</p>
           </div>
         </IonContent>
       </IonPage>
@@ -355,78 +343,101 @@ const SuperAdminDashboardScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader className="premium-header">
-        <IonToolbar>
+      <IonHeader className="luxury-header">
+        <IonToolbar className="luxury-toolbar">
           <IonButtons slot="start">
-            <IonButton onClick={handleLogout} className="logout-btn-header">
+            <IonButton onClick={handleLogout} className="luxury-icon-btn logout-btn">
               <IonIcon icon={logOutOutline} slot="icon-only" />
             </IonButton>
           </IonButtons>
-          <IonTitle>Super Admin Dashboard</IonTitle>
+
+          <IonTitle className="luxury-title">
+            SUPER ADMIN <span className="gold-text">HUB</span>
+          </IonTitle>
+
           <IonButtons slot="end">
-            <IonButton className="user-badge">
-              <IonIcon icon={peopleOutline} slot="start" />
-              {user?.name}
-            </IonButton>
+            <div className="user-badge-gold">
+              <IonIcon icon={peopleOutline} className="user-icon" />
+              <span>{user?.name || 'Super Admin'}</span>
+            </div>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="super-admin-dashboard" fullscreen>
         <div className="dashboard-container">
-          {/* Metric Cards Row */}
+
+          {/* Metric Cards Grid */}
           <div className="metrics-row">
-            <IonCard className="metric-card">
+            <IonCard className="luxury-metric-card">
               <IonCardContent>
-                <IonIcon icon={schoolOutline} className="metric-icon" />
-                <div className="metric-value">{stats.totalSchools}</div>
-                <div className="metric-label">Active Tenants</div>
+                <div className="metric-header">
+                  <span className="metric-label">Active Tenants</span>
+                  <div className="icon-badge">
+                    <IonIcon icon={schoolOutline} />
+                  </div>
+                </div>
+                <div className="metric-value-gold">{stats.totalSchools}</div>
+                <div className="metric-subtext">Managed Organizations</div>
               </IonCardContent>
             </IonCard>
-            <IonCard className="metric-card">
+
+            <IonCard className="luxury-metric-card">
               <IonCardContent>
-                {telemetryLoading ? (
-                  <IonSpinner name="crescent" className="metric-spinner" />
-                ) : (
-                  <IonIcon icon={speedometerOutline} className="metric-icon" />
-                )}
-                <div className={`metric-value status-${getStatusColor(telemetry.status)}`}>
+                <div className="metric-header">
+                  <span className="metric-label">DB Latency</span>
+                  <div className="icon-badge">
+                    <IonIcon icon={speedometerOutline} />
+                  </div>
+                </div>
+                <div className={`metric-value-gold ${getStatusClass(telemetry.status)}`}>
                   {telemetry.latency > 0 ? `${Math.round(telemetry.latency)}ms` : '--'}
                 </div>
-                <div className="metric-label">DB Pool Latency</div>
+                <div className="metric-subtext">
+                  Status: <span className="status-highlight">{telemetry.status}</span>
+                </div>
                 {telemetryError && <div className="metric-error">{telemetryError}</div>}
               </IonCardContent>
             </IonCard>
-            <IonCard className="metric-card">
+
+            <IonCard className="luxury-metric-card">
               <IonCardContent>
-                <IonIcon icon={peopleOutline} className="metric-icon" />
-                <div className="metric-value">{stats.totalStudents}</div>
-                <div className="metric-label">Total End Users</div>
+                <div className="metric-header">
+                  <span className="metric-label">Total End Users</span>
+                  <div className="icon-badge">
+                    <IonIcon icon={peopleOutline} />
+                  </div>
+                </div>
+                <div className="metric-value-gold">{stats.totalStudents}</div>
+                <div className="metric-subtext">Registered Across System</div>
               </IonCardContent>
             </IonCard>
           </div>
 
-          {/* Quick Actions Section */}
+          {/* Quick Actions Panel */}
           <div className="section-panel">
-            <h2 className="section-title">Quick Actions</h2>
+            <h2 className="section-title-gold">
+              <IonIcon icon={flashOutline} /> Quick Actions
+            </h2>
             <div className="actions-grid">
               <IonCard 
-                className="action-card" 
+                className="luxury-action-card" 
                 button 
                 onClick={() => history.push('/superadmin/schools/create')}
               >
                 <IonCardContent>
-                  <IonIcon icon={addCircleOutline} className="action-icon" />
-                  <span className="action-text">Add School</span>
+                  <IonIcon icon={addCircleOutline} className="action-icon-gold" />
+                  <span className="action-text">Add New School</span>
                 </IonCardContent>
               </IonCard>
+
               <IonCard 
-                className="action-card" 
+                className="luxury-action-card" 
                 button 
                 onClick={() => history.push('/superadmin/schools')}
               >
                 <IonCardContent>
-                  <IonIcon icon={listOutline} className="action-icon" />
+                  <IonIcon icon={listOutline} className="action-icon-gold" />
                   <span className="action-text">View All Schools</span>
                 </IonCardContent>
               </IonCard>
@@ -435,108 +446,42 @@ const SuperAdminDashboardScreen: React.FC = () => {
 
           {/* Tenant Management Section */}
           <div className="section-panel">
-            <h2 className="section-title">Tenant Management</h2>
+            <h2 className="section-title-gold">
+              <IonIcon icon={schoolOutline} /> Recent Tenants
+            </h2>
             {recentSchools.length === 0 ? (
-              <div className="empty-state">
-                <IonIcon icon={schoolOutline} className="empty-icon" />
+              <div className="luxury-empty-state">
+                <IonIcon icon={schoolOutline} className="empty-icon-gold" />
                 <p className="empty-text">No schools added yet</p>
-                <p className="empty-subtext">Tap "Add School" to get started</p>
+                <p className="empty-subtext">Click "Add New School" to get started</p>
               </div>
             ) : (
               <div className="tenant-list">
                 {recentSchools.map((school) => (
                   <IonCard
                     key={school.id}
-                    className="tenant-card"
+                    className="luxury-tenant-card"
                     button
                     onClick={() => history.push(`/superadmin/schools/${school.id}`)}
                   >
                     <IonCardContent>
                       <div className="tenant-info">
                         <h3 className="tenant-name">{school.name}</h3>
-                        <p className="tenant-code">{school.code}</p>
+                        <p className="tenant-code">CODE: <span>{school.code}</span></p>
                       </div>
-                      <IonBadge className="status-badge active">ACTIVE</IonBadge>
+                      <div className="tenant-right">
+                        <IonBadge className="luxury-status-badge">ACTIVE</IonBadge>
+                        <IonIcon icon={chevronForwardOutline} className="arrow-icon" />
+                      </div>
                     </IonCardContent>
                   </IonCard>
                 ))}
               </div>
             )}
           </div>
-
-          {/* System Configuration Section */}
-          <div className="section-panel">
-            <IonCard className="config-panel">
-              <IonCardContent>
-                <div className="panel-header">
-                  <IonIcon icon={settingsOutline} className="panel-icon" />
-                  <h3 className="panel-title">System Configuration</h3>
-                </div>
-                <IonList lines="none" className="config-list">
-                  <ConfigToggle
-                    icon={speedometerOutline}
-                    label="Rate Limiting"
-                    description="Control API request rates"
-                    enabled={config.rateLimiting}
-                    loading={!!configLoading.rateLimiting}
-                    onToggle={() => handleConfigToggle('rateLimiting')}
-                  />
-                  <ConfigToggle
-                    icon={shieldCheckmarkOutline}
-                    label="Audit Logs"
-                    description="Track all system changes"
-                    enabled={config.auditLogs}
-                    loading={!!configLoading.auditLogs}
-                    onToggle={() => handleConfigToggle('auditLogs')}
-                  />
-                  <ConfigToggle
-                    icon={timeOutline}
-                    label="Auto Backup"
-                    description="Scheduled database backups"
-                    enabled={config.autoBackup}
-                    loading={!!configLoading.autoBackup}
-                    onToggle={() => handleConfigToggle('autoBackup')}
-                  />
-                </IonList>
-              </IonCardContent>
-            </IonCard>
-          </div>
-
-          {/* System Health Section */}
-          <div className="section-panel">
-            <IonCard className="health-panel">
-              <IonCardContent>
-                <div className="panel-header">
-                  <h3 className="panel-title">System Health</h3>
-                  <span className={`health-indicator ${telemetry.status === 'Optimal' ? 'online' : telemetry.status === 'Error' ? 'offline' : 'warning'}`}></span>
-                </div>
-                <div className="health-metrics">
-                  <div className="health-metric">
-                    <span className="health-label">API Response</span>
-                    <span className={`health-value ${getStatusColor(telemetry.status)}`}>
-                      {telemetry.latency > 0 ? `${Math.round(telemetry.latency)}ms` : '--'}
-                    </span>
-                  </div>
-                  <div className="health-metric">
-                    <span className="health-label">Uptime</span>
-                    <span className="health-value">99.9%</span>
-                  </div>
-                  <div className="health-metric">
-                    <span className="health-label">Active Sessions</span>
-                    <span className="health-value">{stats.totalAdmins}</span>
-                  </div>
-                </div>
-                {telemetry.timestamp && (
-                  <div className="health-footer">
-                    Last updated: {new Date(telemetry.timestamp).toLocaleTimeString()}
-                  </div>
-                )}
-              </IonCardContent>
-            </IonCard>
-          </div>
         </div>
 
-        {/* Toast for notifications */}
+        {/* Notification Toast */}
         <IonToast
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}

@@ -33,6 +33,8 @@ const generateToken = (user) => {
  */
 const getAllTenants = async (req, res, next) => {
   try {
+    console.log('[getAllTenants] Request received with query:', req.query);
+    
     const { 
       page = 1, 
       limit = 10, 
@@ -41,6 +43,8 @@ const getAllTenants = async (req, res, next) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
+
+    console.log('[getAllTenants] Pagination:', { page, limit, skip, take });
 
     // Build where clause dynamically
     let whereClause = '1=1';
@@ -53,10 +57,15 @@ const getAllTenants = async (req, res, next) => {
       paramIndex++;
     }
 
+    console.log('[getAllTenants] Where clause:', whereClause);
+    console.log('[getAllTenants] Params:', params);
+
     // Get total count
     const countQuery = `SELECT COUNT(*) as total FROM "Tenant" WHERE ${whereClause}`;
+    console.log('[getAllTenants] Count query:', countQuery);
     const countResult = await db.query(countQuery, params);
     const total = parseInt(countResult.rows[0].total);
+    console.log('[getAllTenants] Total count:', total);
 
     // Get tenants with stats using subqueries
     const tenantsQuery = `
@@ -72,8 +81,12 @@ const getAllTenants = async (req, res, next) => {
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     
+    console.log('[getAllTenants] Tenants query:', tenantsQuery);
+    console.log('[getAllTenants] Tenants params:', [...params, take, skip]);
+    
     const tenantsParams = [...params, take, skip];
     const tenantsResult = await db.query(tenantsQuery, tenantsParams);
+    console.log('[getAllTenants] Query result rows:', tenantsResult.rows.length);
 
     // Format the response to match the expected structure
     const tenants = tenantsResult.rows.map(tenant => ({
@@ -93,6 +106,8 @@ const getAllTenants = async (req, res, next) => {
       }
     }));
 
+    console.log('[getAllTenants] Success! Returning', tenants.length, 'tenants');
+
     res.status(200).json({
       success: true,
       data: {
@@ -106,6 +121,16 @@ const getAllTenants = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('═══════════════════════════════════════════════════════════');
+    console.error('CRITICAL GET_ALL_TENANTS ERROR:');
+    console.error('  Error Name:', error.name);
+    console.error('  Error Message:', error.message);
+    console.error('  Error Code:', error.code);
+    console.error('  Error Detail:', error.detail);
+    console.error('  Error Hint:', error.hint);
+    console.error('  Error Position:', error.position);
+    console.error('  Full Stack:', error.stack);
+    console.error('═══════════════════════════════════════════════════════════');
     next(error);
   }
 };
@@ -489,7 +514,7 @@ const deleteTenant = async (req, res, next) => {
         (SELECT COUNT(*) FROM "News" n WHERE n."tenantId" = t.id) as "newsCount",
         (SELECT COUNT(*) FROM "Circular" cir WHERE cir."tenantId" = t.id) as "circularCount",
         (SELECT COUNT(*) FROM "ExamSchedule" es WHERE es."tenantId" = t.id) as "examScheduleCount",
-        (SELECT COUNT(*) FROM "Attendance" a WHERE a."tenantId" = t.id) as "attendanceCount",
+        (SELECT COUNT(*) FROM "Attendance" a WHERE a."tenant_id" = t.id) as "attendanceCount",
         (SELECT COUNT(*) FROM "Fee" f WHERE f."tenantId" = t.id) as "feeCount"
       FROM "Tenant" t
       WHERE t.id = $1

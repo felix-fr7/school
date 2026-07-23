@@ -1,10 +1,14 @@
 /**
  * Authentication & Authorization Middleware
- * Verifies JWT tokens, attaches user to request, and enforces role-based access
+ * Verifies JWT tokens, attaches user data to request, and enforces role-based access
+ * 
+ * Includes in-memory caching (5-minute TTL) to avoid repeated database queries
+ * and reduce network latency on every authenticated request.
  */
 
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const { userCache } = require('../utils/cache');
 
 /**
  * Protect routes - verify JWT token
@@ -39,13 +43,19 @@ const protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Fetch full user from database to get role and tenant info
-    // Note: Using aliases for joined table columns to avoid overwriting User table columns
+    // Check if user data is cached (5-minute TTL)
+    const cachedUser = userCache.get(decoded.id);
+    if (cachedUser) {
+      // Cache hit - use cached data, skip database query
+      req.user = cachedUser;
+      return next();
+    }
+
+    // Cache miss - fetch user from database
     const userQuery = `
       SELECT 
         u.id,
         u.email,
-        u.password,
         u.name,
         u.phone,
         u.role,
@@ -78,28 +88,27 @@ const protect = async (req, res, next) => {
     }
 
     const user = userResult.rows[0];
-
-    // Attach user to request (exclude password)
-    const { password, ...userWithoutPassword } = user;
     
     // Add tenant and class objects if they exist
-    // Use the User table's tenantId (not the joined table's id which could be NULL)
     if (user.tenantId) {
-      userWithoutPassword.tenant = {
+      user.tenant = {
         id: user.tenantId,
         name: user.tenantName,
         code: user.tenantCode,
       };
     }
     if (user.classId) {
-      userWithoutPassword.class = {
+      user.class = {
         id: user.classId,
         name: user.className,
         section: user.classSection,
       };
     }
     
-    req.user = userWithoutPassword;
+    // Cache the user data for 5 minutes
+    userCache.set(decoded.id, user);
+    
+    req.user = user;
 
     next();
   } catch (error) {
@@ -137,54 +146,62 @@ const optionalAuth = async (req, res, next) => {
       const token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      // Fixed: Using explicit column list with aliases to avoid column name collision
-      const userQuery = `
-        SELECT 
-          u.id,
-          u.email,
-          u.password,
-          u.name,
-          u.phone,
-          u.role,
-          u."tenantId",
-          u."classId",
-          u."studentId",
-          u."createdAt",
-          u."updatedAt",
-          t.id as "tenant_table_id",
-          t.name as "tenantName",
-          t.code as "tenantCode",
-          c.id as "class_table_id",
-          c.name as "className",
-          c.section as "classSection"
-        FROM "User" u
-        LEFT JOIN "Tenant" t ON u."tenantId" = t.id
-        LEFT JOIN "Class" c ON u."classId" = c.id
-        WHERE u.id = $1
-      `;
-      
-      const userResult = await db.query(userQuery, [decoded.id]);
+      // Check if user data is cached (5-minute TTL)
+      const cachedUser = userCache.get(decoded.id);
+      if (cachedUser) {
+        // Cache hit - use cached data, skip database query
+        req.user = cachedUser;
+      } else {
+        // Cache miss - fetch user from database
+        const userQuery = `
+          SELECT 
+            u.id,
+            u.email,
+            u.name,
+            u.phone,
+            u.role,
+            u."tenantId",
+            u."classId",
+            u."studentId",
+            u."createdAt",
+            u."updatedAt",
+            t.id as "tenant_table_id",
+            t.name as "tenantName",
+            t.code as "tenantCode",
+            c.id as "class_table_id",
+            c.name as "className",
+            c.section as "classSection"
+          FROM "User" u
+          LEFT JOIN "Tenant" t ON u."tenantId" = t.id
+          LEFT JOIN "Class" c ON u."classId" = c.id
+          WHERE u.id = $1
+        `;
+        
+        const userResult = await db.query(userQuery, [decoded.id]);
 
-      if (userResult.rows.length > 0) {
-        const user = userResult.rows[0];
-        const { password, ...userWithoutPassword } = user;
-        
-        if (user.tenantId) {
-          userWithoutPassword.tenant = {
-            id: user.tenantId,
-            name: user.tenantName,
-            code: user.tenantCode,
-          };
+        if (userResult.rows.length > 0) {
+          const user = userResult.rows[0];
+          
+          if (user.tenantId) {
+            user.tenant = {
+              id: user.tenantId,
+              name: user.tenantName,
+              code: user.tenantCode,
+            };
+          }
+          if (user.classId) {
+            user.class = {
+              id: user.classId,
+              name: user.className,
+              section: user.classSection,
+            };
+          }
+          
+          // Cache the user data for 5 minutes
+          userCache.set(decoded.id, user);
+          
+          req.user = user;
         }
-        if (user.classId) {
-          userWithoutPassword.class = {
-            id: user.classId,
-            name: user.className,
-            section: user.classSection,
-          };
-        }
-        
-        req.user = userWithoutPassword;
       }
     }
 

@@ -1,460 +1,482 @@
 /**
- * Schools List Screen - Luxury Corporate Light Theme
- * Ultra-premium, modern "Luxury Corporate Light Hub" design
- * White, Corporate Blue, and Royal Gold color palette
- * High-end premium animations, 60fps optimized
+ * Schools List Screen - Ultra-Luxury Dark Gold Redesign
  */
 
 /* ============================================
-   BASE CONTAINER - Clean Bright Canvas
+   1. GLOBAL VARIABLES & CONTENT SETTINGS
    ============================================ */
 .schools-list-content {
-  --background: #F8FAFC;
-  background: #F8FAFC;
+  --bg-app: #070A10;
+  --bg-surface: rgba(15, 23, 38, 0.7);
+  --border-glass: rgba(255, 255, 255, 0.08);
+
+  --gold-primary: #D4AF37;
+  --gold-light: #F3E5AB;
+  --gold-gradient: linear-gradient(135deg, #FFE082 0%, #D4AF37 50%, #B28D27 100%);
+  --gold-card-bg: linear-gradient(145deg, rgba(212, 175, 55, 0.1) 0%, rgba(15, 23, 38, 0.8) 100%);
+
+  --text-main: #FFFFFF;
+  --text-muted: #94A3B8;
+
+  --background: var(--bg-app);
+  background: var(--bg-app);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
   min-height: 100vh;
 }
 
 .schools-list-content .container {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px 16px 60px 16px;
 }
 
 /* ============================================
-   PREMIUM HEADER - Clean White Top Bar
-   Razor-thin border, subtle shadow
+   2. TOP TOOLBAR
    ============================================ */
-.premium-header {
-  --background: #FFFFFF;
-  background: #FFFFFF !important;
-}
-
 .premium-header ion-toolbar {
-  --background: #FFFFFF;
-  --border-color: transparent;
-  border-bottom: 1px solid #E2E8F0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-  --padding-start: 8px;
-  --padding-end: 8px;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
+  --background: rgba(10, 15, 26, 0.95);
+  --color: #FFFFFF;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .premium-header ion-title {
-  color: #0F172A;
-  font-weight: 600;
+  color: #f59e0b !important;
+  font-weight: 800;
   font-size: 18px;
-  letter-spacing: -0.01em;
-  text-align: center;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.premium-header ion-toolbar ion-icon {
+  color: #f59e0b !important;
 }
 
 .premium-header ion-button {
-  --color: #64748B;
+  --color: #f59e0b !important;
 }
 
-.premium-header ion-button:hover {
-  --color: #2563EB;
-}
-
-.premium-header ion-icon {
-  font-size: 24px;
+.gold-back-btn {
+  --color: var(--gold-primary);
 }
 
 /* ============================================
-   HEADER SECTION - Clean White Typography
-   Pure white background, Corporate Blue accent
+   3. HERO SECTION
    ============================================ */
 .header-section {
-  text-align: center;
-  margin-bottom: 32px;
-  padding: 32px 24px;
-  background: #FFFFFF;
-  border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
-  position: relative;
-  overflow: hidden;
-  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--gold-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.5);
+}
+
+.header-icon-wrapper {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .header-icon {
-  font-size: 40px;
-  color: #2563EB;
-  margin-bottom: 12px;
-  display: block;
+  font-size: 26px;
+  color: var(--gold-primary);
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .header-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0 0 4px 0;
-  letter-spacing: -0.02em;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .header-subtitle {
-  font-size: 13px;
-  color: #64748B;
-  margin: 0;
-  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
 }
 
 /* ============================================
-   SCHOOLS GRID - Responsive Layout
+   4. SCHOOLS GRID & CARDS
    ============================================ */
 .schools-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
 }
 
-/* ============================================
-   SCHOOL CARDS - Premium White Containers
-   Clean elevated design with soft shadows
-   ============================================ */
 .school-card {
-  background: #FFFFFF;
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glass);
   border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --background: transparent;
   margin: 0;
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .school-card:hover {
-  border-color: #BFDBFE;
-  box-shadow: 0 12px 30px -4px rgba(37, 99, 235, 0.12), 0 4px 12px -4px rgba(37, 99, 235, 0.06);
-  transform: translateY(-4px);
-}
-
-.school-card:active {
-  transform: translateY(0);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
 }
 
 .school-card ion-card-content {
-  padding: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-/* ============================================
-   SCHOOL CARD HEADER
-   ============================================ */
 .school-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #F1F5F9;
 }
 
-.school-icon {
-  font-size: 28px;
-  color: #2563EB;
+.school-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: var(--gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
   flex-shrink: 0;
 }
 
+.school-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
 .school-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #0F172A;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
 }
 
-/* ============================================
-   SCHOOL DETAILS - Clean Typography
-   Deep charcoal text colors
-   ============================================ */
+.school-code-pill {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: monospace;
+  color: #070A10;
+  background: var(--gold-gradient);
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .school-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.school-details p {
-  font-size: 13px;
-  color: #64748B;
-  margin: 0;
+.detail-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.school-details ion-icon {
-  font-size: 16px;
-  color: #94A3B8;
+.detail-row ion-icon {
+  font-size: 14px;
+  color: var(--gold-primary);
   flex-shrink: 0;
 }
 
-.school-code {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 12px;
-  color: #64748B;
-}
-
-/* ============================================
-   SCHOOL ACTIONS - Modernized Buttons
-   Clean outline style with subtle accents
-   ============================================ */
+/* Actions Row Buttons */
 .school-actions {
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
+  margin-top: 4px;
 }
 
-.school-actions ion-button {
-  --border-radius: 8px;
-  --border-width: 1px;
-}
-
-/* ============================================
-   EMPTY STATE - Clean & Professional
-   ============================================ */
-.empty-container {
-  text-align: center;
-  padding: 64px 24px;
-  background: #FFFFFF;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.04);
-  border: 1px solid #E2E8F0;
-}
-
-.empty-icon {
-  font-size: 56px;
-  color: #CBD5E1;
-  margin-bottom: 16px;
-  display: block;
-}
-
-.empty-text {
-  font-size: 14px;
-  color: #64748B;
-  font-weight: 600;
-  margin: 0 0 4px 0;
-}
-
-.empty-subtext {
-  font-size: 12px;
-  color: #94A3B8;
-  margin: 0;
-}
-
-/* ============================================
-   LOADING STATE
-   ============================================ */
-.loading-container {
+.action-btn {
+  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  padding: 48px;
+  gap: 6px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  background: transparent;
 }
 
-.loading-container p {
-  margin-top: 16px;
-  font-size: 13px;
-  color: #64748B;
+.btn-view {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: var(--gold-primary);
 }
 
-.loading-container ion-spinner {
-  --color: #2563EB;
+.btn-view:hover {
+  background: var(--gold-primary);
+  color: #070A10;
+}
+
+.btn-edit {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #E2E8F0;
+}
+
+.btn-edit:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #F87171;
+}
+
+.btn-delete:hover {
+  background: #EF4444;
+  color: #FFFFFF;
 }
 
 /* ============================================
-   EDIT MODAL - Light Theme
+   5. EDIT MODAL (Custom Overlay Dark Theme)
    ============================================ */
 .edit-modal {
-  --background: #F8FAFC;
+  --background: rgba(7, 10, 16, 0.95);
+  --backdrop-opacity: 0.7;
 }
 
 .modal-content {
-  background: #FFFFFF;
-  border-radius: 16px;
+  background: #0B111E;
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  max-height: 85vh;
+  margin: 0 auto;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #E2E8F0;
-  background: #FAFBFC;
+  padding: 16px 20px;
+  background: rgba(15, 23, 38, 0.8);
+  border-bottom: 1px solid var(--border-glass);
 }
 
 .modal-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #0F172A;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
   margin: 0;
 }
 
 .modal-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
-  color: #64748B;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  background: #F1F5F9;
-  color: #0F172A;
-}
-
-.modal-close ion-icon {
-  font-size: 20px;
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .modal-body {
-  padding: 24px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-group ion-input,
+.input-group ion-textarea {
+  --background: rgba(0, 0, 0, 0.4);
+  --color: #FFFFFF;
+  --placeholder-color: #64748B;
+  --border-radius: 10px;
+  --border-width: 1px;
+  --border-color: var(--border-glass);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.input-group ion-input.has-focus,
+.input-group ion-textarea.has-focus {
+  border-color: var(--gold-primary);
+}
+
+.input-group .input-error {
+  border-color: #EF4444;
+}
+
+.error-text {
+  font-size: 11px;
+  color: #F87171;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid #E2E8F0;
-  background: #FAFBFC;
+  gap: 10px;
+  padding: 16px 20px;
+  background: rgba(15, 23, 38, 0.9);
+  border-top: 1px solid var(--border-glass);
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
 }
 
-/* ============================================
-   FORM INPUTS - Light Theme
-   ============================================ */
-.input-group {
-  margin-bottom: 20px;
-}
-
-.input-group:last-child {
-  margin-bottom: 0;
-}
-
-.input-label {
-  display: block;
+.modal-btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #0F172A;
-  margin-bottom: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
-.input-group ion-input,
-.input-group ion-textarea {
-  --border-radius: 10px;
-  --border-color: #E2E8F0;
-  --border-style: solid;
-  --border-width: 1px;
-  --background: #F8FAFC;
-  --color: #0F172A;
-  --placeholder-color: #94A3B8;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --highlight-height: 0;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.modal-btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-glass);
+  color: var(--text-muted);
 }
 
-.input-group ion-input:hover,
-.input-group ion-textarea:hover {
-  --border-color: #CBD5E1;
-  --background: #FFFFFF;
+.modal-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
 
-.input-group ion-input.has-focus,
-.input-group ion-textarea.has-focus {
-  --border-color: #2563EB;
-  --background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+.modal-btn-save {
+  background: #fbbf24;
+  color: #070A10;
+  font-weight: 700;
+  border: 1px solid #f59e0b;
 }
 
-.input-group .input-error {
-  --border-color: #DC2626;
+.modal-btn-save:hover {
+  background: #f59e0b;
+  color: #FFFFFF;
 }
 
-.error-text {
-  display: block;
-  margin-top: 6px;
-  font-size: 11px;
-  color: #DC2626;
+.modal-btn-save:disabled {
+  background: #6b7280;
+  color: #9ca3af;
+  border-color: #4b5563;
+  cursor: not-allowed;
 }
 
 /* ============================================
-   ANIMATION KEYFRAMES - 60fps Optimized
+   6. LOADING & EMPTY STATES
    ============================================ */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.loading-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  text-align: center;
+  gap: 12px;
+  color: var(--text-muted);
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
-@media (max-width: 768px) {
-  .schools-list-content .container {
-    padding: 16px;
-  }
-
-  .schools-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .header-section {
-    padding: 24px 16px;
-  }
-
-  .header-title {
-    font-size: 20px;
-  }
-
-  .school-actions {
-    flex-wrap: wrap;
-  }
+.loading-container ion-spinner {
+  --color: var(--gold-primary);
 }
 
-/* ============================================
-   HARDWARE ACCELERATION - Performance
-   ============================================ */
-.school-card,
-.modal-close,
-ion-input {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform, opacity;
+.empty-icon {
+  font-size: 48px;
+  color: var(--gold-primary);
+  opacity: 0.5;
 }
 
-/* ============================================
-   IONIC FRAMEWORK OVERRIDES FOR LIGHT THEME
-   ============================================ */
-.schools-list-content ion-content {
-  --background: #F8FAFC;
+.empty-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
 }
 
-.schools-list-content ion-header {
-  --background: #FFFFFF;
-}
-
-.schools-list-content ion-toolbar {
-  --background: #FFFFFF;
-  --border-color: #E2E8F0;
+.empty-subtext {
+  font-size: 12px;
+  margin: 0;
 }
