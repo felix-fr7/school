@@ -10,6 +10,7 @@ const { body, param, query } = require('express-validator');
 const adminController = require('../controllers/adminController');
 const feeController = require('../controllers/feeController');
 const { protect, requireAdmin } = require('../middleware/auth');
+const { uploadExamSchedule } = require('../middleware/fileUpload');
 
 const router = express.Router();
 
@@ -164,6 +165,17 @@ router.get(
   adminController.getAllStudents
 );
 
+// Static/specific routes MUST come before parameterized routes to avoid conflicts
+/**
+ * @route   GET /api/admin/students/template
+ * @desc    Get student import template (column headers and sample data)
+ * @access  Admin
+ */
+router.get(
+  '/students/template',
+  adminController.getStudentTemplate
+);
+
 /**
  * @route   GET /api/admin/students/:id
  * @desc    Get single student details
@@ -213,51 +225,7 @@ router.post(
   adminController.createStudent
 );
 
-/**
- * @route   PUT /api/admin/students/:id
- * @desc    Update a student
- * @access  Admin
- */
-router.put(
-  '/students/:id',
-  [
-    param('id').isUUID().withMessage('Invalid student ID format'),
-    body('name')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('email')
-      .optional()
-      .isEmail()
-      .normalizeEmail(),
-    body('classId')
-      .optional()
-      .isUUID(),
-  ],
-  adminController.updateStudent
-);
-
-/**
- * @route   DELETE /api/admin/students/:id
- * @desc    Delete a student
- * @access  Admin
- */
-router.delete(
-  '/students/:id',
-  [param('id').isUUID().withMessage('Invalid student ID format')],
-  adminController.deleteStudent
-);
-
-/**
- * @route   GET /api/admin/students/template
- * @desc    Get student import template (column headers and sample data)
- * @access  Admin
- */
-router.get(
-  '/students/template',
-  adminController.getStudentTemplate
-);
-
+// Static/specific POST routes MUST come before any parameterized POST routes
 /**
  * @route   POST /api/admin/students/manual
  * @desc    Create a student manually with extended fields (rollNumber, studentName, classAndSection, parentMobile, bloodGroup, studentAddress, userId, password)
@@ -310,6 +278,41 @@ router.post(
   '/students/bulk',
   upload.single('file'),
   adminController.bulkImportStudents
+);
+
+/**
+ * @route   PUT /api/admin/students/:id
+ * @desc    Update a student
+ * @access  Admin
+ */
+router.put(
+  '/students/:id',
+  [
+    param('id').isUUID().withMessage('Invalid student ID format'),
+    body('name')
+      .optional()
+      .trim()
+      .notEmpty(),
+    body('email')
+      .optional()
+      .isEmail()
+      .normalizeEmail(),
+    body('classId')
+      .optional()
+      .isUUID(),
+  ],
+  adminController.updateStudent
+);
+
+/**
+ * @route   DELETE /api/admin/students/:id
+ * @desc    Delete a student
+ * @access  Admin
+ */
+router.delete(
+  '/students/:id',
+  [param('id').isUUID().withMessage('Invalid student ID format')],
+  adminController.deleteStudent
 );
 
 // ============================================
@@ -639,38 +642,36 @@ router.get('/exam-schedules', adminController.getAllExamSchedules);
 
 /**
  * @route   POST /api/admin/exam-schedules
- * @desc    Create new exam schedule
+ * @desc    Create new exam schedule with file upload (PDF/Image)
  * @access  Admin
+ * @form    file (PDF/Image file), classId (optional)
  */
 router.post(
   '/exam-schedules',
+  uploadExamSchedule.single('file'),
+  adminController.createExamScheduleWithFile
+);
+
+/**
+ * @route   PUT /api/admin/exam-schedules/:id
+ * @desc    Update exam schedule (title, classId)
+ * @access  Admin
+ */
+router.put(
+  '/exam-schedules/:id',
   [
+    param('id').isUUID().withMessage('Invalid exam schedule ID format'),
     body('title')
+      .optional()
       .trim()
       .notEmpty()
-      .withMessage('Exam title is required'),
-    body('subject')
-      .trim()
-      .notEmpty()
-      .withMessage('Subject is required'),
-    body('date')
-      .isISO8601()
-      .withMessage('Valid exam date is required'),
-    body('time')
-      .trim()
-      .notEmpty()
-      .withMessage('Exam time is required'),
+      .withMessage('Title cannot be empty'),
     body('classId')
+      .optional()
       .isUUID()
-      .withMessage('Valid class ID is required'),
-    body('duration')
-      .optional()
-      .isInt({ min: 1 }),
-    body('roomNo')
-      .optional()
-      .trim(),
+      .withMessage('Invalid class ID format'),
   ],
-  adminController.createExamSchedule
+  adminController.updateExamSchedule
 );
 
 /**
@@ -688,6 +689,7 @@ router.delete(
 // Teacher Management Routes
 // ============================================
 
+// Static/specific routes MUST come before parameterized routes to avoid UUID conflicts
 /**
  * @route   GET /api/admin/teachers/available
  * @desc    Get teachers available for class assignment (unassigned or assigned to specific class)
@@ -716,17 +718,6 @@ router.get(
     query('limit').optional().isInt({ min: 1, max: 100 }),
   ],
   adminController.getAllTeachers
-);
-
-/**
- * @route   GET /api/admin/teachers/:id
- * @desc    Get single teacher details
- * @access  Admin
- */
-router.get(
-  '/teachers/:id',
-  [param('id').isUUID().withMessage('Invalid teacher ID format')],
-  adminController.getTeacherById
 );
 
 /**
@@ -764,6 +755,18 @@ router.post(
       .withMessage('Invalid class ID format'),
   ],
   adminController.createTeacher
+);
+
+// Parameterized routes MUST come after all static routes
+/**
+ * @route   GET /api/admin/teachers/:id
+ * @desc    Get single teacher details
+ * @access  Admin
+ */
+router.get(
+  '/teachers/:id',
+  [param('id').isUUID().withMessage('Invalid teacher ID format')],
+  adminController.getTeacherById
 );
 
 /**

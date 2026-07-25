@@ -1,6 +1,6 @@
 /**
  * Create Teacher Screen (Ionic React Version)
- * Form to create a new teacher with optional class assignment
+ * Admin Dashboard UI Layout
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,6 +19,9 @@ import {
   IonAlert,
   IonSelect,
   IonSelectOption,
+  IonGrid,
+  IonRow,
+  IonCol,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
@@ -128,99 +131,153 @@ const CreateTeacherScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="admin-header">
+        <IonToolbar className="admin-toolbar">
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/teachers" />
+            <IonBackButton defaultHref="/admin/teachers" color="light" />
           </IonButtons>
           <IonTitle>Create Teacher</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="create-teacher-content">
-        <div className="form-container">
-          <IonText color="medium" className="description">
-            Create a new teacher account. The teacher will be able to log in and manage their assigned class.
-          </IonText>
 
-          <div className="input-group">
-            <label className="input-label">Teacher Name *</label>
-            <IonInput
-              placeholder="Enter teacher's full name"
-              value={name}
-              onIonInput={(e) => setName(e.detail.value || '')}
-              autocapitalize="words"
-              disabled={loading}
-            />
-          </div>
+      <IonContent className="admin-teacher-content">
+        <div className="admin-form-container">
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Teacher Account Registration</h2>
+              <p className="description">
+                Create a new teacher account. The teacher will be able to log in and manage their assigned class.
+              </p>
+            </div>
 
-          <div className="input-group">
-            <label className="input-label">Email / Login ID *</label>
-            <IonInput
-              placeholder="Enter teacher's email address"
-              value={email}
-              onIonInput={(e) => setEmail(e.detail.value || '')}
-              type="email"
-              autocapitalize="none"
-              disabled={loading}
-            />
-          </div>
+            <div className="admin-card-body">
+              <IonGrid className="ion-no-padding">
+                <IonRow>
+                  {/* Name */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">
+                        Teacher Name <span className="required">*</span>
+                      </label>
+                      <IonInput
+                        className="admin-input"
+                        placeholder="Enter teacher's full name"
+                        value={name}
+                        onIonInput={(e) => setName(e.detail.value || '')}
+                        autocapitalize="words"
+                        disabled={loading}
+                      />
+                    </div>
+                  </IonCol>
 
-          <div className="input-group">
-            <label className="input-label">Password *</label>
-            <IonInput
-              type="password"
-              placeholder="Enter password (min 6 characters)"
-              value={password}
-              onIonInput={(e) => setPassword(e.detail.value || '')}
-              autocapitalize="off"
-              disabled={loading}
-            />
-          </div>
+                  {/* Email */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">
+                        Email / Login ID <span className="required">*</span>
+                      </label>
+                      <IonInput
+                        className="admin-input"
+                        placeholder="Enter teacher's email address"
+                        value={email}
+                        onIonInput={(e) => setEmail(e.detail.value || '')}
+                        type="email"
+                        autocapitalize="none"
+                        disabled={loading}
+                      />
+                    </div>
+                  </IonCol>
+                </IonRow>
 
-          <div className="input-group">
-            <label className="input-label">Phone Number</label>
-            <IonInput
-              placeholder="Enter phone number"
-              value={phone}
-              onIonInput={(e) => setPhone(e.detail.value || '')}
-              type="tel"
-              disabled={loading}
-            />
-          </div>
+                <IonRow>
+                  {/* Password */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">
+                        Password <span className="required">*</span>
+                      </label>
+                      <IonInput
+                        className="admin-input"
+                        type="password"
+                        placeholder="Enter password (min 6 characters)"
+                        value={password}
+                        onIonInput={(e) => setPassword(e.detail.value || '')}
+                        autocapitalize="off"
+                        disabled={loading}
+                      />
+                    </div>
+                  </IonCol>
 
-          <div className="input-group">
-            <label className="input-label">Assign to Class</label>
-            {fetchingClasses ? (
-              <div className="picker-loading">
-                <IonSpinner name="crescent" />
-                <IonText color="medium">Loading classes...</IonText>
-              </div>
-            ) : (
-              <IonSelect
-                value={classId}
-                placeholder="No class assigned (optional)"
-                interface="popover"
-                onIonChange={(e) => setClassId(e.detail.value || undefined)}
+                  {/* Phone */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">Phone Number</label>
+                      <IonInput
+                        className="admin-input"
+                        placeholder="Enter phone number"
+                        value={phone}
+                        onIonInput={(e) => setPhone(e.detail.value || '')}
+                        type="tel"
+                        disabled={loading}
+                      />
+                    </div>
+                  </IonCol>
+                </IonRow>
+
+                <IonRow>
+                  {/* Assign Class */}
+                  <IonCol size="12">
+                    <div className="input-group">
+                      <label className="input-label">Assign to Class</label>
+                      {fetchingClasses ? (
+                        <div className="picker-loading">
+                          <IonSpinner name="crescent" color="primary" />
+                          <IonText color="medium">Loading classes...</IonText>
+                        </div>
+                      ) : (
+                        <IonSelect
+                          value={classId}
+                          placeholder="No class assigned (optional)"
+                          interface="popover"
+                          onIonChange={(e) => setClassId(e.detail.value || undefined)}
+                          disabled={loading}
+                          className="admin-select class-select"
+                        >
+                          <IonSelectOption value="">No class assigned (optional)</IonSelectOption>
+                          {classes.map((cls) => (
+                            <IonSelectOption key={cls.id} value={cls.id}>
+                              {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
+                            </IonSelectOption>
+                          ))}
+                        </IonSelect>
+                      )}
+                    </div>
+                  </IonCol>
+                </IonRow>
+              </IonGrid>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="button-row">
+              <IonButton
+                className="cancel-btn"
+                fill="outline"
+                color="medium"
+                onClick={() => history.goBack()}
                 disabled={loading}
-                className="class-select"
               >
-                <IonSelectOption value="">No class assigned (optional)</IonSelectOption>
-                {classes.map((cls) => (
-                  <IonSelectOption key={cls.id} value={cls.id}>
-                    {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
-                  </IonSelectOption>
-                ))}
-              </IonSelect>
-            )}
-          </div>
-
-          <div className="button-row">
-            <IonButton expand="block" color="medium" onClick={() => history.goBack()} disabled={loading}>
-              Cancel
-            </IonButton>
-            <IonButton expand="block" color="primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? <IonSpinner name="crescent" /> : 'Create Teacher'}
-            </IonButton>
+                Cancel
+              </IonButton>
+              <IonButton
+                className="submit-btn"
+                fill="solid"
+                color="primary"
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? <IonSpinner name="crescent" /> : 'Create Teacher'}
+              </IonButton>
+            </div>
           </div>
         </div>
 

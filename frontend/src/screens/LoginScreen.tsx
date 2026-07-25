@@ -163,11 +163,13 @@ const LoginScreen: React.FC = () => {
                 </div>
               ) : (
                 <div className="input-field-group">
-                  <label className="field-label">Email Address</label>
+                  <label className="field-label">
+                    {loginMode === 'cls' ? 'Class ID / Code' : 'Email Address'}
+                  </label>
                   <div className="input-box-wrapper">
                     <IonInput
-                      type="email"
-                      placeholder="name@school.com"
+                      type={loginMode === 'cls' ? 'text' : 'email'}
+                      placeholder={loginMode === 'cls' ? 'e.g. CLS-9' : 'name@school.com'}
                       value={email}
                       onIonInput={(e) => setEmail(e.detail.value || '')}
                       disabled={isLoading}

@@ -1,9 +1,3 @@
-/**
- * Admin News Screen (Ionic React Version)
- * Premium minimalist 2-column bento style with visibility control
- * Features: Title, Content, Image Picker, PDF Picker, Visibility selector
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   IonPage,
@@ -11,36 +5,29 @@ import {
   IonToolbar,
   IonTitle,
   IonContent,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonItem,
-  IonLabel,
   IonInput,
   IonTextarea,
   IonButton,
   IonSpinner,
   IonAlert,
   IonIcon,
-  IonChip,
-  IonBadge,
-  IonText,
-  IonModal,
-  IonList,
-  IonSegment,
-  IonSegmentButton,
   IonButtons,
   IonBackButton,
+  IonModal,
 } from '@ionic/react';
 import {
   newspaperOutline,
   imageOutline,
   documentOutline,
-  trashOutline,
   createOutline,
-  informationCircleOutline,
   closeOutline,
+  closeCircleOutline,
+  sendOutline,
+  peopleOutline,
+  schoolOutline,
+  trashOutline,
+  calendarOutline,
+  searchOutline,
   checkmarkCircleOutline,
 } from 'ionicons/icons';
 import { News, CreateNewsInput, Class } from '../../types';
@@ -49,123 +36,60 @@ import './AdminNewsScreen.css';
 
 type VisibilityType = 'ALL' | 'SPECIFIC_CLASSES';
 
-interface NewsItemProps {
-  item: News;
-  onDelete: (id: string) => void;
-  onEdit: (item: News) => void;
-}
-
-const NewsItem: React.FC<NewsItemProps> = ({ item, onDelete, onEdit }) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  return (
-    <>
-      <div className="news-card" onDoubleClick={() => onEdit(item)}>
-        <div className="news-card-content">
-          <h3 className="news-title">{item.title}</h3>
-          <p className="news-content">{item.content.substring(0, 100)}...</p>
-          <div className="news-meta-row">
-            <IonBadge color={item.visibility === 'ALL' ? 'success' : 'primary'}>
-              {item.visibility === 'ALL' ? '👥 All Classes' : '🏫 Specific Classes'}
-            </IonBadge>
-            <span className="news-date">
-              {new Date(item.createdAt).toLocaleDateString()}
-            </span>
-          </div>
-          {(item.imageUrl || item.pdfUrl) && (
-            <div className="attachments-row">
-              {item.imageUrl && (
-                <IonBadge color="light">🖼️ Image</IonBadge>
-              )}
-              {item.pdfUrl && (
-                <IonBadge color="light">📄 PDF</IonBadge>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="news-card-actions">
-          <button className="action-button edit" onClick={() => onEdit(item)} title="Edit">
-            <IonIcon icon={createOutline} />
-          </button>
-          <button className="action-button delete" onClick={() => setShowDeleteConfirm(true)} title="Delete">
-            <IonIcon icon={trashOutline} />
-          </button>
-        </div>
-      </div>
-
-      <IonAlert
-        isOpen={showDeleteConfirm}
-        onDidDismiss={() => setShowDeleteConfirm(false)}
-        header="Delete News"
-        message={`Are you sure you want to delete "${item.title}"?`}
-        buttons={[
-          { text: 'Cancel', role: 'cancel' },
-          {
-            text: 'Delete',
-            role: 'destructive',
-            handler: () => {
-              onDelete(item.id);
-              setShowDeleteConfirm(false);
-            }
-          }
-        ]}
-      />
-    </>
-  );
-};
-
 const AdminNewsScreen: React.FC = () => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
+  // Core Data States
   const [newsList, setNewsList] = useState<News[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageName, setImageName] = useState('');
-  const [imagePreview, setImagePreview] = useState('');
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfName, setPdfName] = useState('');
-  const [visibility, setVisibility] = useState<VisibilityType>('ALL');
-  const [submitting, setSubmitting] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Form Field States
+  const [title, setTitle] = useState<string>('');
+  const [content, setContent] = useState<string>('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageName, setImageName] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfName, setPdfName] = useState<string>('');
+  const [visibility, setVisibility] = useState<VisibilityType>('ALL');
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
-  const [showClassSelector, setShowClassSelector] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertHeader, setAlertHeader] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
+
+  // Editing & Modals
   const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
+  const [showClassSelector, setShowClassSelector] = useState<boolean>(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Alerts
+  const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [alertHeader, setAlertHeader] = useState<string>('');
+  const [alertMessage, setAlertMessage] = useState<string>('');
 
   useEffect(() => {
-    fetchNews();
-    fetchClasses();
+    fetchData();
   }, []);
 
-  const fetchNews = async () => {
+  const fetchData = async () => {
     try {
-      const response = await adminAPI.getNews(page, 10);
-      if (response.success && response.data) {
-        setNewsList(response.data.news || []);
-        setTotalPages(response.data.pagination?.pages || 1);
+      setLoading(true);
+      const [newsRes, classRes] = await Promise.all([
+        adminAPI.getNews(1, 20),
+        adminAPI.getClasses(),
+      ]);
+
+      if (newsRes.success && newsRes.data) {
+        setNewsList(newsRes.data.news || []);
+      }
+      if (classRes.success && classRes.data) {
+        setClasses(classRes.data);
       }
     } catch (error) {
-      console.error('Error fetching news:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchClasses = async () => {
-    try {
-      const response = await adminAPI.getClasses();
-      if (response.success && response.data) {
-        setClasses(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
     }
   };
 
@@ -181,9 +105,7 @@ const AdminNewsScreen: React.FC = () => {
       setImageFile(file);
       setImageName(file.name);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -196,22 +118,30 @@ const AdminNewsScreen: React.FC = () => {
     }
   };
 
+  const removeImage = () => {
+    setImageFile(null);
+    setImageName('');
+    setImagePreview('');
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const removePdf = () => {
+    setPdfFile(null);
+    setPdfName('');
+    if (pdfInputRef.current) pdfInputRef.current.value = '';
+  };
+
   const toggleClassSelection = (classId: string) => {
-    setSelectedClassIds(prev =>
-      prev.includes(classId)
-        ? prev.filter(id => id !== classId)
-        : [...prev, classId]
+    setSelectedClassIds((prev) =>
+      prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId]
     );
   };
 
   const resetForm = () => {
     setTitle('');
     setContent('');
-    setImageFile(null);
-    setImageName('');
-    setImagePreview('');
-    setPdfFile(null);
-    setPdfName('');
+    removeImage();
+    removePdf();
     setVisibility('ALL');
     setSelectedClassIds([]);
     setEditingNewsId(null);
@@ -219,56 +149,42 @@ const AdminNewsScreen: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
-      showAlertMessage('Validation Error', 'Title and content are required');
+      showAlertMessage('Warning', 'Please enter both Title and Content.');
       return;
     }
 
     if (visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length === 0) {
-      showAlertMessage('Validation Error', 'Please select at least one class');
+      showAlertMessage('Warning', 'Please select at least one target class.');
       return;
     }
 
     setSubmitting(true);
     try {
-      const data: CreateNewsInput = {
+      const payload: CreateNewsInput = {
         title: title.trim(),
         content: content.trim(),
-        imageUrl: imageFile ? `/uploads/news/${imageFile.name}` : undefined,
-        pdfUrl: pdfFile ? `/uploads/news/${pdfFile.name}` : undefined,
+        imageUrl: imageFile ? `/uploads/news/${imageFile.name}` : imagePreview || undefined,
+        pdfUrl: pdfFile ? `/uploads/news/${pdfFile.name}` : pdfName || undefined,
         visibility,
-        classId: visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length > 0
-          ? selectedClassIds[0]
-          : undefined,
+        classId: visibility === 'SPECIFIC_CLASSES' ? selectedClassIds[0] : undefined,
       };
 
-      let response;
-      if (editingNewsId) {
-        response = await adminAPI.updateNews(editingNewsId, data);
-      } else {
-        response = await adminAPI.createNews(data);
-      }
+      const response = editingNewsId
+        ? await adminAPI.updateNews(editingNewsId, payload)
+        : await adminAPI.createNews(payload);
 
       if (response.success) {
-        showAlertMessage('Success', editingNewsId ? 'News updated successfully' : 'News created successfully');
+        showAlertMessage(
+          'Success',
+          editingNewsId ? 'Announcement updated successfully!' : 'Announcement published successfully!'
+        );
         resetForm();
-        fetchNews();
+        fetchData();
       }
     } catch (error: any) {
-      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to create news');
+      showAlertMessage('Error', error.response?.data?.error?.message || 'Operation failed.');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      const response = await adminAPI.deleteNews(id);
-      if (response.success) {
-        setNewsList(prev => prev.filter(item => item.id !== id));
-        showAlertMessage('Success', 'News deleted successfully');
-      }
-    } catch (error) {
-      showAlertMessage('Error', 'Failed to delete news');
     }
   };
 
@@ -276,263 +192,383 @@ const AdminNewsScreen: React.FC = () => {
     setTitle(item.title);
     setContent(item.content);
     setImagePreview(item.imageUrl || '');
-    setImageName(item.imageUrl ? 'Current Image (select new to replace)' : '');
-    setPdfName(item.pdfUrl ? 'Current PDF (select new to replace)' : '');
+    setImageName(item.imageUrl ? 'Attached Image' : '');
+    setPdfName(item.pdfUrl ? 'Attached Document' : '');
     setVisibility(item.visibility);
     setEditingNewsId(item.id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (loading && newsList.length === 0) {
-  return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/dashboard" />
-          </IonButtons>
-          <IonTitle>News Manager</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-        <IonContent className="admin-news-content" fullscreen>
-          <div className="loading-container">
-            <IonSpinner name="crescent" />
-            <p>Loading news...</p>
-          </div>
-        </IonContent>
-      </IonPage>
-    );
-  }
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await adminAPI.deleteNews(id);
+      if (response.success) {
+        setNewsList((prev) => prev.filter((item) => item.id !== id));
+        showAlertMessage('Deleted', 'Announcement removed.');
+      }
+    } catch (error) {
+      showAlertMessage('Error', 'Failed to delete announcement.');
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
+  const filteredNews = newsList.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="admin-news-header">
         <IonToolbar>
           <IonButtons slot="start">
             <IonBackButton defaultHref="/admin/dashboard" />
           </IonButtons>
-          <IonTitle>News Manager</IonTitle>
+          <IonTitle>News & Announcements</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="admin-news-content" fullscreen>
-        <div className="container">
-          {/* Header */}
-          <div className="header-section">
-            <h1 className="header-title">📰 News Manager</h1>
-            <p className="header-subtitle">Create and manage school announcements</p>
+        <div className="onebyone-layout-container">
+          {/* Top Header Summary Banner */}
+          <div className="header-summary-card">
+            <div>
+              <h2>📢 Announcement Publisher</h2>
+              <p>Create, target, and broadcast circulars to students</p>
+            </div>
+            <div className="summary-badge">{newsList.length} Total News</div>
           </div>
 
-          {/* Create Form */}
-          <IonCard className="form-card">
-            <IonCardHeader>
-              <IonCardTitle>{editingNewsId ? 'Edit News' : 'Create New News'}</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              {/* Title Input */}
-              <div className="input-group">
-                <label className="input-label">Title *</label>
-                <IonInput
-                  value={title}
-                  onIonInput={(e) => setTitle(e.detail.value || '')}
-                  placeholder="Enter news title"
-                />
-              </div>
+          {/* ONE BY ONE VERTICAL FORM FLOW */}
+          <div className="form-step-card">
+            <div className="step-card-header">
+              <span className="step-badge">{editingNewsId ? 'EDIT MODE' : 'NEW'}</span>
+              <h3>{editingNewsId ? 'Edit Announcement' : 'Create New Announcement'}</h3>
+            </div>
 
-              {/* Content Input */}
-              <div className="input-group">
-                <label className="input-label">Content *</label>
-                <IonTextarea
-                  value={content}
-                  onIonInput={(e) => setContent(e.detail.value || '')}
-                  placeholder="Write your news content here..."
-                  rows={4}
-                />
-              </div>
-
-              {/* Image Picker */}
-              <div className="input-group">
-                <label className="input-label">Feature Image</label>
-                <input
-                  type="file"
-                  ref={imageInputRef}
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  className="file-picker-button"
-                  onClick={() => imageInputRef.current?.click()}
-                >
-                  <IonIcon icon={imageOutline} className="file-icon" />
-                  <span>{imageName || 'Choose Image from Gallery'}</span>
-                </button>
-                {imagePreview && (
-                  <img src={imagePreview} alt="Preview" className="image-preview" />
-                )}
-              </div>
-
-              {/* PDF Picker */}
-              <div className="input-group">
-                <label className="input-label">PDF Document</label>
-                <input
-                  type="file"
-                  ref={pdfInputRef}
-                  accept=".pdf"
-                  onChange={handlePdfChange}
-                  style={{ display: 'none' }}
-                />
-                <button
-                  className="file-picker-button"
-                  onClick={() => pdfInputRef.current?.click()}
-                >
-                  <IonIcon icon={documentOutline} className="file-icon" />
-                  <span>{pdfName || 'Choose PDF Document'}</span>
-                </button>
-              </div>
-
-              {/* Visibility Selector */}
-              <div className="input-group">
-                <label className="input-label">Target Audience</label>
-                <div className="visibility-container">
-                  <button
-                    className={`visibility-option ${visibility === 'ALL' ? 'active' : ''}`}
-                    onClick={() => setVisibility('ALL')}
-                  >
-                    <IonIcon icon={informationCircleOutline} />
-                    <span>All Classes & Students</span>
-                  </button>
-                  <button
-                    className={`visibility-option ${visibility === 'SPECIFIC_CLASSES' ? 'active' : ''}`}
-                    onClick={() => {
-                      setVisibility('SPECIFIC_CLASSES');
-                      setShowClassSelector(true);
-                    }}
-                  >
-                    <IonIcon icon={informationCircleOutline} />
-                    <span>Specific Classes Only</span>
-                  </button>
+            <div className="step-form-body">
+              {/* STEP 1: Title Input */}
+              <div className="vertical-step">
+                <div className="step-number">1</div>
+                <div className="step-content">
+                  <label>Announcement Title *</label>
+                  <IonInput
+                    className="step-input"
+                    value={title}
+                    onIonInput={(e) => setTitle(e.detail.value || '')}
+                    placeholder="Enter short, descriptive title..."
+                  />
                 </div>
-                {visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length > 0 && (
-                  <div className="selected-classes-container">
-                    <span className="selected-classes-label">
-                      Selected: {selectedClassIds.length} class(es)
-                    </span>
+              </div>
+
+              {/* STEP 2: Content Body */}
+              <div className="vertical-step">
+                <div className="step-number">2</div>
+                <div className="step-content">
+                  <label>Full Content Details *</label>
+                  <IonTextarea
+                    className="step-textarea"
+                    value={content}
+                    onIonInput={(e) => setContent(e.detail.value || '')}
+                    placeholder="Type the full news description or message here..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+
+              {/* STEP 3: Media Uploads */}
+              <div className="vertical-step">
+                <div className="step-number">3</div>
+                <div className="step-content">
+                  <label>Attachments (Optional)</label>
+                  <div className="upload-options-row">
+                    {/* Image Selector */}
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ display: 'none' }}
+                    />
+                    {!imageName ? (
+                      <button
+                        type="button"
+                        className="upload-box-btn"
+                        onClick={() => imageInputRef.current?.click()}
+                      >
+                        <IonIcon icon={imageOutline} />
+                        <span>Add Image</span>
+                      </button>
+                    ) : (
+                      <div className="file-chip image">
+                        <IonIcon icon={imageOutline} />
+                        <span>{imageName}</span>
+                        <button type="button" onClick={removeImage}>
+                          <IonIcon icon={closeCircleOutline} />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* PDF Selector */}
+                    <input
+                      type="file"
+                      ref={pdfInputRef}
+                      accept=".pdf"
+                      onChange={handlePdfChange}
+                      style={{ display: 'none' }}
+                    />
+                    {!pdfName ? (
+                      <button
+                        type="button"
+                        className="upload-box-btn"
+                        onClick={() => pdfInputRef.current?.click()}
+                      >
+                        <IonIcon icon={documentOutline} />
+                        <span>Add PDF</span>
+                      </button>
+                    ) : (
+                      <div className="file-chip pdf">
+                        <IonIcon icon={documentOutline} />
+                        <span>{pdfName}</span>
+                        <button type="button" onClick={removePdf}>
+                          <IonIcon icon={closeCircleOutline} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="image-preview-card">
+                      <img src={imagePreview} alt="Upload Preview" />
+                      <button type="button" onClick={removeImage}>
+                        <IonIcon icon={closeOutline} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* STEP 4: Target Audience Selection */}
+              <div className="vertical-step">
+                <div className="step-number">4</div>
+                <div className="step-content">
+                  <label>Target Audience</label>
+                  <div className="audience-toggle-group">
                     <button
-                      className="selected-classes-link"
-                      onClick={() => setShowClassSelector(true)}
+                      type="button"
+                      className={`audience-btn ${visibility === 'ALL' ? 'selected' : ''}`}
+                      onClick={() => setVisibility('ALL')}
                     >
-                      View / Edit
+                      <IonIcon icon={peopleOutline} />
+                      <span>All Classes & Students</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`audience-btn ${visibility === 'SPECIFIC_CLASSES' ? 'selected' : ''}`}
+                      onClick={() => {
+                        setVisibility('SPECIFIC_CLASSES');
+                        setShowClassSelector(true);
+                      }}
+                    >
+                      <IonIcon icon={schoolOutline} />
+                      <span>Specific Classes</span>
                     </button>
                   </div>
-                )}
+
+                  {visibility === 'SPECIFIC_CLASSES' && (
+                    <div className="class-selection-info">
+                      <span>
+                        {selectedClassIds.length > 0
+                          ? `${selectedClassIds.length} class(es) selected`
+                          : 'No specific class chosen'}
+                      </span>
+                      <button type="button" onClick={() => setShowClassSelector(true)}>
+                        {selectedClassIds.length > 0 ? 'Edit Selection' : 'Select Classes'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="button-group">
+              <div className="form-action-row">
                 <IonButton
                   expand="block"
-                  className="submit-button"
+                  className="submit-post-btn"
                   onClick={handleSubmit}
                   disabled={submitting}
                 >
-                  {submitting ? <IonSpinner name="crescent" /> : (editingNewsId ? 'Update News' : 'Publish News')}
+                  {submitting ? (
+                    <IonSpinner name="crescent" />
+                  ) : (
+                    <>
+                      <IonIcon slot="start" icon={sendOutline} />
+                      {editingNewsId ? 'Update Announcement' : 'Publish Announcement'}
+                    </>
+                  )}
                 </IonButton>
+
                 {editingNewsId && (
                   <IonButton
                     expand="block"
-                    color="medium"
-                    className="cancel-button"
+                    fill="clear"
+                    className="cancel-post-btn"
                     onClick={resetForm}
                   >
-                    Cancel Edit
+                    Cancel Editing
                   </IonButton>
                 )}
               </div>
-            </IonCardContent>
-          </IonCard>
+            </div>
+          </div>
 
-          {/* News List */}
-          <IonCard className="list-card">
-            <IonCardHeader>
-              <IonCardTitle>Published News ({newsList.length})</IonCardTitle>
-            </IonCardHeader>
-            <IonCardContent>
-              {newsList.length === 0 ? (
-                <div className="empty-state">
-                  <IonIcon icon={newspaperOutline} className="empty-icon" />
-                  <p>No news published yet</p>
-                </div>
-              ) : (
-                newsList.map((item) => (
-                  <NewsItem
-                    key={item.id}
-                    item={item}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                  />
-                ))
-              )}
-              {page < totalPages && (
-                <IonButton
-                  expand="block"
-                  fill="outline"
-                  className="load-more-button"
-                  onClick={() => {
-                    setPage(prev => prev + 1);
-                    fetchNews();
-                  }}
-                >
-                  Load More
-                </IonButton>
-              )}
-            </IonCardContent>
-          </IonCard>
+          {/* ONE BY ONE LIST FLOW SECTION */}
+          <div className="feed-stream-section">
+            <div className="feed-header-row">
+              <h3>
+                <IonIcon icon={newspaperOutline} /> Published Circulars
+              </h3>
+              <div className="search-input-box">
+                <IonIcon icon={searchOutline} />
+                <input
+                  type="text"
+                  placeholder="Search notices..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="loading-state-box">
+                <IonSpinner name="crescent" color="primary" />
+                <p>Loading published news...</p>
+              </div>
+            ) : filteredNews.length === 0 ? (
+              <div className="empty-state-box">
+                <IonIcon icon={newspaperOutline} />
+                <p>No circulars found.</p>
+              </div>
+            ) : (
+              <div className="vertical-news-stream">
+                {filteredNews.map((item) => (
+                  <div key={item.id} className="news-stream-card">
+                    <div className="news-card-top">
+                      <span className={`pill-visibility ${item.visibility.toLowerCase()}`}>
+                        {item.visibility === 'ALL' ? 'All Classes' : 'Specific Target'}
+                      </span>
+                      <span className="news-date">
+                        <IonIcon icon={calendarOutline} />
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <h4 className="news-card-title">{item.title}</h4>
+                    <p className="news-card-body">{item.content}</p>
+
+                    {(item.imageUrl || item.pdfUrl) && (
+                      <div className="news-attachments">
+                        {item.imageUrl && (
+                          <span className="chip img-chip">
+                            <IonIcon icon={imageOutline} /> Image Attached
+                          </span>
+                        )}
+                        {item.pdfUrl && (
+                          <span className="chip pdf-chip">
+                            <IonIcon icon={documentOutline} /> PDF Document
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="news-card-actions">
+                      <button
+                        type="button"
+                        className="btn-action edit"
+                        onClick={() => handleEdit(item)}
+                      >
+                        <IonIcon icon={createOutline} /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-action delete"
+                        onClick={() => setDeleteId(item.id)}
+                      >
+                        <IonIcon icon={trashOutline} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Class Selector Modal */}
+        {/* Modal for Class Selection */}
         <IonModal
           isOpen={showClassSelector}
           onDidDismiss={() => setShowClassSelector(false)}
           className="class-selector-modal"
         >
-          <div className="modal-content">
+          <div className="modal-inner-content">
             <div className="modal-header">
-              <h2>Select Classes</h2>
-              <button className="modal-close" onClick={() => setShowClassSelector(false)}>
+              <h4>Select Target Classes</h4>
+              <button type="button" onClick={() => setShowClassSelector(false)}>
                 <IonIcon icon={closeOutline} />
               </button>
             </div>
-            <p className="modal-subtitle">
-              Tap to select one or more classes for this news
-            </p>
-            <div className="class-list">
-              {classes.map((cls) => (
-                <div
-                  key={cls.id}
-                  className={`class-item ${selectedClassIds.includes(cls.id) ? 'active' : ''}`}
-                  onClick={() => toggleClassSelection(cls.id)}
-                >
-                  <span className="class-item-icon">
-                    {selectedClassIds.includes(cls.id) ? '✅' : '⬜'}
-                  </span>
-                  <span className="class-item-text">
-                    {cls.name}{cls.section ? ` - ${cls.section}` : ''}
-                  </span>
-                </div>
-              ))}
+            <div className="modal-class-list">
+              {classes.map((cls) => {
+                const isSelected = selectedClassIds.includes(cls.id);
+                return (
+                  <div
+                    key={cls.id}
+                    className={`class-select-tile ${isSelected ? 'active' : ''}`}
+                    onClick={() => toggleClassSelection(cls.id)}
+                  >
+                    <IonIcon
+                      icon={isSelected ? checkmarkCircleOutline : schoolOutline}
+                      className="tile-icon"
+                    />
+                    <span>
+                      Class {cls.name} {cls.section ? `(${cls.section})` : ''}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             <div className="modal-footer">
-              <span className="selected-count">
-                {selectedClassIds.length} class(es) selected
-              </span>
-              <IonButton onClick={() => setShowClassSelector(false)}>
-                Done
+              <IonButton
+                expand="block"
+                className="confirm-modal-btn"
+                onClick={() => setShowClassSelector(false)}
+              >
+                Done ({selectedClassIds.length} Selected)
               </IonButton>
             </div>
           </div>
         </IonModal>
 
-        {/* Alert */}
+        {/* Delete Confirmation Alert */}
+        <IonAlert
+          isOpen={!!deleteId}
+          onDidDismiss={() => setDeleteId(null)}
+          header="Delete Announcement"
+          message="Are you sure you want to permanently delete this announcement?"
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Delete',
+              role: 'destructive',
+              handler: () => deleteId && handleDelete(deleteId),
+            },
+          ]}
+        />
+
+        {/* Global Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

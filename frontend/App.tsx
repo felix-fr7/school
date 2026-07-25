@@ -10,18 +10,11 @@ import { IonReactRouter } from '@ionic/react-router';
 import { Route, Redirect, Switch, RouteProps, useHistory } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
-import { PostProvider } from './src/contexts/PostContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 
 // Auth Screens
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
-
-// Legacy Screens (Posts)
-import HomeScreen from './src/screens/HomeScreen';
-import PostDetailScreen from './src/screens/PostDetailScreen';
-import CreatePostScreen from './src/screens/CreatePostScreen';
-import EditPostScreen from './src/screens/EditPostScreen';
 
 // Super Admin Screens (Lazy loaded)
 const SuperAdminDashboardScreen = React.lazy(() => import('./src/screens/superadmin/DashboardScreen'));
@@ -43,8 +36,6 @@ const StudentsListScreen = React.lazy(() => import('./src/screens/admin/Students
 const CreateStudentScreen = React.lazy(() => import('./src/screens/admin/CreateStudentScreen'));
 const HomeworkListScreen = React.lazy(() => import('./src/screens/admin/HomeworkListScreen'));
 const CreateHomeworkScreen = React.lazy(() => import('./src/screens/admin/CreateHomeworkScreen'));
-const MarksListScreen = React.lazy(() => import('./src/screens/admin/MarksListScreen'));
-const AddMarksScreen = React.lazy(() => import('./src/screens/admin/AddMarksScreen'));
 const NewsListScreen = React.lazy(() => import('./src/screens/admin/NewsListScreen'));
 const CreateNewsScreen = React.lazy(() => import('./src/screens/admin/CreateNewsScreen'));
 const CircularsListScreen = React.lazy(() => import('./src/screens/admin/CircularsListScreen'));
@@ -233,12 +224,6 @@ const AppContent: React.FC = () => {
           <Redirect to="/login" />
         </Route>
 
-        {/* Legacy Post Routes */}
-        <Route exact path="/posts" component={HomeScreen} />
-        <Route exact path="/posts/:postId" component={PostDetailScreen} />
-        <Route exact path="/posts/create" component={CreatePostScreen} />
-        <Route exact path="/posts/:postId/edit" component={EditPostScreen} />
-
         {/* Super Admin Routes */}
         {isSuperAdmin && (
           <>
@@ -253,20 +238,22 @@ const AppContent: React.FC = () => {
         {isAdmin && (
           <>
             <ProtectedRoute exact path="/admin/dashboard" component={AdminDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            {/* Static/specific routes MUST come before parameterized routes */}
             <ProtectedRoute exact path="/admin/classes" component={ClassesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes/create" component={CreateClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            {/* Dynamic ID routes come after specific routes */}
             <ProtectedRoute exact path="/admin/classes/:classId" component={ClassDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes/:classId/edit" component={EditClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            {/* Static/specific routes MUST come before parameterized routes */}
             <ProtectedRoute exact path="/admin/teachers" component={TeachersListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/teachers/create" component={CreateTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            {/* Dynamic ID routes come after specific routes */}
             <ProtectedRoute exact path="/admin/teachers/:teacherId" component={TeacherDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/teachers/:teacherId/edit" component={EditTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/admin/teachers/create" component={CreateTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/students" component={StudentsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/students/create" component={CreateStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/homework" component={HomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/homework/create" component={CreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/admin/marks" component={MarksListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/admin/marks/add" component={AddMarksScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/news" component={NewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/news/create" component={CreateNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/circulars" component={CircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
@@ -319,8 +306,8 @@ const AppContent: React.FC = () => {
             <ProtectedRoute exact path="/class-controller/students/add" component={ClassAddStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/students/:studentId/edit" component={ClassEditStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/homework" component={ClassHomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/class-controller/homework/:homeworkId" component={ClassHomeworkDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/homework/create" component={ClassCreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/homework/:homeworkId" component={ClassHomeworkDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/attendance" component={ClassAttendanceListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/attendance/mark" component={ClassMarkAttendanceScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/news" component={ClassNewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
@@ -365,9 +352,7 @@ const AppWithAuth: React.FC = () => {
   return (
     <IonReactRouter>
       <IonRouterOutlet>
-        <PostProvider>
-          <AppContent />
-        </PostProvider>
+        <AppContent />
       </IonRouterOutlet>
     </IonReactRouter>
   );

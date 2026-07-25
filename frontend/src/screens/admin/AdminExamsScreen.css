@@ -1,287 +1,309 @@
-/* Admin Exams Screen Styles */
-
-.admin-exams-content {
-  --background: #F8FAFC;
+/* Header Background Override */
+ion-header.admin-header,
+.admin-toolbar {
+  --background: #1e293b !important;
+  --border-color: #334155 !important;
+  color: #ffffff !important;
 }
 
-.admin-exams-content .container {
+ion-toolbar ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+ion-toolbar ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+}
+
+/* Page Container */
+.admin-exams-content {
+  --background: #f8fafc !important;
+}
+
+.admin-container-modern {
   max-width: 800px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px 16px;
 }
 
-/* Header Section */
-.header-section {
-  margin-bottom: 24px;
+.page-header {
+  margin-bottom: 20px;
 }
 
-.header-title {
-  font-size: 24px;
+.page-title {
+  font-size: 22px;
   font-weight: 700;
-  color: #1E293B;
-  margin: 0 0 4px 0;
+  color: #0f172a;
+  margin: 0 0 6px 0;
 }
 
-.header-subtitle {
+.page-subtitle {
   font-size: 14px;
-  color: #64748B;
+  color: #64748b;
   margin: 0;
 }
 
-/* Form Card */
-.form-card {
+/* Tab Segment Styling */
+.view-segment-container {
   margin-bottom: 24px;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.form-card ion-card-header {
-  padding-bottom: 8px;
+.custom-segment {
+  background: #e2e8f0;
+  border-radius: 10px;
+  padding: 4px;
 }
 
-.form-card ion-card-title {
-  font-size: 18px;
+ion-segment-button {
+  --color: #475569;
+  --color-checked: #2563eb;
+  --background-checked: #ffffff;
+  --indicator-color: transparent;
   font-weight: 600;
-  color: #1E293B;
+  border-radius: 8px;
 }
 
-.form-card ion-card-content {
-  padding: 16px 0;
+/* Cards Modern Layout */
+.admin-card-modern {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  margin: 0 0 24px 0;
 }
 
-/* Input Groups */
-.input-group {
+.card-title-modern {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Form inputs */
+.input-field-modern {
   margin-bottom: 16px;
 }
 
-.input-label {
+.field-label-modern {
   display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.custom-input-item-modern {
+  --background: #f8fafc;
+  --border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.custom-text-input-modern {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  outline: none;
   font-size: 14px;
-  font-weight: 500;
-  color: #475569;
+  color: #0f172a;
+}
+
+/* Dropzone Upload */
+.file-upload-dropzone-modern {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-upload-dropzone-modern:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.upload-icon-modern {
+  font-size: 32px;
+  color: #3b82f6;
   margin-bottom: 8px;
 }
 
-/* Input Row */
-.input-row {
+.upload-text-modern {
+  font-size: 14px;
+  color: #334155;
+  margin: 0 0 4px 0;
+}
+
+.upload-hint-modern {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* File Preview Block */
+.file-preview-card-modern {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.file-info-row-modern {
   display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-type-icon-modern {
+  font-size: 24px;
+  color: #2563eb;
+}
+
+.file-details-modern {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name-modern {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.file-size-modern {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.remove-file-btn-modern {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.image-preview-container-modern {
+  margin-top: 12px;
+  max-height: 180px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.image-preview-modern {
+  width: 100%;
+  object-fit: cover;
+}
+
+.info-box-modern {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #eff6ff;
+  border-radius: 8px;
+  color: #1d4ed8;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.primary-btn-modern {
+  --border-radius: 8px;
+  font-weight: 600;
+  height: 44px;
+}
+
+/* Exam Item Card inside List */
+.exam-list-grid-modern {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.input-row .input-group {
-  flex: 1;
-}
-
-/* Class Selector */
-.class-selector {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.class-option {
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 13px;
-}
-
-.class-option.active {
-  --background: #2e7d32;
-  color: white;
-}
-
-/* Info Note */
-.info-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-  background: #F0F9FF;
-  border-radius: 8px;
-  margin: 16px 0;
-  border-left: 4px solid #0284C7;
-}
-
-.info-icon {
-  font-size: 20px;
-  color: #0284C7;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.info-note span {
-  font-size: 13px;
-  color: #0369A1;
-  line-height: 1.4;
-}
-
-/* Button Group */
-.button-group {
-  margin-top: 16px;
-}
-
-.submit-button {
-  --background: #2e7d32;
-  --background-activated: #1b5e20;
-  border-radius: 12px;
-  font-weight: 600;
-}
-
-.cancel-button {
-  margin-top: 8px;
-  border-radius: 12px;
-}
-
-/* List Card */
-.list-card {
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.list-card ion-card-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E293B;
-}
-
-/* Exam Card */
-.exam-card {
-  display: flex;
-  background: #F8FAFC;
-  border-radius: 12px;
+.exam-card-modern {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   padding: 14px;
-  margin-bottom: 12px;
-  border: 1px solid #E2E8F0;
-  transition: all 0.2s;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
 }
 
-.exam-card:hover {
-  border-color: #0284C7;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
+.exam-card-preview {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.exam-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdf-icon-large {
+  font-size: 30px;
+  color: #ef4444;
 }
 
 .exam-card-content {
   flex: 1;
-  margin-right: 12px;
 }
 
-.exam-title {
+.exam-card-title {
   font-size: 15px;
-  font-weight: 600;
-  color: #1E293B;
-  margin: 0 0 4px 0;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
 }
 
-.exam-subject {
-  font-size: 13px;
-  color: #0284C7;
-  font-weight: 500;
-  margin: 0 0 8px 0;
-}
-
-.exam-meta-row {
+.exam-card-meta {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 8px;
-}
-
-.exam-date,
-.exam-time,
-.exam-room {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   font-size: 12px;
-  color: #64748B;
+  color: #64748b;
+  align-items: center;
 }
 
-.exam-date ion-icon,
-.exam-time ion-icon,
-.exam-room ion-icon {
-  font-size: 14px;
-  color: #94A3B8;
-}
-
-.exam-class {
-  font-size: 13px;
-  color: #64748B;
-  margin: 0;
-}
-
-/* Exam Card Actions */
-.exam-card-actions {
+.exam-card-actions-modern {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   gap: 8px;
 }
 
-.action-button {
+.action-btn-modern {
+  border: none;
+  background: #f1f5f9;
   width: 36px;
   height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
   border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-button.edit:hover {
-  background: #E3F2FD;
-}
-
-.action-button.delete:hover {
-  background: #FFEBEE;
-}
-
-.action-button ion-icon {
-  font-size: 18px;
-  color: #64748B;
-}
-
-.action-button.edit:hover ion-icon {
-  color: #1565C0;
-}
-
-.action-button.delete:hover ion-icon {
-  color: #C62828;
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 32px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  color: #CBD5E1;
-  margin-bottom: 12px;
-}
-
-.empty-state p {
-  font-size: 15px;
-  color: #94A3B8;
-  font-weight: 500;
-}
-
-/* Loading Container */
-.loading-container {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  padding: 40px;
+  cursor: pointer;
+  color: #475569;
 }
 
-.loading-container p {
-  margin-top: 16px;
-  font-size: 14px;
-  color: #64748B;
+.action-btn-modern.delete-btn {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.action-btn-modern.edit-btn {
+  color: #2563eb;
+  background: #eff6ff;
 }

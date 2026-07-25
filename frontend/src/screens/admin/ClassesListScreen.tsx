@@ -23,7 +23,6 @@ import {
   IonRefresher,
   IonRefresherContent,
   IonAlert,
-  IonBadge,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline } from 'ionicons/icons';
@@ -91,11 +90,11 @@ const ClassesListScreen: React.FC = () => {
   if (loading && classes.length === 0) {
     return (
       <IonPage>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
-          <IonSpinner name="crescent" />
-          <IonText color="medium">
-            <p>Loading classes...</p>
-          </IonText>
+        <IonContent className="classes-list-content">
+          <div className="loading-state-modern">
+            <IonSpinner name="crescent" color="primary" />
+            <p className="loading-text">Loading classes...</p>
+          </div>
         </IonContent>
       </IonPage>
     );
@@ -103,72 +102,96 @@ const ClassesListScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="classes-list-header">
         <IonToolbar>
           <IonButtons slot="start">
             <IonBackButton defaultHref="/admin/dashboard" />
           </IonButtons>
-          <IonTitle>Classes</IonTitle>
-          <IonButton slot="end" onClick={() => history.push('/admin/classes/create')}>
-            <IonIcon icon={addCircleOutline} /> Add
+          <IonTitle>Classes & Sections</IonTitle>
+          <IonButton
+            slot="end"
+            className="add-header-btn"
+            onClick={() => history.push('/admin/classes/create')}
+          >
+            <IonIcon icon={addCircleOutline} slot="start" /> Add Class
           </IonButton>
         </IonToolbar>
       </IonHeader>
+
       <IonContent className="classes-list-content">
         <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
           <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
         </IonRefresher>
 
-        {classes.length === 0 ? (
-          <div className="empty-container">
-            <IonIcon icon={schoolOutline} className="empty-icon" />
-            <IonText color="medium">
-              <h3>No classes found</h3>
-              <p>Add your first class to get started</p>
-            </IonText>
+        <div className="classes-container-wrapper">
+          {/* Header Stats / Banner Section */}
+          <div className="classes-summary-card">
+            <div>
+              <h2>🏫 Manage Classes</h2>
+              <p>Configure classes, sections, and structural details</p>
+            </div>
+            <div className="summary-badge">{classes.length} Total Classes</div>
           </div>
-        ) : (
-          <IonList>
-            {classes.map((item) => {
-              const classFullName = item.section ? `${item.name} - ${item.section}` : item.name;
-              return (
-                <IonItem key={item.id} className="class-item">
-                  <IonCard className="class-card" button onClick={() => history.push(`/admin/classes/${item.id}`)}>
-                    <IonCardContent>
-                      <div className="class-info">
-                        <h3 className="class-name">{classFullName}</h3>
-                        <p className="class-date">Created: {formatDate(item.createdAt)}</p>
-                      </div>
-                      <div className="class-actions">
-                        <IonButton
-                          fill="outline"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            history.push(`/admin/classes/${item.id}`);
-                          }}
-                        >
-                          <IonIcon icon={createOutline} /> Edit
-                        </IonButton>
-                        <IonButton
-                          fill="outline"
-                          color="danger"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClick(item.id, classFullName);
-                          }}
-                        >
-                          <IonIcon icon={trashOutline} /> Delete
-                        </IonButton>
-                      </div>
-                    </IonCardContent>
-                  </IonCard>
-                </IonItem>
-              );
-            })}
-          </IonList>
-        )}
+
+          {classes.length === 0 ? (
+            <div className="empty-container-modern">
+              <IonIcon icon={schoolOutline} className="empty-icon-modern" />
+              <h3 className="empty-title-modern">No classes found</h3>
+              <p className="empty-text-modern">Add your first class to get started</p>
+            </div>
+          ) : (
+            <IonList className="class-list-modern">
+              {classes.map((item) => {
+                const classFullName = item.section ? `${item.name} - ${item.section}` : item.name;
+                return (
+                  <IonItem key={item.id} className="class-item-modern" lines="none">
+                    <IonCard className="class-card-modern">
+                      <IonCardContent className="class-card-content-modern">
+                        <div className="class-card-left">
+                          <div className="class-icon-modern">
+                            <IonIcon icon={schoolOutline} />
+                          </div>
+                          <div className="class-info-modern">
+                            <h3 className="class-name-modern">{classFullName}</h3>
+                            <p className="class-date-modern">Created: {formatDate(item.createdAt)}</p>
+                            <div className="class-stats-modern">
+                              <span className="class-stat-badge">Active Class</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="class-actions-modern">
+                          <button
+                            type="button"
+                            className="action-btn-small"
+                            title="Edit Class"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              history.push(`/admin/classes/${item.id}`);
+                            }}
+                          >
+                            <IonIcon icon={createOutline} />
+                          </button>
+                          <button
+                            type="button"
+                            className="action-btn-small delete-btn"
+                            title="Delete Class"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(item.id, classFullName);
+                            }}
+                          >
+                            <IonIcon icon={trashOutline} />
+                          </button>
+                        </div>
+                      </IonCardContent>
+                    </IonCard>
+                  </IonItem>
+                );
+              })}
+            </IonList>
+          )}
+        </div>
 
         <IonAlert
           isOpen={showDeleteAlert}

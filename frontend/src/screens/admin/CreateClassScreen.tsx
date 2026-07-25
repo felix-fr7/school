@@ -1,6 +1,5 @@
 /**
- * Admin Create Class Screen (Ionic React Version)
- * Create a new class with optional teacher assignment
+ * Admin Create Class Screen (Ionic React Modern Admin Version)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -23,9 +22,20 @@ import {
   IonItem,
   IonCard,
   IonCardContent,
+  IonSearchbar,
+  IonAvatar,
+  IonChip,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
-import { chevronForwardOutline, closeOutline, searchOutline } from 'ionicons/icons';
+import {
+  chevronForwardOutline,
+  closeOutline,
+  personOutline,
+  schoolOutline,
+  keyOutline,
+  bookmarkOutline,
+  checkmarkCircleOutline,
+} from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import { User } from '../../types';
 import './CreateClassScreen.css';
@@ -79,7 +89,6 @@ const CreateClassScreen: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (!className.trim()) {
       setAlertMessage('Please enter class name');
       setShowErrorAlert(true);
@@ -116,19 +125,25 @@ const CreateClassScreen: React.FC = () => {
         const classCode = response.data.classCode || 'N/A';
         setGeneratedClassCode(classCode);
         setShowSuccessAlert(true);
-        // Reset form after success
+        
+        // Reset form
         setClassName('');
         setSection('');
         setPassword('');
         setTeacherId(undefined);
         setSelectedTeacher(null);
-        setGeneratedClassCode(null);
       } else {
         setAlertMessage(response.error?.message || 'Failed to create class');
         setShowErrorAlert(true);
       }
     } catch (error: any) {
-      setAlertMessage(error.response?.data?.error?.message || 'Failed to create class');
+      const errorMsg =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to create class';
+      console.error('Create Class Error:', error.response?.data || error.message);
+      setAlertMessage(errorMsg);
       setShowErrorAlert(true);
     } finally {
       setLoading(false);
@@ -142,151 +157,224 @@ const CreateClassScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="admin-header ion-no-border">
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/classes" />
+            <IonBackButton defaultHref="/admin/classes" className="admin-back-btn" />
           </IonButtons>
-          <IonTitle>Create Class</IonTitle>
+          <IonTitle className="admin-title">Create New Class</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="create-class-content">
-        <div className="form-container">
-          <IonText color="medium" className="description">
-            Create a new class for your school. Optionally assign an existing teacher as the class teacher.
-          </IonText>
 
-          <div className="input-group">
-            <label className="input-label">Class Name *</label>
-            <IonInput
-              placeholder="e.g., Class 10, Grade 5, MCA"
-              value={className}
-              onIonInput={(e) => setClassName(e.detail.value || '')}
-              autocapitalize="words"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Section (Optional)</label>
-            <IonInput
-              placeholder="e.g., A, B, C, -A, -B"
-              value={section}
-              onIonInput={(e) => setSection(e.detail.value || '')}
-              autocapitalize="characters"
-              maxlength={10}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Class Login Password *</label>
-            <IonInput
-              type="password"
-              placeholder="Set a password for class login (min 6 characters)"
-              value={password}
-              onIonInput={(e) => setPassword(e.detail.value || '')}
-              autocapitalize="off"
-              disabled={loading}
-            />
-            <IonText color="medium" className="hint-text">
-              This password will be used by students/parents to login to this class.
-            </IonText>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Assigned Class Teacher (Optional)</label>
-            {fetchingTeachers ? (
-              <div className="teacher-picker-button">
-                <IonSpinner name="crescent" />
-                <IonText color="medium">Loading teachers...</IonText>
+      <IonContent className="create-class-content ion-padding">
+        <div className="admin-container">
+          
+          {/* Header Banner Card */}
+          <IonCard className="banner-card">
+            <IonCardContent className="banner-content">
+              <div className="banner-icon-box">
+                <IonIcon icon={schoolOutline} />
               </div>
-            ) : selectedTeacher ? (
-              <div className="teacher-picker-button" onClick={() => setShowTeacherPicker(true)}>
-                <div className="selected-teacher">
-                  <span className="selected-teacher-name">{selectedTeacher.name}</span>
-                  <span className="selected-teacher-email">{selectedTeacher.email}</span>
+              <div>
+                <h2 className="banner-title">Class Setup</h2>
+                <p className="banner-subtitle">
+                  Configure class credentials and assign a class teacher.
+                </p>
+              </div>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Form Card */}
+          <IonCard className="admin-form-card">
+            <IonCardContent>
+              
+              {/* Class Name */}
+              <div className="admin-input-group">
+                <label className="admin-label">
+                  Class Name <span className="required">*</span>
+                </label>
+                <div className="input-wrapper">
+                  <IonIcon icon={schoolOutline} className="input-icon" />
+                  <IonInput
+                    placeholder="e.g., Grade 10, MCA, Class 5"
+                    value={className}
+                    onIonInput={(e) => setClassName(e.detail.value || '')}
+                    disabled={loading}
+                    className="custom-admin-input"
+                  />
                 </div>
-                <IonText color="primary" className="change-text">Change</IonText>
               </div>
-            ) : (
-              <div className="teacher-picker-button" onClick={() => setShowTeacherPicker(true)}>
-                <IonText color="medium">Select a teacher...</IonText>
-                <IonIcon icon={chevronForwardOutline} className="dropdown-icon" />
-              </div>
-            )}
-          </div>
 
-          <IonButton
-            expand="block"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={loading}
-            className="submit-button"
-          >
-            {loading ? <IonSpinner name="crescent" /> : 'Create Class'}
-          </IonButton>
+              {/* Section */}
+              <div className="admin-input-group">
+                <label className="admin-label">Section (Optional)</label>
+                <div className="input-wrapper">
+                  <IonIcon icon={bookmarkOutline} className="input-icon" />
+                  <IonInput
+                    placeholder="e.g., A, B, Section-1"
+                    value={section}
+                    onIonInput={(e) => setSection(e.detail.value || '')}
+                    maxlength={10}
+                    disabled={loading}
+                    className="custom-admin-input"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="admin-input-group">
+                <label className="admin-label">
+                  Class Access Password <span className="required">*</span>
+                </label>
+                <div className="input-wrapper">
+                  <IonIcon icon={keyOutline} className="input-icon" />
+                  <IonInput
+                    type="password"
+                    placeholder="Min 6 characters"
+                    value={password}
+                    onIonInput={(e) => setPassword(e.detail.value || '')}
+                    disabled={loading}
+                    className="custom-admin-input"
+                  />
+                </div>
+                <span className="admin-hint">
+                  Students and parents use this password for class dashboard authentication.
+                </span>
+              </div>
+
+              {/* Teacher Selector */}
+              <div className="admin-input-group">
+                <label className="admin-label">Class Teacher (Optional)</label>
+                {fetchingTeachers ? (
+                  <div className="teacher-selector-btn loading">
+                    <IonSpinner name="crescent" color="primary" />
+                    <IonText color="medium">Fetching faculty list...</IonText>
+                  </div>
+                ) : selectedTeacher ? (
+                  <div
+                    className="teacher-selector-btn selected"
+                    onClick={() => setShowTeacherPicker(true)}
+                  >
+                    <div className="teacher-avatar">
+                      {selectedTeacher.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="teacher-details">
+                      <span className="teacher-name">{selectedTeacher.name}</span>
+                      <span className="teacher-email">{selectedTeacher.email}</span>
+                    </div>
+                    <IonChip color="primary" className="change-chip">
+                      Change
+                    </IonChip>
+                  </div>
+                ) : (
+                  <div
+                    className="teacher-selector-btn placeholder"
+                    onClick={() => setShowTeacherPicker(true)}
+                  >
+                    <div className="placeholder-content">
+                      <IonIcon icon={personOutline} className="placeholder-icon" />
+                      <span>Assign a Class Teacher...</span>
+                    </div>
+                    <IonIcon icon={chevronForwardOutline} className="arrow-icon" />
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <IonButton
+                expand="block"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="admin-submit-btn"
+              >
+                {loading ? <IonSpinner name="crescent" /> : 'Create Class'}
+              </IonButton>
+
+            </IonCardContent>
+          </IonCard>
         </div>
 
-        {/* Teacher Selection Modal */}
-        <IonModal isOpen={showTeacherPicker} onDidDismiss={() => setShowTeacherPicker(false)}>
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3 className="modal-title">Select Class Teacher</h3>
-              <IonButton fill="clear" onClick={() => setShowTeacherPicker(false)}>
-                <IonIcon icon={closeOutline} slot="icon-only" />
-              </IonButton>
+        {/* Teacher Selection Modal Sheet */}
+        <IonModal
+          isOpen={showTeacherPicker}
+          onDidDismiss={() => setShowTeacherPicker(false)}
+          className="admin-modal-sheet"
+        >
+          <div className="modal-header">
+            <div className="modal-title-box">
+              <h3>Select Class Teacher</h3>
+              <p>Choose an active faculty member</p>
             </div>
+            <IonButton fill="clear" color="medium" onClick={() => setShowTeacherPicker(false)}>
+              <IonIcon icon={closeOutline} slot="icon-only" />
+            </IonButton>
+          </div>
 
-            <div className="search-container">
-              <IonInput
-                placeholder="Search teachers by name or email..."
-                value={searchQuery}
-                onIonInput={(e) => setSearchQuery(e.detail.value || '')}
-              >
-                <IonIcon icon={searchOutline} slot="start" />
-              </IonInput>
-            </div>
+          <div className="modal-search-bar">
+            <IonSearchbar
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onIonInput={(e) => setSearchQuery(e.detail.value || '')}
+              showClearButton="always"
+            />
+          </div>
 
+          <IonContent className="modal-list-content">
             {filteredTeachers.length === 0 ? (
-              <div className="empty-state">
-                <IonText color="medium">No teachers found</IonText>
+              <div className="empty-teacher-state">
+                <IonIcon icon={personOutline} />
+                <p>No teachers matched your search</p>
               </div>
             ) : (
-              <IonList>
+              <IonList lines="none" className="teacher-list">
                 {filteredTeachers.map((teacher) => (
                   <IonItem
                     key={teacher.id}
                     button
                     onClick={() => handleSelectTeacher(teacher)}
-                    className="teacher-item"
+                    className="teacher-list-item"
                   >
-                    <div className="teacher-item-info">
-                      <span className="teacher-item-name">{teacher.name}</span>
-                      <span className="teacher-item-email">{teacher.email}</span>
+                    <IonAvatar slot="start" className="list-avatar">
+                      <div className="avatar-initials">{teacher.name.charAt(0).toUpperCase()}</div>
+                    </IonAvatar>
+                    <div className="item-teacher-info">
+                      <span className="item-name">{teacher.name}</span>
+                      <span className="item-email">{teacher.email}</span>
                     </div>
-                    <IonIcon icon={chevronForwardOutline} className="select-icon" />
+                    {teacherId === teacher.id && (
+                      <IonIcon
+                        icon={checkmarkCircleOutline}
+                        slot="end"
+                        color="primary"
+                        className="check-icon"
+                      />
+                    )}
                   </IonItem>
                 ))}
               </IonList>
             )}
-          </div>
+          </IonContent>
         </IonModal>
 
+        {/* Alerts */}
         <IonAlert
           isOpen={showSuccessAlert}
           onDidDismiss={handleSuccessDismiss}
-          header="Success"
-          message={`Class created successfully!\n\nClass ID: ${generatedClassCode}\n\nShare this ID with students/parents for login.`}
-          buttons={['OK']}
+          header="Class Created Successfully"
+          message={
+            generatedClassCode
+              ? `Generated Class Code: ${generatedClassCode}\n\nShare this code with students/parents for authentication.`
+              : 'Class has been created successfully.'
+          }
+          buttons={[{ text: 'Done', handler: handleSuccessDismiss }]}
         />
 
         <IonAlert
           isOpen={showErrorAlert}
           onDidDismiss={() => setShowErrorAlert(false)}
-          header="Error"
+          header="Error Creating Class"
           message={alertMessage}
-          buttons={['OK']}
+          buttons={['Dismiss']}
         />
       </IonContent>
     </IonPage>

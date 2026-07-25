@@ -1,141 +1,104 @@
-.teacher-detail-content {
-  --background: #f5f5f5;
+.create-teacher-content {
+  --background: #f8fafc !important;
+  background: #f8fafc !important;
 }
 
-/* Header Card */
-.header-card {
-  background-color: #fff;
-  padding: 24px 20px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #eee;
+/* Form Layout Container */
+.form-container {
+  max-width: 600px;
+  margin: 24px auto;
+  padding: 0 16px;
 }
 
-.avatar {
-  width: 70px;
-  height: 70px;
-  background-color: #007AFF;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 32px;
-  font-weight: bold;
-  color: #fff;
+.form-card {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
-.header-info {
-  margin-left: 16px;
-  flex: 1;
-}
-
-.teacher-name {
-  font-size: 22px;
-  font-weight: 700;
-  color: #333;
-  margin: 0 0 4px 0;
-}
-
-.teacher-role {
+.form-header-text {
   font-size: 14px;
-  color: #666;
-  text-transform: uppercase;
-  font-weight: 600;
-  margin: 0;
+  color: #64748b;
+  margin-top: 0;
+  margin-bottom: 24px;
+  line-height: 1.5;
 }
 
-/* Sections */
-.section {
-  padding: 20px;
+/* Input Fields Wrapper */
+.form-group {
+  margin-bottom: 20px;
 }
 
-.section-title {
-  font-size: 14px;
+.form-label {
+  display: block;
+  font-size: 13px;
   font-weight: 600;
-  color: #666;
+  color: #1e293b;
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0 0 12px 0;
 }
 
-.info-card {
-  margin: 0;
-  border-radius: 12px;
+.form-label .required {
+  color: #ef4444;
 }
 
-IonCardContent {
-  padding: 16px;
+/* Ionic Input / Select Modern Style Overrides */
+.admin-input,
+.admin-select {
+  --background: #f8fafc !important;
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  --padding-start: 14px !important;
+  --padding-end: 14px !important;
+  --border-radius: 10px !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  transition: all 0.2s ease;
 }
 
-.info-row {
+.admin-input:focus-within,
+.admin-select:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* Action Buttons Grid */
+.button-group {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-}
-
-.info-row:first-child {
-  padding-top: 0;
-}
-
-.info-row:last-child {
-  padding-bottom: 0;
-}
-
-.info-label {
-  font-size: 14px;
-  color: #666;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.info-value {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
-}
-
-/* Metrics */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  justify-content: flex-end;
   gap: 12px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
 }
 
-.metric-card {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
+.button-group ion-button {
+  margin: 0;
+  --border-radius: 10px;
+  font-weight: 600;
+  height: 44px;
+  min-width: 120px;
 }
 
-.metric-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #007AFF;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.metric-label {
-  font-size: 12px;
-  color: #666;
-  display: block;
-}
-
-/* Actions */
-.actions-section {
-  padding: 20px;
-  padding-bottom: 40px;
-}
-
-/* Error Container */
-.error-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 24px;
-  text-align: center;
-  gap: 16px;
+/* Mobile Responsiveness */
+@media (max-width: 576px) {
+  .form-container {
+    margin: 12px auto;
+    padding: 0 12px;
+  }
+  
+  .form-card {
+    padding: 16px;
+  }
+  
+  .button-group {
+    flex-direction: column-reverse;
+  }
+  
+  .button-group ion-button {
+    width: 100%;
+  }
 }

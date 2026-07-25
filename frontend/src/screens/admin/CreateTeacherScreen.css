@@ -1,45 +1,204 @@
-.create-teacher-content {
-  --background: #f5f5f5;
+/* ==========================================
+   1. NAVBAR / HEADER STYLES (Fixes Contrast)
+   ========================================== */
+
+/* Header Background */
+ion-header.admin-header,
+.admin-toolbar {
+  --background: #1e293b !important; /* Dark Slate Blue Background */
+  --border-color: #334155 !important;
+  color: #ffffff !important;
 }
 
-.form-container {
-  padding: 20px;
+/* Title Styling */
+ion-toolbar ion-title,
+.admin-toolbar ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  letter-spacing: 0.3px;
+}
+
+/* Back Button & Icon Visibility */
+ion-toolbar ion-back-button,
+.admin-toolbar ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* ==========================================
+   2. CONTENT & CARD LAYOUT STYLES
+   ========================================== */
+
+/* Screen Background */
+.admin-teacher-content,
+.create-teacher-content {
+  --background: #f1f5f9 !important;
+  background: #f1f5f9 !important;
+}
+
+/* Centered Layout Wrapper */
+.admin-form-container,
+.form-container,
+.form-wrapper {
+  max-width: 800px;
+  margin: 28px auto;
+  padding: 0 16px;
+}
+
+/* Main Form Card */
+.admin-card,
+.form-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+}
+
+.admin-card-header {
+  padding: 24px 28px 12px 28px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.admin-card-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .description {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 24px;
-  line-height: 20px;
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0 0 18px 0;
+  line-height: 1.5;
 }
 
+.admin-card-body {
+  padding: 20px 28px;
+}
+
+/* ==========================================
+   3. INPUT & FORM CONTROLS
+   ========================================== */
+
 .input-group {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  padding: 0 6px;
 }
 
 .input-label {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-label .required {
+  color: #ef4444;
+}
+
+/* Custom Ionic Input Override */
+ion-input.admin-input {
+  --background: #f8fafc !important;
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  --padding-start: 14px !important;
+  --padding-end: 14px !important;
+  --padding-top: 10px !important;
+  --padding-bottom: 10px !important;
+  --border-radius: 8px !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+ion-input.admin-input.has-focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Custom Ionic Select Override */
+ion-select.admin-select {
+  --background: #f8fafc !important;
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  --padding-start: 14px !important;
+  --padding-end: 14px !important;
+  --padding-top: 10px !important;
+  --padding-bottom: 10px !important;
+  --border-radius: 8px !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  width: 100%;
 }
 
 .picker-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background-color: #f5f5f5;
+  gap: 10px;
+  padding: 10px 14px;
+  background-color: #f8fafc;
   border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
 }
 
-.class-select {
-  width: 100%;
-}
+/* ==========================================
+   4. BUTTONS & RESPONSIVENESS
+   ========================================== */
 
 .button-row {
   display: flex;
+  justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
+  padding: 16px 28px;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.button-row ion-button {
+  margin: 0;
+  --border-radius: 8px !important;
+  font-weight: 600 !important;
+  height: 42px !important;
+  min-width: 120px;
+}
+
+.button-row ion-button.submit-btn {
+  --box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* Mobile Screens Optimization */
+@media (max-width: 576px) {
+  .admin-form-container,
+  .form-container {
+    margin: 12px auto;
+    padding: 0 8px;
+  }
+
+  .admin-card-header,
+  .admin-card-body,
+  .button-row {
+    padding: 16px;
+  }
+
+  .input-group {
+    padding: 0;
+  }
+
+  .button-row {
+    flex-direction: column-reverse;
+  }
+
+  .button-row ion-button {
+    width: 100%;
+  }
 }

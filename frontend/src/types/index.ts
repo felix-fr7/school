@@ -213,6 +213,7 @@ export interface ExamSchedule {
   roomNo?: string;
   classId: string;
   tenantId: string;
+  fileUrl?: string;
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;

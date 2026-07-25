@@ -46,10 +46,21 @@ const EditTeacherScreen: React.FC = () => {
   const [alertCallback, setAlertCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => {
+    // If teacherId is 'create', redirect to the create teacher page
+    if (teacherId === 'create') {
+      history.push('/admin/teachers/create');
+      return;
+    }
+    
     fetchData();
   }, [teacherId]);
 
   const fetchData = async () => {
+    // Skip fetching if teacherId is 'create' (handled by redirect above)
+    if (teacherId === 'create') {
+      return;
+    }
+    
     try {
       setLoading(true);
       const [teacherRes, classesRes] = await Promise.all([

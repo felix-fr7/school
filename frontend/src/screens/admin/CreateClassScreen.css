@@ -1,137 +1,322 @@
+/* Custom Styling for Admin Create Class Screen */
+
 .create-class-content {
-  --background: #f5f5f5;
+  --background: #f8fafc;
 }
 
-.form-container {
-  padding: 20px;
+.admin-container {
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.description {
-  font-size: 14px;
-  margin-bottom: 24px;
-  line-height: 20px;
+/* Header & Banner Styles */
+.admin-header ion-toolbar {
+  --background: #ffffff;
+  --border-color: #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
-.input-group {
+.admin-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.banner-card {
+  margin: 0 0 16px 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+}
+
+.banner-icon-box {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #ffffff;
+}
+
+.banner-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+  color: #ffffff;
+}
+
+.banner-subtitle {
+  font-size: 12px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Admin Form Card */
+.admin-form-card {
+  margin: 0;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+}
+
+.admin-input-group {
   margin-bottom: 20px;
 }
 
-.input-label {
+.admin-label {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
+  color: #334155;
+  margin-bottom: 6px;
 }
 
-.hint-text {
-  font-size: 12px;
-  margin-top: 6px;
-  font-style: italic;
+.admin-label .required {
+  color: #ef4444;
 }
 
-.teacher-picker-button {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px;
+.input-wrapper {
+  position: relative;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  transition: all 0.2s ease;
 }
 
-.selected-teacher {
-  flex: 1;
+.input-wrapper:focus-within {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-.selected-teacher-name {
-  font-size: 16px;
-  color: #333;
-  font-weight: 500;
+.input-icon {
+  font-size: 18px;
+  color: #64748b;
+  margin-left: 12px;
 }
 
-.selected-teacher-email {
-  font-size: 12px;
-  color: #666;
-  margin-top: 2px;
-}
-
-.change-text {
+.custom-admin-input {
+  --padding-start: 10px;
+  --padding-end: 12px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
   font-size: 14px;
-  color: #007AFF;
-  font-weight: 500;
+  color: #0f172a;
+  width: 100%;
 }
 
-.dropdown-icon {
-  font-size: 12px;
-  color: #999;
+.admin-hint {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 5px;
 }
 
-.submit-button {
-  margin-top: 24px;
+/* Teacher Picker Custom Button */
+.teacher-selector-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 52px;
 }
 
-/* Modal Styles */
-.modal-container {
-  height: 100%;
+.teacher-selector-btn:active {
+  transform: scale(0.99);
+}
+
+.teacher-selector-btn.placeholder {
+  color: #64748b;
+}
+
+.placeholder-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.placeholder-icon {
+  font-size: 20px;
+  color: #94a3b8;
+}
+
+.arrow-icon {
+  font-size: 16px;
+  color: #94a3b8;
+}
+
+.teacher-selector-btn.selected {
+  background: #ffffff;
+  border-color: #3b82f6;
+}
+
+.teacher-avatar {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.teacher-details {
+  flex: 1;
+  margin-left: 12px;
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+}
+
+.teacher-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.teacher-email {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.change-chip {
+  height: 24px;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.teacher-selector-btn.loading {
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+/* Submit Button */
+.admin-submit-btn {
+  margin-top: 28px;
+  --border-radius: 10px;
+  --background: #2563eb;
+  --background-hover: #1d4ed8;
+  --box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+  font-weight: 600;
+  height: 48px;
+  font-size: 15px;
+}
+
+/* Modal Sheet Styling */
+.admin-modal-sheet {
+  --border-radius: 20px 20px 0 0;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #eee;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-.modal-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #333;
+.modal-title-box h3 {
   margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-.search-container {
-  padding: 16px;
-}
-
-.empty-state {
-  padding: 40px;
-  text-align: center;
-}
-
-.teacher-item {
-  --inner-padding-end: 0;
-  --padding-top: 0;
-  --padding-bottom: 0;
-  --padding-start: 0;
-  --padding-end: 0;
-}
-
-.teacher-item-info {
-  flex: 1;
-  padding: 16px;
-}
-
-.teacher-item-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.teacher-item-email {
+.modal-title-box p {
+  margin: 2px 0 0 0;
   font-size: 12px;
-  color: #666;
+  color: #64748b;
 }
 
-.select-icon {
-  font-size: 18px;
-  color: #007AFF;
-  padding-right: 16px;
+.modal-search-bar {
+  padding: 8px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-list-content {
+  --background: #ffffff;
+}
+
+.teacher-list-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 8px;
+  margin-bottom: 4px;
+  border-radius: 12px;
+}
+
+.list-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.avatar-initials {
+  width: 100%;
+  height: 100%;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 50%;
+}
+
+.item-teacher-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.item-email {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.check-icon {
+  font-size: 20px;
+}
+
+.empty-teacher-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.empty-teacher-state ion-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
 }

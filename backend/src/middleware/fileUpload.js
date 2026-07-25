@@ -39,6 +39,24 @@ const csvFileFilter = (req, file, cb) => {
   }
 };
 
+// File filter - allow exam schedule uploads (PDF, Images only)
+const examScheduleFileFilter = (req, file, cb) => {
+  const allowedMimes = [
+    // Images
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    // PDF
+    'application/pdf',
+  ];
+
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('File type not allowed. Allowed types: PDF, Images (JPG, PNG, WebP)'), false);
+  }
+};
+
 // File filter - allow lesson attachments (PDF, Images, Documents)
 const lessonFileFilter = (req, file, cb) => {
   const allowedMimes = [
@@ -68,6 +86,16 @@ const upload = multer({
   fileFilter: csvFileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1,
+  },
+});
+
+// Configure multer for exam schedule uploads
+const uploadExamSchedule = multer({
+  storage,
+  fileFilter: examScheduleFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for exam schedules
     files: 1,
   },
 });
@@ -111,4 +139,4 @@ const handleFileUploadError = (err, req, res, next) => {
   next();
 };
 
-module.exports = { upload, uploadLesson, handleFileUploadError };
+module.exports = { upload, uploadLesson, uploadExamSchedule, handleFileUploadError };

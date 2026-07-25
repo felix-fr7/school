@@ -1,0 +1,701 @@
+/* ============================================
+   Admin Portal Design System
+   Unified CSS Variables and Component Styles
+   ============================================ */
+
+/* ============================================
+   CSS Variables - Design Tokens
+   ============================================ */
+:root {
+  /* Primary Colors */
+  --admin-primary: #2563EB;
+  --admin-primary-hover: #1D4ED8;
+  --admin-primary-light: #EFF6FF;
+  --admin-primary-lighter: #DBEAFE;
+  --admin-primary-border: #BFDBFE;
+
+  /* Danger Colors */
+  --admin-danger: #EF4444;
+  --admin-danger-hover: #DC2626;
+  --admin-danger-light: #FEF2F2;
+  --admin-danger-lighter: #FEE2E2;
+
+  /* Success Colors */
+  --admin-success: #10B981;
+  --admin-success-light: #ECFDF5;
+  --admin-success-lighter: #D1FAE5;
+
+  /* Warning Colors */
+  --admin-warning: #F59E0B;
+  --admin-warning-light: #FFFBEB;
+  --admin-warning-lighter: #FEF3C7;
+
+  /* Neutral Colors */
+  --admin-white: #FFFFFF;
+  --admin-bg: #F1F5F9;
+  --admin-bg-light: #F8FAFC;
+  --admin-border: #E2E8F0;
+  --admin-border-light: #CBD5E1;
+
+  /* Text Colors */
+  --admin-text-primary: #0F172A;
+  --admin-text-secondary: #475569;
+  --admin-text-muted: #64748B;
+  --admin-text-placeholder: #94A3B8;
+  --admin-text-disabled: #CBD5E1;
+
+  /* Shadows */
+  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --admin-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02);
+  --admin-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 8px 16px rgba(0, 0, 0, 0.03);
+  --admin-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+  --admin-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.1);
+
+  /* Border Radius */
+  --admin-radius-sm: 6px;
+  --admin-radius: 10px;
+  --admin-radius-md: 12px;
+  --admin-radius-lg: 14px;
+  --admin-radius-xl: 16px;
+  --admin-radius-full: 9999px;
+
+  /* Spacing */
+  --admin-spacing-xs: 4px;
+  --admin-spacing-sm: 8px;
+  --admin-spacing-md: 12px;
+  --admin-spacing-lg: 16px;
+  --admin-spacing-xl: 20px;
+  --admin-spacing-2xl: 24px;
+  --admin-spacing-3xl: 32px;
+
+  /* Typography */
+  --admin-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --admin-text-xs: 11px;
+  --admin-text-sm: 12px;
+  --admin-text-base: 14px;
+  --admin-text-lg: 15px;
+  --admin-text-xl: 16px;
+  --admin-text-2xl: 18px;
+  --admin-text-3xl: 22px;
+  --admin-text-4xl: 28px;
+
+  /* Transitions */
+  --admin-transition: all 0.2s ease-in-out;
+  --admin-transition-fast: all 0.15s ease;
+  --admin-transition-slow: all 0.3s ease;
+}
+
+/* ============================================
+   Base Admin Content Styles
+   ============================================ */
+.admin-content-base {
+  --background: var(--admin-bg);
+}
+
+/* ============================================
+   Admin Header Toolbar
+   ============================================ */
+.admin-header-toolbar {
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-header-toolbar ion-toolbar {
+  --background: var(--admin-white);
+  --border-color: transparent;
+}
+
+.admin-page-title {
+  font-weight: 600;
+  font-size: var(--admin-text-2xl);
+  color: var(--admin-text-primary);
+}
+
+.admin-header-badge {
+  font-size: var(--admin-text-sm);
+  padding: 4px 12px;
+  border-radius: var(--admin-radius-full);
+  margin-right: var(--admin-spacing-sm);
+  font-weight: 500;
+}
+
+/* ============================================
+   Admin Container
+   ============================================ */
+.admin-container-base {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--admin-spacing-2xl) var(--admin-spacing-xl);
+}
+
+/* ============================================
+   Page Header
+   ============================================ */
+.admin-page-header {
+  margin-bottom: var(--admin-spacing-3xl);
+  padding-bottom: var(--admin-spacing-xl);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-page-title-main {
+  font-size: var(--admin-text-4xl);
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  margin: 0 0 var(--admin-spacing-sm) 0;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.admin-page-subtitle {
+  font-size: var(--admin-text-base);
+  color: var(--admin-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ============================================
+   Admin Cards
+   ============================================ */
+.admin-card-base {
+  background: var(--admin-white);
+  border-radius: var(--admin-radius-xl);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow);
+  margin-bottom: 0;
+  overflow: hidden;
+  transition: var(--admin-transition);
+}
+
+.admin-card-base:hover {
+  box-shadow: var(--admin-shadow-md);
+}
+
+.admin-card-header-base {
+  border-bottom: 1px solid var(--admin-bg-light);
+  padding: var(--admin-spacing-xl) var(--admin-spacing-2xl);
+  background: var(--admin-bg-light);
+}
+
+.admin-card-title-base {
+  font-size: var(--admin-text-xl);
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--admin-spacing-sm);
+  margin: 0;
+}
+
+.admin-card-title-base ion-icon {
+  font-size: 20px;
+  color: var(--admin-primary);
+}
+
+.admin-count-badge {
+  margin-left: auto;
+  border-radius: var(--admin-radius-full);
+  padding: 4px 12px;
+  font-size: var(--admin-text-sm);
+  font-weight: 500;
+}
+
+.admin-card-content-base {
+  padding: var(--admin-spacing-2xl);
+}
+
+/* ============================================
+   Form Elements
+   ============================================ */
+.admin-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-spacing-xl);
+}
+
+.admin-input-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-field-label {
+  font-size: var(--admin-text-sm);
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  margin-bottom: var(--admin-spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-input-item {
+  --background: var(--admin-bg-light);
+  --border-radius: var(--admin-radius);
+  --padding-start: 14px;
+  border: 1px solid var(--admin-border-light);
+  border-radius: var(--admin-radius);
+  transition: var(--admin-transition);
+}
+
+.admin-input-item:focus-within {
+  border-color: var(--admin-primary);
+  box-shadow: var(--admin-shadow-focus);
+}
+
+.admin-text-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: var(--admin-text-base);
+  font-family: var(--admin-font-sans);
+  color: var(--admin-text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.admin-text-input::placeholder {
+  color: var(--admin-text-placeholder);
+}
+
+/* ============================================
+   File Upload Dropzone
+   ============================================ */
+.admin-dropzone {
+  border: 2px dashed var(--admin-primary-border);
+  background: linear-gradient(135deg, var(--admin-primary-light) 0%, var(--admin-primary-lighter) 100%);
+  border-radius: var(--admin-radius-lg);
+  padding: var(--admin-spacing-3xl) var(--admin-spacing-xl);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--admin-transition);
+}
+
+.admin-dropzone:hover {
+  background: linear-gradient(135deg, var(--admin-primary-lighter) 0%, var(--admin-primary-border) 100%);
+  border-color: var(--admin-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+}
+
+.admin-dropzone-icon {
+  font-size: 42px;
+  color: var(--admin-primary);
+  margin-bottom: var(--admin-spacing-md);
+}
+
+.admin-dropzone-text {
+  font-size: var(--admin-text-lg);
+  color: var(--admin-text-primary);
+  margin: 0 0 var(--admin-spacing-xs) 0;
+}
+
+.admin-dropzone-hint {
+  font-size: var(--admin-text-sm);
+  color: var(--admin-text-muted);
+}
+
+/* ============================================
+   File Preview Card
+   ============================================ */
+.admin-file-preview {
+  background: var(--admin-bg-light);
+  border: 1px solid var(--admin-border-light);
+  border-radius: var(--admin-radius-md);
+  padding: var(--admin-spacing-lg);
+}
+
+.admin-file-info-row {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-spacing-md);
+}
+
+.admin-file-icon {
+  font-size: 28px;
+  color: var(--admin-primary);
+}
+
+.admin-file-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-file-name {
+  font-size: var(--admin-text-base);
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-file-size {
+  font-size: var(--admin-text-sm);
+  color: var(--admin-text-muted);
+}
+
+.admin-file-remove-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.admin-file-remove-btn ion-icon {
+  font-size: 24px;
+  color: var(--admin-danger);
+  transition: var(--admin-transition);
+}
+
+.admin-file-remove-btn:hover ion-icon {
+  transform: scale(1.1);
+}
+
+/* ============================================
+   Info Box
+   ============================================ */
+.admin-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--admin-spacing-sm);
+  background: var(--admin-primary-light);
+  border: 1px solid var(--admin-primary-border);
+  border-radius: var(--admin-radius-md);
+  padding: var(--admin-spacing-md) var(--admin-spacing-lg);
+  color: #1E40AF;
+  font-size: var(--admin-text-sm);
+  line-height: 1.5;
+}
+
+.admin-info-box ion-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ============================================
+   Primary Button
+   ============================================ */
+.admin-primary-btn {
+  --background: var(--admin-primary);
+  --border-radius: var(--admin-radius);
+  font-weight: 600;
+  height: 48px;
+  margin: 0;
+  font-size: var(--admin-text-base);
+  letter-spacing: 0.3px;
+  transition: var(--admin-transition);
+}
+
+.admin-primary-btn:hover {
+  --background: var(--admin-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.admin-primary-btn:disabled {
+  opacity: 0.6;
+  transform: none;
+}
+
+/* ============================================
+   Data List / Card Grid
+   ============================================ */
+.admin-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-spacing-lg);
+}
+
+/* ============================================
+   Data Card Item
+   ============================================ */
+.admin-data-card {
+  display: flex;
+  background: var(--admin-white);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg);
+  overflow: hidden;
+  transition: var(--admin-transition);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-data-card:hover {
+  border-color: var(--admin-primary-border);
+  box-shadow: var(--admin-shadow);
+  transform: translateY(-2px);
+}
+
+.admin-data-preview {
+  width: 120px;
+  min-height: 100px;
+  background: var(--admin-bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-right: 1px solid var(--admin-border);
+}
+
+.admin-data-content {
+  flex: 1;
+  padding: var(--admin-spacing-lg) var(--admin-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.admin-data-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--admin-spacing-md);
+  margin-bottom: var(--admin-spacing-sm);
+}
+
+.admin-data-title {
+  font-size: var(--admin-text-lg);
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.admin-data-badge {
+  font-size: var(--admin-text-xs);
+  padding: 4px 10px;
+  border-radius: var(--admin-radius-full);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.admin-data-badge ion-icon {
+  font-size: 12px;
+}
+
+.admin-data-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--admin-spacing-md);
+}
+
+.admin-meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-spacing-xs);
+  font-size: var(--admin-text-sm);
+  color: var(--admin-text-muted);
+}
+
+.admin-meta-item ion-icon {
+  font-size: 14px;
+  color: var(--admin-text-placeholder);
+}
+
+.admin-data-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-spacing-xs);
+  padding: var(--admin-spacing-lg);
+  border-left: 1px solid var(--admin-border);
+  background: var(--admin-bg-light);
+}
+
+.admin-action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--admin-radius);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--admin-transition);
+}
+
+.admin-action-btn ion-icon {
+  font-size: 18px;
+}
+
+.admin-action-btn.edit-btn {
+  background: var(--admin-primary-light);
+  color: var(--admin-primary);
+}
+
+.admin-action-btn.edit-btn:hover {
+  background: var(--admin-primary-lighter);
+  transform: scale(1.05);
+}
+
+.admin-action-btn.delete-btn {
+  background: var(--admin-danger-light);
+  color: var(--admin-danger);
+}
+
+.admin-action-btn.delete-btn:hover {
+  background: var(--admin-danger-lighter);
+  transform: scale(1.05);
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.admin-empty-state {
+  text-align: center;
+  padding: var(--admin-spacing-3xl) * 2 var(--admin-spacing-xl);
+}
+
+.admin-empty-icon {
+  font-size: 56px;
+  color: var(--admin-text-disabled);
+  margin-bottom: var(--admin-spacing-lg);
+}
+
+.admin-empty-state h4 {
+  font-size: var(--admin-text-2xl);
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  margin: 0 0 var(--admin-spacing-sm) 0;
+}
+
+.admin-empty-state p {
+  font-size: var(--admin-text-base);
+  color: var(--admin-text-muted);
+  margin: 0;
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+.admin-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: var(--admin-spacing-lg);
+}
+
+.admin-loading p {
+  font-size: var(--admin-text-base);
+  color: var(--admin-text-muted);
+}
+
+/* ============================================
+   Modal Styles
+   ============================================ */
+.admin-modal {
+  --background: rgba(0, 0, 0, 0.5);
+}
+
+.admin-modal-container {
+  background: var(--admin-white);
+  border-radius: var(--admin-radius-xl);
+  margin: auto;
+  max-width: 480px;
+  overflow: hidden;
+  box-shadow: var(--admin-shadow-lg);
+}
+
+.admin-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--admin-spacing-xl) var(--admin-spacing-2xl);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-modal-header h2 {
+  font-size: var(--admin-text-2xl);
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0;
+}
+
+.admin-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-modal-close ion-icon {
+  font-size: 24px;
+  color: var(--admin-text-muted);
+  transition: var(--admin-transition);
+}
+
+.admin-modal-close:hover ion-icon {
+  color: var(--admin-danger);
+}
+
+.admin-modal-content {
+  padding: var(--admin-spacing-2xl);
+}
+
+.admin-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--admin-spacing-md);
+  padding: var(--admin-spacing-lg) var(--admin-spacing-2xl);
+  border-top: 1px solid var(--admin-border);
+  background: var(--admin-bg-light);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 991px) {
+  .admin-data-card {
+    flex-direction: column;
+  }
+
+  .admin-data-preview {
+    width: 100%;
+    min-height: 80px;
+    border-right: none;
+    border-bottom: 1px solid var(--admin-border);
+  }
+
+  .admin-data-actions {
+    border-left: none;
+    border-top: 1px solid var(--admin-border);
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 575px) {
+  .admin-container-base {
+    padding: var(--admin-spacing-lg) var(--admin-spacing-md);
+  }
+
+  .admin-page-title-main {
+    font-size: var(--admin-text-3xl);
+  }
+
+  .admin-card-content-base {
+    padding: var(--admin-spacing-lg);
+  }
+
+  .admin-data-content {
+    padding: var(--admin-spacing-md) var(--admin-spacing-lg);
+  }
+
+  .admin-data-header {
+    flex-direction: column;
+    gap: var(--admin-spacing-sm);
+  }
+
+  .admin-data-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--admin-spacing-sm);
+  }
+}

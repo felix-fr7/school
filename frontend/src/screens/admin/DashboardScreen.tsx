@@ -1,6 +1,5 @@
 /**
- * Admin Dashboard Screen (Premium UI Version)
- * Main dashboard for School Admin - Redesigned with modern, premium aesthetics
+ * Admin Dashboard Screen (Pure Modern Light Theme)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -9,19 +8,13 @@ import {
   IonContent,
   IonHeader,
   IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonButton,
-  IonIcon,
-  IonBadge,
   IonGrid,
   IonRow,
   IonCol,
-  IonCard,
-  IonCardContent,
   IonSpinner,
   IonRefresher,
   IonRefresherContent,
+  IonIcon,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import {
@@ -36,7 +29,9 @@ import {
   logOutOutline,
   refreshOutline,
   schoolOutline,
-  timeOutline,
+  addCircleOutline,
+  sparklesOutline,
+  pulseOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -49,7 +44,7 @@ interface MenuItem {
   icon: any;
   route: string;
   count?: number;
-  color: string;
+  gradient: string;
 }
 
 const AdminDashboardScreen: React.FC = () => {
@@ -62,7 +57,6 @@ const AdminDashboardScreen: React.FC = () => {
     totalNews: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
@@ -83,7 +77,6 @@ const AdminDashboardScreen: React.FC = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -92,7 +85,6 @@ const AdminDashboardScreen: React.FC = () => {
   }, []);
 
   const onRefresh = async (event: CustomEvent) => {
-    setRefreshing(true);
     await fetchDashboardData();
     event.detail.complete();
   };
@@ -110,7 +102,7 @@ const AdminDashboardScreen: React.FC = () => {
       icon: bookOutline, 
       route: '/admin/classes', 
       count: stats.totalClasses,
-      color: 'primary'
+      gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
     },
     { 
       id: '2', 
@@ -118,7 +110,7 @@ const AdminDashboardScreen: React.FC = () => {
       subtitle: 'Faculty management',
       icon: personOutline, 
       route: '/admin/teachers',
-      color: 'secondary'
+      gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
     },
     { 
       id: '3', 
@@ -127,7 +119,7 @@ const AdminDashboardScreen: React.FC = () => {
       icon: peopleOutline, 
       route: '/admin/students', 
       count: stats.totalStudents,
-      color: 'tertiary'
+      gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
     },
     { 
       id: '4', 
@@ -136,15 +128,7 @@ const AdminDashboardScreen: React.FC = () => {
       icon: documentTextOutline, 
       route: '/admin/homework', 
       count: stats.totalHomework,
-      color: 'success'
-    },
-    { 
-      id: '5', 
-      title: 'Marks', 
-      subtitle: 'Grades & analytics',
-      icon: statsChartOutline, 
-      route: '/admin/marks',
-      color: 'warning'
+      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
     },
     { 
       id: '6', 
@@ -153,7 +137,7 @@ const AdminDashboardScreen: React.FC = () => {
       icon: newspaperOutline, 
       route: '/admin/admin-news', 
       count: stats.totalNews,
-      color: 'danger'
+      gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)'
     },
     { 
       id: '7', 
@@ -161,7 +145,7 @@ const AdminDashboardScreen: React.FC = () => {
       subtitle: 'Official communications',
       icon: clipboardOutline, 
       route: '/admin/admin-circulars',
-      color: 'light'
+      gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
     },
     { 
       id: '8', 
@@ -169,17 +153,17 @@ const AdminDashboardScreen: React.FC = () => {
       subtitle: 'Schedule & management',
       icon: calendarOutline, 
       route: '/admin/admin-exams',
-      color: 'dark'
+      gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
     },
   ];
 
   if (loading) {
     return (
       <IonPage>
-        <IonContent className="admin-dashboard-loading ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
-          <div className="loading-container">
-            <IonSpinner name="crescent" />
-            <p className="loading-text">Loading dashboard...</p>
+        <IonContent className="pure-light-dashboard-content ion-padding ion-text-center">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '16px' }}>
+            <IonSpinner name="crescent" color="primary" />
+            <p style={{ color: '#64748b', fontWeight: 600 }}>Loading Dashboard...</p>
           </div>
         </IonContent>
       </IonPage>
@@ -188,111 +172,126 @@ const AdminDashboardScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar className="premium-toolbar">
-          <IonTitle>Admin Dashboard</IonTitle>
-          <IonButton 
-            slot="end"
-            fill="clear" 
-            onClick={handleLogout} 
-            className="logout-button"
-            color="danger"
-            aria-label="Logout"
-            style={{ fontWeight: 'bold', textTransform: 'none' }}
-          >
-            <IonIcon icon={logOutOutline} slot="start" />
-            Logout
-          </IonButton>
+      {/* SaaS Glass Floating Nav Header */}
+      <IonHeader className="ultra-light-nav-header">
+        <IonToolbar className="ultra-light-nav-toolbar">
+          <div className="light-nav-pill">
+            <div className="nav-brand">
+              <div className="brand-logo-light">
+                <IonIcon icon={schoolOutline} />
+              </div>
+              <div className="brand-text-container">
+                <span className="brand-title-light">ADMIN PORTAL</span>
+                <span className="brand-badge-light">
+                  <span className="mini-pulse-dot"></span>
+                  School Console
+                </span>
+              </div>
+            </div>
+
+            <div className="nav-user-actions">
+              <div className="admin-chip-light">
+                <div className="avatar-ring-light">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                </div>
+                <span className="admin-name-light">{user?.name || 'Administrator'}</span>
+              </div>
+
+              <button className="nextgen-logout-btn-light" onClick={handleLogout}>
+                <IonIcon icon={logOutOutline} />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="admin-dashboard">
+      <IonContent className="pure-light-dashboard-content">
         <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
           <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
         </IonRefresher>
 
-        {/* Profile Summary Banner */}
-        <div className="profile-banner">
-          <div className="profile-icon-wrapper">
-            <IonIcon icon={schoolOutline} className="profile-icon" />
-          </div>
-          <div className="profile-info">
-            <h2 className="welcome-text">Welcome, {user?.name}</h2>
-            <p className="role-text">School Administrator</p>
-          </div>
-          <div className="profile-stats">
-            <div className="stat-item">
-              <span className="stat-value">{stats.totalClasses}</span>
-              <span className="stat-label">Classes</span>
+        <div className="dashboard-wrapper">
+          {/* Light Hero Banner */}
+          <div className="light-hero-card">
+            <div className="hero-bg-shapes"></div>
+            <div className="hero-left-content">
+              <div className="live-status-pill-light">
+                <span className="green-dot-pulse-light"></span>
+                SYSTEM OPERATIONAL
+              </div>
+              <h1 className="hero-title-light">Welcome back, {user?.name || 'Administrator'}</h1>
+              <p className="hero-subtitle-light">Manage school classes, faculty, and academic records easily.</p>
             </div>
-            <div className="stat-item">
-              <span className="stat-value">{stats.totalStudents}</span>
-              <span className="stat-label">Students</span>
+
+            <div className="hero-stats-group">
+              <div className="light-stat-box">
+                <span className="stat-number-light">{stats.totalClasses}</span>
+                <span className="stat-label-light">Classes</span>
+              </div>
+              <div className="light-stat-box">
+                <span className="stat-number-light">{stats.totalStudents}</span>
+                <span className="stat-label-light">Students</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Quick Actions Grid */}
-        <div className="quick-actions">
-          <IonButton fill="outline" className="quick-action-btn" onClick={() => history.push('/admin/teachers/create')}>
-            <IonIcon icon={personOutline} slot="start" />
-            Add Teacher
-          </IonButton>
-          <IonButton fill="outline" className="quick-action-btn" onClick={() => history.push('/admin/students/create')}>
-            <IonIcon icon={peopleOutline} slot="start" />
-            Add Student
-          </IonButton>
-          <IonButton fill="outline" className="quick-action-btn" onClick={() => history.push('/admin/classes/create')}>
-            <IonIcon icon={bookOutline} slot="start" />
-            Create Class
-          </IonButton>
-        </div>
+          {/* Quick Actions */}
+          <div className="section-title-light">
+            <IonIcon icon={sparklesOutline} />
+            QUICK ACTIONS
+          </div>
+          <div className="quick-actions-grid">
+            <button className="quick-btn-light" onClick={() => history.push('/admin/teachers/create')}>
+              <IonIcon icon={addCircleOutline} className="btn-icon-light" />
+              Add Teacher
+            </button>
+            <button className="quick-btn-light" onClick={() => history.push('/admin/classes/create')}>
+              <IonIcon icon={addCircleOutline} className="btn-icon-light" />
+              Create Class
+            </button>
+          </div>
 
-        {/* Menu Grid */}
-        <IonGrid className="menu-grid-container">
-          <IonRow>
-            {menuItems.map((item) => (
-              <IonCol size="12" size-md="6" size-lg="3" key={item.id}>
-                <IonCard 
-                  className={`menu-item menu-item-${item.color}`}
-                  onClick={() => history.push(item.route)}
-                >
-                  <IonCardContent>
-                    <div className="menu-item-content">
-                      <div className="menu-icon-wrapper">
-                        <IonIcon icon={item.icon} className="menu-icon" />
-                        {item.count !== undefined && item.count > 0 && (
-                          <span className="count-badge">{item.count}</span>
-                        )}
+          {/* Modules Grid */}
+          <div className="section-title-light">
+            <IonIcon icon={pulseOutline} />
+            ACADEMIC MODULES
+          </div>
+          <IonGrid className="academic-modules-grid">
+            <IonRow>
+              {menuItems.map((item) => (
+                <IonCol size="12" size-md="6" size-lg="3" key={item.id} className="module-col-wrapper">
+                  <div 
+                    className="light-menu-card-item"
+                    onClick={() => history.push(item.route)}
+                  >
+                    <div className="card-header-flex">
+                      <div className="icon-orb-light" style={{ background: item.gradient }}>
+                        <IonIcon icon={item.icon} />
                       </div>
-                      <div className="menu-text">
-                        <h3 className="menu-title">{item.title}</h3>
-                        <p className="menu-subtitle">{item.subtitle}</p>
-                      </div>
+                      {item.count !== undefined && item.count > 0 && (
+                        <span className="count-pill-light">{item.count}</span>
+                      )}
                     </div>
-                  </IonCardContent>
-                </IonCard>
-              </IonCol>
-            ))}
-          </IonRow>
-        </IonGrid>
+                    <div>
+                      <h3 className="card-title-light">{item.title}</h3>
+                      <p className="card-sub-light">{item.subtitle}</p>
+                    </div>
+                  </div>
+                </IonCol>
+              ))}
+            </IonRow>
+          </IonGrid>
 
-        {/* Recent Activity Section */}
-        <div className="recent-section">
-          <h3 className="section-title">Recent Activity</h3>
-          <div className="activity-cards">
-            <IonCard className="activity-card">
-              <IonCardContent>
-                <div className="activity-icon">
-                  <IonIcon icon={timeOutline} />
-                </div>
-                <div className="activity-content">
-                  <h4>System Status</h4>
-                  <p>All systems operational</p>
-                  <span className="activity-time">Last updated: {new Date().toLocaleTimeString()}</span>
-                </div>
-              </IonCardContent>
-            </IonCard>
+          {/* System Status Bar */}
+          <div className="status-light-bar">
+            <div className="status-left">
+              <span className="green-dot-pulse-light"></span>
+              <div className="status-txt-light">
+                <h5>All Systems Synchronized</h5>
+                <p>Database and academic services running smoothly.</p>
+              </div>
+            </div>
           </div>
         </div>
       </IonContent>

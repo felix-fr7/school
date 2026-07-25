@@ -1,97 +1,334 @@
+/* ============================================
+   Students List Screen - Modern Admin Design
+   ============================================ */
+
+@import './AdminDesignSystem.css';
+
 .students-list-content {
-  --background: #f5f5f5;
+  --background: var(--admin-bg);
 }
 
-.filter-bar {
-  padding: 16px;
-  background-color: #fff;
+/* ============================================
+   Modern Dark Navy Header & Toolbar
+   ============================================ */
+.students-list-header {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
-.search-container {
-  background-color: #f5f5f5;
-  border-radius: 8px;
+.students-list-header ion-toolbar {
+  --background: #1e293b !important; /* Dark Navy Background */
+  --border-color: #334155 !important;
+  --color: #ffffff !important;
+  color: #ffffff !important;
 }
 
-.empty-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 24px;
-  text-align: center;
+.students-list-header ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
 }
 
-.empty-icon {
-  font-size: 48px;
-  color: #999;
-  margin-bottom: 16px;
+.students-list-header ion-back-button,
+.students-list-header ion-buttons ion-button,
+.students-list-header ion-icon {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+  color: #ffffff !important;
 }
 
-.student-item {
+/* Filter Bar */
+.filter-bar-modern {
+  padding: var(--admin-spacing-xl) var(--admin-spacing-2xl);
+  background-color: var(--admin-white);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.search-container-modern {
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.search-input-modern {
+  --background: var(--admin-bg-light);
+  --border-radius: var(--admin-radius-full);
+  --padding-start: 44px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-full);
+  transition: var(--admin-transition);
+}
+
+.search-input-modern:focus-within {
+  border-color: var(--admin-primary);
+  box-shadow: var(--admin-shadow-focus);
+}
+
+.search-icon-slot {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--admin-text-muted);
+  pointer-events: none;
+}
+
+/* Student List */
+.student-list-modern {
+  padding: var(--admin-spacing-xl);
+}
+
+.student-item-modern {
   --inner-padding-end: 0;
   --padding-top: 0;
   --padding-bottom: 0;
   --padding-start: 0;
   --padding-end: 0;
   --background: transparent;
+  margin-bottom: var(--admin-spacing-md);
 }
 
-.student-card {
-  margin: 0 16px 12px 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.student-card-modern {
+  margin: 0;
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-sm);
+  transition: var(--admin-transition);
+  overflow: hidden;
+  background: var(--admin-white);
 }
 
-IonCardContent {
+.student-card-modern:hover {
+  border-color: var(--admin-primary-border);
+  box-shadow: var(--admin-shadow);
+  transform: translateY(-2px);
+}
+
+.student-card-content-modern {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: var(--admin-spacing-lg) var(--admin-spacing-xl);
 }
 
-.student-info {
+/* Student Info */
+.student-info-modern {
   flex: 1;
-}
-
-.student-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 4px 0;
-}
-
-.student-email {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
-}
-
-.student-id {
-  font-size: 12px;
-  color: #999;
-  margin: 2px 0;
-}
-
-.class-badge {
-  font-size: 11px;
-  margin-top: 4px;
-}
-
-.student-actions {
   display: flex;
-  gap: 8px;
-  margin-left: 16px;
+  flex-direction: column;
+  gap: var(--admin-spacing-xs);
 }
 
-.pagination-info {
-  padding: 16px;
-  text-align: center;
-  background-color: #fff;
-  border-top: 1px solid #eee;
+.student-avatar-modern {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--admin-radius-full);
+  background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-hover) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: var(--admin-text-lg);
+  margin-right: var(--admin-spacing-md);
+  flex-shrink: 0;
 }
 
-.pagination-info p {
-  font-size: 14px;
-  color: #666;
+.student-name-modern {
+  font-size: var(--admin-text-lg);
+  font-weight: 600;
+  color: var(--admin-text-primary);
   margin: 0;
+}
+
+.student-email-modern {
+  font-size: var(--admin-text-sm);
+  color: var(--admin-text-muted);
+  margin: 0;
+}
+
+.student-id-modern {
+  font-size: var(--admin-text-xs);
+  color: var(--admin-text-placeholder);
+  margin: 0;
+}
+
+.student-class-badge-modern {
+  font-size: var(--admin-text-xs);
+  padding: 4px 10px;
+  border-radius: var(--admin-radius-full);
+  background: var(--admin-primary-light);
+  color: var(--admin-primary);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: var(--admin-spacing-xs);
+}
+
+/* Student Actions */
+.student-actions-modern {
+  display: flex;
+  gap: var(--admin-spacing-sm);
+  margin-left: var(--admin-spacing-lg);
+  flex-shrink: 0;
+}
+
+.action-btn-small {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--admin-radius);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--admin-transition);
+  background: var(--admin-bg-light);
+  color: var(--admin-text-muted);
+}
+
+.action-btn-small:hover {
+  background: var(--admin-primary-light);
+  color: var(--admin-primary);
+  transform: scale(1.05);
+}
+
+.action-btn-small.delete-btn {
+  background: var(--admin-danger-light);
+  color: var(--admin-danger);
+}
+
+.action-btn-small.delete-btn:hover {
+  background: var(--admin-danger-lighter);
+}
+
+.action-btn-small ion-icon {
+  font-size: 16px;
+}
+
+/* Empty State */
+.empty-container-modern {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: calc(var(--admin-spacing-3xl) * 2) var(--admin-spacing-2xl);
+  text-align: center;
+}
+
+.empty-icon-modern {
+  font-size: 64px;
+  color: var(--admin-text-disabled);
+  margin-bottom: var(--admin-spacing-lg);
+}
+
+.empty-title-modern {
+  font-size: var(--admin-text-2xl);
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+  margin: 0 0 var(--admin-spacing-sm) 0;
+}
+
+.empty-text-modern {
+  font-size: var(--admin-text-base);
+  color: var(--admin-text-muted);
+  margin: 0;
+}
+
+/* Pagination */
+.pagination-modern {
+  padding: var(--admin-spacing-lg) var(--admin-spacing-2xl);
+  text-align: center;
+  background-color: var(--admin-white);
+  border-top: 1px solid var(--admin-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--admin-spacing-md);
+}
+
+.pagination-text {
+  font-size: var(--admin-text-sm);
+  color: var(--admin-text-muted);
+  margin: 0;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: var(--admin-spacing-xs);
+}
+
+.page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  background: var(--admin-white);
+  color: var(--admin-text-secondary);
+  font-size: var(--admin-text-sm);
+  cursor: pointer;
+  transition: var(--admin-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--admin-primary-light);
+  border-color: var(--admin-primary);
+  color: var(--admin-primary);
+}
+
+.page-btn.active {
+  background: var(--admin-primary);
+  border-color: var(--admin-primary);
+  color: white;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading State */
+.loading-state-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: var(--admin-spacing-lg);
+}
+
+.loading-text {
+  font-size: var(--admin-text-base);
+  color: var(--admin-text-muted);
+}
+
+/* Responsive */
+@media (max-width: 575px) {
+  .student-card-content-modern {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--admin-spacing-md);
+  }
+
+  .student-avatar-modern {
+    display: none;
+  }
+
+  .student-actions-modern {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .filter-bar-modern {
+    padding: var(--admin-spacing-md) var(--admin-spacing-lg);
+  }
+
+  .student-list-modern {
+    padding: var(--admin-spacing-md);
+  }
 }

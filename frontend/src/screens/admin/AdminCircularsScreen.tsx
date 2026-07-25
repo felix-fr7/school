@@ -1,7 +1,6 @@
 /**
  * Admin Circulars Screen (Ionic React Version)
- * Premium minimalist 2-column bento style with visibility control
- * Features: Title, Message OR Image Picker, Target Audience selector (All Classes or Specific Classes)
+ * Modern Enterprise Admin Console Dashboard Style
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -32,7 +31,9 @@ import {
   trashOutline,
   createOutline,
   closeOutline,
-  informationCircleOutline,
+  peopleOutline,
+  schoolOutline,
+  cloudUploadOutline,
 } from 'ionicons/icons';
 import { Class, Circular, CreateCircularInput } from '../../types';
 import { adminAPI } from '../../services/api';
@@ -47,11 +48,10 @@ interface CircularItemProps {
   onEdit: (item: Circular) => void;
 }
 
-// Map visibility to display text
 const getVisibilityLabel = (visibility: string) => {
-  if (visibility === 'ALL') return '👥 All Classes';
-  if (visibility === 'SPECIFIC_CLASSES') return '🏫 Specific Classes';
-  return '👥 All Classes';
+  if (visibility === 'ALL') return 'All Classes';
+  if (visibility === 'SPECIFIC_CLASSES') return 'Specific Classes';
+  return 'All Classes';
 };
 
 const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) => {
@@ -61,26 +61,33 @@ const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) =
     <>
       <div className="circular-card" onDoubleClick={() => onEdit(item)}>
         <div className="circular-card-content">
-          <h3 className="circular-title">{item.title}</h3>
-          {item.imageUrl ? (
-            <img src={item.imageUrl} alt="Circular" className="circular-image" />
-          ) : (
-            <p className="circular-content">{item.content?.substring(0, 100) || ''}...</p>
-          )}
-          <div className="circular-meta-row">
-            <IonBadge color={item.visibility === 'ALL' ? 'success' : 'primary'}>
+          <div className="circular-header">
+            <h3 className="circular-title">{item.title}</h3>
+            <IonBadge color={item.visibility === 'ALL' ? 'success' : 'tertiary'} className="visibility-badge">
               {getVisibilityLabel(item.visibility)}
             </IonBadge>
+          </div>
+
+          {item.imageUrl ? (
+            <div className="image-wrapper">
+              <img src={item.imageUrl} alt="Circular" className="circular-image" />
+            </div>
+          ) : (
+            <p className="circular-content">{item.content || 'No content description provided.'}</p>
+          )}
+
+          <div className="circular-meta-row">
             <span className="circular-date">
-              {new Date(item.createdAt).toLocaleDateString()}
+              Published: {new Date(item.createdAt).toLocaleDateString()}
             </span>
           </div>
         </div>
+
         <div className="circular-card-actions">
-          <button className="action-button edit" onClick={() => onEdit(item)} title="Edit">
+          <button className="action-button edit" onClick={() => onEdit(item)} title="Edit Circular">
             <IonIcon icon={createOutline} />
           </button>
-          <button className="action-button delete" onClick={() => setShowDeleteConfirm(true)} title="Delete">
+          <button className="action-button delete" onClick={() => setShowDeleteConfirm(true)} title="Delete Circular">
             <IonIcon icon={trashOutline} />
           </button>
         </div>
@@ -90,7 +97,7 @@ const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) =
         isOpen={showDeleteConfirm}
         onDidDismiss={() => setShowDeleteConfirm(false)}
         header="Delete Circular"
-        message={`Are you sure you want to delete "${item.title}"?`}
+        message={`Are you sure you want to delete "${item.title}"? This action cannot be undone.`}
         buttons={[
           { text: 'Cancel', role: 'cancel' },
           {
@@ -99,8 +106,8 @@ const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) =
             handler: () => {
               onDelete(item.id);
               setShowDeleteConfirm(false);
-            }
-          }
+            },
+          },
         ]}
       />
     </>
@@ -231,18 +238,18 @@ const AdminCircularsScreen: React.FC = () => {
 
       let response;
       if (editingCircularId) {
-        response = await adminAPI.updateNews(editingCircularId, data as any); // Reusing news update for now
+        response = await adminAPI.updateNews(editingCircularId, data as any);
       } else {
         response = await adminAPI.createCircular(data);
       }
 
       if (response.success) {
-        showAlertMessage('Success', editingCircularId ? 'Circular updated successfully' : 'Circular created successfully');
+        showAlertMessage('Success', editingCircularId ? 'Circular updated successfully' : 'Circular published successfully');
         resetForm();
         fetchCirculars();
       }
     } catch (error: any) {
-      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to create circular');
+      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to process circular');
     } finally {
       setSubmitting(false);
     }
@@ -265,7 +272,7 @@ const AdminCircularsScreen: React.FC = () => {
     if (item.imageUrl) {
       setMode('IMAGE');
       setImagePreview(item.imageUrl);
-      setImageName('Current Image (select new to replace)');
+      setImageName('Current Image Attached');
       setMessage('');
     } else {
       setMode('TEXT');
@@ -280,15 +287,15 @@ const AdminCircularsScreen: React.FC = () => {
   if (loading && circularList.length === 0) {
     return (
       <IonPage>
-        <IonHeader>
+        <IonHeader className="ion-no-border">
           <IonToolbar>
-            <IonTitle>Circulars Manager</IonTitle>
+            <IonTitle>Circulars Management</IonTitle>
           </IonToolbar>
         </IonHeader>
         <IonContent className="admin-circulars-content" fullscreen>
           <div className="loading-container">
-            <IonSpinner name="crescent" />
-            <p>Loading circulars...</p>
+            <IonSpinner name="crescent" color="primary" />
+            <p>Fetching circulars...</p>
           </div>
         </IonContent>
       </IonPage>
@@ -297,46 +304,48 @@ const AdminCircularsScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="admin-toolbar">
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/dashboard" />
+            <IonBackButton defaultHref="/admin/dashboard" text="" />
           </IonButtons>
-          <IonTitle>Circulars Manager</IonTitle>
+          <IonTitle>Circulars Console</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="admin-circulars-content" fullscreen>
         <div className="container">
-          {/* Header */}
+          {/* Header Section */}
           <div className="header-section">
-            <h1 className="header-title">📋 Circulars Manager</h1>
-            <p className="header-subtitle">Create and manage school circulars</p>
+            <h1 className="header-title">Circulars & Announcements</h1>
+            <p className="header-subtitle">Broadcast text announcements or digital notices to classes</p>
           </div>
 
-          {/* Create Form */}
+          {/* Create / Edit Form Card */}
           <IonCard className="form-card">
             <IonCardHeader>
-              <IonCardTitle>{editingCircularId ? 'Edit Circular' : 'Create New Circular'}</IonCardTitle>
+              <IonCardTitle>{editingCircularId ? '✏️ Edit Circular Details' : '📢 Publish New Circular'}</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              {/* Mode Selector */}
+              {/* Type Switcher */}
               <div className="input-group">
-                <label className="input-label">Circular Type</label>
+                <label className="input-label">Content Format</label>
                 <div className="mode-container">
                   <button
+                    type="button"
                     className={`mode-option ${mode === 'TEXT' ? 'active' : ''}`}
                     onClick={() => setMode('TEXT')}
                   >
-                    <span className="mode-icon">📝</span>
-                    <span>Type Message</span>
+                    <IonIcon icon={documentTextOutline} className="mode-icon" />
+                    <span>Text Message</span>
                   </button>
                   <button
+                    type="button"
                     className={`mode-option ${mode === 'IMAGE' ? 'active' : ''}`}
                     onClick={() => setMode('IMAGE')}
                   >
-                    <span className="mode-icon">📷</span>
-                    <span>Upload Image</span>
+                    <IonIcon icon={imageOutline} className="mode-icon" />
+                    <span>Image / Notice</span>
                   </button>
                 </div>
               </div>
@@ -344,27 +353,31 @@ const AdminCircularsScreen: React.FC = () => {
               {/* Title Input */}
               <div className="input-group">
                 <label className="input-label">Title *</label>
-                <IonInput
-                  value={title}
-                  onIonInput={(e) => setTitle(e.detail.value || '')}
-                  placeholder="Enter circular title"
-                />
+                <div className="admin-input-wrapper">
+                  <IonInput
+                    value={title}
+                    onIonInput={(e) => setTitle(e.detail.value || '')}
+                    placeholder="Enter circular title or subject"
+                  />
+                </div>
               </div>
 
-              {/* Content based on mode */}
+              {/* Message or File Input */}
               {mode === 'TEXT' ? (
                 <div className="input-group">
-                  <label className="input-label">Message *</label>
-                  <IonTextarea
-                    value={message}
-                    onIonInput={(e) => setMessage(e.detail.value || '')}
-                    placeholder="Write your circular message here..."
-                    rows={4}
-                  />
+                  <label className="input-label">Message Content *</label>
+                  <div className="admin-input-wrapper">
+                    <IonTextarea
+                      value={message}
+                      onIonInput={(e) => setMessage(e.detail.value || '')}
+                      placeholder="Write circular description here..."
+                      rows={4}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="input-group">
-                  <label className="input-label">Select Image File {editingCircularId ? '(optional)' : '*'}</label>
+                  <label className="input-label">Notice Banner {editingCircularId ? '(Optional to replace)' : '*'}</label>
                   <input
                     type="file"
                     ref={imageInputRef}
@@ -373,50 +386,57 @@ const AdminCircularsScreen: React.FC = () => {
                     style={{ display: 'none' }}
                   />
                   <button
+                    type="button"
                     className="file-picker-button"
                     onClick={() => imageInputRef.current?.click()}
                   >
-                    <IonIcon icon={imageOutline} className="file-icon" />
-                    <span>{imageName || 'Browse and select image from gallery'}</span>
+                    <IonIcon icon={cloudUploadOutline} className="file-icon" />
+                    <span>{imageName || 'Click to select notice image'}</span>
                   </button>
                   {imagePreview && (
-                    <img src={imagePreview} alt="Preview" className="image-preview" />
+                    <div className="image-preview-container">
+                      <img src={imagePreview} alt="Preview" className="image-preview" />
+                    </div>
                   )}
                 </div>
               )}
 
-              {/* Target Audience Selector */}
+              {/* Audience Selector */}
               <div className="input-group">
                 <label className="input-label">Target Audience</label>
                 <div className="visibility-container">
                   <button
+                    type="button"
                     className={`visibility-option ${visibility === 'ALL' ? 'active' : ''}`}
                     onClick={() => setVisibility('ALL')}
                   >
-                    <IonIcon icon={informationCircleOutline} />
-                    <span>All Classes & Students</span>
+                    <IonIcon icon={peopleOutline} />
+                    <span>All Classes</span>
                   </button>
                   <button
+                    type="button"
                     className={`visibility-option ${visibility === 'SPECIFIC_CLASSES' ? 'active' : ''}`}
                     onClick={() => {
                       setVisibility('SPECIFIC_CLASSES');
                       setShowClassSelector(true);
                     }}
                   >
-                    <IonIcon icon={informationCircleOutline} />
-                    <span>Specific Classes Only</span>
+                    <IonIcon icon={schoolOutline} />
+                    <span>Specific Classes</span>
                   </button>
                 </div>
+
                 {visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length > 0 && (
                   <div className="selected-classes-container">
                     <span className="selected-classes-label">
-                      Selected: {selectedClassIds.length} class(es)
+                      Targeting: {selectedClassIds.length} class(es) selected
                     </span>
                     <button
+                      type="button"
                       className="selected-classes-link"
                       onClick={() => setShowClassSelector(true)}
                     >
-                      View / Edit
+                      Modify Selection
                     </button>
                   </div>
                 )}
@@ -426,7 +446,7 @@ const AdminCircularsScreen: React.FC = () => {
               <div className="button-group">
                 <IonButton
                   expand="block"
-                  className="submit-button"
+                  className="admin-submit-btn"
                   onClick={handleSubmit}
                   disabled={submitting}
                 >
@@ -435,21 +455,21 @@ const AdminCircularsScreen: React.FC = () => {
                 {editingCircularId && (
                   <IonButton
                     expand="block"
-                    color="medium"
-                    className="cancel-button"
+                    fill="outline"
+                    className="admin-cancel-btn"
                     onClick={resetForm}
                   >
-                    Cancel Edit
+                    Cancel Editing
                   </IonButton>
                 )}
               </div>
             </IonCardContent>
           </IonCard>
 
-          {/* Circulars List */}
+          {/* Published Circulars Panel */}
           <IonCard className="list-card">
             <IonCardHeader>
-              <IonCardTitle>Published Circulars ({circularList.length})</IonCardTitle>
+              <IonCardTitle>Published Records ({circularList.length})</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
               {circularList.length === 0 ? (
@@ -467,6 +487,7 @@ const AdminCircularsScreen: React.FC = () => {
                   />
                 ))
               )}
+
               {page < totalPages && (
                 <IonButton
                   expand="block"
@@ -484,7 +505,7 @@ const AdminCircularsScreen: React.FC = () => {
           </IonCard>
         </div>
 
-        {/* Class Selector Modal */}
+        {/* Class Selection Modal */}
         <IonModal
           isOpen={showClassSelector}
           onDidDismiss={() => setShowClassSelector(false)}
@@ -492,42 +513,41 @@ const AdminCircularsScreen: React.FC = () => {
         >
           <div className="modal-content">
             <div className="modal-header">
-              <h2>Select Classes</h2>
-              <button className="modal-close" onClick={() => setShowClassSelector(false)}>
+              <h2>Select Target Classes</h2>
+              <button type="button" className="modal-close" onClick={() => setShowClassSelector(false)}>
                 <IonIcon icon={closeOutline} />
               </button>
             </div>
-            <p className="modal-subtitle">
-              Tap to select one or more classes for this circular
-            </p>
+            <p className="modal-subtitle">Check the classes that should receive this notice:</p>
+
             <div className="class-list">
-              {classes.map((cls) => (
-                <div
-                  key={cls.id}
-                  className={`class-item ${selectedClassIds.includes(cls.id) ? 'active' : ''}`}
-                  onClick={() => toggleClassSelection(cls.id)}
-                >
-                  <span className="class-item-icon">
-                    {selectedClassIds.includes(cls.id) ? '✅' : '⬜'}
-                  </span>
-                  <span className="class-item-text">
-                    {cls.name}{cls.section ? ` - ${cls.section}` : ''}
-                  </span>
-                </div>
-              ))}
+              {classes.map((cls) => {
+                const isSelected = selectedClassIds.includes(cls.id);
+                return (
+                  <div
+                    key={cls.id}
+                    className={`class-item ${isSelected ? 'active' : ''}`}
+                    onClick={() => toggleClassSelection(cls.id)}
+                  >
+                    <span className="class-item-checkbox">{isSelected ? '✓' : ''}</span>
+                    <span className="class-item-text">
+                      {cls.name}{cls.section ? ` (${cls.section})` : ''}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
+
             <div className="modal-footer">
-              <span className="selected-count">
-                {selectedClassIds.length} class(es) selected
-              </span>
-              <IonButton onClick={() => setShowClassSelector(false)}>
+              <span className="selected-count">{selectedClassIds.length} Selected</span>
+              <IonButton className="modal-done-btn" onClick={() => setShowClassSelector(false)}>
                 Done
               </IonButton>
             </div>
           </div>
         </IonModal>
 
-        {/* Alert */}
+        {/* Alert Notifications */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

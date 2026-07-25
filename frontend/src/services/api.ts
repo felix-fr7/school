@@ -513,29 +513,6 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Marks
-  async getMarks(page = 1, limit = 10, studentId = '', examType = ''): Promise<ApiResponse<{ marks: Mark[]; pagination: any }>> {
-    const response = await api.get<ApiResponse<{ marks: Mark[]; pagination: any }>>('/admin/marks', {
-      params: { page, limit, studentId, examType },
-    });
-    return response.data;
-  },
-
-  async createMark(data: CreateMarkInput): Promise<ApiResponse<Mark>> {
-    const response = await api.post<ApiResponse<Mark>>('/admin/marks', data);
-    return response.data;
-  },
-
-  async updateMark(id: string, data: Partial<CreateMarkInput> & { grade?: string; isPublished?: boolean }): Promise<ApiResponse<void>> {
-    const response = await api.put<ApiResponse<void>>(`/admin/marks/${id}`, data);
-    return response.data;
-  },
-
-  async deleteMark(id: string): Promise<ApiResponse<void>> {
-    const response = await api.delete<ApiResponse<void>>(`/admin/marks/${id}`);
-    return response.data;
-  },
-
   // News
   async getNews(page = 1, limit = 10, category = '', isPublished = ''): Promise<ApiResponse<{ news: News[]; pagination: any }>> {
     const response = await api.get<ApiResponse<{ news: News[]; pagination: any }>>('/admin/news', {
@@ -585,13 +562,20 @@ export const adminAPI = {
     return response.data;
   },
 
-  async createExamSchedule(data: CreateExamScheduleInput): Promise<ApiResponse<ExamSchedule>> {
-    const response = await api.post<ApiResponse<ExamSchedule>>('/admin/exam-schedules', data);
+  async createExamSchedule(data: FormData | CreateExamScheduleInput): Promise<ApiResponse<ExamSchedule>> {
+    const response = await api.post<ApiResponse<ExamSchedule>>('/admin/exam-schedules', data, {
+      headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
     return response.data;
   },
 
   async deleteExamSchedule(id: string): Promise<ApiResponse<void>> {
     const response = await api.delete<ApiResponse<void>>(`/admin/exam-schedules/${id}`);
+    return response.data;
+  },
+
+  async updateExamSchedule(id: string, data: { title?: string; classId?: string | null }): Promise<ApiResponse<void>> {
+    const response = await api.put<ApiResponse<void>>(`/admin/exam-schedules/${id}`, data);
     return response.data;
   },
 

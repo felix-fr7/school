@@ -69,6 +69,16 @@ const getClassDashboard = async (req, res, next) => {
     const userRole = req.user.role;
     const userId = req.user.id;
 
+    // Validate classId - must be a valid UUID, not 'create' or other strings
+    if (!id || id === 'create' || id.length < 36) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Invalid Class ID provided. Expected a valid UUID.',
+        },
+      });
+    }
+
     // Get class details with teacher info
     const classQuery = `
       SELECT 
@@ -254,13 +264,18 @@ const getClassById = async (req, res, next) => {
 const createClass = async (req, res, next) => {
   try {
     const { name, section, password, assignedTeacherId } = req.body;
-    const tenantId = req.user.tenantId;
+    let tenantId = req.user.tenantId;
+
+    // Fallback: Allow SUPER_ADMIN to specify tenantId in body
+    if (!tenantId && req.user.role === 'SUPER_ADMIN' && req.body.tenantId) {
+      tenantId = req.body.tenantId;
+    }
 
     if (!tenantId) {
       return res.status(400).json({
         success: false,
         error: {
-          message: 'Tenant ID is required to create a class. SUPER_ADMIN users must impersonate a tenant first.',
+          message: 'Tenant ID is required to create a class. Either log in as a tenant user or provide tenantId in the request body (for SUPER_ADMIN users).',
         },
       });
     }
@@ -2066,7 +2081,7 @@ const getAllExamSchedules = async (req, res, next) => {
 };
 
 /**
- * Create new exam schedule
+ * Create new exam schedule (legacy - JSON body)
  * POST /api/admin/exam-schedules
  */
 const createExamSchedule = async (req, res, next) => {
@@ -2092,6 +2107,191 @@ const createExamSchedule = async (req, res, next) => {
       message: 'Exam schedule created successfully',
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create new exam schedule with file upload (PDF/Image)
+ * POST /api/admin/exam-schedules (multipart/form-data)
+ */
+const createExamScheduleWithFile = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+    let { classId, title } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No file uploaded. Please upload a PDF or image file.' },
+      });
+    }
+
+    // Validate title - required field
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Timetable title is required.' },
+      });
+    }
+
+    title = title.trim();
+
+    // Validate file exists
+    const filePath = req.file.path;
+    const fileName = req.file.filename;
+    const fileUrl = `/uploads/${fileName}`;
+
+    // Validate classId - must be a valid UUID or null/empty for school-wide
+    const isValidUUID = (value) => {
+      if (!value || typeof value !== 'string') return false;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(value);
+    };
+
+    // If classId is not a valid UUID, set it to null (school-wide)
+    if (!isValidUUID(classId)) {
+      classId = null;
+    }
+
+    // Verify class exists if classId is provided
+    if (classId) {
+      const classExistsQuery = 'SELECT id FROM "Class" WHERE id = $1 AND "tenantId" = $2';
+      const classExistsResult = await db.query(classExistsQuery, [classId, tenantId]);
+
+      if (classExistsResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Class not found in your school' },
+        });
+      }
+    }
+
+    // Create exam schedule record with file URL
+    const createQuery = `
+      INSERT INTO "ExamSchedule" (title, subject, date, time, "classId", "tenantId", "fileUrl", "isPublished", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const subject = 'Timetable';
+    const date = new Date();
+    const time = '00:00:00';
+
+    const createResult = await db.query(createQuery, [
+      title, subject, date, time, classId || null, tenantId, fileUrl, true
+    ]);
+
+    const examSchedule = createResult.rows[0];
+
+    res.status(201).json({
+      success: true,
+      data: examSchedule,
+      message: 'Exam timetable uploaded successfully',
+    });
+  } catch (error) {
+    console.error('CreateExamScheduleWithFile Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Update exam schedule
+ * PUT /api/admin/exam-schedules/:id
+ */
+const updateExamSchedule = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, classId } = req.body;
+    const tenantId = req.user.tenantId;
+
+    // Verify the exam schedule exists and belongs to this tenant
+    const checkQuery = 'SELECT * FROM "ExamSchedule" WHERE id = $1 AND "tenantId" = $2';
+    const checkResult = await db.query(checkQuery, [id, tenantId]);
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'Exam schedule not found',
+        },
+      });
+    }
+
+    // Build update fields
+    const updateFields = [];
+    const updateParams = [];
+    let paramIndex = 1;
+
+    if (title !== undefined) {
+      if (!title || !title.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Title cannot be empty' },
+        });
+      }
+      updateFields.push(`title = $${paramIndex}`);
+      updateParams.push(title.trim());
+      paramIndex++;
+    }
+
+    if (classId !== undefined) {
+      // Validate classId - must be a valid UUID or null for school-wide
+      const isValidUUID = (value) => {
+        if (value === null || value === undefined || value === '') return true;
+        if (typeof value !== 'string') return false;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(value);
+      };
+
+      if (!isValidUUID(classId)) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Invalid class ID format' },
+        });
+      }
+
+      // If classId is provided, verify it exists in this tenant
+      if (classId) {
+        const classExistsQuery = 'SELECT id FROM "Class" WHERE id = $1 AND "tenantId" = $2';
+        const classExistsResult = await db.query(classExistsQuery, [classId, tenantId]);
+        if (classExistsResult.rows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            error: { message: 'Class not found in your school' },
+          });
+        }
+      }
+
+      updateFields.push(`"classId" = $${paramIndex}`);
+      updateParams.push(classId || null);
+      paramIndex++;
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No fields to update' },
+      });
+    }
+
+    updateFields.push(`"updatedAt" = NOW()`);
+    updateParams.push(id);
+
+    const updateQuery = `
+      UPDATE "ExamSchedule"
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
+    `;
+
+    await db.query(updateQuery, updateParams);
+
+    res.status(200).json({
+      success: true,
+      message: 'Exam schedule updated successfully',
+    });
+  } catch (error) {
+    console.error('UpdateExamSchedule Error:', error);
     next(error);
   }
 };
@@ -3145,6 +3345,8 @@ module.exports = {
   // Exam Schedule
   getAllExamSchedules,
   createExamSchedule,
+  createExamScheduleWithFile,
+  updateExamSchedule,
   deleteExamSchedule,
   // Teacher
   getAvailableTeachers,

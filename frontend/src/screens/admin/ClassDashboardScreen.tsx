@@ -3,7 +3,7 @@
  * Displays detailed information about a specific class
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   IonPage,
   IonContent,
@@ -57,7 +57,9 @@ interface ClassDashboardData {
 const ClassDashboardScreen: React.FC = () => {
   const { classId } = useParams<ClassDashboardParams>();
   const history = useHistory();
+  const redirectAttemptedRef = useRef(false);
 
+  // 1️⃣ ALL HOOKS DECLARED AT THE TOP LEVEL
   const [dashboardData, setDashboardData] = useState<ClassDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,7 +69,31 @@ const ClassDashboardScreen: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Effect to handle redirection cleanly if classId is 'create'
+  useEffect(() => {
+    if (classId === 'create' && !redirectAttemptedRef.current) {
+      redirectAttemptedRef.current = true;
+      history.replace('/admin/classes/create');
+    }
+  }, [classId, history]);
+
+  // Effect to fetch dashboard data
+  useEffect(() => {
+    // Skip fetching if classId is 'create'
+    if (classId === 'create') {
+      return;
+    }
+    fetchDashboardData();
+  }, [classId]);
+
+  // 2️⃣ HELPER FUNCTIONS
   const fetchDashboardData = async () => {
+    if (!classId || classId.length < 36) {
+      console.error('Invalid classId:', classId);
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await adminAPI.getClassDashboard(classId);
       if (response.success && response.data) {
@@ -80,10 +106,6 @@ const ClassDashboardScreen: React.FC = () => {
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [classId]);
 
   const onRefresh = async (event: CustomEvent) => {
     setRefreshing(true);
@@ -122,6 +144,11 @@ const ClassDashboardScreen: React.FC = () => {
       setUpdatingPassword(false);
     }
   };
+
+  // 3️⃣ CONDITIONAL RETURNS / RENDER GUARDS (AFTER ALL HOOKS)
+  if (classId === 'create') {
+    return null;
+  }
 
   if (loading) {
     return (

@@ -56,6 +56,12 @@ const EditClassScreen: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
+    // If classId is 'create', redirect to the create class page
+    if (classId === 'create') {
+      history.push('/admin/classes/create');
+      return;
+    }
+    
     if (!classId) {
       setAlertMessage('No class ID provided');
       setIsSuccess(false);
