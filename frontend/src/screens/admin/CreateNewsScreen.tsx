@@ -33,7 +33,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import { Class } from '../../types';
-import './CreateNewsScreen.css';
+import './AdminTheme.css';
 
 const CreateNewsScreen: React.FC = () => {
   const [title, setTitle] = useState('');

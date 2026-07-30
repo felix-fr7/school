@@ -1,261 +1,299 @@
 /**
- * Class Exam Detail Screen (Ionic React Styles)
- * Displays exam details with PDF/Image viewer
+ * Class Controller Exam Detail Screen Styles
+ * Theme: Deep Royal Blue / Educational Slate
  */
 
-/* ============================================
-   Loading State
-   ============================================ */
+:root {
+  --class-primary: #1E3A8A;
+  --class-primary-light: #2563EB;
+  --class-bg-light: #F8FAFC;
+  --class-card-bg: #FFFFFF;
+  --class-border: #E2E8F0;
+  --class-text-dark: #0F172A;
+  --class-text-muted: #64748B;
+}
+
+.class-toolbar {
+  --background: var(--class-primary);
+  --color: #FFFFFF;
+}
+
+/* Loading State */
 .exam-detail-loading {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  background: var(--class-bg-light);
 }
 
 .exam-detail-loading .loading-text {
-  margin-top: 16px;
-  font-size: 16px;
-  color: var(--ion-color-medium);
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--class-text-muted);
 }
 
-/* ============================================
-   Content Container
-   ============================================ */
+/* Content Area */
 .exam-detail-content {
-  --background: #F8FAFC;
-  padding: 16px;
+  --background: var(--class-bg-light);
 }
 
-/* ============================================
-   Error State
-   ============================================ */
+.exam-detail-wrapper {
+  padding: 16px;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+/* Error State */
 .error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  padding: 40px 20px;
   text-align: center;
 }
 
 .error-icon {
-  font-size: 48px;
+  font-size: 56px;
   color: #EF4444;
   margin-bottom: 16px;
 }
 
 .error-state h2 {
   font-size: 18px;
-  font-weight: 600;
-  color: var(--ion-color-danger);
+  font-weight: 700;
+  color: var(--class-text-dark);
   margin: 0 0 20px 0;
 }
 
-/* ============================================
-   Exam Info Card
-   ============================================ */
-.exam-info-card {
-  --background: #FFFFFF;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-top: 16px;
+.retry-btn {
+  --background: var(--class-primary);
+  --border-radius: 10px;
 }
 
-.exam-info-card ion-card-header {
-  padding: 16px 16px 8px 16px;
+/* Exam Info Card */
+.exam-info-card {
+  --background: var(--class-card-bg);
+  border-radius: 18px;
+  border: 1px solid var(--class-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  margin: 0 0 16px 0;
 }
 
 .title-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 12px;
 }
 
 .exam-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #1E293B;
-  margin: 0;
-  flex: 1;
-  margin-right: 12px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--class-text-dark);
+  line-height: 1.3;
 }
 
 .published-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   border-radius: 20px;
-  padding: 4px 12px;
+  padding: 6px 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
-.exam-info-card ion-card-content {
+/* Metadata Grid */
+.metadata-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--class-bg-light);
   padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  border: 1px solid var(--class-border);
 }
 
-/* ============================================
-   Info Row
-   ============================================ */
 .info-row {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
-}
-
-.info-row:last-child {
-  margin-bottom: 16px;
+  gap: 12px;
 }
 
 .info-icon {
-  color: #64748B;
-  margin-right: 8px;
-  font-size: 16px;
+  color: var(--class-primary-light);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.info-text {
+  display: flex;
+  flex-direction: column;
 }
 
 .info-label {
-  font-weight: 500;
-  margin-right: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--class-text-muted);
+  letter-spacing: 0.5px;
 }
 
-/* ============================================
-   Attachment Status
-   ============================================ */
-.attachment-status {
+.info-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--class-text-dark);
+  margin: 2px 0 0 0;
+}
+
+.info-val.highlight {
+  color: var(--class-primary-light);
+}
+
+/* Attachment Card */
+.attachment-status-card {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.attachment-header {
   display: flex;
   align-items: center;
-  background-color: #F8FAFC;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.attachment-header.empty {
+  background: #FEF3C7;
+  border-color: #FDE68A;
 }
 
 .attachment-icon {
-  font-size: 18px;
-  margin-right: 8px;
-  color: #475569;
+  font-size: 26px;
+  color: var(--class-primary-light);
 }
 
 .attachment-icon.warning {
-  color: #F59E0B;
+  color: #D97706;
 }
 
-.attachment-text {
-  font-weight: 500;
+.attachment-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--class-text-dark);
+  margin: 0;
 }
 
-/* ============================================
-   Open Document Button
-   ============================================ */
+.attachment-sub {
+  font-size: 12px;
+  color: var(--class-text-muted);
+  margin: 2px 0 0 0;
+}
+
+/* Action Button */
 .open-doc-button {
+  --background: var(--class-primary);
   --border-radius: 12px;
+  --box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+  height: 48px;
+  font-weight: 700;
   margin-bottom: 16px;
 }
 
-/* ============================================
-   Preview Section
-   ============================================ */
+/* Preview Section */
 .preview-section {
-  margin-top: 20px;
+  margin-top: 16px;
+  border-top: 1px border var(--class-border);
+  padding-top: 16px;
 }
 
 .preview-label {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--class-text-muted);
   margin-bottom: 8px;
 }
 
 .preview-image {
   width: 100%;
   border-radius: 12px;
-  max-height: 200px;
+  max-height: 220px;
   object-fit: cover;
+  border: 1px solid var(--class-border);
 }
 
-/* ============================================
-   Info Note
-   ============================================ */
+/* Info Note */
 .info-note {
   display: flex;
-  align-items: center;
-  background-color: #F0F9FF;
-  padding: 12px;
+  align-items: flex-start;
+  gap: 10px;
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  padding: 12px 16px;
   border-radius: 12px;
-  margin-top: 16px;
+  margin-bottom: 16px;
 }
 
 .info-note-icon {
-  font-size: 16px;
-  margin-right: 8px;
+  font-size: 20px;
+  color: var(--class-primary-light);
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .info-note-text {
   font-size: 13px;
-  line-height: 18px;
-  flex: 1;
+  line-height: 1.4;
+  color: #1E40AF;
   margin: 0;
 }
 
-/* ============================================
-   Back Button Container
-   ============================================ */
+/* Back Button */
 .back-button-container {
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .back-button {
   --border-radius: 12px;
+  --color: var(--class-text-dark);
+  --border-color: var(--class-border);
+  font-weight: 600;
 }
 
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
-@media (min-width: 768px) {
-  .exam-detail-content {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 24px;
-  }
-}
-
-/* ============================================
-   Dark Mode Support
-   ============================================ */
+/* Dark Mode Optimization */
 @media (prefers-color-scheme: dark) {
-  .exam-detail-content {
-    --background: #121212;
+  :root {
+    --class-bg-light: #0F172A;
+    --class-card-bg: #1E293B;
+    --class-border: #334155;
+    --class-text-dark: #F8FAFC;
+    --class-text-muted: #94A3B8;
   }
 
-  .exam-info-card {
-    --background: #1e1e1e;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  .attachment-status-card {
+    background: #1E293B;
+    border-color: #3B82F6;
   }
 
-  .exam-title {
-    color: #fff;
-  }
-
-  .info-icon {
-    color: #888;
-  }
-
-  .info-label {
-    color: #fff;
-  }
-
-  .attachment-status {
-    background-color: #2a2a2a;
-  }
-
-  .attachment-text {
-    color: #fff;
+  .attachment-icon {
+    color: #60A5FA;
   }
 
   .info-note {
-    background-color: #1a237e;
+    background-color: #1E293B;
+    border-color: #334155;
   }
 
   .info-note-text {
-    color: #90caf9;
+    color: #93C5FD;
   }
 }

@@ -36,8 +36,8 @@ import {
   cloudUploadOutline,
 } from 'ionicons/icons';
 import { Class, Circular, CreateCircularInput } from '../../types';
-import { adminAPI } from '../../services/api';
-import './AdminCircularsScreen.css';
+import { adminAPI, fetchFileAsBlobUrl } from '../../services/api';
+import './ClassDashboardScreen.css';
 
 type VisibilityType = 'ALL' | 'SPECIFIC_CLASSES';
 type CircularMode = 'TEXT' | 'IMAGE';
@@ -56,6 +56,16 @@ const getVisibilityLabel = (visibility: string) => {
 
 const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [imageBlobUrl, setImageBlobUrl] = useState<string>('');
+
+  // Fetch image with auth on mount
+  useEffect(() => {
+    if (item.imageUrl) {
+      fetchFileAsBlobUrl(`/files/circular/${item.id}/image`)
+        .then(setImageBlobUrl)
+        .catch(err => console.error('Error loading circular image:', err));
+    }
+  }, [item.id, item.imageUrl]);
 
   return (
     <>
@@ -68,9 +78,13 @@ const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) =
             </IonBadge>
           </div>
 
-          {item.imageUrl ? (
+          {item.imageUrl && imageBlobUrl ? (
             <div className="image-wrapper">
-              <img src={item.imageUrl} alt="Circular" className="circular-image" />
+              <img 
+                src={imageBlobUrl} 
+                alt="Circular" 
+                className="circular-image" 
+              />
             </div>
           ) : (
             <p className="circular-content">{item.content || 'No content description provided.'}</p>

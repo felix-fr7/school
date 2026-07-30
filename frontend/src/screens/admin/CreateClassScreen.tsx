@@ -38,7 +38,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import { User } from '../../types';
-import './CreateClassScreen.css';
+import './AdminTheme.css';
 
 const CreateClassScreen: React.FC = () => {
   const history = useHistory();

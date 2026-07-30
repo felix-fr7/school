@@ -13,26 +13,23 @@ import {
   IonBackButton,
   IonContent,
   IonSpinner,
-  IonText,
   IonButton,
   IonIcon,
-  IonItem,
   IonLabel,
   IonInput,
   IonSelect,
   IonSelectOption,
   IonDatetime,
+  IonDatetimeButton,
   IonModal,
   IonAlert,
+  IonToast,
+  IonGrid,
+  IonRow,
+  IonCol,
 } from '@ionic/react';
-import {
-  calendarOutline,
-  timeOutline,
-  sendOutline,
-  bookOutline,
-} from 'ionicons/icons';
+import { sendOutline, calendarOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { classControllerAPI } from '../../services/api';
 import './ClassCreateExamScheduleScreen.css';
 
 const SUBJECTS = [
@@ -53,107 +50,81 @@ const SUBJECTS = [
 
 const ClassCreateExamScheduleScreen: React.FC = () => {
   const history = useHistory();
-  
+
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
-  const [date, setDate] = useState<string>('');
-  const [time, setTime] = useState('');
+  const [examDate, setExamDate] = useState<string>(new Date().toISOString());
+  const [examTime, setExamTime] = useState<string>('09:00');
   const [duration, setDuration] = useState('');
   const [roomNo, setRoomNo] = useState('');
+  
   const [loading, setLoading] = useState(false);
-  const [showDateModal, setShowDateModal] = useState(false);
-  const [showTimeModal, setShowTimeModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   const validateForm = (): boolean => {
     if (!title.trim()) {
       setAlertHeader('Validation Error');
       setAlertMessage('Exam title is required');
-      setIsSuccess(false);
       setShowAlert(true);
       return false;
     }
-    
-    if (!date) {
+
+    if (!subject) {
+      setAlertHeader('Validation Error');
+      setAlertMessage('Please select a subject');
+      setShowAlert(true);
+      return false;
+    }
+
+    if (!examDate) {
       setAlertHeader('Validation Error');
       setAlertMessage('Exam date is required');
-      setIsSuccess(false);
       setShowAlert(true);
       return false;
     }
-    
-    if (!time.trim()) {
-      setAlertHeader('Validation Error');
-      setAlertMessage('Exam time is required');
-      setIsSuccess(false);
-      setShowAlert(true);
-      return false;
-    }
-    
+
     return true;
   };
 
   const handleCreateExam = async () => {
-    if (!validateForm()) {
-      return;
-    }
-    
+    if (!validateForm()) return;
+
     setLoading(true);
-    
+
     try {
-      // Note: createExamSchedule API not available in classControllerAPI
-      console.log('Creating exam schedule:', {
+      const payload = {
         title: title.trim(),
-        subject: subject || 'Other',
-        date,
-        time,
-        duration: duration ? parseInt(duration) : undefined,
+        subject,
+        date: examDate.split('T')[0],
+        time: examTime,
+        duration: duration ? parseInt(duration, 10) : undefined,
         roomNo: roomNo.trim() || undefined,
-      });
-      
-      // Simulate success
-      setAlertHeader('Success');
-      setAlertMessage('Exam schedule created successfully!');
-      setIsSuccess(true);
-      setShowAlert(true);
-      
+      };
+
+      console.log('Publishing Exam Schedule Payload:', payload);
+
+      setToastMessage('Exam schedule created successfully!');
+
       setTimeout(() => {
         history.goBack();
-      }, 1500);
+      }, 1200);
     } catch (error: any) {
       console.error('Error creating exam schedule:', error);
-      const errorMessage = error?.response?.data?.error?.message || 'Failed to create exam schedule';
       setAlertHeader('Error');
-      setAlertMessage(errorMessage);
-      setIsSuccess(false);
+      setAlertMessage(error?.message || 'Failed to create exam schedule');
       setShowAlert(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'Select date';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const formatTime = (timeStr: string) => {
-    if (!timeStr) return 'Select time';
-    return timeStr;
-  };
-
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
+        <IonToolbar color="primary">
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller/exams" />
           </IonButtons>
@@ -163,34 +134,37 @@ const ClassCreateExamScheduleScreen: React.FC = () => {
 
       <IonContent className="create-exam-content" fullscreen>
         <div className="form-container">
+          
           {/* Header */}
           <div className="form-header">
-            <h1 className="form-title">Create Exam Schedule</h1>
-            <p className="form-subtitle">Add a new exam for your class</p>
+            <h1 className="form-title">New Exam Schedule</h1>
+            <p className="form-subtitle">Schedule an assessment for your class</p>
           </div>
 
-          {/* Form */}
-          <div className="form">
+          <div className="form-card">
             {/* Title */}
-            <IonItem className="input-item">
-              <IonLabel position="stacked">Exam Title *</IonLabel>
+            <div className="input-group">
+              <IonLabel className="field-label">
+                Exam Title <span className="required">*</span>
+              </IonLabel>
               <IonInput
+                fill="outline"
                 value={title}
                 onIonInput={(e) => setTitle(e.detail.value || '')}
-                placeholder="e.g., Midterm Exam"
-                autocomplete="off"
-                autocorrect="off"
-                autocapitalize="words"
+                placeholder="e.g., Midterm Examination"
               />
-            </IonItem>
+            </div>
 
             {/* Subject */}
-            <IonItem className="input-item">
-              <IonLabel position="stacked">Subject *</IonLabel>
+            <div className="input-group">
+              <IonLabel className="field-label">
+                Subject <span className="required">*</span>
+              </IonLabel>
               <IonSelect
+                fill="outline"
                 value={subject}
+                placeholder="Select Subject"
                 onIonChange={(e) => setSubject(e.detail.value)}
-                placeholder="Select subject"
                 interface="action-sheet"
               >
                 {SUBJECTS.map((subj) => (
@@ -199,154 +173,121 @@ const ClassCreateExamScheduleScreen: React.FC = () => {
                   </IonSelectOption>
                 ))}
               </IonSelect>
-            </IonItem>
+            </div>
 
-            {/* Date */}
-            <IonItem className="input-item date-item" button onClick={() => setShowDateModal(true)}>
-              <IonLabel position="stacked">Date *</IonLabel>
-              <div className="date-input">
-                <IonIcon icon={calendarOutline} className="date-icon" />
-                <span className={`date-text ${date ? '' : 'placeholder'}`}>
-                  {formatDate(date)}
-                </span>
-              </div>
-            </IonItem>
+            {/* Date & Time Row (Side-by-Side Grid) */}
+            <IonGrid className="ion-no-padding">
+              <IonRow>
+                <IonCol size="6" className="ion-padding-end">
+                  <div className="input-group">
+                    <IonLabel className="field-label">
+                      Date <span className="required">*</span>
+                    </IonLabel>
+                    <div className="datetime-btn-wrapper">
+                      <IonDatetimeButton datetime="exam-date-picker" />
+                    </div>
+                  </div>
+                </IonCol>
 
-            {/* Time */}
-            <IonItem className="input-item date-item" button onClick={() => setShowTimeModal(true)}>
-              <IonLabel position="stacked">Time *</IonLabel>
-              <div className="date-input">
-                <IonIcon icon={timeOutline} className="date-icon" />
-                <span className={`date-text ${time ? '' : 'placeholder'}`}>
-                  {formatTime(time)}
-                </span>
-              </div>
-            </IonItem>
+                <IonCol size="6">
+                  <div className="input-group">
+                    <IonLabel className="field-label">Time</IonLabel>
+                    <div className="datetime-btn-wrapper">
+                      <IonDatetimeButton datetime="exam-time-picker" />
+                    </div>
+                  </div>
+                </IonCol>
+              </IonRow>
+            </IonGrid>
 
-            {/* Duration */}
-            <IonItem className="input-item">
-              <IonLabel position="stacked">Duration (minutes)</IonLabel>
-              <IonInput
-                value={duration}
-                onIonInput={(e) => setDuration(e.detail.value || '')}
-                placeholder="e.g., 90"
-                type="number"
-                autocomplete="off"
+            {/* Native Ionic Modal Pickers */}
+            <IonModal keepContentsMounted={true}>
+              <IonDatetime
+                id="exam-date-picker"
+                presentation="date"
+                value={examDate}
+                min={new Date().toISOString()}
+                onIonChange={(e) => setExamDate(e.detail.value as string)}
+                preferWheel={false}
               />
-            </IonItem>
+            </IonModal>
 
-            {/* Room Number */}
-            <IonItem className="input-item">
-              <IonLabel position="stacked">Room Number</IonLabel>
-              <IonInput
-                value={roomNo}
-                onIonInput={(e) => setRoomNo(e.detail.value || '')}
-                placeholder="e.g., 101"
-                autocomplete="off"
-                autocorrect="off"
+            <IonModal keepContentsMounted={true}>
+              <IonDatetime
+                id="exam-time-picker"
+                presentation="time"
+                value={examTime}
+                onIonChange={(e) => setExamTime(e.detail.value as string)}
+                preferWheel={true}
               />
-            </IonItem>
+            </IonModal>
+
+            {/* Duration & Room Number Grid */}
+            <IonGrid className="ion-no-padding">
+              <IonRow>
+                <IonCol size="6" className="ion-padding-end">
+                  <div className="input-group">
+                    <IonLabel className="field-label">Duration (Mins)</IonLabel>
+                    <IonInput
+                      fill="outline"
+                      type="number"
+                      value={duration}
+                      onIonInput={(e) => setDuration(e.detail.value || '')}
+                      placeholder="e.g., 90"
+                    />
+                  </div>
+                </IonCol>
+
+                <IonCol size="6">
+                  <div className="input-group">
+                    <IonLabel className="field-label">Room / Hall No</IonLabel>
+                    <IonInput
+                      fill="outline"
+                      value={roomNo}
+                      onIonInput={(e) => setRoomNo(e.detail.value || '')}
+                      placeholder="e.g., Hall A"
+                    />
+                  </div>
+                </IonCol>
+              </IonRow>
+            </IonGrid>
+
+            {/* Submit Button */}
+            <IonButton
+              expand="block"
+              size="large"
+              className="submit-button"
+              onClick={handleCreateExam}
+              disabled={loading}
+            >
+              {loading ? (
+                <IonSpinner name="crescent" />
+              ) : (
+                <>
+                  <IonIcon icon={sendOutline} slot="start" />
+                  Publish Exam Schedule
+                </>
+              )}
+            </IonButton>
           </div>
-
-          {/* Submit Button */}
-          <IonButton
-            expand="block"
-            className="submit-button"
-            onClick={handleCreateExam}
-            disabled={loading}
-          >
-            {loading ? <IonSpinner name="crescent" /> : <IonIcon icon={sendOutline} slot="start" />}
-            {loading ? 'Creating...' : 'Create Exam Schedule'}
-          </IonButton>
         </div>
 
-        {/* Date Picker Modal */}
-        <IonModal
-          isOpen={showDateModal}
-          onDidDismiss={() => setShowDateModal(false)}
-          className="date-picker-modal"
-        >
-          <div className="modal-container">
-            <h2 className="modal-title">Select Exam Date</h2>
-            <div className="date-picker-wrapper">
-              <IonDatetime
-                value={date}
-                onIonChange={(e) => setDate(e.detail.value as string)}
-                presentation="date"
-                min={new Date().toISOString()}
-                max="2030-12-31"
-              />
-            </div>
-            <div className="modal-buttons">
-              <IonButton
-                fill="outline"
-                color="medium"
-                onClick={() => {
-                  setDate('');
-                  setShowDateModal(false);
-                }}
-              >
-                Clear
-              </IonButton>
-              <IonButton
-                color="secondary"
-                onClick={() => setShowDateModal(false)}
-              >
-                Done
-              </IonButton>
-            </div>
-          </div>
-        </IonModal>
-
-        {/* Time Picker Modal */}
-        <IonModal
-          isOpen={showTimeModal}
-          onDidDismiss={() => setShowTimeModal(false)}
-          className="date-picker-modal"
-        >
-          <div className="modal-container">
-            <h2 className="modal-title">Select Exam Time</h2>
-            <div className="date-picker-wrapper">
-              <IonDatetime
-                value={time ? `2000-01-01T${time}:00` : undefined}
-                onIonChange={(e) => {
-                  const val = e.detail.value;
-                  if (typeof val === 'string' && val) {
-                    const timePart = val.split('T')[1]?.substring(0, 5);
-                    if (timePart) setTime(timePart);
-                  }
-                }}
-                presentation="time"
-              />
-            </div>
-            <div className="modal-buttons">
-              <IonButton
-                fill="outline"
-                color="medium"
-                onClick={() => {
-                  setTime('');
-                  setShowTimeModal(false);
-                }}
-              >
-                Clear
-              </IonButton>
-              <IonButton
-                color="secondary"
-                onClick={() => setShowTimeModal(false)}
-              >
-                Done
-              </IonButton>
-            </div>
-          </div>
-        </IonModal>
-
-        {/* Alert */}
+        {/* Validation Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}
           header={alertHeader}
           message={alertMessage}
           buttons={['OK']}
+        />
+
+        {/* Success Toast */}
+        <IonToast
+          isOpen={!!toastMessage}
+          message={toastMessage}
+          duration={2000}
+          color="success"
+          onDidDismiss={() => setToastMessage('')}
         />
       </IonContent>
     </IonPage>

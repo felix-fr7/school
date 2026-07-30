@@ -21,7 +21,6 @@ import {
   IonLabel,
   IonItem,
   IonModal,
-  IonInput,
   IonSegment,
   IonSegmentButton
 } from '@ionic/react';
@@ -40,18 +39,59 @@ import {
   downloadOutline,
   listOutline
 } from 'ionicons/icons';
-import { adminAPI } from '../../services/api';
+import { adminAPI, api, openFileInNewTab } from '../../services/api';
 import { Class, ExamSchedule } from '../../types';
 import './AdminExamsScreen.css';
+
+// API Base URL for constructing file URLs
+const API_BASE_URL = 
+  import.meta.env.VITE_API_URL || 
+  import.meta.env.EXPO_PUBLIC_API_URL || 
+  'http://localhost:3000/api';
+
+// Helper to get full file URL safely
+const getFullFileUrl = (fileUrl: string | undefined | null): string => {
+  // Handle undefined, null, empty string, or '/'
+  if (!fileUrl || fileUrl === '' || fileUrl === '/') return '';
+  
+  // Strip trailing /api or / from base URL using regex
+  const rawBaseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
+  
+  // Handle local file:// URIs - extract filename and construct server path
+  if (fileUrl.startsWith('file://')) {
+    const fileName = fileUrl.split('/').pop() || '';
+    if (!fileName) return '';
+    return `${rawBaseUrl}/uploads/${fileName}`;
+  }
+  
+  // Full http:// or https:// URLs - return directly
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+    return fileUrl;
+  }
+  
+  // Relative paths - combine with base URL
+  // Ensure path starts with /uploads/
+  let relativePath = fileUrl;
+  if (!relativePath.startsWith('/')) {
+    relativePath = '/' + relativePath;
+  }
+  // If it doesn't have /uploads prefix, add it
+  if (!relativePath.startsWith('/uploads/')) {
+    relativePath = '/uploads' + relativePath;
+  }
+  
+  return `${rawBaseUrl}${relativePath}`;
+};
 
 interface ExamItemProps {
   item: ExamSchedule;
   classes: Class[];
   onDelete: (id: string) => void;
   onEdit: (id: string, title: string, classId: string | null) => void;
+  showAlertMessage?: (header: string, message: string) => void;
 }
 
-const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit }) => {
+const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit, showAlertMessage: parentShowAlert }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTitle, setEditTitle] = useState(item.title);
@@ -89,37 +129,79 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit }) 
     return 'School-wide';
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const formatDate = (dateStr: string | Date) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return 'N/A';
+    }
   };
+
+  const handleViewFile = async (examId: string, fileUrl: string | undefined) => {
+    // Prefer the new DB file endpoint if examId is available
+    if (examId) {
+      try {
+        const fileEndpoint = `/files/exam/${examId}`;
+        console.log('Opening file from database:', fileEndpoint);
+        await openFileInNewTab(fileEndpoint);
+        return;
+      } catch (error) {
+        console.error('Error opening file:', error);
+        if (parentShowAlert) {
+          parentShowAlert('Error', 'Failed to open file. Please try again.');
+        }
+        return;
+      }
+    }
+    
+    // Fallback to legacy fileUrl if examId is not available
+    const fullUrl = getFullFileUrl(fileUrl);
+    
+    // Validate URL before opening
+    if (!fullUrl) {
+      if (parentShowAlert) {
+        parentShowAlert('File Not Available', 'File URL is missing or invalid. Please re-upload the file.');
+      }
+      console.error('Invalid file URL:', fileUrl);
+      return;
+    }
+    
+    // Log for debugging
+    console.log('Opening file URL:', fullUrl);
+    
+    // Open in new tab with security attributes
+    if (typeof window !== 'undefined') {
+      window.open(fullUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const fullFileUrl = getFullFileUrl(item.fileUrl);
 
   return (
     <>
       <div className="exam-card-modern">
-        <div className="exam-card-preview">
+        <div className="exam-card-preview" onClick={() => handleViewFile(item.id, item.fileUrl)}>
           {isImageFile(item.fileUrl) ? (
             <div className="image-thumbnail-wrapper">
               <img 
-                src={item.fileUrl} 
+                src={fullFileUrl} 
                 alt={item.title} 
                 className="exam-thumbnail"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
-              <a 
-                href={item.fileUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="thumbnail-overlay"
-              >
+              <div className="thumbnail-overlay">
                 <IonIcon icon={eyeOutline} />
                 <span>View Full</span>
-              </a>
+              </div>
             </div>
           ) : (
             <div className="pdf-icon-wrapper">
@@ -143,17 +225,15 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit }) 
               <IonIcon icon={calendarOutline} />
               {formatDate(item.date)}
             </span>
-            {isPdfFile(item.fileUrl) && (
-              <a 
-                href={item.fileUrl} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="view-pdf-btn"
-              >
-                <IonIcon icon={downloadOutline} />
-                View PDF
-              </a>
-            )}
+            <button 
+              type="button"
+              onClick={() => handleViewFile(item.id, item.fileUrl)}
+              className="view-pdf-btn"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: 0 }}
+            >
+              <IonIcon icon={isPdfFile(item.fileUrl) ? downloadOutline : eyeOutline} />
+              {isPdfFile(item.fileUrl) ? 'View PDF' : 'View File'}
+            </button>
           </div>
         </div>
 
@@ -194,40 +274,71 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit }) 
         ]}
       />
 
-      {/* Edit Modal */}
+      {/* Inline Styled Edit Modal to prevent Shadow DOM override issues */}
       <IonModal 
         isOpen={showEditModal} 
         onDidDismiss={() => setShowEditModal(false)}
-        className="edit-modal-modern"
+        style={{
+          '--width': '90%',
+          '--max-width': '460px',
+          '--height': 'auto',
+          '--border-radius': '16px',
+          '--box-shadow': '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+        }}
       >
-        <div className="modal-container">
-          <div className="modal-header">
-            <h2>Edit Timetable</h2>
-            <button className="modal-close" onClick={() => setShowEditModal(false)}>
+        <div style={{ padding: '24px', background: '#ffffff', borderRadius: '16px', color: '#1f2937' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: '#111827' }}>Edit Timetable</h2>
+            <button 
+              onClick={() => setShowEditModal(false)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#6b7280', display: 'flex', alignItems: 'center' }}
+            >
               <IonIcon icon={closeCircleOutline} />
             </button>
           </div>
 
-          <div className="modal-content">
-            <div className="form-group">
-              <IonLabel position="stacked">Timetable Title *</IonLabel>
-              <IonInput
+          {/* Body */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                Timetable Title *
+              </label>
+              <input
                 type="text"
                 value={editTitle}
-                onIonInput={(e) => setEditTitle(e.detail.value || '')}
+                onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Enter timetable title"
-                className="modern-input"
+                style={{
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  background: '#f9fafb',
+                  color: '#111827'
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <IonLabel position="stacked">Target Class</IonLabel>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                Target Class
+              </label>
               <IonSelect
                 value={editClassId}
                 placeholder="Select Class (Default: All Classes)"
                 onIonChange={(e) => setEditClassId(e.detail.value)}
                 interface="popover"
-                className="modern-select"
+                style={{
+                  width: '100%',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  padding: '4px 8px',
+                  background: '#f9fafb'
+                }}
               >
                 <IonSelectOption value={undefined}>🏫 All Classes (School-wide)</IonSelectOption>
                 {classes.map((cls) => (
@@ -239,9 +350,11 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit }) 
             </div>
           </div>
 
-          <div className="modal-footer">
+          {/* Footer */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '24px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
             <IonButton 
               fill="outline" 
+              color="medium"
               onClick={() => setShowEditModal(false)}
               disabled={isSubmitting}
             >
@@ -268,12 +381,9 @@ const AdminExamsScreen: React.FC = () => {
   const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<'upload' | 'list'>('upload');
 
-  // File state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Timetable title state
   const [title, setTitle] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
@@ -288,9 +398,10 @@ const AdminExamsScreen: React.FC = () => {
 
   const fetchExams = async () => {
     try {
-      const response = await adminAPI.getExamSchedules(1, 50);
+      // Use the /admin/exams endpoint (Exam table for PDF/Image based timetables)
+      const response = await adminAPI.getExams(1, 100);
       if (response.success && response.data) {
-        setExamList(response.data.examSchedules || []);
+        setExamList(response.data.exams || []);
       }
     } catch (error) {
       console.error('Error fetching exams:', error);
@@ -372,24 +483,40 @@ const AdminExamsScreen: React.FC = () => {
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('title', title.trim());
-      if (isValidUUID(selectedClassId)) {
-        formData.append('classId', selectedClassId as string);
+      // First, upload the file to get a URL
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', selectedFile);
+      
+      // Upload file using the admin content upload endpoint
+      const uploadResponse = await api.post('/admin/content/upload', uploadFormData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (!uploadResponse.data.success) {
+        throw new Error('File upload failed');
       }
 
-      const response = await adminAPI.createExamSchedule(formData as any);
+      const fileUrl = uploadResponse.data.data.url;
 
-      if (response.success) {
+      // Then create the exam record with the file URL
+      const examData = {
+        title: title.trim(),
+        classId: isValidUUID(selectedClassId) ? selectedClassId : undefined,
+        fileUrl: fileUrl,
+      };
+
+      const response = await api.post('/admin/content/exams', examData);
+
+      if (response.data.success) {
         showAlertMessage('Success', 'Exam timetable published successfully!');
         handleRemoveFile();
         setSelectedClassId(undefined);
         setTitle('');
-        fetchExams();
-        setActiveTab('list'); // Automatically switch to view published timetables
+        fetchExams(); // Refresh the list to show the newly created exam
+        setActiveTab('list');
       }
     } catch (error: any) {
+      console.error('Error creating exam:', error);
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to upload timetable');
     } finally {
       setSubmitting(false);
@@ -398,27 +525,31 @@ const AdminExamsScreen: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await adminAPI.deleteExamSchedule(id);
-      if (response.success) {
+      // Use the /admin/content/exams/:id endpoint (Exam table)
+      const response = await api.delete(`/admin/content/exams/${id}`);
+      if (response.data.success) {
         setExamList(prev => prev.filter(item => item.id !== id));
-        showAlertMessage('Success', 'Exam schedule deleted successfully');
+        showAlertMessage('Success', 'Exam timetable deleted successfully');
       }
-    } catch (error) {
-      showAlertMessage('Error', 'Failed to delete exam schedule');
+    } catch (error: any) {
+      console.error('Error deleting exam:', error);
+      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to delete exam timetable');
     }
   };
 
   const handleEdit = async (id: string, newTitle: string, newClassId: string | null) => {
     try {
-      const response = await adminAPI.updateExamSchedule(id, {
+      // Use the /admin/content/exams/:id endpoint (Exam table)
+      const response = await api.put(`/admin/content/exams/${id}`, {
         title: newTitle,
         classId: newClassId
       });
-      if (response.success) {
-        showAlertMessage('Success', 'Exam schedule updated successfully');
+      if (response.data.success) {
+        showAlertMessage('Success', 'Exam timetable updated successfully');
         fetchExams();
       }
     } catch (error: any) {
+      console.error('Error updating exam:', error);
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update timetable');
     }
   };
@@ -462,7 +593,6 @@ const AdminExamsScreen: React.FC = () => {
 
       <IonContent className="admin-exams-content" fullscreen>
         <div className="admin-container-modern">
-          {/* Header Banner */}
           <div className="page-header">
             <div className="header-content">
               <h1 className="page-title">📅 Exam Schedule Management</h1>
@@ -470,7 +600,6 @@ const AdminExamsScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Tab View Switcher */}
           <div className="view-segment-container">
             <IonSegment 
               value={activeTab} 
@@ -488,7 +617,6 @@ const AdminExamsScreen: React.FC = () => {
             </IonSegment>
           </div>
 
-          {/* Section 1: Upload Form */}
           {activeTab === 'upload' && (
             <IonCard className="admin-card-modern upload-card">
               <IonCardHeader>
@@ -604,7 +732,6 @@ const AdminExamsScreen: React.FC = () => {
             </IonCard>
           )}
 
-          {/* Section 2: Published Timetables List */}
           {activeTab === 'list' && (
             <IonCard className="admin-card-modern list-card-modern">
               <IonCardHeader>
@@ -631,6 +758,7 @@ const AdminExamsScreen: React.FC = () => {
                         classes={classes}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
+                        showAlertMessage={showAlertMessage}
                       />
                     ))}
                   </div>

@@ -1,259 +1,274 @@
 /**
  * Student Routes
- * Handles student-specific read-only operations
- * All routes require Student role
+ * Student-specific endpoints
  */
 
 const express = require('express');
-const { query, body, param } = require('express-validator');
-const studentController = require('../controllers/studentController');
-const studentDashboardController = require('../controllers/studentDashboardController');
-const attendanceController = require('../controllers/attendanceController');
-const feeController = require('../controllers/feeController');
-const { protect, requireStudent } = require('../middleware/auth');
-
 const router = express.Router();
+const { query } = require('../config/db');
+const { authenticate } = require('../middleware/auth');
 
-// All routes require Student role
-router.use(protect);
-router.use(requireStudent);
+router.use(authenticate);
 
-// ============================================
-// Dashboard Routes
-// ============================================
+// Dashboard
+router.get('/dashboard', async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+    const classId = req.user.classId;
 
-/**
- * @route   GET /api/student/dashboard
- * @desc    Get student dashboard with stats, recent homework, news, and upcoming exams
- * @access  Student
- */
-router.get('/dashboard', studentController.getDashboardStats);
+    // Today's attendance
+    const [todayAttendance] = await query(
+      `SELECT status FROM attendance WHERE student_id = ? AND attendance_date = CURDATE()`,
+      [studentId]
+    );
 
-/**
- * @route   GET /api/student/dashboard-extended
- * @desc    Extended dashboard with attendance percentage and fee status
- * @access  Student
- */
-router.get('/dashboard-extended', studentController.getDashboardExtended);
+    // Pending homework
+    const [pendingHomework] = await query(
+      `SELECT COUNT(*) as count FROM homework_submissions hs
+       JOIN homework h ON hs.homework_id = h.id
+       WHERE hs.student_id = ? AND hs.status = 'pending'`,
+      [studentId]
+    );
 
-// ============================================
-// Homework Routes
-// ============================================
+    // Upcoming exams
+    const exams = await query(
+      `SELECT e.name, e.type, es.schedule_date, es.start_time, es.end_time, s.name as subject_name
+       FROM exam_schedules es
+       JOIN exams e ON es.exam_id = e.id
+       JOIN subjects s ON es.subject_id = s.id
+       WHERE es.class_id = ? AND es.schedule_date >= CURDATE()
+       ORDER BY es.schedule_date, es.start_time
+       LIMIT 5`,
+      [classId]
+    );
 
-/**
- * @route   GET /api/student/homework
- * @desc    Get all homework for student's class
- * @access  Student
- * @query   page, limit, subject
- */
-router.get(
-  '/homework',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-    query('subject').optional().trim(),
-  ],
-  studentController.getHomework
-);
+    // Recent homework
+    const homework = await query(
+      `SELECT h.*, s.name as subject_name, hs.status as submission_status, hs.grade, hs.remarks
+       FROM homework h
+       JOIN subjects s ON h.subject_id = s.id
+       LEFT JOIN homework_submissions hs ON h.id = hs.homework_id AND hs.student_id = ?
+       WHERE h.class_id = ? AND h.is_published = TRUE
+       ORDER BY h.due_date DESC
+       LIMIT 5`,
+      [studentId, classId]
+    );
 
-/**
- * @route   GET /api/student/homework/:id
- * @desc    Get single homework details
- * @access  Student
- */
-router.get(
-  '/homework/:id',
-  [param('id').isUUID().withMessage('Invalid homework ID format')],
-  studentController.getHomeworkById
-);
+    res.json({
+      success: true,
+      data: {
+        todayAttendance: todayAttendance?.status || null,
+        pendingHomework: pendingHomework.count,
+        upcomingExams: exams,
+        recentHomework: homework
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-// ============================================
-// Marks Routes
-// ============================================
+// Timetable
+router.get('/timetable', async (req, res, next) => {
+  try {
+    const classId = req.user.classId;
 
-/**
- * @route   GET /api/student/marks
- * @desc    Get student's own marks with statistics
- * @access  Student
- * @query   page, limit, subject, examType
- */
-router.get(
-  '/marks',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-    query('subject').optional().trim(),
-    query('examType').optional().trim(),
-  ],
-  studentController.getMarks
-);
+    const timetable = await query(
+      `SELECT t.*, s.name as subject_name, u.name as teacher_name
+       FROM timetables t
+       JOIN subjects s ON t.subject_id = s.id
+       JOIN users u ON t.teacher_id = u.id
+       WHERE t.class_id = ? AND t.is_active = TRUE
+       ORDER BY FIELD(t.day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), 
+                t.period_number`,
+      [classId]
+    );
 
-/**
- * @route   GET /api/student/marks/:id
- * @desc    Get single mark details
- * @access  Student
- */
-router.get(
-  '/marks/:id',
-  [param('id').isUUID().withMessage('Invalid mark ID format')],
-  studentController.getMarkById
-);
+    res.json({ success: true, data: timetable });
+  } catch (error) {
+    next(error);
+  }
+});
 
-// ============================================
-// News Routes
-// ============================================
+// Homework
+router.get('/homework', async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+    const classId = req.user.classId;
 
-/**
- * @route   GET /api/student/news
- * @desc    Get all published news for student's school
- * @access  Student
- * @query   page, limit, category
- */
-router.get(
-  '/news',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-    query('category').optional().trim(),
-  ],
-  studentController.getNews
-);
+    const homework = await query(
+      `SELECT h.*, s.name as subject_name, 
+              hs.status as submission_status, hs.submitted_at, hs.grade, hs.remarks,
+              u.name as graded_by_name
+       FROM homework h
+       JOIN subjects s ON h.subject_id = s.id
+       LEFT JOIN homework_submissions hs ON h.id = hs.homework_id AND hs.student_id = ?
+       LEFT JOIN users u ON hs.graded_by = u.id
+       WHERE h.class_id = ? AND h.is_published = TRUE
+       ORDER BY h.due_date DESC`,
+      [studentId, classId]
+    );
 
-/**
- * @route   GET /api/student/news/:id
- * @desc    Get single news article
- * @access  Student
- */
-router.get(
-  '/news/:id',
-  [param('id').isUUID().withMessage('Invalid news ID format')],
-  studentController.getNewsById
-);
+    res.json({ success: true, data: homework });
+  } catch (error) {
+    next(error);
+  }
+});
 
-// ============================================
-// Circular Routes
-// ============================================
+// Submit homework
+router.post('/homework/:id/submit', async (req, res, next) => {
+  try {
+    const { submissionText, attachmentUrl } = req.body;
+    const studentId = req.user.id;
 
-/**
- * @route   GET /api/student/circulars
- * @desc    Get all published circulars for student's school
- * @access  Student
- * @query   page, limit
- */
-router.get(
-  '/circulars',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-  ],
-  studentController.getCirculars
-);
+    await query(
+      `UPDATE homework_submissions SET submission_text = ?, attachment_url = ?, status = 'submitted', 
+              submitted_at = NOW()
+       WHERE homework_id = ? AND student_id = ?`,
+      [submissionText, attachmentUrl, req.params.id, studentId]
+    );
 
-/**
- * @route   GET /api/student/circulars/:id
- * @desc    Get single circular
- * @access  Student
- */
-router.get(
-  '/circulars/:id',
-  [param('id').isUUID().withMessage('Invalid circular ID format')],
-  studentController.getCircularById
-);
+    res.json({ success: true, message: 'Homework submitted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
 
-// ============================================
-// Exam Schedule Routes
-// ============================================
+// Exams
+router.get('/exams', async (req, res, next) => {
+  try {
+    const classId = req.user.classId;
 
-/**
- * @route   GET /api/student/exam-schedules
- * @desc    Get upcoming exam schedules for student's class
- * @access  Student
- * @query   page, limit
- */
-router.get(
-  '/exam-schedules',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-  ],
-  studentController.getExamSchedules
-);
+    const exams = await query(
+      `SELECT e.*, es.schedule_date, es.start_time, es.end_time, es.room_number, s.name as subject_name
+       FROM exam_schedules es
+       JOIN exams e ON es.exam_id = e.id
+       JOIN subjects s ON es.subject_id = s.id
+       WHERE es.class_id = ? AND e.is_published = TRUE
+       ORDER BY es.schedule_date, es.start_time`,
+      [classId]
+    );
 
-/**
- * @route   GET /api/student/exam-schedules/:id
- * @desc    Get single exam schedule
- * @access  Student
- */
-router.get(
-  '/exam-schedules/:id',
-  [param('id').isUUID().withMessage('Invalid exam schedule ID format')],
-  studentController.getExamScheduleById
-);
+    res.json({ success: true, data: exams });
+  } catch (error) {
+    next(error);
+  }
+});
 
-// ============================================
-// Attendance Routes
-// ============================================
+// Marks/Report Card
+router.get('/marks', async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
 
-/**
- * @route   GET /api/student/attendance/stats
- * @desc    Get student's own attendance statistics
- * @access  Student
- */
-router.get('/attendance/stats', attendanceController.getStudentAttendanceStats);
+    const marks = await query(
+      `SELECT m.*, e.name as exam_name, e.type as exam_type, s.name as subject_name,
+              (SELECT COUNT(*) FROM marks WHERE student_id = ? AND exam_id = m.exam_id) as total_subjects
+       FROM marks m
+       JOIN exams e ON m.exam_id = e.id
+       JOIN subjects s ON m.subject_id = s.id
+       WHERE m.student_id = ?
+       ORDER BY e.start_date DESC, s.name`,
+      [studentId, studentId]
+    );
 
-// ============================================
-// Fee Routes
-// ============================================
+    res.json({ success: true, data: marks });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   GET /api/student/fees
- * @desc    Get student's own fee ledger
- * @access  Student
- */
-router.get('/fees', feeController.getStudentFees);
+// Attendance history
+router.get('/attendance', async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+    const { month, year } = req.query;
 
-// ============================================
-// Dashboard Profile Route (New UI)
-// ============================================
+    let whereClause = 'a.student_id = ?';
+    let params = [studentId];
 
-/**
- * @route   GET /api/student/dashboard-profile
- * @desc    Get student dashboard profile with school branding
- * @access  Student
- */
-router.get('/dashboard-profile', studentDashboardController.getDashboardProfile);
+    if (month && year) {
+      whereClause += ` AND MONTH(a.attendance_date) = ? AND YEAR(a.attendance_date) = ?`;
+      params.push(parseInt(month), parseInt(year));
+    }
 
-// ============================================
-// Profile Routes
-// ============================================
+    const attendance = await query(
+      `SELECT a.*, u.name as marked_by_name
+       FROM attendance a
+       JOIN users u ON a.marked_by = u.id
+       WHERE ${whereClause}
+       ORDER BY a.attendance_date DESC, a.createdAt DESC`,
+      params
+    );
 
-/**
- * @route   GET /api/student/profile
- * @desc    Get student's own profile
- * @access  Student
- */
-router.get('/profile', studentController.getProfile);
+    res.json({ success: true, data: attendance });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   PUT /api/student/profile
- * @desc    Update student's own profile
- * @access  Student
- * @body    { name?, phone? }
- */
-router.put(
-  '/profile',
-  [
-    body('name')
-      .optional()
-      .trim()
-      .notEmpty()
-      .isLength({ max: 100 }),
-    body('phone')
-      .optional()
-      .trim()
-      .isLength({ max: 20 }),
-  ],
-  studentController.updateProfile
-);
+// Leave requests
+router.get('/leave', async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+
+    const leaves = await query(
+      `SELECT l.*, u.name as approved_by_name
+       FROM leave_requests l
+       LEFT JOIN users u ON l.approved_by = u.id
+       WHERE l.student_id = ?
+       ORDER BY l.createdAt DESC`,
+      [studentId]
+    );
+
+    res.json({ success: true, data: leaves });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/leave', async (req, res, next) => {
+  try {
+    const { leaveType, startDate, endDate, reason, attachmentUrl } = req.body;
+    const studentId = req.user.id;
+    const classId = req.user.classId;
+    const { v4: uuidv4 } = require('uuid');
+    const leaveId = uuidv4();
+
+    await query(
+      `INSERT INTO leave_requests (id, tenant_id, student_id, class_id, leave_type, start_date, end_date, 
+              reason, attachment_url, applied_by, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      [leaveId, req.user.tenantId, studentId, classId, leaveType, startDate, endDate, reason, attachmentUrl, studentId]
+    );
+
+    res.status(201).json({ success: true, data: { id: leaveId } });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Profile
+router.get('/profile', async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+
+    const profile = await query(
+      `SELECT u.*, sp.*, c.name as class_name, c.section, c.grade_level
+       FROM users u
+       JOIN student_profiles sp ON u.id = sp.user_id
+       JOIN classes c ON sp.class_id = c.id
+       WHERE u.id = ?`,
+      [studentId]
+    );
+
+    if (!profile || profile.length === 0) {
+      return res.status(404).json({ success: false, message: 'Profile not found' });
+    }
+
+    res.json({ success: true, data: profile[0] });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;

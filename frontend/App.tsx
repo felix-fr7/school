@@ -34,6 +34,7 @@ const EditTeacherScreen = React.lazy(() => import('./src/screens/admin/EditTeach
 const CreateTeacherScreen = React.lazy(() => import('./src/screens/admin/CreateTeacherScreen'));
 const StudentsListScreen = React.lazy(() => import('./src/screens/admin/StudentsListScreen'));
 const CreateStudentScreen = React.lazy(() => import('./src/screens/admin/CreateStudentScreen'));
+const EditStudentScreen = React.lazy(() => import('./src/screens/admin/EditStudentScreen'));
 const HomeworkListScreen = React.lazy(() => import('./src/screens/admin/HomeworkListScreen'));
 const CreateHomeworkScreen = React.lazy(() => import('./src/screens/admin/CreateHomeworkScreen'));
 const NewsListScreen = React.lazy(() => import('./src/screens/admin/NewsListScreen'));
@@ -46,17 +47,6 @@ const AdminNewsScreen = React.lazy(() => import('./src/screens/admin/AdminNewsSc
 const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminCircularsScreen'));
 const AdminExamsScreen = React.lazy(() => import('./src/screens/admin/AdminExamsScreen'));
 const PlaceholderScreen = React.lazy(() => import('./src/screens/admin/PlaceholderScreen'));
-
-// Teacher Screens (Lazy loaded)
-const TeacherDashboardScreen = React.lazy(() => import('./src/screens/teacher/TeacherDashboardScreen'));
-const TeacherStudentsScreen = React.lazy(() => import('./src/screens/teacher/TeacherStudentsScreen'));
-const TeacherHomeworkScreen = React.lazy(() => import('./src/screens/teacher/TeacherHomeworkScreen'));
-const TeacherMarksScreen = React.lazy(() => import('./src/screens/teacher/TeacherMarksScreen'));
-const TeacherNewsScreen = React.lazy(() => import('./src/screens/teacher/TeacherNewsScreen'));
-const TeacherCircularsScreen = React.lazy(() => import('./src/screens/teacher/TeacherCircularsScreen'));
-const WeeklyLessonGridScreen = React.lazy(() => import('./src/screens/teacher/WeeklyLessonGridScreen'));
-const TeacherAttendanceScreen = React.lazy(() => import('./src/screens/teacher/TeacherAttendanceScreen'));
-const WeeklyTimetableScreen = React.lazy(() => import('./src/screens/teacher/WeeklyTimetableScreen'));
 
 // Student Screens (Lazy loaded)
 const StudentDashboardScreen = React.lazy(() => import('./src/screens/student/DashboardScreen'));
@@ -79,8 +69,6 @@ const ClassEditStudentScreen = React.lazy(() => import('./src/screens/classcontr
 const ClassHomeworkListScreen = React.lazy(() => import('./src/screens/classcontroller/ClassHomeworkListScreen'));
 const ClassHomeworkDetailScreen = React.lazy(() => import('./src/screens/classcontroller/ClassHomeworkDetailScreen'));
 const ClassCreateHomeworkScreen = React.lazy(() => import('./src/screens/classcontroller/ClassCreateHomeworkScreen'));
-const ClassAttendanceListScreen = React.lazy(() => import('./src/screens/classcontroller/ClassAttendanceListScreen'));
-const ClassMarkAttendanceScreen = React.lazy(() => import('./src/screens/classcontroller/ClassMarkAttendanceScreen'));
 const ClassNewsListScreen = React.lazy(() => import('./src/screens/classcontroller/ClassNewsListScreen'));
 const ClassNewsDetailScreen = React.lazy(() => import('./src/screens/classcontroller/ClassNewsDetailScreen'));
 const ClassCircularsListScreen = React.lazy(() => import('./src/screens/classcontroller/ClassCircularsListScreen'));
@@ -252,6 +240,8 @@ const AppContent: React.FC = () => {
             <ProtectedRoute exact path="/admin/teachers/:teacherId/edit" component={EditTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/students" component={StudentsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/students/create" component={CreateStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/students/edit/:studentId" component={EditStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/students/:studentId/edit" component={EditStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/homework" component={HomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/homework/create" component={CreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/news" component={NewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
@@ -263,21 +253,6 @@ const AppContent: React.FC = () => {
             <ProtectedRoute exact path="/admin/admin-news" component={AdminNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/admin-circulars" component={AdminCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/admin-exams" component={AdminExamsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-          </>
-        )}
-
-        {/* Teacher Routes */}
-        {isTeacher && (
-          <>
-            <ProtectedRoute exact path="/teacher/dashboard" component={TeacherDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/students" component={TeacherStudentsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/homework" component={TeacherHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/marks" component={TeacherMarksScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/news" component={TeacherNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/circulars" component={TeacherCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/weekly-lessons" component={WeeklyLessonGridScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/attendance" component={TeacherAttendanceScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/teacher/timetable" component={WeeklyTimetableScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>
         )}
 
@@ -308,8 +283,6 @@ const AppContent: React.FC = () => {
             <ProtectedRoute exact path="/class-controller/homework" component={ClassHomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/homework/create" component={ClassCreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/homework/:homeworkId" component={ClassHomeworkDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/class-controller/attendance" component={ClassAttendanceListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/class-controller/attendance/mark" component={ClassMarkAttendanceScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/news" component={ClassNewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/news/:newsId" component={ClassNewsDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/circulars" component={ClassCircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />

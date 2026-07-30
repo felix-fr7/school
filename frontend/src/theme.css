@@ -162,6 +162,29 @@
 }
 
 /* ============================================
+   LIGHT MODE DESIGN SYSTEM - Class Screens
+   Clean, modern, professional light theme
+   ============================================ */
+.light-mode,
+.light-mode ion-content {
+  --bg-canvas-light: #f8fafc;
+  --bg-surface-light: #ffffff;
+  --bg-card-light: #ffffff;
+  --text-primary-light: #111827;
+  --text-secondary-light: #475569;
+  --text-tertiary-light: #64748B;
+  --border-subtle-light: 1px solid #e5e7eb;
+  --border-light-light: 1px solid #e2e8f0;
+  --shadow-xs-light: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm-light: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md-light: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --banner-bg-light: #dbeafe;
+  --banner-text-light: #1e40af;
+  --accent-blue-light: #3b82f6;
+  --accent-blue-hover-light: #2563eb;
+}
+
+/* ============================================
    IONIC COLOR OVERRIDES - Premium Palette
    ============================================ */
 :root {

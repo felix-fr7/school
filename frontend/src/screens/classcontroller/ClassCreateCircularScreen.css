@@ -1,33 +1,25 @@
-/**
- * Class Create Circular Screen (Ionic React Styles)
- * Create new circular for the class
- */
-
 /* ============================================
    Content Container
    ============================================ */
 .create-circular-content {
-  --background: #FFF5F0;
+  --background: var(--ion-color-light, #f4f5f8);
 }
 
-/* ============================================
-   Form Container
-   ============================================ */
 .form-container {
   padding: 16px;
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
 }
 
 /* ============================================
-   Form Header
+   Header
    ============================================ */
 .form-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .form-title {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
   color: var(--ion-color-dark);
   margin: 0 0 4px 0;
@@ -40,242 +32,150 @@
 }
 
 /* ============================================
-   Form
+   Form Card Wrapper
    ============================================ */
-.form {
-  margin-bottom: 24px;
+.form-card {
+  background: var(--ion-card-background, #ffffff);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 /* ============================================
-   Input Items
+   Inputs & Labels
    ============================================ */
-.input-item {
-  --background: transparent;
-  --padding-start: 0;
-  --padding-end: 0;
-  margin-bottom: 20px;
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.input-item ion-label {
-  font-size: 14px;
+.field-label {
+  font-size: 13px;
   font-weight: 600;
   color: var(--ion-color-dark);
-  margin-bottom: 8px;
 }
 
-.input-item ion-input {
-  --background: #FFFFFF;
-  --border-radius: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 14px;
-  --padding-bottom: 14px;
+.required {
+  color: var(--ion-color-danger, #eb445a);
+}
+
+/* Ionic Input Native Adjustments */
+.input-group ion-input,
+.input-group ion-textarea,
+.input-group ion-select {
+  --border-radius: 10px;
   font-size: 15px;
-  border: 1px solid #E0E0E0;
-  border-radius: 12px;
 }
 
 /* ============================================
-   Textarea Item
+   Ionic Datetime Button Integration
    ============================================ */
-.textarea-item {
-  margin-bottom: 20px;
-}
-
-.textarea-item ion-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin-bottom: 8px;
-  display: block;
-}
-
-.textarea-item ion-textarea {
-  --background: #FFFFFF;
-  --border-radius: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 14px;
-  --padding-bottom: 14px;
-  font-size: 15px;
-  border: 1px solid #E0E0E0;
-  border-radius: 12px;
-}
-
-/* ============================================
-   Date Item
-   ============================================ */
-.date-item {
-  cursor: pointer;
-}
-
-.date-input {
+.datetime-picker-row {
   display: flex;
   align-items: center;
+}
+
+/* ============================================
+   File Upload Styling
+   ============================================ */
+.file-input-hidden {
+  display: none;
+}
+
+.file-upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 12px 16px;
-  background: #FFFFFF;
-  border: 1px solid #E0E0E0;
-  border-radius: 12px;
-  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed var(--ion-color-medium);
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--ion-color-primary);
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--ion-color-light-tint, #f9fafb);
+  transition: background 0.2s;
 }
 
-.date-icon {
-  font-size: 18px;
-  color: var(--ion-color-medium);
+.file-upload-button:hover {
+  background: var(--ion-color-light-shade, #f0f0f0);
 }
 
-.date-text {
-  flex: 1;
-  font-size: 15px;
+.file-selected-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid var(--ion-color-medium-tint);
+  border-radius: 10px;
+  background: var(--ion-color-light);
+}
+
+.file-name {
+  font-size: 13px;
+  font-weight: 500;
   color: var(--ion-color-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.date-text.placeholder {
-  color: var(--ion-color-medium);
+.file-remove-icon {
+  font-size: 18px;
+  color: var(--ion-color-danger);
+  cursor: pointer;
 }
 
 /* ============================================
    Toggle Item
    ============================================ */
+.toggle-group {
+  background: var(--ion-color-light-tint, #f9fafb);
+  border-radius: 12px;
+  padding: 12px;
+}
+
 .toggle-item {
   --background: transparent;
   --padding-start: 0;
   --padding-end: 0;
-  margin-bottom: 4px;
+  --inner-padding-end: 0;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .toggle-description {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 12px;
   color: var(--ion-color-medium);
-  margin: 0 0 20px 0;
-}
-
-.toggle-description ion-icon {
-  font-size: 14px;
+  margin: 6px 0 0 0;
 }
 
 /* ============================================
    Submit Button
    ============================================ */
 .submit-button {
-  --border-radius: 16px;
-  --box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+  --border-radius: 12px;
   margin-top: 8px;
+  font-weight: 600;
 }
 
 /* ============================================
-   Date Picker Modal
-   ============================================ */
-.date-picker-modal {
-  --height: auto;
-  --max-height: 90vh;
-  --width: 85%;
-  --max-width: 400px;
-}
-
-.modal-container {
-  padding: 24px;
-  background: var(--ion-color-light);
-  border-radius: 24px;
-  text-align: center;
-}
-
-.modal-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--ion-color-dark);
-  margin: 0 0 20px 0;
-}
-
-.date-picker-wrapper {
-  margin-bottom: 20px;
-}
-
-.date-picker-wrapper ion-datetime {
-  --background: var(--ion-color-light);
-  width: 100%;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 12px;
-}
-
-.modal-buttons ion-button {
-  flex: 1;
-}
-
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
-@media (min-width: 768px) {
-  .form-container {
-    padding: 24px;
-  }
-}
-
-/* ============================================
-   Dark Mode Support
+   Dark Mode Adjustments
    ============================================ */
 @media (prefers-color-scheme: dark) {
-  .create-circular-content {
-    --background: #121212;
+  .toggle-group {
+    background: rgba(255, 255, 255, 0.05);
   }
 
-  .form-title {
-    color: #fff;
-  }
-
-  .form-subtitle {
-    color: #888;
-  }
-
-  .input-item ion-label {
-    color: #fff;
-  }
-
-  .input-item ion-input {
-    --background: #2a2a2a;
-    border-color: #444;
-    color: #fff;
-  }
-
-  .textarea-item ion-label {
-    color: #fff;
-  }
-
-  .textarea-item ion-textarea {
-    --background: #2a2a2a;
-    border-color: #444;
-    color: #fff;
-  }
-
-  .date-input {
-    background: #2a2a2a;
-    border-color: #444;
-  }
-
-  .date-text {
-    color: #fff;
-  }
-
-  .date-text.placeholder {
-    color: #888;
-  }
-
-  .toggle-description {
-    color: #888;
-  }
-
-  .modal-container {
-    background: #1e1e1e;
-  }
-
-  .modal-title {
-    color: #fff;
+  .file-upload-button {
+    background: rgba(255, 255, 255, 0.03);
   }
 }

@@ -1,353 +1,114 @@
 /**
- * Authentication & Authorization Middleware
- * Verifies JWT tokens, attaches user data to request, and enforces role-based access
- * 
- * Includes in-memory caching (5-minute TTL) to avoid repeated database queries
- * and reduce network latency on every authenticated request.
+ * Authentication Middleware
+ * JWT token verification and role-based access control
  */
 
 const jwt = require('jsonwebtoken');
-const db = require('../config/db');
-const { userCache } = require('../utils/cache');
+const { query } = require('../config/db');
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 /**
- * Protect routes - verify JWT token
- * Attach user data to request object
+ * Verify JWT Token
+ * Attaches user data to req.user
  */
-const protect = async (req, res, next) => {
+const authenticate = async (req, res, next) => {
   try {
     // Get token from header
     const authHeader = req.headers.authorization;
-
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        error: {
-          message: 'Not authorized to access this route',
-        },
+        message: 'Access denied. No token provided.'
       });
     }
 
-    // Extract token
     const token = authHeader.split(' ')[1];
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          message: 'No token provided',
-        },
-      });
-    }
-
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Check if user data is cached (5-minute TTL)
-    const cachedUser = userCache.get(decoded.id);
-    if (cachedUser) {
-      // Cache hit - use cached data, skip database query
-      req.user = cachedUser;
-      return next();
-    }
+    // Get user from database
+    const users = await query(
+      `SELECT u.id, u.email, u.name, u.role, u.tenant_id, u.avatar_url, u.is_active,
+              sp.student_id, sp.class_id, sp.roll_number,
+              tp.teacher_id
+       FROM users u
+       LEFT JOIN student_profiles sp ON u.id = sp.user_id
+       LEFT JOIN teacher_profiles tp ON u.id = tp.user_id
+       WHERE u.id = ? AND u.is_active = TRUE`,
+      [decoded.userId]
+    );
 
-    // Cache miss - fetch user from database
-    const userQuery = `
-      SELECT 
-        u.id,
-        u.email,
-        u.name,
-        u.phone,
-        u.role,
-        u."tenantId",
-        u."classId",
-        u."studentId",
-        u."createdAt",
-        u."updatedAt",
-        t.id as "tenant_table_id",
-        t.name as "tenantName",
-        t.code as "tenantCode",
-        c.id as "class_table_id",
-        c.name as "className",
-        c.section as "classSection"
-      FROM "User" u
-      LEFT JOIN "Tenant" t ON u."tenantId" = t.id
-      LEFT JOIN "Class" c ON u."classId" = c.id
-      WHERE u.id = $1
-    `;
-
-    const userResult = await db.query(userQuery, [decoded.id]);
-
-    if (userResult.rows.length === 0) {
+    if (!users || users.length === 0) {
       return res.status(401).json({
         success: false,
-        error: {
-          message: 'User not found',
-        },
+        message: 'Invalid token or user not found.'
       });
     }
 
-    const user = userResult.rows[0];
-    
-    // Add tenant and class objects if they exist
-    if (user.tenantId) {
-      user.tenant = {
-        id: user.tenantId,
-        name: user.tenantName,
-        code: user.tenantCode,
-      };
+    const user = users[0];
+
+    if (!user.is_active) {
+      return res.status(401).json({
+        success: false,
+        message: 'User account is deactivated.'
+      });
     }
-    if (user.classId) {
-      user.class = {
-        id: user.classId,
-        name: user.className,
-        section: user.classSection,
-      };
-    }
-    
-    // Cache the user data for 5 minutes
-    userCache.set(decoded.id, user);
-    
-    req.user = user;
+
+    // Attach user to request
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenant_id,
+      avatarUrl: user.avatar_url,
+      // Student specific
+      studentId: user.student_id,
+      classId: user.class_id,
+      rollNumber: user.roll_number,
+      // Teacher specific
+      teacherId: user.teacher_id
+    };
 
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
         success: false,
-        error: {
-          message: 'Invalid token',
-        },
+        message: 'Invalid token.'
       });
     }
-
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
-        error: {
-          message: 'Token expired',
-        },
+        message: 'Token expired.'
       });
     }
-
     next(error);
   }
 };
 
 /**
- * Optional authentication - attach user if token exists, but don't fail if no token
- * Useful for routes that have different content for logged in vs anonymous users
+ * Authorize specific roles
+ * Usage: authorize('ADMIN'), authorize('ADMIN', 'TEACHER')
  */
-const optionalAuth = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
-      // Check if user data is cached (5-minute TTL)
-      const cachedUser = userCache.get(decoded.id);
-      if (cachedUser) {
-        // Cache hit - use cached data, skip database query
-        req.user = cachedUser;
-      } else {
-        // Cache miss - fetch user from database
-        const userQuery = `
-          SELECT 
-            u.id,
-            u.email,
-            u.name,
-            u.phone,
-            u.role,
-            u."tenantId",
-            u."classId",
-            u."studentId",
-            u."createdAt",
-            u."updatedAt",
-            t.id as "tenant_table_id",
-            t.name as "tenantName",
-            t.code as "tenantCode",
-            c.id as "class_table_id",
-            c.name as "className",
-            c.section as "classSection"
-          FROM "User" u
-          LEFT JOIN "Tenant" t ON u."tenantId" = t.id
-          LEFT JOIN "Class" c ON u."classId" = c.id
-          WHERE u.id = $1
-        `;
-        
-        const userResult = await db.query(userQuery, [decoded.id]);
-
-        if (userResult.rows.length > 0) {
-          const user = userResult.rows[0];
-          
-          if (user.tenantId) {
-            user.tenant = {
-              id: user.tenantId,
-              name: user.tenantName,
-              code: user.tenantCode,
-            };
-          }
-          if (user.classId) {
-            user.class = {
-              id: user.classId,
-              name: user.className,
-              section: user.classSection,
-            };
-          }
-          
-          // Cache the user data for 5 minutes
-          userCache.set(decoded.id, user);
-          
-          req.user = user;
-        }
-      }
-    }
-
-    next();
-  } catch (error) {
-    // If token is invalid, just continue without user
-    next();
-  }
-};
-
-/**
- * Require Super Admin role
- */
-const requireSuperAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: {
-        message: 'Authentication required',
-      },
-    });
-  }
-
-  if (req.user.role !== 'SUPER_ADMIN') {
-    return res.status(403).json({
-      success: false,
-      error: {
-        message: 'Access denied. Super Admin privileges required.',
-      },
-    });
-  }
-
-  next();
-};
-
-/**
- * Require Admin role (School Admin)
- */
-const requireAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: {
-        message: 'Authentication required',
-      },
-    });
-  }
-
-  if (req.user.role !== 'ADMIN') {
-    return res.status(403).json({
-      success: false,
-      error: {
-        message: 'Access denied. Admin privileges required.',
-      },
-    });
-  }
-
-  // Note: tenantId check relaxed for development/testing
-  // In production, admins should be associated with a school
-  next();
-};
-
-/**
- * Require Teacher role
- */
-const requireTeacher = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: {
-        message: 'Authentication required',
-      },
-    });
-  }
-
-  if (req.user.role !== 'TEACHER') {
-    return res.status(403).json({
-      success: false,
-      error: {
-        message: 'Access denied. Teacher privileges required.',
-      },
-    });
-  }
-
-  // Note: tenantId check relaxed for development/testing
-  // In production, teachers should be associated with a school
-  next();
-};
-
-/**
- * Require Student role
- */
-const requireStudent = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: {
-        message: 'Authentication required',
-      },
-    });
-  }
-
-  if (req.user.role !== 'STUDENT') {
-    return res.status(403).json({
-      success: false,
-      error: {
-        message: 'Access denied. Student privileges required.',
-      },
-    });
-  }
-
-  if (!req.user.tenantId) {
-    return res.status(403).json({
-      success: false,
-      error: {
-        message: 'Student not associated with any school',
-      },
-    });
-  }
-
-  next();
-};
-
-/**
- * Require specific role (generic role checker)
- * @param {string|string[]} roles - Single role or array of roles
- */
-const requireRole = (roles) => {
-  const allowedRoles = Array.isArray(roles) ? roles : [roles];
-  
+const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        error: {
-          message: 'Authentication required',
-        },
+        message: 'Authentication required.'
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        error: {
-          message: `Access denied. Required role: ${allowedRoles.join(' or ')}`,
-        },
+        message: 'Insufficient permissions for this action.'
       });
     }
 
@@ -356,121 +117,107 @@ const requireRole = (roles) => {
 };
 
 /**
- * Check if user belongs to the same tenant (for tenant isolation)
+ * Check if user is SUPER_ADMIN
  */
-const checkTenantAccess = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: {
-        message: 'Authentication required',
-      },
-    });
-  }
+const isSuperAdmin = authorize('SUPER_ADMIN');
 
-  const { tenantId } = req.params;
-  
-  // Super Admin can access all tenants
-  if (req.user.role === 'SUPER_ADMIN') {
-    return next();
-  }
+/**
+ * Check if user is TENANT_ADMIN
+ */
+const isTenantAdmin = authorize('TENANT_ADMIN');
 
-  // Admin and Student can only access their own tenant
-  if (req.user.tenantId && req.user.tenantId === tenantId) {
-    return next();
-  }
+/**
+ * Check if user is Admin
+ */
+const isAdmin = authorize('ADMIN');
 
-  return res.status(403).json({
-    success: false,
-    error: {
-      message: 'Access denied. Cannot access data from another school.',
-    },
-  });
+/**
+ * Check if user is Teacher
+ */
+const isTeacher = authorize('TEACHER');
+
+/**
+ * Check if user is Student
+ */
+const isStudent = authorize('STUDENT');
+
+/**
+ * Check if user is Admin or Teacher
+ */
+const isAdminOrTeacher = authorize('ADMIN', 'TEACHER');
+
+/**
+ * Check if user is any type of admin (SUPER_ADMIN, TENANT_ADMIN, or ADMIN)
+ */
+const isAnyAdmin = authorize('SUPER_ADMIN', 'TENANT_ADMIN', 'ADMIN');
+
+/**
+ * Generate JWT Token
+ */
+const generateToken = (userId) => {
+  return jwt.sign(
+    { userId },
+    JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+  );
 };
 
 /**
- * Protect routes for Class-based login users
- * Verifies JWT token with type: 'CLASS' and attaches class data to request
+ * Optional authentication - attaches user if token present, continues if not
  */
-const protectClass = async (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
   try {
-    // Get token from header
     const authHeader = req.headers.authorization;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          message: 'Not authorized to access this route',
-        },
-      });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, JWT_SECRET);
+      
+      const users = await query(
+        `SELECT u.id, u.email, u.name, u.role, u.tenant_id, u.avatar_url,
+                sp.student_id, sp.class_id,
+                tp.teacher_id
+         FROM users u
+         LEFT JOIN student_profiles sp ON u.id = sp.user_id
+         LEFT JOIN teacher_profiles tp ON u.id = tp.user_id
+         WHERE u.id = ? AND u.is_active = TRUE`,
+        [decoded.userId]
+      );
+
+      if (users && users.length > 0) {
+        const user = users[0];
+        req.user = {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          tenantId: user.tenant_id,
+          avatarUrl: user.avatar_url,
+          studentId: user.student_id,
+          classId: user.class_id,
+          teacherId: user.teacher_id
+        };
+      }
     }
-
-    // Extract token
-    const token = authHeader.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          message: 'No token provided',
-        },
-      });
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Check if this is a class token (type: 'CLASS')
-    if (decoded.type !== 'CLASS' || !decoded.classId) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          message: 'Invalid token type. Class login required.',
-        },
-      });
-    }
-
-    // Attach class info to request
-    req.user = {
-      classId: decoded.classId,
-      classCode: decoded.classCode,
-      tenantId: decoded.tenantId,
-      type: 'CLASS',
-    };
-
+    
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        error: {
-          message: `Invalid token: ${error.message}`,
-        },
-      });
-    }
-
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        error: {
-          message: `Token expired: ${error.message}`,
-        },
-      });
-    }
-
-    next(error);
+    // If token is invalid, just continue without user
+    next();
   }
 };
 
-module.exports = { 
-  protect, 
-  optionalAuth, 
-  requireSuperAdmin, 
-  requireAdmin, 
-  requireTeacher,
-  requireStudent,
-  requireRole,
-  checkTenantAccess,
-  protectClass
+module.exports = {
+  authenticate,
+  authorize,
+  isSuperAdmin,
+  isTenantAdmin,
+  isAdmin,
+  isTeacher,
+  isStudent,
+  isAdminOrTeacher,
+  isAnyAdmin,
+  optionalAuth,
+  generateToken,
+  JWT_SECRET
 };

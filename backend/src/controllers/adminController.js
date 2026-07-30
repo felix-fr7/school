@@ -889,7 +889,7 @@ const createStudent = async (req, res, next) => {
 const updateStudent = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, email, classId } = req.body;
+    const { name, email, phone, classId } = req.body;
     const tenantId = req.user.tenantId;
 
     // First verify the student exists and belongs to this tenant
@@ -942,6 +942,13 @@ const updateStudent = async (req, res, next) => {
       paramIndex++;
     }
 
+    if (phone !== undefined) {
+      const trimmedPhone = phone?.trim() || '';
+      updateFields.push(`phone = $${paramIndex}`);
+      updateParams.push(trimmedPhone || null);
+      paramIndex++;
+    }
+
     if (classId !== undefined) {
       if (classId) {
         const classExistsQuery = 'SELECT id FROM "Class" WHERE id = $1 AND "tenantId" = $2';
@@ -977,7 +984,7 @@ const updateStudent = async (req, res, next) => {
       UPDATE "User"
       SET ${updateFields.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, name, email, "studentId", "classId", "updatedAt"
+      RETURNING id, name, email, phone, "studentId", "classId", "updatedAt"
     `;
 
     const updateResult = await db.query(updateQuery, updateParams);
@@ -1945,17 +1952,17 @@ const getAllCirculars = async (req, res, next) => {
  */
 const createCircular = async (req, res, next) => {
   try {
-    const { title, content, circularNo } = req.body;
+    const { title, content } = req.body;
     const tenantId = req.user.tenantId;
     const issuedBy = req.user.id;
 
     const createQuery = `
-      INSERT INTO "Circular" (title, content, "circularNo", "tenantId", "issuedBy", "issueDate", "createdAt", "updatedAt")
-      VALUES ($1, $2, $3, $4, $5, NOW(), NOW(), NOW())
+      INSERT INTO "Circular" (title, content, "tenantId", "issuedBy", "issueDate", "createdAt", "updatedAt")
+      VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())
       RETURNING *
     `;
 
-    const createResult = await db.query(createQuery, [title, content, circularNo || null, tenantId, issuedBy]);
+    const createResult = await db.query(createQuery, [title, content, tenantId, issuedBy]);
 
     const circular = createResult.rows[0];
 
@@ -2137,9 +2144,8 @@ const createExamScheduleWithFile = async (req, res, next) => {
 
     title = title.trim();
 
-    // Validate file exists
-    const filePath = req.file.path;
-    const fileName = req.file.filename;
+    // Get file info from memory storage (originalname is available, filename is not)
+    const fileName = req.file.originalname;
     const fileUrl = `/uploads/${fileName}`;
 
     // Validate classId - must be a valid UUID or null/empty for school-wide
@@ -3044,9 +3050,9 @@ const bulkUploadStudentsCSV = async (req, res, next) => {
       });
     }
 
-    // Parse CSV file using xlsx
+    // Parse CSV file using xlsx (read from buffer, not path)
     const XLSX = require('xlsx');
-    const workbook = XLSX.readFile(req.file.path);
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(sheet);
@@ -3166,9 +3172,7 @@ const bulkUploadStudentsCSV = async (req, res, next) => {
       createdStudents.push(result.rows[0]);
     }
 
-    // Clean up uploaded file
-    const fs = require('fs');
-    fs.unlinkSync(req.file.path);
+    // No file cleanup needed - using memory storage
 
     res.status(201).json({
       success: true,
@@ -3242,6 +3246,80 @@ const getMySchool = async (req, res, next) => {
     });
   } catch (error) {
     console.error('GetMySchool Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Get all exams (PDF/Image based timetables) for admin's school
+ * GET /api/admin/exams
+ */
+const getAllExams = async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { page = 1, limit = 50 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total FROM "Exam"
+      WHERE "tenant_id" = $1
+    `;
+    const countResult = await db.query(countQuery, [tenantId]);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get exams
+    const examsQuery = `
+      SELECT 
+        e.*,
+        c.id as "classId",
+        c.name as "className",
+        c.section as "classSection"
+      FROM "Exam" e
+      LEFT JOIN "Class" c ON e."class_id" = c.id
+      WHERE e."tenant_id" = $1
+      ORDER BY e."created_at" DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const examsResult = await db.query(examsQuery, [tenantId, take, skip]);
+
+    const exams = examsResult.rows.map(item => ({
+      id: item.id,
+      title: item.title || item.exam_name || 'Exam',
+      examName: item.title || item.exam_name || 'Exam',
+      classId: item.class_id,
+      tenantId: item.tenant_id,
+      fileUrl: item.file_url || item.pdf_url || item.image_url,
+      pdfUrl: item.pdf_url || item.file_url,
+      imageUrl: item.image_url || item.file_url,
+      dueDate: item.due_date,
+      isPublished: item.is_published,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      class: item.class_id ? {
+        id: item.classId,
+        name: item.className,
+        section: item.classSection,
+      } : null,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        exams,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit)),
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error in getAllExams (adminController):', error);
     next(error);
   }
 };
@@ -3358,4 +3436,6 @@ module.exports = {
   // School/Tenant Info
   getMySchool,
   getMySchoolStats,
+  // Exam (New Exam table - PDF/Image based timetables)
+  getAllExams,
 };

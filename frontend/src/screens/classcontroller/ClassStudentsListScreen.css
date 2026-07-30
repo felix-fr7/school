@@ -1,30 +1,39 @@
 /**
- * Class Students List Screen (Ionic React Styles)
- * View and manage students for the class
+ * Class Students List Screen - Light Modern Design System
+ * Clean, professional, modern light theme
  */
 
 /* ============================================
-   Loading State
+   Layout & Page Setup
    ============================================ */
+.students-list-content {
+  --background: #f8fafc;
+  --ion-background-color: #f8fafc;
+}
+
 .students-loading {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  height: 100%;
 }
 
-.students-loading .loading-text {
-  margin-top: 16px;
-  font-size: 16px;
-  color: var(--ion-color-medium);
+.students-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px 16px 80px 16px;
 }
 
-/* ============================================
-   Content Container
-   ============================================ */
-.students-list-content {
-  --background: #FFF5F0;
+.student-searchbar {
+  --background: #f1f5f9;
+  --color: #111827;
+  --placeholder-color: #94a3b8;
+  --icon-color: #64748b;
+  --clear-button-color: #64748b;
+  --border-radius: 12px;
+  padding-start: 12px;
+  padding-end: 12px;
 }
 
 /* ============================================
@@ -35,67 +44,92 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 16px;
+  padding: 60px 20px;
   text-align: center;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px dashed #cbd5e1;
+  margin-top: 20px;
 }
 
-.empty-icon {
-  font-size: 64px;
+.empty-icon-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
   margin-bottom: 16px;
 }
 
 .empty-state h3 {
   font-size: 18px;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 8px 0;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px 0;
 }
 
 .empty-subtext {
   font-size: 14px;
-  color: var(--ion-color-medium);
-  margin: 0;
+  color: #64748b;
+  margin: 0 0 20px 0;
+  max-width: 280px;
+}
+
+.add-first-btn {
+  --border-radius: 20px;
+  --background: #3b82f6;
+  --background-activated: #2563eb;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
 }
 
 /* ============================================
-   Student Card
+   Student Item Card
    ============================================ */
-.student-card {
-  --background: #FFFFFF;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 16px;
-  --padding-bottom: 16px;
-  margin-bottom: 12px;
-  border-radius: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --min-height: auto;
+.student-list {
+  background: transparent;
+  padding: 0;
 }
 
-.student-card::part(native) {
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  border-radius: 16px;
+.student-card-item {
+  --background: #ffffff;
+  --padding-start: 14px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --border-radius: 12px;
+  --min-height: 72px;
+  margin-bottom: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.student-card-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
 .student-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 24px;
-  background: var(--ion-color-secondary);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eff6ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  --border-radius: 24px;
+  margin-right: 14px;
+  border: 1px solid #bfdbfe;
 }
 
 .student-avatar span {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #3b82f6;
 }
 
 .student-info {
@@ -103,62 +137,53 @@
 }
 
 .student-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--ion-color-dark);
-  margin: 0;
+  color: #111827;
+  margin: 0 0 2px 0;
 }
 
 .student-email {
-  font-size: 13px;
-  color: var(--ion-color-medium);
-  margin: 4px 0;
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 6px 0;
 }
 
 .student-id-badge {
-  font-size: 11px;
-  font-weight: 600;
-  --padding-start: 8px;
-  --padding-end: 8px;
-  --padding-top: 4px;
-  --padding-bottom: 4px;
-  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: #eff6ff;
+  color: #3b82f6;
 }
 
 /* ============================================
-   Student Actions
+   Actions & FAB
    ============================================ */
 .student-actions {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 2px;
 }
 
 .student-actions ion-button {
-  --padding-start: 8px;
-  --padding-end: 8px;
+  --padding-start: 6px;
+  --padding-end: 6px;
+  height: 36px;
+  margin: 0;
 }
 
-/* ============================================
-   FAB Button
-   ============================================ */
 ion-fab {
-  --bottom: 20px;
-  --right: 20px;
+  --background: #3b82f6;
+  --background-activated: #2563eb;
 }
 
 ion-fab-button {
-  --box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
-}
-
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
-@media (min-width: 768px) {
-  .student-card {
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  --background: #3b82f6;
+  --background-activated: #2563eb;
+  --box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
 }
 
 /* ============================================
@@ -166,27 +191,28 @@ ion-fab-button {
    ============================================ */
 @media (prefers-color-scheme: dark) {
   .students-list-content {
-    --background: #121212;
+    --background: #0F172A;
   }
 
-  .student-card {
-    --background: #1e1e1e;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  .student-card-item,
+  .empty-state {
+    --background: #1E293B;
+    border-color: #334155;
   }
 
-  .student-name {
-    color: #fff;
-  }
-
-  .student-email {
-    color: #888;
-  }
-
+  .student-name,
   .empty-state h3 {
-    color: #fff;
+    color: #F8FAFC;
   }
 
+  .student-email,
   .empty-subtext {
-    color: #888;
+    color: #94A3B8;
+  }
+
+  .student-avatar,
+  .empty-icon-badge {
+    background: #0F172A;
+    border-color: #334155;
   }
 }

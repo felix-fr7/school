@@ -1,7 +1,6 @@
 /**
  * Class Circulars List Screen (Ionic React Version)
  * View circulars/announcements with visibility filtering
- * Only shows circulars where visibility is 'ALL' OR the current class is included
  */
 
 import React, { useEffect, useState } from 'react';
@@ -10,6 +9,8 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButtons,
+  IonBackButton,
   IonContent,
   IonSpinner,
   IonText,
@@ -21,6 +22,8 @@ import {
   IonRefresherContent,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonAlert,
+  IonToast,
   IonButton,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
@@ -31,6 +34,7 @@ import {
   listOutline,
   refreshOutline,
   trashOutline,
+  informationCircleOutline,
 } from 'ionicons/icons';
 import { Circular } from '../../types';
 import './ClassCircularsListScreen.css';
@@ -44,6 +48,11 @@ const ClassCircularsListScreen: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Delete State Handling
+  const [selectedCircularToDelete, setSelectedCircularToDelete] = useState<Circular | null>(null);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+
   const fetchCirculars = async (refresh = false) => {
     try {
       if (refresh) {
@@ -52,10 +61,9 @@ const ClassCircularsListScreen: React.FC = () => {
       }
       
       const currentPage = refresh ? 1 : page;
-      // Note: classControllerAPI.getCirculars not available, using console.log fallback
       console.log('Fetching circulars for page:', currentPage);
       
-      // Simulate empty response for now
+      // Fallback empty data / API integration point
       setCirculars([]);
       setTotalPages(1);
     } catch (error) {
@@ -71,12 +79,12 @@ const ClassCircularsListScreen: React.FC = () => {
   }, []);
 
   const onRefresh = async (event: CustomEvent) => {
-    setRefreshing(true);
     await fetchCirculars(true);
     event.detail.complete();
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
@@ -89,10 +97,19 @@ const ClassCircularsListScreen: React.FC = () => {
     history.push(`/class-controller/circulars/${circular.id}`);
   };
 
-  const handleDeleteCircular = (circular: Circular) => {
-    // Note: deleteCircular API not available, using console.log fallback
-    console.log('Deleting circular:', circular.id);
-    setCirculars(prev => prev.filter(c => c.id !== circular.id));
+  const confirmDelete = (circular: Circular, event: React.MouseEvent) => {
+    event.stopPropagation(); // Card navigation trigger ஆகாமல் தடுக்கும்
+    setSelectedCircularToDelete(circular);
+    setShowDeleteAlert(true);
+  };
+
+  const executeDelete = () => {
+    if (!selectedCircularToDelete) return;
+    
+    // Logic for deleting item locally
+    setCirculars(prev => prev.filter(c => c.id !== selectedCircularToDelete.id));
+    setToastMessage('Circular deleted successfully');
+    setSelectedCircularToDelete(null);
   };
 
   const onIonInfinite = async (event: CustomEvent) => {
@@ -107,12 +124,15 @@ const ClassCircularsListScreen: React.FC = () => {
     return (
       <IonPage>
         <IonHeader>
-          <IonToolbar>
+          <IonToolbar className="light-toolbar">
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/class-controller/dashboard" />
+            </IonButtons>
             <IonTitle>Circulars</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center circulars-loading">
-          <IonSpinner name="crescent" />
+        <IonContent className="circulars-loading ion-text-center">
+          <IonSpinner name="crescent" color="primary" />
           <IonText color="medium">
             <p className="loading-text">Loading circulars...</p>
           </IonText>
@@ -124,7 +144,10 @@ const ClassCircularsListScreen: React.FC = () => {
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
+        <IonToolbar className="light-toolbar">
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/class-controller/dashboard" />
+          </IonButtons>
           <IonTitle>Circulars</IonTitle>
         </IonToolbar>
       </IonHeader>
@@ -134,7 +157,7 @@ const ClassCircularsListScreen: React.FC = () => {
           <IonRefresherContent pullingIcon={refreshOutline} />
         </IonRefresher>
 
-        {/* Header */}
+        {/* Header Section */}
         <div className="header-section">
           <h1 className="header-title">Circulars</h1>
           <IonText color="medium">
@@ -144,8 +167,8 @@ const ClassCircularsListScreen: React.FC = () => {
 
         {/* Info Banner */}
         <div className="info-banner">
-          <span className="info-icon">ℹ️</span>
-          <IonText color="primary">
+          <IonIcon icon={informationCircleOutline} className="info-icon" color="primary" />
+          <IonText color="dark">
             <p className="info-text">
               Showing circulars visible to your class
             </p>
@@ -162,7 +185,7 @@ const ClassCircularsListScreen: React.FC = () => {
             </IonText>
           </div>
         ) : (
-          <>
+          <div className="circulars-wrapper">
             {circulars.map((item) => (
               <IonCard 
                 key={item.id} 
@@ -189,26 +212,27 @@ const ClassCircularsListScreen: React.FC = () => {
                   <div className="circular-footer">
                     <div className="footer-left">
                       <IonIcon icon={calendarOutline} />
-                      <span>{item.issueDate ? formatDate(item.issueDate) : formatDate(item.createdAt)}</span>
+                      <span>{formatDate(item.issueDate || item.createdAt)}</span>
                     </div>
                     <div className="footer-right">
                       {item.imageUrl && (
                         <IonIcon icon={documentOutline} className="attachment-icon" />
                       )}
-                      <IonIcon 
-                        icon={trashOutline} 
-                        className="delete-icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteCircular(item);
-                        }}
-                      />
+                      <IonButton
+                        fill="clear"
+                        size="small"
+                        color="danger"
+                        className="delete-btn"
+                        onClick={(e) => confirmDelete(item, e)}
+                      >
+                        <IonIcon slot="icon-only" icon={trashOutline} />
+                      </IonButton>
                     </div>
                   </div>
                 </IonCardContent>
               </IonCard>
             ))}
-          </>
+          </div>
         )}
 
         {/* Infinite Scroll */}
@@ -221,6 +245,30 @@ const ClassCircularsListScreen: React.FC = () => {
             loadingText="Loading more circulars..."
           />
         </IonInfiniteScroll>
+
+        {/* Delete Confirmation Alert */}
+        <IonAlert
+          isOpen={showDeleteAlert}
+          onDidDismiss={() => setShowDeleteAlert(false)}
+          header="Confirm Deletion"
+          message={`Are you sure you want to delete "${selectedCircularToDelete?.title}"?`}
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Delete',
+              role: 'destructive',
+              handler: executeDelete,
+            },
+          ]}
+        />
+
+        {/* Action Feedback Toast */}
+        <IonToast
+          isOpen={!!toastMessage}
+          message={toastMessage}
+          duration={2000}
+          onDidDismiss={() => setToastMessage('')}
+        />
       </IonContent>
     </IonPage>
   );

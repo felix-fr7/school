@@ -23,7 +23,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import { Class } from '../../types';
-import './CreateStudentScreen.css';
+import './AdminTheme.css';
 
 const CreateStudentScreen: React.FC = () => {
   const history = useHistory();

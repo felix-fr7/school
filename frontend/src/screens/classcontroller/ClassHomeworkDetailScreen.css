@@ -1,89 +1,145 @@
 /**
- * Class Homework Detail Screen (Ionic React Styles)
- * Displays full homework details
+ * Class Controller Homework Detail Screen Styles
+ * Theme: Deep Royal Blue / Educational Slate
  */
 
-/* ============================================
-   Loading State
-   ============================================ */
+:root {
+  --class-primary: #1E3A8A;
+  --class-primary-light: #2563EB;
+  --class-bg-light: #F8FAFC;
+  --class-card-bg: #FFFFFF;
+  --class-border: #E2E8F0;
+  --class-text-dark: #0F172A;
+  --class-text-muted: #64748B;
+}
+
+.class-toolbar {
+  --background: var(--class-primary);
+  --color: #FFFFFF;
+}
+
+/* Loading State */
 .homework-detail-loading {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  background: var(--class-bg-light);
 }
 
 .homework-detail-loading .loading-text {
-  margin-top: 16px;
-  font-size: 16px;
-  color: var(--ion-color-medium);
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--class-text-muted);
 }
 
-/* ============================================
-   Content Container
-   ============================================ */
+/* Content Container */
 .homework-detail-content {
-  --background: #FFF5F0;
-  padding: 16px;
+  --background: var(--class-bg-light);
 }
 
-/* ============================================
-   Empty State
-   ============================================ */
+.homework-detail-wrapper {
+  padding: 16px;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+/* Empty State */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 16px;
+  padding: 60px 20px;
   text-align: center;
 }
 
 .empty-icon {
-  font-size: 64px;
+  font-size: 56px;
+  color: #EF4444;
   margin-bottom: 16px;
 }
 
 .empty-state h3 {
   font-size: 18px;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-  margin: 0 0 24px 0;
+  font-weight: 700;
+  color: var(--class-text-dark);
+  margin: 0 0 20px 0;
 }
 
-/* ============================================
-   Subject Badge
-   ============================================ */
-.subject-badge-container {
+.retry-btn {
+  --background: var(--class-primary);
+  --border-radius: 10px;
+}
+
+/* Homework Main Card */
+.homework-main-card {
+  --background: var(--class-card-bg);
+  border-radius: 18px;
+  border: 1px solid var(--class-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  margin: 0;
+}
+
+.homework-main-card ion-card-content {
+  padding: 20px;
+}
+
+/* Badge Header Row */
+.badge-header-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
 .subject-badge {
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--class-primary);
+  color: #FFFFFF;
+  font-size: 13px;
   font-weight: 700;
-  padding: 8px 16px;
+  padding: 6px 14px;
   border-radius: 20px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
-/* ============================================
-   Homework Title
-   ============================================ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-badge.overdue {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.status-badge.active {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+/* Title */
 .homework-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
-  color: var(--ion-color-dark);
-  margin: 0 0 16px 0;
-  line-height: 32px;
+  color: var(--class-text-dark);
+  line-height: 1.35;
+  margin: 0 0 18px 0;
 }
 
-/* ============================================
-   Dates Row
-   ============================================ */
-.dates-row {
+/* Dates Grid */
+.dates-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
@@ -91,164 +147,163 @@
 }
 
 .date-card {
-  --background: #FFFFFF;
+  background: var(--class-bg-light);
+  border: 1px solid var(--class-border);
   border-radius: 12px;
-  padding: 16px;
-  border: 1px solid #E2E8F0;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.date-card.date-card-overdue {
-  --background: #FFF5F5;
-  border-color: #FED7D7;
+.date-card.overdue-card {
+  background: #FEF2F2;
+  border-color: #FCA5A5;
 }
 
-.date-card ion-card-content {
-  padding: 0;
+.date-icon {
+  font-size: 22px;
+  color: var(--class-primary-light);
+  flex-shrink: 0;
 }
 
-.date-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.date-value {
-  font-size: 14px;
-  font-weight: 700;
-  color: #334155;
-  margin: 0;
-}
-
-.date-value-overdue {
+.date-icon.overdue-icon {
   color: #DC2626;
 }
 
-/* ============================================
-   Class Info Card
-   ============================================ */
-.class-info-card {
-  --background: #FFFFFF;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  border: 1px solid #E2E8F0;
+.date-info {
+  display: flex;
+  flex-direction: column;
 }
 
-.class-info-card ion-card-content {
-  padding: 16px;
-}
-
-.class-label {
-  font-size: 12px;
-  font-weight: 600;
+.date-label {
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
+  color: var(--class-text-muted);
   letter-spacing: 0.5px;
-  display: block;
-  margin-bottom: 4px;
 }
 
-.class-value {
+.date-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--class-text-dark);
+  margin: 2px 0 0 0;
+}
+
+.date-value.highlight {
+  color: var(--class-primary-light);
+}
+
+.date-value.overdue-text {
+  color: #DC2626;
+}
+
+/* Target Class Info Box */
+.class-info-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #334155;
-  margin: 0;
-}
-
-.class-icon {
-  font-size: 16px;
-  color: var(--ion-color-medium);
-}
-
-/* ============================================
-   Description Card
-   ============================================ */
-.description-card {
-  --background: #FFFFFF;
+  gap: 12px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
   border-radius: 12px;
-  margin-bottom: 16px;
-  border: 1px solid #E2E8F0;
+  padding: 14px 16px;
+  margin-bottom: 18px;
 }
 
-.description-card ion-card-content {
-  padding: 16px;
+.class-info-icon {
+  font-size: 22px;
+  color: var(--class-primary-light);
+  flex-shrink: 0;
+}
+
+.class-info-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.class-info-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--class-text-muted);
+  letter-spacing: 0.5px;
+}
+
+.class-info-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--class-text-dark);
+  margin: 2px 0 0 0;
+}
+
+/* Description Section */
+.description-section {
+  margin-bottom: 24px;
 }
 
 .description-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  color: #475569;
-  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  color: var(--class-text-muted);
+  margin: 0 0 8px 0;
+  letter-spacing: 0.5px;
 }
 
 .description-box {
-  background: #FFFFFF;
-  padding: 20px;
+  background: var(--class-bg-light);
+  border: 1px solid var(--class-border);
   border-radius: 12px;
-  border: 1px solid #E2E8F0;
-  min-height: 120px;
+  padding: 16px;
+  min-height: 100px;
 }
 
 .description-text {
-  font-size: 16px;
-  color: #334155;
-  line-height: 26px;
-  letter-spacing: 0.2px;
+  font-size: 15px;
+  color: var(--class-text-dark);
+  line-height: 1.6;
   margin: 0;
+  white-space: pre-line;
 }
 
-/* ============================================
-   Actions
-   ============================================ */
+/* Actions Container */
 .actions-container {
-  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
-@media (min-width: 768px) {
-  .homework-detail-content {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 24px;
-  }
+.delete-button {
+  --border-radius: 12px;
+  --border-color: #FCA5A5;
+  --color: #DC2626;
+  font-weight: 700;
+  height: 48px;
 }
 
-/* ============================================
-   Dark Mode Support
-   ============================================ */
+.back-button {
+  --color: var(--class-text-muted);
+  font-weight: 600;
+}
+
+/* Dark Mode Optimization */
 @media (prefers-color-scheme: dark) {
-  .homework-detail-content {
-    --background: #121212;
+  :root {
+    --class-bg-light: #0F172A;
+    --class-card-bg: #1E293B;
+    --class-border: #334155;
+    --class-text-dark: #F8FAFC;
+    --class-text-muted: #94A3B8;
   }
 
-  .homework-title {
-    color: #fff;
+  .class-info-box {
+    background: #1E293B;
+    border-color: #334155;
   }
 
-  .date-card,
-  .class-info-card,
-  .description-card {
-    --background: #1e1e1e;
-    border-color: #333;
-  }
-
-  .date-value,
-  .class-value {
-    color: #fff;
-  }
-
-  .description-text {
-    color: #e0e0e0;
-  }
-
-  .description-box {
-    background: #2a2a2a;
-    border-color: #444;
+  .date-card.overdue-card {
+    background: #451A1A;
+    border-color: #991B1B;
   }
 }

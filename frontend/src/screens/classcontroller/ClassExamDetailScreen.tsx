@@ -1,7 +1,6 @@
 /**
  * Class Controller Exam Detail Screen (Ionic React Version)
- * Displays exam details with PDF/Image viewer and "View Schedule / Open PDF" button
- * Uses Capacitor Browser plugin to open documents
+ * Styled with Class Royal Blue Theme
  */
 
 import React, { useState, useEffect } from 'react';
@@ -35,6 +34,8 @@ import {
   checkmarkCircleOutline,
   alertCircleOutline,
   arrowBackOutline,
+  openOutline,
+  informationCircleOutline
 } from 'ionicons/icons';
 import { classControllerAPI } from '../../services/api';
 import './ClassExamDetailScreen.css';
@@ -57,10 +58,6 @@ interface ExamDetail {
   } | null;
 }
 
-interface RouteParams {
-  examId: string;
-}
-
 const ClassExamDetailScreen: React.FC = () => {
   const history = useHistory();
   const examId = (window.location.pathname.match(/exams\/([^/]+)$/) || [])[1];
@@ -79,18 +76,17 @@ const ClassExamDetailScreen: React.FC = () => {
   const fetchExamDetails = async () => {
     try {
       setLoading(true);
-      // Note: getExamById API not available in classControllerAPI
       console.log('Fetching exam details for:', examId);
       
-      // Simulate exam data for demo
+      // Simulated exam data matching class theme
       setExam({
-        id: examId,
-        title: 'Midterm Exam Schedule',
-        examName: 'Midterm Exam',
+        id: examId || 'ex-101',
+        title: 'Midterm Assessment Schedule & Guidelines',
+        examName: 'Midterm Examination 2026',
         fileUrl: 'https://example.com/exam-schedule.pdf',
         pdfUrl: '',
-        imageUrl: 'https://via.placeholder.com/400x200?text=Exam+Schedule',
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        imageUrl: 'https://via.placeholder.com/600x300/1E3A8A/FFFFFF?text=Class+10-A+Exam+Schedule',
+        dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
         isPublished: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -116,21 +112,19 @@ const ClassExamDetailScreen: React.FC = () => {
       return;
     }
 
-    // Use Capacitor Browser if available, otherwise fallback to window.open
     const Browser = (window as any).Capacitor?.Plugins?.Browser;
     
     if (Browser) {
       try {
         await Browser.open({ 
           url: displayFileUrl, 
-          toolbarColor: '#3880ff' 
+          toolbarColor: '#1E3A8A' 
         });
       } catch (err) {
         console.error('Error opening URL with Capacitor:', err);
         window.open(displayFileUrl, '_blank');
       }
     } else {
-      // Fallback: open in new window/tab
       window.open(displayFileUrl, '_blank');
     }
   };
@@ -139,7 +133,7 @@ const ClassExamDetailScreen: React.FC = () => {
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric',
       });
     } catch {
@@ -150,8 +144,8 @@ const ClassExamDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonHeader>
-          <IonToolbar>
+        <IonHeader className="ion-no-border">
+          <IonToolbar color="primary" className="class-toolbar">
             <IonButtons slot="start">
               <IonBackButton defaultHref="/class-controller/exams" />
             </IonButtons>
@@ -161,7 +155,7 @@ const ClassExamDetailScreen: React.FC = () => {
         <IonContent className="ion-padding ion-text-center exam-detail-loading">
           <IonSpinner name="crescent" color="primary" />
           <IonText color="medium">
-            <p className="loading-text">Loading exam details...</p>
+            <p className="loading-text">Loading Class Exam Details...</p>
           </IonText>
         </IonContent>
       </IonPage>
@@ -171,8 +165,8 @@ const ClassExamDetailScreen: React.FC = () => {
   if (error || !exam) {
     return (
       <IonPage>
-        <IonHeader>
-          <IonToolbar>
+        <IonHeader className="ion-no-border">
+          <IonToolbar color="primary" className="class-toolbar">
             <IonButtons slot="start">
               <IonBackButton defaultHref="/class-controller/exams" />
             </IonButtons>
@@ -183,10 +177,10 @@ const ClassExamDetailScreen: React.FC = () => {
           <div className="error-state">
             <IonIcon icon={alertCircleOutline} className="error-icon" />
             <IonText color="danger">
-              <h2>{error || 'Exam not found'}</h2>
+              <h2>{error || 'Exam record not found'}</h2>
             </IonText>
-            <IonButton onClick={fetchExamDetails} color="primary">
-              Retry
+            <IonButton onClick={fetchExamDetails} color="primary" className="retry-btn">
+              Try Again
             </IonButton>
           </div>
         </IonContent>
@@ -194,16 +188,15 @@ const ClassExamDetailScreen: React.FC = () => {
     );
   }
 
-  const displayTitle = exam.title || exam.examName || 'Exam';
+  const displayTitle = exam.title || exam.examName || 'Exam Schedule';
   const displayFileUrl = exam.fileUrl || exam.pdfUrl || exam.imageUrl;
   const hasAttachment = !!displayFileUrl;
   const isPDF = displayFileUrl?.toLowerCase().endsWith('.pdf');
-  const isImage = !isPDF && (displayFileUrl?.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i));
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="ion-no-border">
+        <IonToolbar color="primary" className="class-toolbar">
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller/exams" />
           </IonButtons>
@@ -211,139 +204,124 @@ const ClassExamDetailScreen: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="exam-detail-content">
-        {/* Exam Info Card */}
-        <IonCard className="exam-info-card">
-          <IonCardHeader>
-            <div className="title-row">
-              <IonCardTitle className="exam-title">
-                {displayTitle}
-              </IonCardTitle>
-              {exam.isPublished && (
-                <IonBadge color="success" className="published-badge">
-                  <IonIcon icon={checkmarkCircleOutline} />
-                  Published
-                </IonBadge>
+      <IonContent className="exam-detail-content" fullscreen>
+        <div className="exam-detail-wrapper">
+          {/* Main Info Card */}
+          <IonCard className="exam-info-card">
+            <IonCardHeader>
+              <div className="title-row">
+                <IonCardTitle className="exam-title">
+                  {displayTitle}
+                </IonCardTitle>
+                {exam.isPublished && (
+                  <IonBadge color="success" className="published-badge">
+                    <IonIcon icon={checkmarkCircleOutline} />
+                    Published
+                  </IonBadge>
+                )}
+              </div>
+            </IonCardHeader>
+
+            <IonCardContent>
+              {/* Metadata Details Grid */}
+              <div className="metadata-grid">
+                <div className="info-row">
+                  <IonIcon icon={schoolOutline} className="info-icon" />
+                  <div className="info-text">
+                    <span className="info-label">Assigned Target</span>
+                    <p className="info-val">
+                      {exam.class ? `${exam.class.name} - ${exam.class.section}` : 'School-wide (All Classes)'}
+                    </p>
+                  </div>
+                </div>
+
+                {exam.dueDate && (
+                  <div className="info-row">
+                    <IonIcon icon={calendarOutline} className="info-icon" />
+                    <div className="info-text">
+                      <span className="info-label">Exam Date / Deadline</span>
+                      <p className="info-val highlight">{formatDate(exam.dueDate)}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="info-row">
+                  <IonIcon icon={globeOutline} className="info-icon" />
+                  <div className="info-text">
+                    <span className="info-label">Created Date</span>
+                    <p className="info-val">{formatDate(exam.createdAt)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Attachment Section */}
+              <div className="attachment-status-card">
+                {hasAttachment ? (
+                  <div className="attachment-header">
+                    <IonIcon 
+                      icon={isPDF ? documentOutline : imageOutline} 
+                      className="attachment-icon"
+                    />
+                    <div>
+                      <h4 className="attachment-title">{isPDF ? 'PDF Time Table Attached' : 'Schedule Image Attached'}</h4>
+                      <p className="attachment-sub">Ready for view or download</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="attachment-header empty">
+                    <IonIcon icon={alertCircleOutline} className="attachment-icon warning" />
+                    <div>
+                      <h4 className="attachment-title">No Document Attached</h4>
+                      <p className="attachment-sub">No timetable PDF or image uploaded</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Button */}
+              {hasAttachment && (
+                <IonButton 
+                  expand="block" 
+                  onClick={handleOpenDocument}
+                  className="open-doc-button"
+                >
+                  <IonIcon icon={openOutline} slot="start" />
+                  View Schedule / Open Document
+                </IonButton>
               )}
-            </div>
-          </IonCardHeader>
 
-          <IonCardContent>
-            {/* Class Info */}
-            {exam.class ? (
-              <div className="info-row">
-                <IonIcon icon={schoolOutline} className="info-icon" />
-                <IonText color="medium">
-                  <span className="info-label">Class:</span>
-                  {exam.class.name}{exam.class.section ? ` - ${exam.class.section}` : ''}
-                </IonText>
-              </div>
-            ) : (
-              <div className="info-row">
-                <IonIcon icon={globeOutline} className="info-icon" />
-                <IonText color="medium">
-                  <span className="info-label">Scope:</span>
-                  School-wide (All Classes)
-                </IonText>
-              </div>
-            )}
-
-            {/* Due Date */}
-            {exam.dueDate && (
-              <div className="info-row">
-                <IonIcon icon={calendarOutline} className="info-icon" />
-                <IonText color="medium">
-                  <span className="info-label">Due Date:</span>
-                  {formatDate(exam.dueDate)}
-                </IonText>
-              </div>
-            )}
-
-            {/* Created Date */}
-            <div className="info-row">
-              <IonIcon icon={calendarOutline} className="info-icon" />
-              <IonText color="medium">
-                <span className="info-label">Published:</span>
-                {formatDate(exam.createdAt)}
-              </IonText>
-            </div>
-
-            {/* Attachment Status */}
-            <div className="attachment-status">
-              {hasAttachment ? (
-                <>
-                  <IonIcon 
-                    icon={isPDF ? documentOutline : imageOutline} 
-                    className="attachment-icon"
-                  />
-                  <IonText color="dark">
-                    <span className="attachment-text">Attachment available</span>
-                  </IonText>
-                </>
-              ) : (
-                <>
-                  <IonIcon 
-                    icon={alertCircleOutline} 
-                    className="attachment-icon warning"
-                  />
-                  <IonText color="warning">
-                    <span className="attachment-text">No attachment available</span>
-                  </IonText>
-                </>
+              {/* Preview Image */}
+              {exam.imageUrl && (
+                <div className="preview-section">
+                  <p className="preview-label">Document Preview:</p>
+                  <IonImg src={exam.imageUrl} className="preview-image" alt="Exam preview" />
+                </div>
               )}
-            </div>
+            </IonCardContent>
+          </IonCard>
 
-            {/* View Schedule / Open PDF Button */}
-            {hasAttachment && (
-              <IonButton 
-                expand="block" 
-                onClick={handleOpenDocument}
-                className="open-doc-button"
-              >
-                <IonIcon icon={documentOutline} />
-                View Schedule / Open PDF
-              </IonButton>
-            )}
-
-            {/* Preview Image */}
-            {exam.imageUrl && (
-              <div className="preview-section">
-                <IonText color="medium">
-                  <p className="preview-label">Preview:</p>
-                </IonText>
-                <IonImg
-                  src={exam.imageUrl}
-                  className="preview-image"
-                />
-              </div>
-            )}
-          </IonCardContent>
-        </IonCard>
-
-        {/* Info Note */}
-        <div className="info-note">
-          <span className="info-note-icon">ℹ️</span>
-          <IonText color="primary">
+          {/* Info Banner */}
+          <div className="info-note">
+            <IonIcon icon={informationCircleOutline} className="info-note-icon" />
             <p className="info-note-text">
-              Tap the button above to view or download the exam schedule. The document will open in your device's default PDF viewer or image gallery.
+              Tapping <strong>"View Schedule"</strong> opens the official PDF/Image in full screen. You can save or print directly from your browser.
             </p>
-          </IonText>
+          </div>
+
+          {/* Go Back */}
+          <div className="back-button-container">
+            <IonButton 
+              expand="block" 
+              fill="outline" 
+              onClick={() => history.goBack()}
+              className="back-button"
+            >
+              <IonIcon icon={arrowBackOutline} slot="start" />
+              Back to Exams List
+            </IonButton>
+          </div>
         </div>
 
-        {/* Back Button */}
-        <div className="back-button-container">
-          <IonButton 
-            expand="block" 
-            fill="outline" 
-            onClick={() => history.goBack()}
-            className="back-button"
-          >
-            <IonIcon icon={arrowBackOutline} />
-            Back to Exams
-          </IonButton>
-        </div>
-
-        {/* Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

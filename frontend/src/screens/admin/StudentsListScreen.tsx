@@ -33,7 +33,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import { User } from '../../types';
-import './StudentsListScreen.css';
+import './AdminTheme.css';
 
 const StudentsListScreen: React.FC = () => {
   const history = useHistory();

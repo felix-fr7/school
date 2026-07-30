@@ -1,66 +1,84 @@
 /**
- * Global Error Handler Middleware
- * Handles all errors and returns consistent error responses
+ * Error Handler Middleware
+ * Centralized error handling for the application
  */
 
 const errorHandler = (err, req, res, next) => {
-  // Log error for debugging (don't log in production for sensitive data)
-  if (process.env.NODE_ENV === 'development') {
-    console.error('Error:', err);
-  } else {
-    console.error('Error:', err.message);
+  console.error('Error:', {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+    path: req.path,
+    method: req.method
+  });
+
+  // MySQL error codes
+  if (err.code === 'ER_DUP_ENTRY') {
+    return res.status(409).json({
+      success: false,
+      message: 'Duplicate entry. This record already exists.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 
-  // Default error values
-  let statusCode = err.statusCode || err.status || 500;
-  let message = err.message || 'Internal Server Error';
-  let errors = null;
-
-  // Prisma validation error
-  if (err.code === 'P2002') {
-    statusCode = 409;
-    message = 'A record with this value already exists';
-    if (err.meta && err.meta.target) {
-      message = `${err.meta.target[0]} already exists`;
-    }
-  }
-
-  // Prisma record not found
-  if (err.code === 'P2025') {
-    statusCode = 404;
-    message = 'Record not found';
+  if (err.code === 'ER_NO_REFERENCED_ROW' || err.code === 'ER_ROW_IS_REFERENCED_2') {
+    return res.status(409).json({
+      success: false,
+      message: 'Cannot perform this action. The record is referenced by other data.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 
   // JWT errors
   if (err.name === 'JsonWebTokenError') {
-    statusCode = 401;
-    message = 'Invalid token';
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 
   if (err.name === 'TokenExpiredError') {
-    statusCode = 401;
-    message = 'Token expired';
+    return res.status(401).json({
+      success: false,
+      message: 'Token expired. Please login again.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 
-  // Express validator errors
-  if (err.array) {
-    statusCode = 400;
-    message = 'Validation error';
-    errors = err.array().map((e) => ({
-      field: e.path,
-      message: e.msg,
-    }));
+  // Validation errors
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation error.',
+      errors: err.details ? err.details.map(d => d.message) : [err.message],
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 
-  // Send error response
+  // Multer errors (file upload)
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum file size is 10MB.',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: 'File upload error.',
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+
+  // Default error
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal server error.';
+
   res.status(statusCode).json({
     success: false,
-    error: {
-      message,
-      code: err.code,
-      errors,
-    },
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    message,
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 };
 

@@ -31,7 +31,7 @@ import {
   checkmarkCircleOutline,
 } from 'ionicons/icons';
 import { News, CreateNewsInput, Class } from '../../types';
-import { adminAPI } from '../../services/api';
+import { adminAPI, openFileInNewTab } from '../../services/api';
 import './AdminNewsScreen.css';
 
 type VisibilityType = 'ALL' | 'SPECIFIC_CLASSES';
@@ -472,14 +472,34 @@ const AdminNewsScreen: React.FC = () => {
                     {(item.imageUrl || item.pdfUrl) && (
                       <div className="news-attachments">
                         {item.imageUrl && (
-                          <span className="chip img-chip">
+                          <button
+                            type="button"
+                            className="chip img-chip"
+                            onClick={async () => {
+                              try {
+                                await openFileInNewTab(`/files/news/${item.id}/image`);
+                              } catch (error) {
+                                console.error('Error opening image:', error);
+                              }
+                            }}
+                          >
                             <IonIcon icon={imageOutline} /> Image Attached
-                          </span>
+                          </button>
                         )}
                         {item.pdfUrl && (
-                          <span className="chip pdf-chip">
+                          <button
+                            type="button"
+                            className="chip pdf-chip"
+                            onClick={async () => {
+                              try {
+                                await openFileInNewTab(`/files/news/${item.id}/pdf`);
+                              } catch (error) {
+                                console.error('Error opening PDF:', error);
+                              }
+                            }}
+                          >
                             <IonIcon icon={documentOutline} /> PDF Document
-                          </span>
+                          </button>
                         )}
                       </div>
                     )}

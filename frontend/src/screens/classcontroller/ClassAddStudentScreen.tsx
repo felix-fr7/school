@@ -32,6 +32,9 @@ import {
   warningOutline,
   checkmarkCircleOutline,
   copyOutline,
+  personAddOutline,
+  keyOutline,
+  personOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
@@ -47,7 +50,7 @@ interface StudentCreationResult {
 
 const ClassAddStudentScreen: React.FC = () => {
   const history = useHistory();
-  
+
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -64,8 +67,6 @@ const ClassAddStudentScreen: React.FC = () => {
 
   const fetchNextStudentId = async () => {
     try {
-      // Note: getNextStudentId API not available in classControllerAPI
-      // This would need to be implemented in the backend
       console.log('Fetching next student ID...');
     } catch (error) {
       console.error('Error fetching next student ID:', error);
@@ -78,19 +79,19 @@ const ClassAddStudentScreen: React.FC = () => {
       setShowValidationError(true);
       return false;
     }
-    
+
     if (!password.trim()) {
       setValidationErrorMessage('Password is required');
       setShowValidationError(true);
       return false;
     }
-    
+
     if (password.length < 6) {
       setValidationErrorMessage('Password must be at least 6 characters long');
       setShowValidationError(true);
       return false;
     }
-    
+
     return true;
   };
 
@@ -98,15 +99,12 @@ const ClassAddStudentScreen: React.FC = () => {
     if (!validateForm()) {
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      // Note: createStudent API not available in classControllerAPI
-      // This would need to be implemented in the backend
       console.log('Creating student:', { name: name.trim(), password: password.trim() });
-      
-      // Simulate success for demo
+
       const mockResponse: StudentCreationResult = {
         id: Date.now().toString(),
         name: name.trim(),
@@ -114,13 +112,11 @@ const ClassAddStudentScreen: React.FC = () => {
         createdAt: new Date().toISOString(),
         password: password.trim(),
       };
-      
+
       setCreatedStudent(mockResponse);
       setShowSuccessModal(true);
-      // Reset form
       setName('');
       setPassword('');
-      // Refresh next student ID
       fetchNextStudentId();
     } catch (error: any) {
       console.error('Error creating student:', error);
@@ -140,9 +136,7 @@ const ClassAddStudentScreen: React.FC = () => {
 
   const handleCopyPassword = () => {
     if (createdStudent?.password) {
-      // Use Clipboard API for web
       navigator.clipboard.writeText(createdStudent.password).catch(() => {
-        // Fallback: show in alert
         setValidationErrorMessage(`Password: ${createdStudent.password}\n\nPlease save this password securely!`);
         setShowValidationError(true);
       });
@@ -151,60 +145,73 @@ const ClassAddStudentScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="light-toolbar">
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/class-controller/students" />
+            <IonBackButton defaultHref="/class-controller/students" color="dark" />
           </IonButtons>
-          <IonTitle>Add Student</IonTitle>
+          <IonTitle>
+            <div className="brand-header">
+              <IonIcon icon={personAddOutline} className="brand-icon" />
+              <span>Add New Student</span>
+            </div>
+          </IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="add-student-content" fullscreen>
         <div className="form-container">
-          {/* Header */}
-          <div className="form-header">
-            <h1 className="form-title">Add New Student</h1>
-            <p className="form-subtitle">Student ID will be auto-generated</p>
+          {/* Header Card */}
+          <div className="light-hero-card flex-hero">
+            <div className="hero-main">
+              <h1 className="class-title">Enroll Student</h1>
+              <p className="teacher-greeting">
+                Create login credentials for a new student in your workspace.
+              </p>
+            </div>
           </div>
 
           {/* Next Student ID Preview */}
           {nextStudentId && (
             <IonCard className="preview-card">
               <IonCardContent>
-                <IonText color="secondary">
-                  <small className="preview-label">Next Student ID</small>
-                </IonText>
+                <span className="preview-label">NEXT GENERATED ID</span>
                 <h2 className="preview-value">{nextStudentId}</h2>
-                <IonText color="medium">
-                  <small className="preview-note">This ID will be assigned to the new student</small>
-                </IonText>
+                <span className="preview-note">This ID will be automatically assigned upon creation</span>
               </IonCardContent>
             </IonCard>
           )}
 
           {/* Form */}
-          <div className="form">
+          <div className="form-card">
             {/* Student Name */}
-            <IonItem className="input-item">
-              <IonLabel position="stacked">Student Name *</IonLabel>
-              <IonInput
-                value={name}
-                onIonInput={(e) => setName(e.detail.value || '')}
-                placeholder="Enter student's full name"
-                autocomplete="name"
-                autocorrect="off"
-              />
-            </IonItem>
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={personOutline} className="label-icon" />
+                Student Name *
+              </label>
+              <div className="custom-input-box">
+                <IonInput
+                  value={name}
+                  onIonInput={(e) => setName(e.detail.value || '')}
+                  placeholder="Enter student's full name"
+                  autocomplete="name"
+                  autocorrect="off"
+                />
+              </div>
+            </div>
 
             {/* Password */}
-            <IonItem className="input-item password-item">
-              <IonLabel position="stacked">Password *</IonLabel>
-              <div className="password-wrapper">
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={keyOutline} className="label-icon" />
+                Set Password *
+              </label>
+              <div className="custom-input-box password-box">
                 <IonInput
                   value={password}
                   onIonInput={(e) => setPassword(e.detail.value || '')}
-                  placeholder="Enter password (min 6 characters)"
+                  placeholder="Minimum 6 characters"
                   type={showPassword ? 'text' : 'password'}
                   autocomplete="new-password"
                   autocorrect="off"
@@ -221,31 +228,26 @@ const ClassAddStudentScreen: React.FC = () => {
                   />
                 </IonButton>
               </div>
-              <IonText color="medium" className="input-hint">
-                <small>This password will be used for student login</small>
-              </IonText>
-            </IonItem>
+            </div>
 
             {/* Info Box */}
             <div className="info-box">
               <IonIcon icon={informationCircleOutline} className="info-icon" />
-              <IonText>
-                <small>
-                  The student will use their <strong className="id-highlight">Student ID</strong> as username and this password to login.
-                </small>
-              </IonText>
+              <p>
+                The student will use their assigned <strong className="id-highlight">Student ID</strong> as their username along with this password to access the app.
+              </p>
             </div>
-          </div>
 
-          {/* Submit Button */}
-          <IonButton
-            expand="block"
-            className="submit-button"
-            onClick={handleCreateStudent}
-            disabled={loading}
-          >
-            {loading ? <IonSpinner name="crescent" /> : 'Create Student'}
-          </IonButton>
+            {/* Submit Button */}
+            <IonButton
+              expand="block"
+              className="submit-button"
+              onClick={handleCreateStudent}
+              disabled={loading}
+            >
+              {loading ? <IonSpinner name="crescent" /> : 'Confirm & Create Student'}
+            </IonButton>
+          </div>
         </div>
 
         {/* Success Modal */}
@@ -255,31 +257,30 @@ const ClassAddStudentScreen: React.FC = () => {
           className="success-modal"
         >
           <div className="modal-container">
-            {/* Success Icon */}
             <div className="success-icon-container">
               <IonIcon icon={checkmarkCircleOutline} className="success-icon" />
             </div>
 
-            <h2 className="modal-title">Student Created Successfully!</h2>
-            
+            <h2 className="modal-title">Student Created!</h2>
+
             {createdStudent && (
               <div className="modal-details">
                 <div className="student-id-highlight">
-                  <small className="student-id-label">Student ID</small>
+                  <small className="student-id-label">Assigned Student ID</small>
                   <h3 className="student-id-value">{createdStudent.studentId}</h3>
                 </div>
-                
+
                 <div className="detail-row">
-                  <span className="detail-label">Name:</span>
+                  <span className="detail-label">Full Name</span>
                   <span className="detail-value">{createdStudent.name}</span>
                 </div>
-                
+
                 <div className="detail-row password-row">
-                  <span className="detail-label">Password:</span>
+                  <span className="detail-label">Login Password</span>
                   <div className="modal-password-container">
                     <span className="password-value">{createdStudent.password}</span>
                     <IonButton
-                      fill="outline"
+                      fill="solid"
                       size="small"
                       onClick={handleCopyPassword}
                       className="copy-button"
@@ -294,16 +295,15 @@ const ClassAddStudentScreen: React.FC = () => {
 
             <div className="modal-warning">
               <IonIcon icon={warningOutline} className="warning-icon" />
-              <IonText>
-                <small>Please save the Student ID and password securely! The password won't be shown again.</small>
-              </IonText>
+              <p>Please note down these credentials. The password will not be displayed again!</p>
             </div>
 
             {/* Action Buttons */}
             <div className="modal-actions">
               <IonButton
                 fill="outline"
-                color="secondary"
+                color="medium"
+                className="modal-btn"
                 onClick={() => {
                   setShowSuccessModal(false);
                   setName('');
@@ -314,9 +314,10 @@ const ClassAddStudentScreen: React.FC = () => {
               >
                 Add Another
               </IonButton>
-              
+
               <IonButton
-                color="secondary"
+                color="primary"
+                className="modal-btn"
                 onClick={handleCloseSuccessModal}
               >
                 Done
@@ -329,7 +330,7 @@ const ClassAddStudentScreen: React.FC = () => {
         <IonAlert
           isOpen={showValidationError}
           onDidDismiss={() => setShowValidationError(false)}
-          header="Validation Error"
+          header="Notice"
           message={validationErrorMessage}
           buttons={['OK']}
         />

@@ -143,6 +143,80 @@ export const storage = {
   },
 };
 
+// ============================================
+// File Service - Authenticated file fetching
+// ============================================
+
+/**
+ * Fetch a file from the API with authentication and return as blob URL
+ * This allows opening files in new tabs while maintaining auth
+ * @param endpoint - The file endpoint (e.g., '/files/exam/123')
+ * @returns Promise<string> - Object URL for the file
+ */
+export const fetchFileAsBlobUrl = async (endpoint: string): Promise<string> => {
+  const token = await storage.getToken();
+  
+  console.log(`[API] Fetching file from: ${endpoint}`);
+  
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': token ? `Bearer ${token}` : '',
+      'ngrok-skip-browser-warning': 'true',
+    },
+    credentials: 'include',
+  });
+
+  console.log(`[API] File response status: ${response.status} ${response.statusText}`);
+
+  if (!response.ok) {
+    // Try to get error message from response
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    try {
+      const errorData = await response.text();
+      if (errorData) {
+        try {
+          const parsed = JSON.parse(errorData);
+          errorMessage = parsed.error?.message || parsed.message || errorData;
+        } catch {
+          errorMessage = errorData;
+        }
+      }
+    } catch {
+      // Ignore parsing errors
+    }
+    console.error(`[API] File fetch error: ${errorMessage}`);
+    throw new Error(errorMessage);
+  }
+
+  const blob = await response.blob();
+  console.log(`[API] File fetched successfully, size: ${blob.size} bytes`);
+  return URL.createObjectURL(blob);
+};
+
+/**
+ * Open a file in a new tab with authentication
+ * @param endpoint - The file endpoint (e.g., '/files/exam/123')
+ */
+export const openFileInNewTab = async (endpoint: string): Promise<void> => {
+  try {
+    const blobUrl = await fetchFileAsBlobUrl(endpoint);
+    window.open(blobUrl, '_blank', 'noopener,noreferrer');
+  } catch (error) {
+    console.error('Error opening file:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get image src with authentication (returns blob URL)
+ * @param endpoint - The image endpoint (e.g., '/files/news/123/image')
+ * @returns Promise<string> - Object URL for the image
+ */
+export const getImageSrc = async (endpoint: string): Promise<string> => {
+  return fetchFileAsBlobUrl(endpoint);
+};
+
 // Create Axios instance
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -155,13 +229,125 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor - add auth token
+// Tenant ID storage for multi-tenant support
+let currentTenantId: string | null = null;
+
+// Set tenant ID (called when user logs in or switches tenant)
+export const setTenantId = (tenantId: string | null) => {
+  currentTenantId = tenantId;
+  // Also persist to localStorage for page refreshes
+  if (tenantId) {
+    localStorage.setItem('tenantId', tenantId);
+  } else {
+    localStorage.removeItem('tenantId');
+  }
+};
+
+// Get tenant ID from memory or localStorage
+export const getTenantId = (): string | null => {
+  if (currentTenantId) return currentTenantId;
+  return localStorage.getItem('tenantId');
+};
+
+// Cache invalidation for multi-tenant support
+const tenantCache = new Map<string, Set<string>>();
+
+/**
+ * Clear all cached data for the current tenant
+ * This is called when switching tenants to prevent stale data
+ */
+export const clearTenantCache = (): void => {
+  const tenantId = getTenantId();
+  if (tenantId) {
+    console.log('[API] Clearing cache for tenant:', tenantId);
+    
+    // Clear any cached API responses
+    // This is a simple implementation - you can extend this based on your caching strategy
+    const cacheKeys = tenantCache.get(tenantId);
+    if (cacheKeys) {
+      cacheKeys.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      tenantCache.delete(tenantId);
+    }
+  }
+};
+
+/**
+ * Register a cache key for a tenant
+ * This allows the cache to be cleared when switching tenants
+ */
+export const registerCacheKey = (cacheKey: string): void => {
+  const tenantId = getTenantId();
+  if (tenantId) {
+    if (!tenantCache.has(tenantId)) {
+      tenantCache.set(tenantId, new Set());
+    }
+    tenantCache.get(tenantId)!.add(cacheKey);
+  }
+};
+
+/**
+ * Get cached data for a key
+ */
+export const getCachedData = <T>(key: string): T | null => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      const { data, timestamp, ttl } = JSON.parse(cached);
+      // Check if cache is still valid (default TTL: 5 minutes)
+      if (ttl && Date.now() - timestamp < ttl) {
+        return data as T;
+      }
+      // Cache expired, remove it
+      localStorage.removeItem(key);
+    }
+  } catch (error) {
+    console.error('[API] Error reading cache:', error);
+  }
+  return null;
+};
+
+/**
+ * Set cached data for a key
+ */
+export const setCachedData = <T>(key: string, data: T, ttl: number = 300000): void => {
+  try {
+    const cacheEntry = {
+      data,
+      timestamp: Date.now(),
+      ttl
+    };
+    localStorage.setItem(key, JSON.stringify(cacheEntry));
+    registerCacheKey(key);
+  } catch (error) {
+    console.error('[API] Error writing cache:', error);
+  }
+};
+
+// Request interceptor - add auth token and tenant ID
 api.interceptors.request.use(
   async (config) => {
     try {
       const token = await storage.getToken();
       if (token && typeof token === 'string' && token.trim()) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      // Add tenant ID header for multi-tenant support
+      // Skip for auth endpoints and superadmin endpoints (they don't need tenant context)
+      const skipTenantHeader = [
+        '/auth/',
+        '/superadmin/',
+        '/health'
+      ].some(prefix => config.url?.includes(prefix));
+      
+      if (!skipTenantHeader) {
+        const tenantId = getTenantId();
+        if (tenantId) {
+          config.headers['x-tenant-id'] = tenantId;
+        }
       }
     } catch (error) {
       console.error('Error getting token from storage:', error);
@@ -173,11 +359,24 @@ api.interceptors.request.use(
   }
 );
 
+// Event callback for tenant suspended - can be set by AuthContext
+let onTenantSuspended: (() => void) | null = null;
+
+/**
+ * Set callback for tenant suspended event
+ * This is called when a 403 response indicates tenant suspension
+ */
+export const setTenantSuspendedCallback = (callback: (() => void) | null) => {
+  onTenantSuspended = callback;
+};
+
 // Response interceptor - handle common errors
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    
+    if (status === 401) {
       // Token expired or invalid - clear storage
       try {
         await storage.clearAuth();
@@ -185,7 +384,30 @@ api.interceptors.response.use(
       } catch (storageError) {
         console.error('Error clearing auth storage:', storageError);
       }
+    } else if (status === 403) {
+      // Check if it's a tenant suspension error
+      const errorMessage = error.response?.data?.message || '';
+      const isTenantSuspended = 
+        errorMessage.toLowerCase().includes('suspended') ||
+        errorMessage.toLowerCase().includes('tenant is suspended') ||
+        error.response?.data?.code === 'TENANT_SUSPENDED';
+      
+      if (isTenantSuspended) {
+        console.error('[API] Tenant suspended - redirecting user');
+        
+        // Clear tenant-specific cache
+        clearTenantCache();
+        
+        // Trigger callback if set
+        if (onTenantSuspended) {
+          onTenantSuspended();
+        }
+        
+        // Optionally redirect to suspended page
+        // window.location.href = '/tenant-suspended';
+      }
     }
+    
     return Promise.reject(error);
   }
 );
@@ -429,8 +651,8 @@ export const adminAPI = {
     return response.data;
   },
 
-  async updateStudent(id: string, data: Partial<CreateStudentInput>): Promise<ApiResponse<void>> {
-    const response = await api.put<ApiResponse<void>>(`/admin/students/${id}`, data);
+  async updateStudent(id: string, data: { name?: string; email?: string; phone?: string; classId?: string | null }): Promise<ApiResponse<{ id: string; name: string; email: string; phone?: string; studentId: string; classId: string | null; updatedAt: string }>> {
+    const response = await api.put<ApiResponse<{ id: string; name: string; email: string; phone?: string; studentId: string; classId: string | null; updatedAt: string }>>(`/admin/students/${id}`, data);
     return response.data;
   },
 
@@ -558,6 +780,14 @@ export const adminAPI = {
   async getExamSchedules(page = 1, limit = 10, classId = '', isPublished = ''): Promise<ApiResponse<{ examSchedules: ExamSchedule[]; pagination: any }>> {
     const response = await api.get<ApiResponse<{ examSchedules: ExamSchedule[]; pagination: any }>>('/admin/exam-schedules', {
       params: { page, limit, classId, isPublished },
+    });
+    return response.data;
+  },
+
+  // New Exam table (PDF/Image based timetables)
+  async getExams(page = 1, limit = 50): Promise<ApiResponse<{ exams: ExamSchedule[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ exams: ExamSchedule[]; pagination: any }>>('/admin/exams', {
+      params: { page, limit },
     });
     return response.data;
   },
@@ -735,212 +965,6 @@ export const studentAPI = {
 };
 
 // ============================================
-// Teacher API
-// ============================================
-
-export const teacherAPI = {
-  // Dashboard Profile (New UI)
-  async getDashboardProfile(): Promise<ApiResponse<{
-    teacher: {
-      id: string;
-      name: string;
-      classId: string | null;
-      className: string;
-      sectionName: string;
-      classSection: string;
-    };
-    school: {
-      id: string;
-      name: string;
-      logoUrl: string | null;
-      code: string;
-    };
-    stats: {
-      totalStudents: number;
-      totalHomework: number;
-      totalExams: number;
-    };
-  }>> {
-    const response = await api.get<ApiResponse<{
-      teacher: {
-        id: string;
-        name: string;
-        classId: string | null;
-        className: string;
-        sectionName: string;
-        classSection: string;
-      };
-      school: {
-        id: string;
-        name: string;
-        logoUrl: string | null;
-        code: string;
-      };
-      stats: {
-        totalStudents: number;
-        totalHomework: number;
-        totalExams: number;
-      };
-    }>>('/teacher/dashboard-profile');
-    return response.data;
-  },
-
-  // Dashboard - Get teacher's assigned class
-  async getMyClass(): Promise<ApiResponse<{
-    id: string;
-    name: string;
-    section?: string;
-    students: User[];
-    homeworks: Homework[];
-    examSchedules: ExamSchedule[];
-    _count: { students: number; homeworks: number; examSchedules: number };
-  }>> {
-    const response = await api.get<ApiResponse<{
-      id: string;
-      name: string;
-      section?: string;
-      students: User[];
-      homeworks: Homework[];
-      examSchedules: ExamSchedule[];
-      _count: { students: number; homeworks: number; examSchedules: number };
-    }>>('/teacher/my-class');
-    return response.data;
-  },
-
-  // Students
-  async getMyStudents(page = 1, limit = 10, search = ''): Promise<ApiResponse<{ students: User[]; pagination: any }>> {
-    const response = await api.get<ApiResponse<{ students: User[]; pagination: any }>>('/teacher/students', {
-      params: { page, limit, search },
-    });
-    return response.data;
-  },
-
-  // Homework
-  async getHomework(page = 1, limit = 10): Promise<ApiResponse<{ homeworks: Homework[]; pagination: any }>> {
-    const response = await api.get<ApiResponse<{ homeworks: Homework[]; pagination: any }>>('/teacher/homework', {
-      params: { page, limit },
-    });
-    return response.data;
-  },
-
-  async createHomework(data: Omit<CreateHomeworkInput, 'classId'>): Promise<ApiResponse<Homework>> {
-    const response = await api.post<ApiResponse<Homework>>('/teacher/homework', data);
-    return response.data;
-  },
-
-  // Marks
-  async getMarks(page = 1, limit = 10, studentId = '', examType = ''): Promise<ApiResponse<{ marks: Mark[]; pagination: any }>> {
-    const response = await api.get<ApiResponse<{ marks: Mark[]; pagination: any }>>('/teacher/marks', {
-      params: { page, limit, studentId, examType },
-    });
-    return response.data;
-  },
-
-  async createMarks(marksData: Array<{
-    studentId: string;
-    subject: string;
-    marksObtained: number;
-    totalMarks: number;
-    examType: string;
-    examDate?: string;
-    remarks?: string;
-  }>): Promise<ApiResponse<Mark[]>> {
-    const response = await api.post<ApiResponse<Mark[]>>('/teacher/marks', { marksData });
-    return response.data;
-  },
-
-  async updateMark(id: string, data: Partial<CreateMarkInput> & { isPublished?: boolean }): Promise<ApiResponse<Mark>> {
-    const response = await api.put<ApiResponse<Mark>>(`/teacher/marks/${id}`, data);
-    return response.data;
-  },
-
-  async deleteMark(id: string): Promise<ApiResponse<void>> {
-    const response = await api.delete<ApiResponse<void>>(`/teacher/marks/${id}`);
-    return response.data;
-  },
-
-  async updateHomework(id: string, data: Partial<CreateHomeworkInput> & { isPublished?: boolean }): Promise<ApiResponse<Homework>> {
-    const response = await api.put<ApiResponse<Homework>>(`/teacher/homework/${id}`, data);
-    return response.data;
-  },
-
-  async deleteHomework(id: string): Promise<ApiResponse<void>> {
-    const response = await api.delete<ApiResponse<void>>(`/teacher/homework/${id}`);
-    return response.data;
-  },
-
-  async updateStudent(id: string, data: { name?: string; email?: string; studentId?: string }): Promise<ApiResponse<void>> {
-    const response = await api.put<ApiResponse<void>>(`/teacher/students/${id}`, data);
-    return response.data;
-  },
-
-  async createStudentManual(data: {
-    name: string;
-    email: string;
-    studentId: string;
-    phone?: string;
-    password?: string;
-  }): Promise<ApiResponse<{
-    id: string;
-    email: string;
-    name: string;
-    studentId: string;
-    phone?: string;
-    createdAt: string;
-  }>> {
-    const response = await api.post<ApiResponse<{
-      id: string;
-      email: string;
-      name: string;
-      studentId: string;
-      phone?: string;
-      createdAt: string;
-    }>>('/teacher/students/manual', data);
-    return response.data;
-  },
-
-  async bulkUploadStudents(file: File): Promise<ApiResponse<{
-    totalProcessed: number;
-    successfullyCreated: number;
-    duplicates: number;
-    students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
-  }>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await api.post<ApiResponse<{
-      totalProcessed: number;
-      successfullyCreated: number;
-      duplicates: number;
-      students: Array<{ id: string; email: string; name: string; studentId: string; createdAt: string }>;
-    }>>('/teacher/students/bulk-upload', formData);
-    return response.data;
-  },
-
-  async markAttendance(date: string, attendanceData: Array<{ studentId: string; status: string; remarks?: string }>): Promise<ApiResponse<{ marked: number; date: string; className: string }>> {
-    const response = await api.post<ApiResponse<{ marked: number; date: string; className: string }>>('/teacher/attendance', {
-      date,
-      attendanceData,
-    });
-    return response.data;
-  },
-
-  async getClassAttendance(date?: string): Promise<ApiResponse<{
-    date: string;
-    className: string;
-    attendance: Array<{ studentId: string; name: string; email: string; studentCode: string; status: string | null; remarks?: string }>;
-    summary: { total: number; marked: number; unmarked: number };
-  }>> {
-    const response = await api.get<ApiResponse<{
-      date: string;
-      className: string;
-      attendance: Array<{ studentId: string; name: string; email: string; studentCode: string; status: string | null; remarks?: string }>;
-      summary: { total: number; marked: number; unmarked: number };
-    }>>('/teacher/attendance', { params: { date } });
-    return response.data;
-  },
-};
-
-// ============================================
 // Class Controller API
 // ============================================
 
@@ -972,6 +996,19 @@ export const classControllerAPI = {
     const response = await api.get<ApiResponse<{ students: User[]; pagination: any }>>('/class-controller/students', {
       params: { classId, page, limit, search },
     });
+    return response.data;
+  },
+
+  // Exams (New Exam table - PDF/Image based timetables)
+  async getExams(page = 1, limit = 20): Promise<ApiResponse<{ exams: ExamSchedule[]; pagination: any }>> {
+    const response = await api.get<ApiResponse<{ exams: ExamSchedule[]; pagination: any }>>('/class-controller/exams', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async getExamById(id: string): Promise<ApiResponse<ExamSchedule>> {
+    const response = await api.get<ApiResponse<ExamSchedule>>(`/class-controller/exams/${id}`);
     return response.data;
   },
 };
@@ -1012,6 +1049,248 @@ export const weeklyLessonsAPI = {
 
   async deleteAttachment(lessonId: string, attachmentId: string): Promise<ApiResponse<void>> {
     const response = await api.delete<ApiResponse<void>>(`/weekly-lessons/${lessonId}/attachments/${attachmentId}`);
+    return response.data;
+  },
+};
+
+// ============================================
+// SuperAdmin API (System-wide tenant management)
+// ============================================
+
+export const superadminAPI = {
+  /**
+   * Get system-wide statistics
+   */
+  async getStats(): Promise<ApiResponse<{
+    tenants: { total: number; active: number; suspended: number };
+    users: { total: number; super_admins: number };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      tenants: { total: number; active: number; suspended: number };
+      users: { total: number; super_admins: number };
+    }>>('/superadmin/stats');
+    return response.data;
+  },
+
+  /**
+   * Create a new tenant
+   */
+  async createTenant(data: {
+    name: string;
+    domain_slug: string;
+    subscription_plan?: string;
+    max_users?: number;
+    max_students?: number;
+    settings?: Record<string, any>;
+  }): Promise<ApiResponse<Tenant>> {
+    const response = await api.post<ApiResponse<Tenant>>('/superadmin/tenants', data);
+    return response.data;
+  },
+
+  /**
+   * Get all tenants with pagination and filtering
+   */
+  async getAllTenants(params?: {
+    page?: number;
+    limit?: number;
+    status?: 'ACTIVE' | 'SUSPENDED';
+    subscription_plan?: string;
+    search?: string;
+  }): Promise<ApiResponse<{
+    tenants: Tenant[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      tenants: Tenant[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+      };
+    }>>('/superadmin/tenants', { params });
+    return response.data;
+  },
+
+  /**
+   * Get single tenant by ID with stats
+   */
+  async getTenant(id: string): Promise<ApiResponse<Tenant & {
+    stats: {
+      total_users: number;
+      total_admins: number;
+    };
+  }>> {
+    const response = await api.get<ApiResponse<Tenant & {
+      stats: {
+        total_users: number;
+        total_admins: number;
+      };
+    }>>(`/superadmin/tenants/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Update tenant details
+   */
+  async updateTenant(id: string, data: Partial<{
+    name: string;
+    domain_slug: string;
+    subscription_plan: string;
+    max_users: number;
+    max_students: number;
+    settings: Record<string, any>;
+  }>): Promise<ApiResponse<Tenant>> {
+    const response = await api.patch<ApiResponse<Tenant>>(`/superadmin/tenants/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Update tenant status (suspend/activate)
+   */
+  async updateTenantStatus(id: string, status: 'ACTIVE' | 'SUSPENDED'): Promise<ApiResponse<Tenant>> {
+    const response = await api.patch<ApiResponse<Tenant>>(`/superadmin/tenants/${id}/status`, { status });
+    return response.data;
+  },
+
+  /**
+   * Delete tenant (soft delete)
+   */
+  async deleteTenant(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/superadmin/tenants/${id}`);
+    return response.data;
+  },
+};
+
+// ============================================
+// Products API (Tenant-isolated example)
+// ============================================
+
+export interface Product {
+  id: string;
+  tenant_id: string;
+  name: string;
+  description?: string;
+  sku?: string;
+  price: number;
+  stock_quantity: number;
+  category?: string;
+  is_active: boolean;
+  metadata?: Record<string, any>;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  created_by_name?: string;
+  created_by_email?: string;
+}
+
+export interface CreateProductInput {
+  name: string;
+  description?: string;
+  sku?: string;
+  price?: number;
+  stock_quantity?: number;
+  category?: string;
+  metadata?: Record<string, any>;
+}
+
+export const productsAPI = {
+  /**
+   * Get product statistics for current tenant
+   */
+  async getStats(): Promise<ApiResponse<{
+    total_products: number;
+    active_products: number;
+    inventory_value: number;
+    low_stock: number;
+    out_of_stock: number;
+    categories: Array<{ category: string; count: number; total_stock: number }>;
+  }>> {
+    const response = await api.get<ApiResponse<{
+      total_products: number;
+      active_products: number;
+      inventory_value: number;
+      low_stock: number;
+      out_of_stock: number;
+      categories: Array<{ category: string; count: number; total_stock: number }>;
+    }>>('/products/stats');
+    return response.data;
+  },
+
+  /**
+   * Get all products for current tenant with pagination and filtering
+   */
+  async getAllProducts(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+    is_active?: boolean;
+    min_price?: number;
+    max_price?: number;
+  }): Promise<ApiResponse<{
+    products: Product[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }>> {
+    const response = await api.get<ApiResponse<{
+      products: Product[];
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+      };
+    }>>('/products', { params });
+    return response.data;
+  },
+
+  /**
+   * Get single product by ID
+   */
+  async getProduct(id: string): Promise<ApiResponse<Product>> {
+    const response = await api.get<ApiResponse<Product>>(`/products/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Create a new product (automatically assigns tenant_id)
+   */
+  async createProduct(data: CreateProductInput): Promise<ApiResponse<Product>> {
+    const response = await api.post<ApiResponse<Product>>('/products', data);
+    return response.data;
+  },
+
+  /**
+   * Update a product
+   */
+  async updateProduct(id: string, data: Partial<CreateProductInput> & { is_active?: boolean }): Promise<ApiResponse<Product>> {
+    const response = await api.put<ApiResponse<Product>>(`/products/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete a product (soft delete)
+   */
+  async deleteProduct(id: string): Promise<ApiResponse<void>> {
+    const response = await api.delete<ApiResponse<void>>(`/products/${id}`);
     return response.data;
   },
 };

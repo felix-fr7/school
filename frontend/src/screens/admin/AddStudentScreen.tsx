@@ -32,7 +32,7 @@ import {
   personAddOutline,
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import './AddStudentScreen.css';
+import './AdminTheme.css';
 
 type TabMode = 'manual' | 'excel';
 

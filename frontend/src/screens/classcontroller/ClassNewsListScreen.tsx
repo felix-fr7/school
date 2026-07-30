@@ -1,9 +1,3 @@
-/**
- * Class News List Screen (Ionic React Version)
- * Displays school news for class controller (class-based login) users
- * Fetches news from GET /api/content/news endpoint with proper class isolation
- */
-
 import React, { useEffect, useState } from 'react';
 import {
   IonPage,
@@ -13,7 +7,6 @@ import {
   IonButtons,
   IonBackButton,
   IonContent,
-  IonSpinner,
   IonText,
   IonCard,
   IonCardContent,
@@ -23,15 +16,15 @@ import {
   IonRefresherContent,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  IonButton,
+  IonSkeletonText,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { 
-  newspaperOutline, 
   calendarOutline, 
   imageOutline, 
   documentOutline,
   refreshOutline,
+  chevronForwardOutline,
 } from 'ionicons/icons';
 import { News } from '../../types';
 import './ClassNewsListScreen.css';
@@ -53,40 +46,41 @@ const NewsItem: React.FC<NewsItemProps> = ({ item, onClick }) => {
   return (
     <IonCard className="news-card" button onClick={() => onClick(item)}>
       {item.imageUrl && (
-        <img src={item.imageUrl} alt={item.title} className="news-image" />
+        <div className="card-image-wrapper">
+          <img src={item.imageUrl} alt={item.title} className="news-image" />
+        </div>
       )}
-      <IonCardContent className={item.imageUrl ? 'news-content' : 'news-content no-image'}>
-        <h3 className="news-title">{item.title}</h3>
-        <p className="news-summary">{item.content}</p>
-        
-        <div className="news-meta">
+      <IonCardContent className="news-content">
+        <div className="card-header-meta">
+          {item.category && (
+            <IonBadge color="primary" className="category-badge">
+              {item.category}
+            </IonBadge>
+          )}
           <div className="news-date">
             <IonIcon icon={calendarOutline} />
             <span>{formatDate(item.createdAt)}</span>
           </div>
-          {item.category && (
-            <IonBadge color="secondary" className="category-badge">
-              {item.category}
-            </IonBadge>
-          )}
         </div>
 
-        {(item.imageUrl || item.pdfUrl) && (
+        <h3 className="news-title">{item.title}</h3>
+        <p className="news-summary">{item.summary || item.content}</p>
+
+        <div className="card-footer-meta">
           <div className="attachments">
             {item.imageUrl && (
-              <IonBadge color="light" className="attachment-badge">
-                <IonIcon icon={imageOutline} slot="start" />
-                Image
-              </IonBadge>
+              <span className="attachment-chip">
+                <IonIcon icon={imageOutline} /> Image
+              </span>
             )}
             {item.pdfUrl && (
-              <IonBadge color="light" className="attachment-badge">
-                <IonIcon icon={documentOutline} slot="start" />
-                PDF
-              </IonBadge>
+              <span className="attachment-chip pdf">
+                <IonIcon icon={documentOutline} /> PDF
+              </span>
             )}
           </div>
-        )}
+          <IonIcon icon={chevronForwardOutline} className="read-more-icon" />
+        </div>
       </IonCardContent>
     </IonCard>
   );
@@ -97,39 +91,79 @@ const ClassNewsListScreen: React.FC = () => {
   
   const [newsList, setNewsList] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const fetchNews = async (refresh = false) => {
+  // Mock API Loader Function
+  const fetchNewsApi = async (pageNumber: number): Promise<{ data: News[]; totalPages: number }> => {
+    // API Call Simulate
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const mockData: News[] = [
+      {
+        id: '1',
+        title: 'Annual Sports Meet & Cultural Fest Schedule',
+        content: 'We are excited to announce our upcoming Annual Sports Meet for this academic year. Practice starts next Monday.',
+        summary: 'Annual Sports meet dates and event details announced for all classes.',
+        category: 'Sports',
+        imageUrl: 'https://picsum.photos/600/300?random=1',
+        pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        visibility: 'ALL',
+        tenantId: '1',
+        postedBy: '1',
+        isPublished: true,
+      },
+      {
+        id: '2',
+        title: 'Parent-Teacher Meeting Next Saturday',
+        content: 'Parent-Teacher Meeting for Term 1 results will be held this Saturday between 9:00 AM and 1:00 PM.',
+        summary: 'PTM schedule and discussion topics for Term 1 progress.',
+        category: 'Academic',
+        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        visibility: 'ALL',
+        tenantId: '1',
+        postedBy: '1',
+        isPublished: true,
+      },
+    ];
+
+    return {
+      data: mockData,
+      totalPages: 2,
+    };
+  };
+
+  const fetchNews = async (isRefresh = false, targetPage = 1) => {
     try {
-      if (refresh) {
-        setRefreshing(true);
+      if (isRefresh) {
         setPage(1);
       }
       
-      const currentPage = refresh ? 1 : page;
-      // Note: contentAPI.getNews may not be available, using console.log fallback
-      console.log('Fetching news for page:', currentPage);
-      
-      // Simulate empty response for now
-      setNewsList([]);
-      setTotalPages(1);
+      const response = await fetchNewsApi(targetPage);
+
+      if (isRefresh || targetPage === 1) {
+        setNewsList(response.data);
+      } else {
+        setNewsList((prev) => [...prev, ...response.data]);
+      }
+
+      setTotalPages(response.totalPages);
     } catch (error) {
       console.error('Error fetching news:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchNews();
+    fetchNews(true, 1);
   }, []);
 
   const onRefresh = async (event: CustomEvent) => {
-    setRefreshing(true);
-    await fetchNews(true);
+    await fetchNews(true, 1);
     event.detail.complete();
   };
 
@@ -139,38 +173,21 @@ const ClassNewsListScreen: React.FC = () => {
 
   const onIonInfinite = async (event: CustomEvent) => {
     if (page < totalPages) {
-      setPage(prev => prev + 1);
-      await fetchNews(false);
+      const nextPage = page + 1;
+      setPage(nextPage);
+      await fetchNews(false, nextPage);
     }
     (event.target as HTMLIonInfiniteScrollElement).complete();
   };
 
-  if (loading && newsList.length === 0) {
-    return (
-      <IonPage>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>School News</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center news-loading">
-          <IonSpinner name="crescent" />
-          <IonText color="medium">
-            <p className="loading-text">Loading news...</p>
-          </IonText>
-        </IonContent>
-      </IonPage>
-    );
-  }
-
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="ion-no-border">
+        <IonToolbar color="primary">
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller" />
           </IonButtons>
-          <IonTitle>School News</IonTitle>
+          <IonTitle>Class Announcements</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -179,47 +196,62 @@ const ClassNewsListScreen: React.FC = () => {
           <IonRefresherContent pullingIcon={refreshOutline} />
         </IonRefresher>
 
-        {/* News List */}
-        {newsList.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">📰</div>
-            <IonText>
-              <h3>No News Yet</h3>
-              <p className="empty-subtext">
-                No news has been published for your class. Check back later!
-              </p>
-            </IonText>
-          </div>
-        ) : (
-          <>
-            {newsList.map((item) => (
-              <NewsItem 
-                key={item.id} 
-                item={item} 
-                onClick={handleNewsPress}
-              />
-            ))}
-          </>
-        )}
+        <div className="news-container">
+          {/* Skeleton Loading State */}
+          {loading && newsList.length === 0 ? (
+            <div className="skeleton-wrapper">
+              {[1, 2, 3].map((n) => (
+                <IonCard key={n} className="news-card skeleton-card">
+                  <IonSkeletonText animated style={{ width: '100%', height: '140px' }} />
+                  <IonCardContent>
+                    <IonSkeletonText animated style={{ width: '40%', height: '14px', marginBottom: '8px' }} />
+                    <IonSkeletonText animated style={{ width: '80%', height: '20px', marginBottom: '12px' }} />
+                    <IonSkeletonText animated style={{ width: '100%', height: '14px' }} />
+                  </IonCardContent>
+                </IonCard>
+              ))}
+            </div>
+          ) : newsList.length === 0 ? (
+            /* Empty State */
+            <div className="empty-state">
+              <div className="empty-icon">📰</div>
+              <IonText color="dark">
+                <h3>No Announcements Yet</h3>
+                <p className="empty-subtext">
+                  There are no active news or updates for your class right now.
+                </p>
+              </IonText>
+            </div>
+          ) : (
+            /* News List */
+            <>
+              {newsList.map((item) => (
+                <NewsItem 
+                  key={item.id} 
+                  item={item} 
+                  onClick={handleNewsPress}
+                />
+              ))}
+            </>
+          )}
 
-        {/* Infinite Scroll */}
-        <IonInfiniteScroll
-          onIonInfinite={onIonInfinite}
-          disabled={page >= totalPages}
-        >
-          <IonInfiniteScrollContent
-            loadingSpinner="crescent"
-            loadingText="Loading more news..."
-          />
-        </IonInfiniteScroll>
+          {/* Infinite Scroll */}
+          <IonInfiniteScroll
+            onIonInfinite={onIonInfinite}
+            disabled={page >= totalPages}
+          >
+            <IonInfiniteScrollContent
+              loadingSpinner="crescent"
+              loadingText="Loading more updates..."
+            />
+          </IonInfiniteScroll>
 
-        {/* Footer */}
-        <div className="footer">
-          <IonText color="medium">
-            <p className="footer-text">
-              News is managed by your school administration
-            </p>
-          </IonText>
+          {/* Footer Note */}
+          {!loading && newsList.length > 0 && (
+            <div className="list-footer">
+              <p>Managed by School Administration</p>
+            </div>
+          )}
         </div>
       </IonContent>
     </IonPage>

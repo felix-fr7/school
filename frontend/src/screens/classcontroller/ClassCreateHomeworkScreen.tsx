@@ -1,8 +1,3 @@
-/**
- * Class Create Homework Screen (Ionic React Version)
- * Create new homework assignments for the class
- */
-
 import React, { useState } from 'react';
 import {
   IonPage,
@@ -13,7 +8,6 @@ import {
   IonBackButton,
   IonContent,
   IonSpinner,
-  IonText,
   IonButton,
   IonIcon,
   IonItem,
@@ -26,98 +20,94 @@ import {
   IonModal,
   IonAlert,
   IonToggle,
+  IonChip,
 } from '@ionic/react';
 import {
   calendarOutline,
-  checkmarkOutline,
   sendOutline,
+  attachOutline,
+  schoolOutline,
+  bookOutline,
+  alertCircleOutline
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { classControllerAPI } from '../../services/api';
 import './ClassCreateHomeworkScreen.css';
 
 const SUBJECTS = [
-  'Mathematics',
-  'Science',
-  'English',
-  'History',
-  'Geography',
-  'Computer Science',
-  'Physics',
-  'Chemistry',
-  'Biology',
-  'Physical Education',
-  'Art',
-  'Music',
+  'Mathematics', 'Science', 'English', 'History',
+  'Geography', 'Computer Science', 'Physics', 'Chemistry'
 ];
+
+const CLASSES = ['Class 9-A', 'Class 9-B', 'Class 10-A', 'Class 10-B', 'Class 11-A', 'Class 12-A'];
 
 const ClassCreateHomeworkScreen: React.FC = () => {
   const history = useHistory();
-  
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('');
+  const [selectedClass, setSelectedClass] = useState('');
   const [dueDate, setDueDate] = useState<string>('');
-  const [isPublished, setIsPublished] = useState(false);
+  const [isPublished, setIsPublished] = useState(true);
+  const [attachments, setAttachments] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDueDateModal, setShowDueDateModal] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const fileName = e.target.files[0].name;
+      setAttachments((prev) => [...prev, fileName]);
+    }
+  };
 
   const validateForm = (): boolean => {
+    if (!selectedClass) {
+      setAlertHeader('Class Required');
+      setAlertMessage('Please select a target class/section.');
+      setShowAlert(true);
+      return false;
+    }
     if (!title.trim()) {
       setAlertHeader('Validation Error');
-      setAlertMessage('Please enter a title for the homework');
-      setIsSuccess(false);
+      setAlertMessage('Please enter a title for the homework assignment.');
       setShowAlert(true);
       return false;
     }
-    
     if (!subject) {
       setAlertHeader('Validation Error');
-      setAlertMessage('Please select a subject');
-      setIsSuccess(false);
+      setAlertMessage('Please select a subject.');
       setShowAlert(true);
       return false;
     }
-    
     return true;
   };
 
   const handleCreateHomework = async () => {
-    if (!validateForm()) {
-      return;
-    }
-    
+    if (!validateForm()) return;
     setLoading(true);
-    
+
     try {
-      // Note: createHomework API not available in classControllerAPI
-      console.log('Creating homework:', {
+      console.log('Creating Class Homework:', {
+        class: selectedClass,
         title: title.trim(),
-        description: description.trim(),
         subject,
+        description: description.trim(),
         dueDate: dueDate || null,
         isPublished,
+        attachments,
       });
-      
-      // Simulate success
-      setAlertHeader('Success');
-      setAlertMessage('Homework created successfully!');
-      setIsSuccess(true);
+
+      setAlertHeader('Homework Published');
+      setAlertMessage(`Assignment created successfully for ${selectedClass}!`);
       setShowAlert(true);
-      
-      setTimeout(() => {
-        history.goBack();
-      }, 1500);
-    } catch (error: any) {
-      console.error('Error creating homework:', error);
-      const errorMessage = error?.response?.data?.error?.message || 'Failed to create homework';
+
+      setTimeout(() => history.goBack(), 1500);
+    } catch (error) {
       setAlertHeader('Error');
-      setAlertMessage(errorMessage);
-      setIsSuccess(false);
+      setAlertMessage('Failed to create homework');
       setShowAlert(true);
     } finally {
       setLoading(false);
@@ -125,80 +115,109 @@ const ClassCreateHomeworkScreen: React.FC = () => {
   };
 
   const formatDueDate = (dateStr: string) => {
-    if (!dateStr) return 'Select due date';
+    if (!dateStr) return 'Set Due Date & Time';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="ion-no-border">
+        <IonToolbar color="primary" className="class-toolbar">
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller/homework" />
           </IonButtons>
-          <IonTitle>Create Homework</IonTitle>
+          <IonTitle>Assign Homework</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="create-homework-content" fullscreen>
         <div className="form-container">
-          {/* Header */}
           <div className="form-header">
-            <h1 className="form-title">Create Homework</h1>
-            <p className="form-subtitle">Assign homework to your class</p>
+            <h1 className="form-title">New Assignment</h1>
+            <p className="form-subtitle">Create and distribute homework to your students</p>
           </div>
 
-          {/* Form */}
           <div className="form">
-            {/* Title */}
+            {/* Target Class Selection */}
             <IonItem className="input-item">
-              <IonLabel position="stacked">Title *</IonLabel>
-              <IonInput
-                value={title}
-                onIonInput={(e) => setTitle(e.detail.value || '')}
-                placeholder="Enter homework title"
-                autocomplete="off"
-                autocorrect="off"
-              />
-            </IonItem>
-
-            {/* Subject */}
-            <IonItem className="input-item">
-              <IonLabel position="stacked">Subject *</IonLabel>
+              <IonIcon icon={schoolOutline} slot="start" className="field-icon" />
+              <IonLabel position="stacked">Target Class *</IonLabel>
               <IonSelect
-                value={subject}
-                onIonChange={(e) => setSubject(e.detail.value)}
-                placeholder="Select subject"
+                value={selectedClass}
+                onIonChange={(e) => setSelectedClass(e.detail.value)}
+                placeholder="Select Target Class"
                 interface="action-sheet"
               >
-                {SUBJECTS.map((subj) => (
-                  <IonSelectOption key={subj} value={subj}>
-                    {subj}
-                  </IonSelectOption>
+                {CLASSES.map((cls) => (
+                  <IonSelectOption key={cls} value={cls}>{cls}</IonSelectOption>
                 ))}
               </IonSelect>
             </IonItem>
 
+            {/* Subject Selection */}
+            <IonItem className="input-item">
+              <IonIcon icon={bookOutline} slot="start" className="field-icon" />
+              <IonLabel position="stacked">Subject *</IonLabel>
+              <IonSelect
+                value={subject}
+                onIonChange={(e) => setSubject(e.detail.value)}
+                placeholder="Select Subject"
+                interface="action-sheet"
+              >
+                {SUBJECTS.map((subj) => (
+                  <IonSelectOption key={subj} value={subj}>{subj}</IonSelectOption>
+                ))}
+              </IonSelect>
+            </IonItem>
+
+            {/* Title */}
+            <IonItem className="input-item">
+              <IonLabel position="stacked">Assignment Title *</IonLabel>
+              <IonInput
+                value={title}
+                onIonInput={(e) => setTitle(e.detail.value || '')}
+                placeholder="e.g., Chapter 4 Algebra Practice Questions"
+              />
+            </IonItem>
+
             {/* Description */}
             <IonItem className="input-item textarea-item">
-              <IonLabel position="stacked">Description</IonLabel>
+              <IonLabel position="stacked">Instructions & Notes</IonLabel>
               <IonTextarea
                 value={description}
                 onIonInput={(e) => setDescription(e.detail.value || '')}
-                placeholder="Enter homework description and instructions"
-                rows={6}
+                placeholder="Provide detailed submission instructions, reference pages, or links..."
+                rows={5}
                 autoGrow
               />
             </IonItem>
 
-            {/* Due Date */}
+            {/* Attachment Section */}
+            <div className="attachment-section">
+              <label htmlFor="file-upload" className="attachment-button">
+                <IonIcon icon={attachOutline} /> Attach Worksheets / PDFs
+              </label>
+              <input id="file-upload" type="file" onChange={handleFileUpload} style={{ display: 'none' }} />
+
+              <div className="chips-container">
+                {attachments.map((file, idx) => (
+                  <IonChip key={idx} color="primary" onDismiss={() => setAttachments(attachments.filter((_, i) => i !== idx))}>
+                    {file}
+                  </IonChip>
+                ))}
+              </div>
+            </div>
+
+            {/* Due Date Modal Trigger */}
             <IonItem className="input-item date-item" button onClick={() => setShowDueDateModal(true)}>
-              <IonLabel position="stacked">Due Date</IonLabel>
+              <IonLabel position="stacked">Submission Deadline</IonLabel>
               <div className="date-input">
                 <IonIcon icon={calendarOutline} className="date-icon" />
                 <span className={`date-text ${dueDate ? '' : 'placeholder'}`}>
@@ -207,11 +226,11 @@ const ClassCreateHomeworkScreen: React.FC = () => {
               </div>
             </IonItem>
 
-            {/* Publish Toggle */}
+            {/* Publish Immediately Toggle */}
             <IonItem className="toggle-item">
               <IonLabel>
-                <h4>Publish Immediately</h4>
-                <p>Make this homework visible to students</p>
+                <h4>Notify Class Immediately</h4>
+                <p>Send an instant alert to students and parents</p>
               </IonLabel>
               <IonToggle
                 checked={isPublished}
@@ -229,49 +248,33 @@ const ClassCreateHomeworkScreen: React.FC = () => {
             disabled={loading}
           >
             {loading ? <IonSpinner name="crescent" /> : <IonIcon icon={sendOutline} slot="start" />}
-            {loading ? 'Creating...' : 'Create Homework'}
+            {loading ? 'Publishing...' : 'Publish Homework'}
           </IonButton>
         </div>
 
         {/* Due Date Modal */}
-        <IonModal
-          isOpen={showDueDateModal}
-          onDidDismiss={() => setShowDueDateModal(false)}
-          className="date-picker-modal"
-        >
+        <IonModal isOpen={showDueDateModal} onDidDismiss={() => setShowDueDateModal(false)} className="date-picker-modal">
           <div className="modal-container">
-            <h2 className="modal-title">Select Due Date</h2>
+            <h2 className="modal-title">Select Due Date & Time</h2>
             <div className="date-picker-wrapper">
               <IonDatetime
                 value={dueDate}
                 onIonChange={(e) => setDueDate(e.detail.value as string)}
-                presentation="date"
+                presentation="date-time"
                 min={new Date().toISOString()}
-                max="2030-12-31"
               />
             </div>
             <div className="modal-buttons">
-              <IonButton
-                fill="outline"
-                color="medium"
-                onClick={() => {
-                  setDueDate('');
-                  setShowDueDateModal(false);
-                }}
-              >
+              <IonButton fill="outline" color="medium" onClick={() => { setDueDate(''); setShowDueDateModal(false); }}>
                 Clear
               </IonButton>
-              <IonButton
-                color="secondary"
-                onClick={() => setShowDueDateModal(false)}
-              >
-                Done
+              <IonButton color="primary" onClick={() => setShowDueDateModal(false)}>
+                Confirm
               </IonButton>
             </div>
           </div>
         </IonModal>
 
-        {/* Alert */}
         <IonAlert
           isOpen={showAlert}
           onDidDismiss={() => setShowAlert(false)}

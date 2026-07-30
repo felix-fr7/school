@@ -1,6 +1,5 @@
 /**
- * Edit Class Screen (Ionic React Version)
- * Allows admin to edit class details
+ * Edit Class Screen (Ionic React - Modern Admin UI)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -25,10 +24,20 @@ import {
   IonCardContent,
 } from '@ionic/react';
 import { useParams, useHistory } from 'react-router-dom';
-import { chevronForwardOutline, closeOutline, searchOutline, keyOutline, lockClosedOutline } from 'ionicons/icons';
+import { 
+  chevronForwardOutline, 
+  closeOutline, 
+  searchOutline, 
+  keyOutline, 
+  lockClosedOutline,
+  personOutline,
+  schoolOutline,
+  checkmarkCircleOutline,
+  trashOutline
+} from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import { User, Class } from '../../types';
-import './EditClassScreen.css';
+import './AdminTheme.css';
 
 interface EditClassParams {
   classId: string;
@@ -56,7 +65,6 @@ const EditClassScreen: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    // If classId is 'create', redirect to the create class page
     if (classId === 'create') {
       history.push('/admin/classes/create');
       return;
@@ -218,17 +226,17 @@ const EditClassScreen: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonHeader>
-          <IonToolbar>
+        <IonHeader className="ion-no-border">
+          <IonToolbar className="admin-toolbar">
             <IonButtons slot="start">
-              <IonBackButton defaultHref="/admin/classes" />
+              <IonBackButton defaultHref="/admin/classes" className="admin-back-btn" />
             </IonButtons>
-            <IonTitle>Edit Class</IonTitle>
+            <IonTitle className="admin-title">Edit Class</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
-          <IonSpinner name="crescent" />
-          <IonText color="medium"><p>Loading class data...</p></IonText>
+        <IonContent className="admin-loading-container">
+          <IonSpinner name="crescent" color="primary" />
+          <IonText className="loading-text">Loading class details...</IonText>
         </IonContent>
       </IonPage>
     );
@@ -236,138 +244,160 @@ const EditClassScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="admin-toolbar">
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/classes" />
+            <IonBackButton defaultHref="/admin/classes" className="admin-back-btn" />
           </IonButtons>
-          <IonTitle>Edit Class</IonTitle>
+          <IonTitle className="admin-title">Edit Class</IonTitle>
         </IonToolbar>
       </IonHeader>
+
       <IonContent className="edit-class-content">
         <div className="form-container">
-          {/* Class ID Card */}
-          <IonCard className="class-id-card">
+          
+          {/* Class ID Highlight Card */}
+          <IonCard className="admin-card id-card">
             <IonCardContent>
-              <div className="bento-header">
-                <IonIcon icon={keyOutline} className="bento-icon" />
-                <span className="bento-title">Class Login ID</span>
+              <div className="card-header-badge">
+                <IonIcon icon={keyOutline} className="card-header-icon" />
+                <span>Class Login ID</span>
               </div>
-              <p className="class-id-value">{classData?.classCode || classData?.class_code || 'Not yet generated'}</p>
-              <IonText color="medium" className="class-id-note">Share this ID with students/parents for class login</IonText>
+              <div className="class-id-value">
+                {classData?.classCode || classData?.class_code || 'Not Generated'}
+              </div>
+              <p className="card-subtext">
+                Share this ID with students and parents for logging into the portal.
+              </p>
             </IonCardContent>
           </IonCard>
 
-          {/* Password Card */}
-          <IonCard className="password-card">
+          {/* Password Security Card */}
+          <IonCard className="admin-card security-card">
             <IonCardContent>
-              <h4 className="password-card-title">
-                <IonIcon icon={lockClosedOutline} /> Class Login Password
-              </h4>
-              <IonText color="medium" className="password-card-note">
-                Set a password for students/parents to login to this class.
-              </IonText>
-              <div className="password-input-row">
+              <div className="card-header-badge">
+                <IonIcon icon={lockClosedOutline} className="card-header-icon" />
+                <span>Security Settings</span>
+              </div>
+              <h4 className="card-title">Reset Class Password</h4>
+              <p className="card-subtext">Set a new login password for students of this class.</p>
+              
+              <div className="password-input-group">
                 <IonInput
+                  className="admin-input password-field"
                   type="password"
-                  placeholder="Enter new password (min 6 characters)"
+                  placeholder="New password (min 6 chars)"
                   value={classPassword}
                   onIonInput={(e) => setClassPassword(e.detail.value || '')}
                   autocapitalize="off"
                 />
                 <IonButton
+                  className="admin-btn-action"
                   color="primary"
                   onClick={handleUpdatePassword}
                   disabled={!classPassword || classPassword.length < 6 || updatingPassword}
                 >
-                  {updatingPassword ? <IonSpinner name="crescent" /> : 'Update'}
+                  {updatingPassword ? <IonSpinner name="crescent" size="small" /> : 'Update'}
                 </IonButton>
               </div>
             </IonCardContent>
           </IonCard>
 
-          <IonText color="medium" className="description">
-            Edit class details below. Changes will be saved to the database.
-          </IonText>
-
-          <div className="input-group">
-            <label className="input-label">Class Name *</label>
-            <IonInput
-              placeholder="e.g., Class 10, Grade 5, MCA"
-              value={className}
-              onIonInput={(e) => setClassName(e.detail.value || '')}
-              autocapitalize="words"
-              disabled={saving}
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Section (Optional)</label>
-            <IonInput
-              placeholder="e.g., A, B, C, -A, -B"
-              value={section}
-              onIonInput={(e) => setSection(e.detail.value || '')}
-              autocapitalize="characters"
-              maxlength={10}
-              disabled={saving}
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label">Assigned Class Teacher (Optional)</label>
-            {fetchingTeachers ? (
-              <div className="teacher-picker-loading">
-                <IonSpinner name="crescent" />
-                <IonText color="medium">Loading available teachers...</IonText>
+          {/* Class Details Form Card */}
+          <IonCard className="admin-card form-card">
+            <IonCardContent>
+              <div className="card-header-badge">
+                <IonIcon icon={schoolOutline} className="card-header-icon" />
+                <span>Class Information</span>
               </div>
-            ) : selectedTeacher ? (
-              <div className="selected-teacher-container">
-                <div className="teacher-picker-button" onClick={() => setShowTeacherPicker(true)}>
-                  <div className="selected-teacher">
-                    <span className="selected-teacher-name">{selectedTeacher.name}</span>
-                    <span className="selected-teacher-email">{selectedTeacher.email}</span>
+
+              <div className="input-field-group">
+                <label className="admin-label">Class Name *</label>
+                <IonInput
+                  className="admin-input"
+                  placeholder="e.g. Grade 10, MCA"
+                  value={className}
+                  onIonInput={(e) => setClassName(e.detail.value || '')}
+                  autocapitalize="words"
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="input-field-group">
+                <label className="admin-label">Section (Optional)</label>
+                <IonInput
+                  className="admin-input"
+                  placeholder="e.g. A, B, Sec-1"
+                  value={section}
+                  onIonInput={(e) => setSection(e.detail.value || '')}
+                  autocapitalize="characters"
+                  maxlength={10}
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="input-field-group">
+                <label className="admin-label">Assigned Class Teacher</label>
+                {fetchingTeachers ? (
+                  <div className="teacher-loading-box">
+                    <IonSpinner name="crescent" size="small" />
+                    <span>Loading teachers...</span>
                   </div>
-                  <IonText color="primary" className="change-text">Change</IonText>
-                </div>
-                <IonButton fill="outline" color="danger" size="small" onClick={handleClearTeacher}>
-                  <IonIcon icon={closeOutline} /> Remove
-                </IonButton>
+                ) : selectedTeacher ? (
+                  <div className="teacher-selected-box">
+                    <div className="teacher-details">
+                      <span className="teacher-name">{selectedTeacher.name}</span>
+                      <span className="teacher-email">{selectedTeacher.email}</span>
+                    </div>
+                    <div className="teacher-actions">
+                      <IonButton fill="clear" color="primary" size="small" onClick={() => setShowTeacherPicker(true)}>
+                        Change
+                      </IonButton>
+                      <IonButton fill="clear" color="danger" size="small" onClick={handleClearTeacher}>
+                        <IonIcon icon={trashOutline} slot="icon-only" />
+                      </IonButton>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="teacher-select-btn" onClick={() => setShowTeacherPicker(true)}>
+                    <div className="select-placeholder">
+                      <IonIcon icon={personOutline} />
+                      <span>Assign a teacher...</span>
+                    </div>
+                    <IonIcon icon={chevronForwardOutline} className="arrow-icon" />
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="teacher-picker-button" onClick={() => setShowTeacherPicker(true)}>
-                <IonText color="medium">Select a teacher...</IonText>
-                <IonIcon icon={chevronForwardOutline} className="dropdown-icon" />
-              </div>
-            )}
-          </div>
+            </IonCardContent>
+          </IonCard>
 
-          <div className="button-row">
-            <IonButton expand="block" color="medium" onClick={() => history.goBack()} disabled={saving}>
+          {/* Action Buttons */}
+          <div className="button-actions-container">
+            <IonButton expand="block" fill="outline" color="medium" className="btn-cancel" onClick={() => history.goBack()} disabled={saving}>
               Cancel
             </IonButton>
-            <IonButton expand="block" color="primary" onClick={handleSubmit} disabled={saving}>
-              {saving ? <IonSpinner name="crescent" /> : 'Save Changes'}
+            <IonButton expand="block" color="primary" className="btn-save" onClick={handleSubmit} disabled={saving}>
+              {saving ? <IonSpinner name="crescent" size="small" /> : 'Save Changes'}
             </IonButton>
           </div>
         </div>
 
         {/* Teacher Selection Modal */}
-        <IonModal isOpen={showTeacherPicker} onDidDismiss={() => setShowTeacherPicker(false)}>
-          <div className="modal-container">
+        <IonModal isOpen={showTeacherPicker} onDidDismiss={() => setShowTeacherPicker(false)} className="admin-modal">
+          <div className="modal-wrapper">
             <div className="modal-header">
-              <h3 className="modal-title">Select Class Teacher</h3>
-              <IonButton fill="clear" onClick={() => setShowTeacherPicker(false)}>
+              <h3>Select Class Teacher</h3>
+              <IonButton fill="clear" color="medium" onClick={() => setShowTeacherPicker(false)}>
                 <IonIcon icon={closeOutline} slot="icon-only" />
               </IonButton>
             </div>
 
-            <IonText color="medium" className="modal-note">
-              Only teachers without a class assignment are shown.
-            </IonText>
+            <p className="modal-subtext">Only teachers available for assignment are shown below.</p>
 
-            <div className="search-container">
+            <div className="modal-search-box">
               <IonInput
-                placeholder="Search teachers by name or email..."
+                className="admin-input search-input"
+                placeholder="Search by name or email..."
                 value={searchQuery}
                 onIonInput={(e) => setSearchQuery(e.detail.value || '')}
               >
@@ -376,28 +406,23 @@ const EditClassScreen: React.FC = () => {
             </div>
 
             {filteredTeachers.length === 0 ? (
-              <div className="empty-state">
-                <IonText color="medium">No available teachers found</IonText>
+              <div className="modal-empty-state">
+                <IonText color="medium">No available teachers found.</IonText>
               </div>
             ) : (
-              <IonList>
+              <IonList className="teacher-modal-list">
                 {filteredTeachers.map((teacher) => (
-                  <IonItem
-                    key={teacher.id}
-                    button
-                    onClick={() => handleSelectTeacher(teacher)}
-                    className="teacher-item"
-                  >
-                    <div className="teacher-item-info">
-                      <span className="teacher-item-name">{teacher.name}</span>
-                      <span className="teacher-item-email">{teacher.email}</span>
+                  <IonItem key={teacher.id} button onClick={() => handleSelectTeacher(teacher)} lines="full" className="teacher-list-item">
+                    <div className="modal-teacher-info">
+                      <span className="modal-teacher-name">{teacher.name}</span>
+                      <span className="modal-teacher-email">{teacher.email}</span>
                       {teacher.class && (
-                        <span className="teacher-item-class">
-                          Assigned: {teacher.class.name}{teacher.class.section ? ` - ${teacher.class.section}` : ''}
+                        <span className="modal-teacher-assigned">
+                          Currently: {teacher.class.name}{teacher.class.section ? ` - ${teacher.class.section}` : ''}
                         </span>
                       )}
                     </div>
-                    <IonIcon icon={chevronForwardOutline} className="select-icon" />
+                    <IonIcon icon={checkmarkCircleOutline} slot="end" className="select-check-icon" />
                   </IonItem>
                 ))}
               </IonList>

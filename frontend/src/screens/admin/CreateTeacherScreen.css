@@ -1,102 +1,121 @@
-/* ==========================================
-   1. NAVBAR / HEADER STYLES (Fixes Contrast)
-   ========================================== */
+/* ============================================================================
+   CREATE TEACHER SCREEN - Royal Light Theme
+   Page-specific CSS for Teacher Registration Form
+   ============================================================================ */
 
-/* Header Background */
-ion-header.admin-header,
-.admin-toolbar {
-  --background: #1e293b !important; /* Dark Slate Blue Background */
-  --border-color: #334155 !important;
-  color: #ffffff !important;
+/* ============================================================================
+   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+   ============================================================================ */
+:root {
+  --royal-bg-main: #f8fafc;
+  --royal-bg-card: #ffffff;
+  --royal-navy: #1e293b;
+  --royal-blue-primary: #2563eb;
+  --royal-blue-dark: #1d4ed8;
+  --royal-blue-light: #3b82f6;
+  --royal-border-light: #e2e8f0;
+  --royal-border-input: #cbd5e1;
+  --royal-text-primary: #0f172a;
+  --royal-text-secondary: #475569;
+  --royal-text-muted: #64748b;
+  --royal-text-placeholder: #94a3b8;
+  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  --royal-radius-sm: 6px;
+  --royal-radius-md: 8px;
+  --royal-radius-lg: 12px;
+  --royal-radius-xl: 16px;
+  --royal-transition: all 0.2s ease-in-out;
 }
 
-/* Title Styling */
-ion-toolbar ion-title,
+/* ============================================================================
+   1. PAGE BACKGROUND & HEADER
+   ============================================================================ */
+.admin-teacher-content {
+  --background: var(--royal-bg-main);
+  background: var(--royal-bg-main);
+}
+
+.admin-header,
+.admin-toolbar {
+  --background: var(--royal-navy) !important;
+  --border-color: transparent !important;
+}
+
+.admin-header ion-title,
 .admin-toolbar ion-title {
   --color: #ffffff !important;
   color: #ffffff !important;
   font-weight: 700 !important;
   font-size: 18px !important;
-  letter-spacing: 0.3px;
+  text-align: center;
 }
 
-/* Back Button & Icon Visibility */
-ion-toolbar ion-back-button,
-.admin-toolbar ion-back-button {
+.admin-header ion-back-button {
   --color: #ffffff !important;
   --icon-color: #ffffff !important;
-  color: #ffffff !important;
-  opacity: 1 !important;
 }
 
-/* ==========================================
-   2. CONTENT & CARD LAYOUT STYLES
-   ========================================== */
-
-/* Screen Background */
-.admin-teacher-content,
-.create-teacher-content {
-  --background: #f1f5f9 !important;
-  background: #f1f5f9 !important;
-}
-
-/* Centered Layout Wrapper */
-.admin-form-container,
-.form-container,
-.form-wrapper {
+/* ============================================================================
+   2. FORM CONTAINER
+   ============================================================================ */
+.admin-form-container {
   max-width: 800px;
-  margin: 28px auto;
-  padding: 0 16px;
+  margin: 0 auto;
+  padding: 20px 16px;
 }
 
-/* Main Form Card */
-.admin-card,
-.form-card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+/* ============================================================================
+   3. ADMIN CARD
+   ============================================================================ */
+.admin-card {
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-xl);
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
   overflow: hidden;
 }
 
 .admin-card-header {
-  padding: 24px 28px 12px 28px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 24px;
+  border-bottom: 1px solid var(--royal-border-light);
 }
 
 .admin-card-header h2 {
-  margin: 0 0 6px 0;
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--royal-text-primary);
+  margin: 0 0 8px 0;
 }
 
-.description {
-  font-size: 13.5px;
-  color: #64748b;
-  margin: 0 0 18px 0;
-  line-height: 1.5;
+.admin-card-header .description {
+  font-size: 13px;
+  color: var(--royal-text-muted);
+  margin: 0;
+  line-height: 1.6;
 }
 
 .admin-card-body {
-  padding: 20px 28px;
+  padding: 24px;
 }
 
-/* ==========================================
-   3. INPUT & FORM CONTROLS
-   ========================================== */
-
+/* ============================================================================
+   4. INPUT GROUPS
+   ============================================================================ */
 .input-group {
-  margin-bottom: 18px;
-  padding: 0 6px;
+  margin-bottom: 20px;
+}
+
+.input-group:last-child {
+  margin-bottom: 0;
 }
 
 .input-label {
   display: block;
   font-size: 12px;
   font-weight: 700;
-  color: #334155;
-  margin-bottom: 6px;
+  color: var(--royal-blue-primary) !important;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -105,100 +124,144 @@ ion-toolbar ion-back-button,
   color: #ef4444;
 }
 
-/* Custom Ionic Input Override */
-ion-input.admin-input {
-  --background: #f8fafc !important;
-  --color: #0f172a !important;
-  --placeholder-color: #94a3b8 !important;
-  --padding-start: 14px !important;
-  --padding-end: 14px !important;
-  --padding-top: 10px !important;
-  --padding-bottom: 10px !important;
-  --border-radius: 8px !important;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  transition: all 0.2s ease-in-out;
+/* ============================================================================
+   5. ADMIN INPUTS
+   ============================================================================ */
+.admin-input {
+  --background: var(--royal-bg-card) !important;
+  --color: var(--royal-text-primary) !important;
+  --placeholder-color: var(--royal-text-placeholder) !important;
+  --padding-start: 16px !important;
+  --padding-end: 16px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  font-size: 14px;
+  transition: var(--royal-transition);
 }
 
-ion-input.admin-input.has-focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+.admin-input:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
 }
 
-/* Custom Ionic Select Override */
-ion-select.admin-select {
-  --background: #f8fafc !important;
-  --color: #0f172a !important;
-  --placeholder-color: #94a3b8 !important;
-  --padding-start: 14px !important;
-  --padding-end: 14px !important;
-  --padding-top: 10px !important;
-  --padding-bottom: 10px !important;
-  --border-radius: 8px !important;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+/* ============================================================================
+   6. ADMIN SELECT
+   ============================================================================ */
+.admin-select {
+  --background: var(--royal-bg-card);
+  --placeholder-color: var(--royal-text-placeholder);
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  font-size: 14px;
+}
+
+.admin-select:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
+}
+
+.class-select {
   width: 100%;
 }
 
+/* Picker loading state */
 .picker-loading {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  background-color: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  background-color: var(--royal-bg-main);
+  border-radius: var(--royal-radius-md);
+  border: 1px solid var(--royal-border-light);
   font-size: 13px;
+  color: var(--royal-text-muted);
+  min-height: 48px;
 }
 
-/* ==========================================
-   4. BUTTONS & RESPONSIVENESS
-   ========================================== */
-
+/* ============================================================================
+   7. BUTTON ROW
+   ============================================================================ */
 .button-row {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 28px;
-  background-color: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  padding: 20px 24px;
+  border-top: 1px solid var(--royal-border-light);
+  background: var(--royal-bg-main);
 }
 
-.button-row ion-button {
-  margin: 0;
-  --border-radius: 8px !important;
+.submit-btn {
+  --background: var(--royal-blue-primary) !important;
+  --background-activated: var(--royal-blue-dark) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  --box-shadow: none !important;
   font-weight: 600 !important;
-  height: 42px !important;
-  min-width: 120px;
+  height: 44px !important;
+  min-width: 140px;
 }
 
-.button-row ion-button.submit-btn {
-  --box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2) !important;
+.cancel-btn {
+  --color: var(--royal-text-secondary) !important;
+  --border-color: var(--royal-border-input) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  height: 44px !important;
+  min-width: 100px;
 }
 
-/* Mobile Screens Optimization */
-@media (max-width: 576px) {
-  .admin-form-container,
-  .form-container {
-    margin: 12px auto;
-    padding: 0 8px;
+/* ============================================================================
+   8. MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .admin-form-container {
+    padding: 16px 12px;
   }
 
-  .admin-card-header,
-  .admin-card-body,
-  .button-row {
+  .admin-card-header h2 {
+    font-size: 16px;
+  }
+
+  .admin-card-body {
     padding: 16px;
-  }
-
-  .input-group {
-    padding: 0;
   }
 
   .button-row {
     flex-direction: column-reverse;
+    padding: 16px;
+    gap: 8px;
   }
 
-  .button-row ion-button {
+  .submit-btn,
+  .cancel-btn {
     width: 100%;
+  }
+
+  /* Ensure touch targets are 48px minimum */
+  .admin-input,
+  .admin-select {
+    min-height: 48px;
+  }
+
+  /* Prevent horizontal scroll */
+  ion-content {
+    --overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-form-container {
+    padding: 12px 8px;
+  }
+
+  .admin-card-header {
+    padding: 16px;
+  }
+
+  .admin-card-body {
+    padding: 12px;
   }
 }

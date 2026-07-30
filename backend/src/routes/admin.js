@@ -1,899 +1,483 @@
 /**
  * Admin Routes
- * Handles school admin operations for managing students, classes, homework, marks, news, etc.
- * All routes require Admin role
+ * School administration endpoints
  */
 
 const express = require('express');
-const multer = require('multer');
-const { body, param, query } = require('express-validator');
-const adminController = require('../controllers/adminController');
-const feeController = require('../controllers/feeController');
-const { protect, requireAdmin } = require('../middleware/auth');
-const { uploadExamSchedule } = require('../middleware/fileUpload');
-
 const router = express.Router();
+const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
+const { query } = require('../config/db');
+const { authenticate, isAdmin } = require('../middleware/auth');
 
-// Configure multer for file uploads (memory storage for Excel parsing)
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedMimes = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-      'text/csv',
-    ];
-    if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only Excel (.xlsx, .xls) and CSV files are allowed.'), false);
-    }
-  },
+// All routes require authentication and admin role
+router.use(authenticate, isAdmin);
+
+// ============================================
+// Dashboard Stats
+// ============================================
+router.get('/dashboard', async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+
+    // Get counts
+    const [totalStudents] = await query(
+      `SELECT COUNT(*) as count FROM users u 
+       JOIN student_profiles sp ON u.id = sp.user_id 
+       WHERE u.tenant_id = ? AND u.role = 'STUDENT' AND u.is_active = TRUE`,
+      [tenantId]
+    );
+
+    const [totalTeachers] = await query(
+      `SELECT COUNT(*) as count FROM users u 
+       JOIN teacher_profiles tp ON u.id = tp.user_id 
+       WHERE u.tenant_id = ? AND u.role = 'TEACHER' AND u.is_active = TRUE`,
+      [tenantId]
+    );
+
+    const [totalClasses] = await query(
+      `SELECT COUNT(*) as count FROM classes WHERE tenant_id = ? AND is_active = TRUE`,
+      [tenantId]
+    );
+
+    const [todayAttendance] = await query(
+      `SELECT 
+        COUNT(CASE WHEN status = 'present' THEN 1 END) as present,
+        COUNT(CASE WHEN status = 'absent' THEN 1 END) as absent,
+        COUNT(CASE WHEN status = 'late' THEN 1 END) as late
+       FROM attendance 
+       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = ?) 
+       AND attendance_date = CURDATE()`,
+      [tenantId]
+    );
+
+    const [recentNews] = await query(
+      `SELECT id, title, type, is_published, createdAt 
+       FROM news WHERE tenant_id = ? 
+       ORDER BY createdAt DESC LIMIT 5`,
+      [tenantId]
+    );
+
+    const [pendingLeaves] = await query(
+      `SELECT COUNT(*) as count FROM leave_requests 
+       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = ?) 
+       AND status = 'pending'`,
+      [tenantId]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        totalStudents: totalStudents.count,
+        totalTeachers: totalTeachers.count,
+        totalClasses: totalClasses.count,
+        todayAttendance: todayAttendance,
+        recentNews,
+        pendingLeaves: pendingLeaves.count
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-// All routes require Admin role
-router.use(protect);
-router.use(requireAdmin);
+// ============================================
+// Classes Management
+// ============================================
+router.get('/classes', async (req, res, next) => {
+  try {
+    const classes = await query(
+      `SELECT c.*, ct.name as class_teacher_name,
+              COUNT(sp.user_id) as student_count
+       FROM classes c
+       LEFT JOIN users ct ON c.class_teacher_id = ct.id
+       LEFT JOIN student_profiles sp ON c.id = sp.class_id AND sp.is_active = TRUE
+       WHERE c.tenant_id = ? AND c.is_active = TRUE
+       GROUP BY c.id
+       ORDER BY c.grade_level, c.section`,
+      [req.user.tenantId]
+    );
+
+    res.json({ success: true, data: classes });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/classes', async (req, res, next) => {
+  try {
+    const { name, section, gradeLevel, classTeacherId, roomNumber, capacity } = req.body;
+    const classId = uuidv4();
+
+    await query(
+      `INSERT INTO classes (id, tenant_id, name, section, grade_level, class_teacher_id, room_number, capacity, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+      [classId, req.user.tenantId, name, section, gradeLevel, classTeacherId, roomNumber, capacity]
+    );
+
+    res.status(201).json({ success: true, data: { id: classId } });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/classes/:id', async (req, res, next) => {
+  try {
+    const { name, section, gradeLevel, classTeacherId, roomNumber, capacity } = req.body;
+
+    await query(
+      `UPDATE classes SET name = ?, section = ?, grade_level = ?, class_teacher_id = ?, 
+              room_number = ?, capacity = ?, updatedAt = NOW()
+       WHERE id = ? AND tenant_id = ?`,
+      [name, section, gradeLevel, classTeacherId, roomNumber, capacity, req.params.id, req.user.tenantId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/classes/:id', async (req, res, next) => {
+  try {
+    await query(`UPDATE classes SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+      [req.params.id, req.user.tenantId]);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // ============================================
-// Class Management Routes
+// Students Management
 // ============================================
+router.get('/students', async (req, res, next) => {
+  try {
+    const { classId, search, page = 1, limit = 50 } = req.query;
+    const offset = (page - 1) * limit;
 
-/**
- * @route   GET /api/admin/classes
- * @desc    Get all classes for admin's school
- * @access  Admin
- */
-router.get('/classes', adminController.getAllClasses);
+    let whereClause = 'u.tenant_id = ? AND u.role = "STUDENT" AND u.is_active = TRUE';
+    let params = [req.user.tenantId];
 
-/**
- * @route   GET /api/admin/classes/:id/dashboard
- * @desc    Get class dashboard data with metrics, recent homework, exams, and announcements
- * @access  Admin
- */
-router.get(
-  '/classes/:id/dashboard',
-  [param('id').isUUID().withMessage('Invalid class ID format')],
-  adminController.getClassDashboard
-);
+    if (classId) {
+      whereClause += ' AND sp.class_id = ?';
+      params.push(classId);
+    }
 
-/**
- * @route   GET /api/admin/classes/:id
- * @desc    Get single class with students
- * @access  Admin
- */
-router.get(
-  '/classes/:id',
-  [param('id').isUUID().withMessage('Invalid class ID format')],
-  adminController.getClassById
-);
+    if (search) {
+      whereClause += ' AND (u.name LIKE ? OR u.email LIKE ? OR sp.student_id LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
 
-/**
- * @route   POST /api/admin/classes
- * @desc    Create a new class
- * @access  Admin
- * @body    { name, section }
- */
-router.post(
-  '/classes',
-  [
-    body('name')
-      .trim()
-      .notEmpty()
-      .withMessage('Class name is required')
-      .isLength({ max: 100 })
-      .withMessage('Class name must be less than 100 characters'),
-    body('section')
-      .optional()
-      .trim()
-      .isLength({ max: 10 })
-      .withMessage('Section must be less than 10 characters'),
-  ],
-  adminController.createClass
-);
+    const students = await query(
+      `SELECT u.id, u.name, u.email, u.phone, u.avatar_url,
+              sp.student_id, sp.roll_number, sp.class_id,
+              c.name as class_name, c.section
+       FROM users u
+       JOIN student_profiles sp ON u.id = sp.user_id
+       JOIN classes c ON sp.class_id = c.id
+       WHERE ${whereClause}
+       ORDER BY c.grade_level, c.section, sp.roll_number
+       LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), parseInt(offset)]
+    );
 
-/**
- * @route   PUT /api/admin/classes/:id
- * @desc    Update a class
- * @access  Admin
- */
-router.put(
-  '/classes/:id',
-  [
-    param('id').isUUID().withMessage('Invalid class ID format'),
-    body('name')
-      .optional()
-      .trim()
-      .notEmpty()
-      .withMessage('Class name cannot be empty'),
-    body('section')
-      .optional()
-      .trim()
-      .isLength({ max: 10 }),
-  ],
-  adminController.updateClass
-);
+    const [{ total }] = await query(
+      `SELECT COUNT(*) as total FROM users u 
+       JOIN student_profiles sp ON u.id = sp.user_id 
+       WHERE ${whereClause}`,
+      params
+    );
 
-/**
- * @route   DELETE /api/admin/classes/:id
- * @desc    Delete a class
- * @access  Admin
- */
-router.delete(
-  '/classes/:id',
-  [param('id').isUUID().withMessage('Invalid class ID format')],
-  adminController.deleteClass
-);
+    res.json({
+      success: true,
+      data: students,
+      pagination: { page: parseInt(page), limit: parseInt(limit), total: total }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   POST /api/admin/classes/:id/reset-password
- * @desc    Reset password for a class (for class-based login)
- * @access  Admin
- * @body    { password }
- */
-router.post(
-  '/classes/:id/reset-password',
-  [
-    param('id').isUUID().withMessage('Invalid class ID format'),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters long')
-      .matches(/\d/)
-      .withMessage('Password must contain at least one number'),
-  ],
-  adminController.resetClassPassword
-);
+router.get('/students/:id', async (req, res, next) => {
+  try {
+    const student = await query(
+      `SELECT u.*, sp.*, c.name as class_name, c.section, c.grade_level
+       FROM users u
+       JOIN student_profiles sp ON u.id = sp.user_id
+       JOIN classes c ON sp.class_id = c.id
+       WHERE u.id = ? AND u.tenant_id = ?`,
+      [req.params.id, req.user.tenantId]
+    );
 
-// ============================================
-// Student Management Routes
-// ============================================
+    if (!student || student.length === 0) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
 
-/**
- * @route   GET /api/admin/students
- * @desc    Get all students for admin's school
- * @access  Admin
- * @query   classId, search, page, limit
- */
-router.get(
-  '/students',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-  ],
-  adminController.getAllStudents
-);
+    res.json({ success: true, data: student[0] });
+  } catch (error) {
+    next(error);
+  }
+});
 
-// Static/specific routes MUST come before parameterized routes to avoid conflicts
-/**
- * @route   GET /api/admin/students/template
- * @desc    Get student import template (column headers and sample data)
- * @access  Admin
- */
-router.get(
-  '/students/template',
-  adminController.getStudentTemplate
-);
+router.put('/students/:id', async (req, res, next) => {
+  try {
+    const { name, email, phone, classId, rollNumber, dateOfBirth, gender, 
+            bloodGroup, address, city, state, fatherName, fatherPhone, motherName, motherPhone } = req.body;
 
-/**
- * @route   GET /api/admin/students/:id
- * @desc    Get single student details
- * @access  Admin
- */
-router.get(
-  '/students/:id',
-  [param('id').isUUID().withMessage('Invalid student ID format')],
-  adminController.getStudentById
-);
+    // Update user
+    await query(
+      `UPDATE users SET name = ?, email = ?, phone = ?, updatedAt = NOW()
+       WHERE id = ? AND tenant_id = ?`,
+      [name, email, phone, req.params.id, req.user.tenantId]
+    );
 
-/**
- * @route   POST /api/admin/students
- * @desc    Create a new student (with login credentials)
- * @access  Admin
- * @body    { name, email, password, studentId, classId }
- */
-router.post(
-  '/students',
-  [
-    body('name')
-      .trim()
-      .notEmpty()
-      .withMessage('Student name is required')
-      .isLength({ max: 100 })
-      .withMessage('Student name must be less than 100 characters'),
-    body('email')
-      .isEmail()
-      .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters long')
-      .matches(/\d/)
-      .withMessage('Password must contain at least one number'),
-    body('studentId')
-      .trim()
-      .notEmpty()
-      .withMessage('Student ID is required')
-      .isLength({ max: 50 })
-      .withMessage('Student ID must be less than 50 characters'),
-    body('classId')
-      .optional()
-      .isUUID()
-      .withMessage('Invalid class ID format'),
-  ],
-  adminController.createStudent
-);
+    // Update student profile
+    await query(
+      `UPDATE student_profiles SET class_id = ?, roll_number = ?, date_of_birth = ?, gender = ?,
+              blood_group = ?, address = ?, city = ?, state = ?, father_name = ?, father_phone = ?,
+              mother_name = ?, mother_phone = ?, updatedAt = NOW()
+       WHERE user_id = ?`,
+      [classId, rollNumber, dateOfBirth, gender, bloodGroup, address, city, state,
+       fatherName, fatherPhone, motherName, motherPhone, req.params.id]
+    );
 
-// Static/specific POST routes MUST come before any parameterized POST routes
-/**
- * @route   POST /api/admin/students/manual
- * @desc    Create a student manually with extended fields (rollNumber, studentName, classAndSection, parentMobile, bloodGroup, studentAddress, userId, password)
- * @access  Admin
- */
-router.post(
-  '/students/manual',
-  [
-    body('rollNumber')
-      .trim()
-      .notEmpty()
-      .withMessage('Roll number is required'),
-    body('studentName')
-      .trim()
-      .notEmpty()
-      .withMessage('Student name is required'),
-    body('userId')
-      .isEmail()
-      .withMessage('Please provide a valid email for userId')
-      .normalizeEmail(),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters long'),
-    body('parentMobile')
-      .optional()
-      .trim(),
-    body('bloodGroup')
-      .optional()
-      .trim(),
-    body('studentAddress')
-      .optional()
-      .trim(),
-    body('classAndSection')
-      .optional()
-      .trim(),
-    body('className')
-      .optional()
-      .trim(),
-  ],
-  adminController.createStudentManual
-);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   POST /api/admin/students/bulk
- * @desc    Bulk import students from Excel file (.xlsx, .xls, .csv)
- * @access  Admin
- * @form    file (Excel file with columns: rollNumber, studentName, classAndSection, parentMobile, bloodGroup, studentAddress, userId, password)
- */
-router.post(
-  '/students/bulk',
-  upload.single('file'),
-  adminController.bulkImportStudents
-);
-
-/**
- * @route   PUT /api/admin/students/:id
- * @desc    Update a student
- * @access  Admin
- */
-router.put(
-  '/students/:id',
-  [
-    param('id').isUUID().withMessage('Invalid student ID format'),
-    body('name')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('email')
-      .optional()
-      .isEmail()
-      .normalizeEmail(),
-    body('classId')
-      .optional()
-      .isUUID(),
-  ],
-  adminController.updateStudent
-);
-
-/**
- * @route   DELETE /api/admin/students/:id
- * @desc    Delete a student
- * @access  Admin
- */
-router.delete(
-  '/students/:id',
-  [param('id').isUUID().withMessage('Invalid student ID format')],
-  adminController.deleteStudent
-);
+router.delete('/students/:id', async (req, res, next) => {
+  try {
+    await query(`UPDATE users SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+      [req.params.id, req.user.tenantId]);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // ============================================
-// Homework Management Routes
+// Teachers Management
 // ============================================
+router.get('/teachers', async (req, res, next) => {
+  try {
+    const teachers = await query(
+      `SELECT u.id, u.name, u.email, u.phone, u.avatar_url,
+              tp.teacher_id, tp.qualification, tp.specialization, tp.experience_years,
+              tp.subjects
+       FROM users u
+       JOIN teacher_profiles tp ON u.id = tp.user_id
+       WHERE u.tenant_id = ? AND u.role = 'TEACHER' AND u.is_active = TRUE
+       ORDER BY u.name`,
+      [req.user.tenantId]
+    );
 
-/**
- * @route   GET /api/admin/homework
- * @desc    Get all homework for admin's school
- * @access  Admin
- * @query   classId, isPublished, page, limit
- */
-router.get(
-  '/homework',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-  ],
-  adminController.getAllHomework
-);
+    res.json({ success: true, data: teachers });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   GET /api/admin/homework/:id
- * @desc    Get single homework
- * @access  Admin
- */
-router.get(
-  '/homework/:id',
-  [param('id').isUUID().withMessage('Invalid homework ID format')],
-  adminController.getHomeworkById
-);
+router.get('/teachers/:id', async (req, res, next) => {
+  try {
+    const teacher = await query(
+      `SELECT u.*, tp.*
+       FROM users u
+       JOIN teacher_profiles tp ON u.id = tp.user_id
+       WHERE u.id = ? AND u.tenant_id = ?`,
+      [req.params.id, req.user.tenantId]
+    );
 
-/**
- * @route   POST /api/admin/homework
- * @desc    Create new homework
- * @access  Admin
- * @body    { title, description, subject, classId, dueDate }
- */
-router.post(
-  '/homework',
-  [
-    body('title')
-      .trim()
-      .notEmpty()
-      .withMessage('Homework title is required')
-      .isLength({ max: 255 })
-      .withMessage('Title must be less than 255 characters'),
-    body('description')
-      .trim()
-      .notEmpty()
-      .withMessage('Homework description is required'),
-    body('subject')
-      .trim()
-      .notEmpty()
-      .withMessage('Subject is required'),
-    body('classId')
-      .isUUID()
-      .withMessage('Valid class ID is required'),
-    body('dueDate')
-      .optional()
-      .isISO8601()
-      .withMessage('Invalid date format'),
-  ],
-  adminController.createHomework
-);
+    if (!teacher || teacher.length === 0) {
+      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    }
 
-/**
- * @route   PUT /api/admin/homework/:id
- * @desc    Update homework
- * @access  Admin
- */
-router.put(
-  '/homework/:id',
-  [
-    param('id').isUUID().withMessage('Invalid homework ID format'),
-    body('title')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('description')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('subject')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('classId')
-      .optional()
-      .isUUID(),
-    body('dueDate')
-      .optional()
-      .isISO8601(),
-    body('isPublished')
-      .optional()
-      .isBoolean(),
-  ],
-  adminController.updateHomework
-);
+    res.json({ success: true, data: teacher[0] });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   DELETE /api/admin/homework/:id
- * @desc    Delete homework
- * @access  Admin
- */
-router.delete(
-  '/homework/:id',
-  [param('id').isUUID().withMessage('Invalid homework ID format')],
-  adminController.deleteHomework
-);
+router.post('/teachers', async (req, res, next) => {
+  try {
+    const { email, password, name, phone, qualification, experienceYears, specialization, subjects } = req.body;
+    const userId = uuidv4();
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-// ============================================
-// Marks Management Routes
-// ============================================
+    // Create user
+    await query(
+      `INSERT INTO users (id, tenant_id, email, phone, password, name, role, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, 'TEACHER', TRUE)`,
+      [userId, req.user.tenantId, email, phone, hashedPassword, name]
+    );
 
-/**
- * @route   GET /api/admin/marks
- * @desc    Get all marks for admin's school
- * @access  Admin
- */
-router.get('/marks', adminController.getAllMarks);
+    // Generate teacher ID
+    const [{ count }] = await query(
+      `SELECT COUNT(*) as count FROM teacher_profiles WHERE tenant_id = ?`,
+      [req.user.tenantId]
+    );
+    const teacherId = `TCH-${String(count + 1).padStart(4, '0')}`;
 
-/**
- * @route   POST /api/admin/marks
- * @desc    Create new marks entry
- * @access  Admin
- */
-router.post(
-  '/marks',
-  [
-    body('studentId')
-      .isUUID()
-      .withMessage('Valid student ID is required'),
-    body('subject')
-      .trim()
-      .notEmpty()
-      .withMessage('Subject is required'),
-    body('marksObtained')
-      .isFloat({ min: 0 })
-      .withMessage('Marks obtained must be a positive number'),
-    body('totalMarks')
-      .isFloat({ min: 1 })
-      .withMessage('Total marks must be greater than 0'),
-    body('examType')
-      .trim()
-      .notEmpty()
-      .withMessage('Exam type is required'),
-    body('examDate')
-      .optional()
-      .isISO8601(),
-    body('remarks')
-      .optional()
-      .trim(),
-  ],
-  adminController.createMark
-);
+    // Create teacher profile
+    await query(
+      `INSERT INTO teacher_profiles (id, user_id, tenant_id, teacher_id, qualification, 
+              experience_years, specialization, subjects, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+      [uuidv4(), userId, req.user.tenantId, teacherId, qualification, experienceYears, specialization, 
+       subjects ? JSON.stringify(subjects) : null]
+    );
 
-/**
- * @route   PUT /api/admin/marks/:id
- * @desc    Update marks
- * @access  Admin
- */
-router.put(
-  '/marks/:id',
-  [
-    param('id').isUUID().withMessage('Invalid mark ID format'),
-    body('marksObtained')
-      .optional()
-      .isFloat({ min: 0 }),
-    body('totalMarks')
-      .optional()
-      .isFloat({ min: 1 }),
-    body('grade')
-      .optional()
-      .trim(),
-    body('remarks')
-      .optional()
-      .trim(),
-    body('isPublished')
-      .optional()
-      .isBoolean(),
-  ],
-  adminController.updateMark
-);
+    res.status(201).json({ success: true, data: { userId, teacherId } });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   DELETE /api/admin/marks/:id
- * @desc    Delete marks
- * @access  Admin
- */
-router.delete(
-  '/marks/:id',
-  [param('id').isUUID().withMessage('Invalid mark ID format')],
-  adminController.deleteMark
-);
+router.put('/teachers/:id', async (req, res, next) => {
+  try {
+    const { name, email, phone, qualification, experienceYears, specialization, subjects } = req.body;
+
+    await query(
+      `UPDATE users SET name = ?, email = ?, phone = ?, updatedAt = NOW()
+       WHERE id = ? AND tenant_id = ?`,
+      [name, email, phone, req.params.id, req.user.tenantId]
+    );
+
+    await query(
+      `UPDATE teacher_profiles SET qualification = ?, experience_years = ?, specialization = ?, 
+              subjects = ?, updatedAt = NOW()
+       WHERE user_id = ?`,
+      [qualification, experienceYears, specialization, subjects ? JSON.stringify(subjects) : null, req.params.id]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/teachers/:id', async (req, res, next) => {
+  try {
+    await query(`UPDATE users SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+      [req.params.id, req.user.tenantId]);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // ============================================
-// News Management Routes
+// Subjects Management
 // ============================================
+router.get('/subjects', async (req, res, next) => {
+  try {
+    const subjects = await query(
+      `SELECT * FROM subjects WHERE tenant_id = ? AND is_active = TRUE ORDER BY name`,
+      [req.user.tenantId]
+    );
+    res.json({ success: true, data: subjects });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   GET /api/admin/news
- * @desc    Get all news for admin's school
- * @access  Admin
- */
-router.get('/news', adminController.getAllNews);
+router.post('/subjects', async (req, res, next) => {
+  try {
+    const { name, code, description } = req.body;
+    const subjectId = uuidv4();
 
-/**
- * @route   POST /api/admin/news
- * @desc    Create new news
- * @access  Admin
- */
-router.post(
-  '/news',
-  [
-    body('title')
-      .trim()
-      .notEmpty()
-      .withMessage('News title is required'),
-    body('content')
-      .trim()
-      .notEmpty()
-      .withMessage('News content is required'),
-    body('summary')
-      .optional()
-      .trim(),
-    body('category')
-      .optional()
-      .trim(),
-    body('imageUrl')
-      .optional()
-      .isURL(),
-  ],
-  adminController.createNews
-);
+    await query(
+      `INSERT INTO subjects (id, tenant_id, name, code, description, is_active)
+       VALUES (?, ?, ?, ?, ?, TRUE)`,
+      [subjectId, req.user.tenantId, name, code, description]
+    );
 
-/**
- * @route   PUT /api/admin/news/:id
- * @desc    Update news
- * @access  Admin
- */
-router.put(
-  '/news/:id',
-  [
-    param('id').isUUID().withMessage('Invalid news ID format'),
-    body('title')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('content')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('isPublished')
-      .optional()
-      .isBoolean(),
-  ],
-  adminController.updateNews
-);
+    res.status(201).json({ success: true, data: { id: subjectId } });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   DELETE /api/admin/news/:id
- * @desc    Delete news
- * @access  Admin
- */
-router.delete(
-  '/news/:id',
-  [param('id').isUUID().withMessage('Invalid news ID format')],
-  adminController.deleteNews
-);
+router.put('/subjects/:id', async (req, res, next) => {
+  try {
+    const { name, code, description } = req.body;
+    await query(
+      `UPDATE subjects SET name = ?, code = ?, description = ?, updatedAt = NOW()
+       WHERE id = ? AND tenant_id = ?`,
+      [name, code, description, req.params.id, req.user.tenantId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/subjects/:id', async (req, res, next) => {
+  try {
+    await query(`UPDATE subjects SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+      [req.params.id, req.user.tenantId]);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // ============================================
-// Circular Management Routes
+// School Contacts
 // ============================================
+router.get('/contacts', async (req, res, next) => {
+  try {
+    const contacts = await query(
+      `SELECT * FROM school_contacts WHERE tenant_id = ? AND is_active = TRUE ORDER BY department`,
+      [req.user.tenantId]
+    );
+    res.json({ success: true, data: contacts });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   GET /api/admin/circulars
- * @desc    Get all circulars for admin's school
- * @access  Admin
- */
-router.get('/circulars', adminController.getAllCirculars);
+router.post('/contacts', async (req, res, next) => {
+  try {
+    const { department, name, designation, phone, email } = req.body;
+    const contactId = uuidv4();
 
-/**
- * @route   POST /api/admin/circulars
- * @desc    Create new circular
- * @access  Admin
- */
-router.post(
-  '/circulars',
-  [
-    body('title')
-      .trim()
-      .notEmpty()
-      .withMessage('Circular title is required'),
-    body('content')
-      .trim()
-      .notEmpty()
-      .withMessage('Circular content is required'),
-    body('circularNo')
-      .optional()
-      .trim(),
-  ],
-  adminController.createCircular
-);
+    await query(
+      `INSERT INTO school_contacts (id, tenant_id, department, name, designation, phone, email, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
+      [contactId, req.user.tenantId, department, name, designation, phone, email]
+    );
 
-/**
- * @route   DELETE /api/admin/circulars/:id
- * @desc    Delete circular
- * @access  Admin
- */
-router.delete(
-  '/circulars/:id',
-  [param('id').isUUID().withMessage('Invalid circular ID format')],
-  adminController.deleteCircular
-);
+    res.status(201).json({ success: true, data: { id: contactId } });
+  } catch (error) {
+    next(error);
+  }
+});
 
-// ============================================
-// Exam Schedule Management Routes
-// ============================================
+router.put('/contacts/:id', async (req, res, next) => {
+  try {
+    const { department, name, designation, phone, email } = req.body;
+    await query(
+      `UPDATE school_contacts SET department = ?, name = ?, designation = ?, phone = ?, email = ?, updatedAt = NOW()
+       WHERE id = ? AND tenant_id = ?`,
+      [department, name, designation, phone, email, req.params.id, req.user.tenantId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
-/**
- * @route   GET /api/admin/exam-schedules
- * @desc    Get all exam schedules for admin's school
- * @access  Admin
- */
-router.get('/exam-schedules', adminController.getAllExamSchedules);
-
-/**
- * @route   POST /api/admin/exam-schedules
- * @desc    Create new exam schedule with file upload (PDF/Image)
- * @access  Admin
- * @form    file (PDF/Image file), classId (optional)
- */
-router.post(
-  '/exam-schedules',
-  uploadExamSchedule.single('file'),
-  adminController.createExamScheduleWithFile
-);
-
-/**
- * @route   PUT /api/admin/exam-schedules/:id
- * @desc    Update exam schedule (title, classId)
- * @access  Admin
- */
-router.put(
-  '/exam-schedules/:id',
-  [
-    param('id').isUUID().withMessage('Invalid exam schedule ID format'),
-    body('title')
-      .optional()
-      .trim()
-      .notEmpty()
-      .withMessage('Title cannot be empty'),
-    body('classId')
-      .optional()
-      .isUUID()
-      .withMessage('Invalid class ID format'),
-  ],
-  adminController.updateExamSchedule
-);
-
-/**
- * @route   DELETE /api/admin/exam-schedules/:id
- * @desc    Delete exam schedule
- * @access  Admin
- */
-router.delete(
-  '/exam-schedules/:id',
-  [param('id').isUUID().withMessage('Invalid exam schedule ID format')],
-  adminController.deleteExamSchedule
-);
-
-// ============================================
-// Teacher Management Routes
-// ============================================
-
-// Static/specific routes MUST come before parameterized routes to avoid UUID conflicts
-/**
- * @route   GET /api/admin/teachers/available
- * @desc    Get teachers available for class assignment (unassigned or assigned to specific class)
- * @access  Admin
- * @query   classId, search, page, limit
- */
-router.get(
-  '/teachers/available',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-  ],
-  adminController.getAvailableTeachers
-);
-
-/**
- * @route   GET /api/admin/teachers
- * @desc    Get all teachers for admin's school
- * @access  Admin
- * @query   classId, search, page, limit
- */
-router.get(
-  '/teachers',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-  ],
-  adminController.getAllTeachers
-);
-
-/**
- * @route   POST /api/admin/teachers
- * @desc    Create a new teacher (with login credentials)
- * @access  Admin
- * @body    { name, email, password, phone, classId }
- */
-router.post(
-  '/teachers',
-  [
-    body('name')
-      .trim()
-      .notEmpty()
-      .withMessage('Teacher name is required')
-      .isLength({ max: 100 })
-      .withMessage('Teacher name must be less than 100 characters'),
-    body('email')
-      .isEmail()
-      .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
-    body('password')
-      .isLength({ min: 6 })
-      .withMessage('Password must be at least 6 characters long')
-      .matches(/\d/)
-      .withMessage('Password must contain at least one number'),
-    body('phone')
-      .optional()
-      .trim()
-      .isLength({ max: 20 })
-      .withMessage('Phone number must be less than 20 characters'),
-    body('classId')
-      .optional()
-      .isUUID()
-      .withMessage('Invalid class ID format'),
-  ],
-  adminController.createTeacher
-);
-
-// Parameterized routes MUST come after all static routes
-/**
- * @route   GET /api/admin/teachers/:id
- * @desc    Get single teacher details
- * @access  Admin
- */
-router.get(
-  '/teachers/:id',
-  [param('id').isUUID().withMessage('Invalid teacher ID format')],
-  adminController.getTeacherById
-);
-
-/**
- * @route   PUT /api/admin/teachers/:id
- * @desc    Update a teacher
- * @access  Admin
- */
-router.put(
-  '/teachers/:id',
-  [
-    param('id').isUUID().withMessage('Invalid teacher ID format'),
-    body('name')
-      .optional()
-      .trim()
-      .notEmpty(),
-    body('email')
-      .optional()
-      .isEmail()
-      .normalizeEmail(),
-    body('phone')
-      .optional()
-      .trim()
-      .isLength({ max: 20 }),
-    body('classId')
-      .optional()
-      .isUUID(),
-  ],
-  adminController.updateTeacher
-);
-
-/**
- * @route   DELETE /api/admin/teachers/:id
- * @desc    Delete a teacher
- * @access  Admin
- */
-router.delete(
-  '/teachers/:id',
-  [param('id').isUUID().withMessage('Invalid teacher ID format')],
-  adminController.deleteTeacher
-);
-
-// ============================================
-// Student Bulk Upload Routes
-// ============================================
-
-/**
- * @route   POST /api/admin/students/bulk-upload
- * @desc    Bulk upload students from CSV file to a specific class
- * @access  Admin
- * @body    multipart/form-data with 'file' (CSV) and 'classId'
- */
-router.post(
-  '/students/bulk-upload',
-  upload.single('file'),
-  [
-    body('classId')
-      .notEmpty()
-      .withMessage('Class ID is required')
-      .isUUID()
-      .withMessage('Invalid class ID format'),
-  ],
-  adminController.bulkUploadStudentsCSV
-);
-
-// ============================================
-// School/Tenant Info Routes (for Admin to view their school)
-// ============================================
-
-/**
- * @route   GET /api/admin/school
- * @desc    Get current admin's school/tenant details
- * @access  Admin
- */
-router.get('/school', adminController.getMySchool);
-
-/**
- * @route   GET /api/admin/school/stats
- * @desc    Get current admin's school statistics
- * @access  Admin
- */
-router.get('/school/stats', adminController.getMySchoolStats);
-
-// ============================================
-// Fee Management Routes
-// ============================================
-
-/**
- * @route   GET /api/admin/fees
- * @desc    Get all fees for admin's school with pagination
- * @access  Admin
- * @query   status, page, limit, classId
- */
-router.get(
-  '/fees',
-  [
-    query('page').optional().isInt({ min: 1 }),
-    query('limit').optional().isInt({ min: 1, max: 100 }),
-    query('status').optional().isIn(['PAID', 'PARTIAL', 'UNPAID', 'WAIVED']),
-    query('classId').optional().isUUID(),
-  ],
-  feeController.getAllFees
-);
-
-/**
- * @route   GET /api/admin/fees/stats
- * @desc    Get fee statistics for dashboard
- * @access  Admin
- */
-router.get('/fees/stats', feeController.getFeeStats);
-
-/**
- * @route   PUT /api/admin/fees/:studentId
- * @desc    Update student fee record (admin only)
- * @access  Admin
- * @body    { totalAmount?, paidAmount?, status?, dueDate?, remarks? }
- */
-router.put(
-  '/fees/:studentId',
-  [
-    param('studentId').isUUID().withMessage('Invalid student ID format'),
-    body('totalAmount').optional().isFloat({ min: 0 }),
-    body('paidAmount').optional().isFloat({ min: 0 }),
-    body('status').optional().isIn(['PAID', 'PARTIAL', 'UNPAID', 'WAIVED']),
-    body('dueDate').optional().isISO8601(),
-    body('remarks').optional().trim(),
-  ],
-  feeController.updateStudentFee
-);
+router.delete('/contacts/:id', async (req, res, next) => {
+  try {
+    await query(`UPDATE school_contacts SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+      [req.params.id, req.user.tenantId]);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = router;

@@ -1,42 +1,51 @@
-/* Header Background Override */
-ion-header.admin-header,
-.admin-toolbar {
-  --background: #1e293b !important;
-  --border-color: #334155 !important;
-  color: #ffffff !important;
+/* ============================================================================
+   ADMIN EXAMS SCREEN - Royal Light Theme
+   ============================================================================ */
+
+/* Background */
+.admin-exams-content {
+  --background: #f8fafc;
+  background: #f8fafc;
 }
 
-ion-toolbar ion-title {
+/* Navbar */
+.admin-header,
+.admin-toolbar {
+  --background: #1e293b !important;
+  --border-color: transparent !important;
+}
+
+.admin-header ion-title,
+.admin-toolbar ion-title {
   --color: #ffffff !important;
   color: #ffffff !important;
   font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
 }
 
-ion-toolbar ion-back-button {
+.admin-header ion-back-button {
   --color: #ffffff !important;
   --icon-color: #ffffff !important;
 }
 
-/* Page Container */
-.admin-exams-content {
-  --background: #f8fafc !important;
-}
-
+/* Container */
 .admin-container-modern {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px 16px;
 }
 
+/* Page Header */
 .page-header {
   margin-bottom: 20px;
 }
 
 .page-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
 }
 
 .page-subtitle {
@@ -45,33 +54,13 @@ ion-toolbar ion-back-button {
   margin: 0;
 }
 
-/* Tab Segment Styling */
-.view-segment-container {
-  margin-bottom: 24px;
-}
-
-.custom-segment {
-  background: #e2e8f0;
-  border-radius: 10px;
-  padding: 4px;
-}
-
-ion-segment-button {
-  --color: #475569;
-  --color-checked: #2563eb;
-  --background-checked: #ffffff;
-  --indicator-color: transparent;
-  font-weight: 600;
-  border-radius: 8px;
-}
-
-/* Cards Modern Layout */
+/* Cards */
 .admin-card-modern {
   background: #ffffff;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
-  margin: 0 0 24px 0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
 }
 
 .card-title-modern {
@@ -83,43 +72,66 @@ ion-segment-button {
   gap: 8px;
 }
 
-/* Form inputs */
-.input-field-modern {
-  margin-bottom: 16px;
-}
-
+/* Form Labels */
 .field-label-modern {
   display: block;
   font-size: 12px;
   font-weight: 700;
-  color: #334155;
-  margin-bottom: 6px;
+  color: #2563eb !important;
+  margin-bottom: 8px;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+/* Input Fields */
 .custom-input-item-modern {
-  --background: #f8fafc;
-  --border-radius: 8px;
+  --background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
+  padding: 0;
+  min-height: 48px;
 }
 
 .custom-text-input-modern {
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: none;
   background: transparent;
   outline: none;
   font-size: 14px;
   color: #0f172a;
+  min-height: 48px;
 }
 
-/* Dropzone Upload */
+.custom-textarea-modern {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #0f172a;
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Form Grid */
+.form-grid-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.input-field-modern {
+  margin-bottom: 0;
+}
+
+/* File Upload */
 .file-upload-dropzone-modern {
   border: 2px dashed #cbd5e1;
   background: #f8fafc;
-  border-radius: 10px;
-  padding: 24px;
+  border-radius: 12px;
+  padding: 32px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
@@ -133,26 +145,26 @@ ion-segment-button {
 .upload-icon-modern {
   font-size: 32px;
   color: #3b82f6;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .upload-text-modern {
   font-size: 14px;
-  color: #334155;
+  color: #475569;
   margin: 0 0 4px 0;
 }
 
 .upload-hint-modern {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
 }
 
-/* File Preview Block */
+/* File Preview */
 .file-preview-card-modern {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 12px;
+  padding: 16px;
 }
 
 .file-info-row-modern {
@@ -192,10 +204,10 @@ ion-segment-button {
 }
 
 .image-preview-container-modern {
-  margin-top: 12px;
-  max-height: 180px;
+  margin-top: 16px;
+  max-height: 200px;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .image-preview-modern {
@@ -203,50 +215,76 @@ ion-segment-button {
   object-fit: cover;
 }
 
+/* Info Box */
 .info-box-modern {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 14px 16px;
   background: #eff6ff;
   border-radius: 8px;
   color: #1d4ed8;
-  font-size: 12px;
-  margin-bottom: 16px;
+  font-size: 13px;
+  border: 1px solid #bfdbfe;
 }
 
+/* Buttons */
 .primary-btn-modern {
   --border-radius: 8px;
+  --background: #2563eb;
+  --background-activated: #1d4ed8;
   font-weight: 600;
-  height: 44px;
+  height: 48px;
+  font-size: 14px;
 }
 
-/* Exam Item Card inside List */
-.exam-list-grid-modern {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* Segment */
+.view-segment-container {
+  margin-bottom: 24px;
 }
 
+.custom-segment {
+  background: #e2e8f0;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.custom-segment ion-segment-button {
+  --color: #475569;
+  --color-checked: #2563eb;
+  --background-checked: #ffffff;
+  --indicator-color: transparent;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* Exam Cards */
 .exam-card-modern {
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
   display: flex;
-  align-items: center;
   gap: 16px;
-  background: #ffffff;
+  transition: all 0.2s;
+}
+
+.exam-card-modern:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .exam-card-preview {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 8px;
   overflow: hidden;
-  background: #f1f5f9;
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   flex-shrink: 0;
 }
 
@@ -257,7 +295,7 @@ ion-segment-button {
 }
 
 .pdf-icon-large {
-  font-size: 30px;
+  font-size: 32px;
   color: #ef4444;
 }
 
@@ -265,26 +303,44 @@ ion-segment-button {
   flex: 1;
 }
 
+.exam-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
 .exam-card-title {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: #0f172a;
-  margin: 0 0 6px 0;
+  margin: 0;
+}
+
+.class-badge-modern {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .exam-card-meta {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
   font-size: 12px;
   color: #64748b;
-  align-items: center;
 }
 
-.exam-card-actions-modern {
+.meta-item {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 4px;
 }
 
+/* Action Buttons */
 .action-btn-modern {
   border: none;
   background: #f1f5f9;
@@ -296,6 +352,16 @@ ion-segment-button {
   justify-content: center;
   cursor: pointer;
   color: #475569;
+  transition: all 0.2s;
+}
+
+.action-btn-modern:hover {
+  background: #e2e8f0;
+}
+
+.action-btn-modern.edit-btn {
+  color: #2563eb;
+  background: #eff6ff;
 }
 
 .action-btn-modern.delete-btn {
@@ -303,7 +369,73 @@ ion-segment-button {
   background: #fef2f2;
 }
 
-.action-btn-modern.edit-btn {
-  color: #2563eb;
-  background: #eff6ff;
+/* Empty State */
+.empty-state-modern {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-icon-modern {
+  font-size: 48px;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.empty-state-modern h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px 0;
+}
+
+.empty-state-modern p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+}
+
+.loading-container p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .admin-container-modern {
+    padding: 16px 12px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .admin-card-modern {
+    border-radius: 8px;
+  }
+  
+  .exam-card-modern {
+    flex-direction: column;
+  }
+  
+  .exam-card-preview {
+    width: 100%;
+    height: 120px;
+  }
+  
+  .custom-input-item-modern,
+  .custom-text-input-modern,
+  .custom-textarea-modern,
+  .primary-btn-modern {
+    min-height: 48px;
+  }
 }

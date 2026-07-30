@@ -1,0 +1,613 @@
+/**
+ * Clean Light UI Design System - Class Controller Screens
+ * Strict adherence to reference screenshot specifications
+ * 
+ * Color Palette:
+ * - Header: Pure White (#ffffff)
+ * - Title: Dark Charcoal (#0f172a / #111827)
+ * - Background: Soft Off-White (#f8fafc)
+ * - Primary Accent: Accent Blue (#2563eb)
+ * - Banner: Pastel Blue (#eff6ff / #dbeafe)
+ * - Border: Light Grey (#e2e8f0)
+ */
+
+/* ============================================
+   LIGHT MODE CSS VARIABLES
+   Strict design tokens matching reference UI
+   ============================================ */
+:root {
+  /* Primary Colors - Accent Blue (matching reference) */
+  --class-primary: #2563eb;
+  --class-primary-light: #3b82f6;
+  --class-primary-dark: #1d4ed8;
+  --class-primary-darker: #1e40af;
+  
+  /* Background Colors */
+  --class-bg-canvas: #f8fafc;
+  --class-bg-surface: #ffffff;
+  --class-bg-card: #ffffff;
+  --class-bg-hover: #f9fafb;
+  --class-bg-icon-badge: #eff6ff;
+  
+  /* Text Colors */
+  --class-text-primary: #0f172a;
+  --class-text-secondary: #111827;
+  --class-text-muted: #64748b;
+  --class-text-quaternary: #94a3b8;
+  
+  /* Border Colors */
+  --class-border-subtle: #e2e8f0;
+  --class-border-light: #e5e7eb;
+  --class-border-medium: #cbd5e1;
+  
+  /* Banner/Notice Colors - Pastel Blue */
+  --class-banner-bg: #eff6ff;
+  --class-banner-bg-alt: #dbeafe;
+  --class-banner-text: #1e40af;
+  --class-banner-border: #bfdbfe;
+  
+  /* Shadow Colors - Light subtle */
+  --class-shadow-xs: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --class-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --class-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+  --class-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  
+  /* Status Colors */
+  --class-success: #10b981;
+  --class-success-bg: #ecfdf5;
+  --class-warning: #f59e0b;
+  --class-warning-bg: #fffbeb;
+  --class-danger: #ef4444;
+  --class-danger-bg: #fef2f2;
+  --class-info: #2563eb;
+  --class-info-bg: #eff6ff;
+}
+
+/* ============================================
+   LIGHT TOOLBAR STYLES
+   Header: Pure White (#ffffff)
+   Title: Dark/Black text (#0f172a), Bold (700), centered
+   Icons: Dark Black (#0f172a)
+   Border: 1px solid #e2e8f0
+   ============================================ */
+.light-toolbar {
+  --background: #ffffff !important;
+  --border-color: #e2e8f0 !important;
+  --ion-toolbar-background: #ffffff;
+  --ion-toolbar-border-color: #e2e8f0;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+  min-height: 56px;
+}
+
+.light-toolbar ion-title {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 17px !important;
+  text-align: center !important;
+  letter-spacing: -0.01em;
+}
+
+.light-toolbar ion-back-button {
+  --color: #0f172a !important;
+  --icon-font-size: 24px;
+}
+
+.light-toolbar ion-button {
+  --color: #0f172a;
+}
+
+/* ============================================
+   LIGHT CONTENT BACKGROUND
+   Off-white canvas background
+   ============================================ */
+.light-content,
+.light-mode ion-content {
+  --background: #f8fafc;
+  --ion-background-color: #f8fafc;
+}
+
+/* ============================================
+   LIGHT CARD STYLES
+   White cards with subtle borders
+   ============================================ */
+.light-card {
+  background: #ffffff !important;
+  --background: #ffffff;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.light-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-1px);
+}
+
+.light-card ion-card-content {
+  padding: 16px;
+}
+
+/* ============================================
+   LIGHT BANNER / ALERT BOX
+   Background: Pastel blue tint (#eff6ff / #dbeafe)
+   Text & Icon: Deep Slate Blue (#1e40af)
+   Border Radius: 12px
+   Font size: 0.875rem, vertically aligned icon
+   ============================================ */
+.light-banner,
+.light-notice,
+.light-alert-box {
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.light-banner ion-icon,
+.light-notice ion-icon,
+.light-alert-box ion-icon {
+  color: #1e40af !important;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.light-banner-text,
+.light-notice-text,
+.light-alert-box-text {
+  color: #1e40af !important;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* ============================================
+   LIGHT BUTTON STYLES
+   Primary: Pill-shaped (border-radius: 9999px)
+   Solid Accent Blue (#2563eb), White bold text
+   ============================================ */
+.light-button-primary {
+  --background: #2563eb;
+  --background-activated: #1d4ed8;
+  --background-hover: #1d4ed8;
+  --color: #ffffff;
+  --border-radius: 9999px;
+  --font-weight: 700;
+  --letter-spacing: 0.025em;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease;
+}
+
+.light-button-primary:hover {
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+.light-button-primary:active {
+  transform: scale(0.97);
+}
+
+.light-button-outline {
+  --background: transparent;
+  --border-color: #2563eb;
+  --border-width: 1px;
+  --border-radius: 9999px;
+  --color: #2563eb;
+  --font-weight: 600;
+}
+
+.light-button-outline:hover {
+  --background: #eff6ff;
+}
+
+/* VIEW Button - Pill-shaped accent blue */
+.light-view-button {
+  --background: #2563eb;
+  --color: #ffffff;
+  --border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 8px 20px;
+}
+
+/* ============================================
+   LIGHT LIST ITEM STYLES
+   ============================================ */
+.light-list-item {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --border-color: #e2e8f0;
+  --border-width: 1px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.light-list-item:hover {
+  --background: #f9fafb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* ============================================
+   LIGHT EMPTY STATE
+   ============================================ */
+.light-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px dashed #cbd5e1;
+  margin: 16px;
+}
+
+.light-empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #94a3b8;
+}
+
+.light-empty-state h3 {
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.light-empty-state p {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ============================================
+   LIGHT LOADING STATE
+   ============================================ */
+.light-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #64748b;
+}
+
+.light-loading ion-spinner {
+  --color: #3b82f6;
+  margin-bottom: 16px;
+}
+
+.light-loading-text {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* ============================================
+   LIGHT SEARCH BAR
+   ============================================ */
+.light-searchbar {
+  --background: #f1f5f9;
+  --color: #111827;
+  --placeholder-color: #94a3b8;
+  --icon-color: #64748b;
+  --clear-button-color: #64748b;
+  --border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin: 0 16px;
+}
+
+/* ============================================
+   LIGHT BADGE STYLES
+   ============================================ */
+.light-badge-primary {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.light-badge-success {
+  background: #ecfdf5;
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.light-badge-warning {
+  background: #fffbeb;
+  color: #f59e0b;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.light-badge-danger {
+  background: #fef2f2;
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ============================================
+   LIGHT AVATAR / ICON BADGE STYLES
+   Item Left Icon Badge: Soft rounded square
+   Pastel blue background (#eff6ff) and blue icon (#2563eb)
+   ============================================ */
+.light-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+/* Icon Badge - Soft rounded square */
+.light-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.light-icon-badge ion-icon {
+  color: #2563eb;
+  font-size: 20px;
+}
+
+/* ============================================
+   LIGHT SECTION TITLE
+   ============================================ */
+.light-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 24px 0 12px 0;
+  padding: 0 16px;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================
+   LIGHT INFO BOX
+   ============================================ */
+.light-info-box {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.light-info-box ion-icon {
+  color: #64748b;
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.light-info-box p {
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.light-info-box strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* ============================================
+   LIGHT MODAL STYLES
+   ============================================ */
+.light-modal {
+  --background: #ffffff;
+  --border-radius: 16px;
+}
+
+.light-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.light-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.light-modal-content {
+  padding: 24px;
+}
+
+.light-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* ============================================
+   LIGHT FORM STYLES
+   ============================================ */
+.light-form-group {
+  margin-bottom: 20px;
+}
+
+.light-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.light-form-label .required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.light-form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #111827;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.light-form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.light-form-input::placeholder {
+  color: #94a3b8;
+}
+
+/* ============================================
+   LIGHT STATS CARD
+   ============================================ */
+.light-stats-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+  text-align: center;
+}
+
+.light-stats-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.light-stats-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* ============================================
+   APPLY LIGHT MODE TO CLASS SCREENS
+   Global class-screen wrapper styles
+   ============================================ */
+.class-screen ion-header ion-toolbar {
+  --background: #ffffff;
+  --border-color: #e2e8f0;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.class-screen ion-header ion-title {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.class-screen ion-content {
+  --background: #f8fafc;
+  --ion-background-color: #f8fafc;
+}
+
+.class-screen ion-card {
+  --background: #ffffff;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+   SECTION HEADERS
+   Main Title: Dark Charcoal (#0f172a), 1.5rem, 800
+   Subtitle: Muted Grey (#64748b), 0.875rem
+   ============================================ */
+.light-section-header {
+  margin-bottom: 20px;
+}
+
+.light-section-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.light-section-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ============================================
+   LIGHT CARD ITEM STYLES
+   Background: Pure White (#ffffff)
+   Border: 1px solid #e2e8f0
+   Border Radius: 16px
+   Shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05)
+   ============================================ */
+.light-card-item {
+  --background: #ffffff;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.light-card-item:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   NAVIGATION CHEVRON
+   Muted arrow (#94a3b8)
+   ============================================ */
+.light-chevron {
+  color: #94a3b8;
+  font-size: 20px;
+}

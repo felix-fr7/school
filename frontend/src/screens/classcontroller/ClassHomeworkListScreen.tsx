@@ -1,22 +1,17 @@
-/**
- * Class Homework List Screen (Ionic React Version)
- * View and manage homework assignments for the class
- */
-
 import React, { useEffect, useState } from 'react';
 import {
   IonPage,
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButtons,
+  IonBackButton,
   IonContent,
   IonSpinner,
   IonText,
   IonButton,
   IonIcon,
   IonList,
-  IonItem,
-  IonLabel,
   IonBadge,
   IonRefresher,
   IonRefresherContent,
@@ -25,9 +20,13 @@ import {
   IonFabButton,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonCard,
+  IonCardContent,
+  IonItem,
+  IonLabel,
 } from '@ionic/react';
 import {
-  addCircleOutline,
+  addOutline,
   calendarOutline,
   bookOutline,
   trashOutline,
@@ -35,15 +34,15 @@ import {
   refreshCircleOutline,
   checkmarkCircleOutline,
   timeOutline,
+  peopleOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { classControllerAPI } from '../../services/api';
 import { Homework } from '../../types';
 import './ClassHomeworkListScreen.css';
 
 const ClassHomeworkListScreen: React.FC = () => {
   const history = useHistory();
-  
+
   const [homework, setHomework] = useState<Homework[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,12 +56,7 @@ const ClassHomeworkListScreen: React.FC = () => {
       if (refresh) {
         setPage(1);
       }
-      
-      // Note: getHomework API not available in classControllerAPI
-      // This would need to be implemented in the backend
       console.log('Fetching homework for page:', refresh ? 1 : page);
-      
-      // Simulate empty response for now
       setHomework([]);
       setTotalPages(1);
     } catch (error) {
@@ -87,18 +81,21 @@ const ClassHomeworkListScreen: React.FC = () => {
     history.push(`/class-controller/homework/${item.id}`);
   };
 
-  const handleDeleteHomework = (item: Homework) => {
+  const handleEditHomework = (e: React.MouseEvent, item: Homework) => {
+    e.stopPropagation(); // Prevents card click
+    history.push(`/class-controller/homework/edit/${item.id}`);
+  };
+
+  const handleDeleteHomework = (e: React.MouseEvent, item: Homework) => {
+    e.stopPropagation(); // Prevents card click
     setSelectedHomework(item);
     setShowDeleteAlert(true);
   };
 
   const confirmDelete = async () => {
     if (!selectedHomework) return;
-    
     try {
-      // Note: deleteHomework API not available in classControllerAPI
-      console.log('Deleting homework:', selectedHomework.id);
-      setHomework(prev => prev.filter(h => h.id !== selectedHomework.id));
+      setHomework((prev) => prev.filter((h) => h.id !== selectedHomework.id));
     } catch (error) {
       console.error('Error deleting homework:', error);
     }
@@ -108,10 +105,10 @@ const ClassHomeworkListScreen: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
   };
 
@@ -122,20 +119,16 @@ const ClassHomeworkListScreen: React.FC = () => {
 
   const getSubjectColor = (subject: string) => {
     const colors: { [key: string]: string } = {
-      Mathematics: '#4CAF50',
-      Science: '#2196F3',
-      English: '#FF9800',
-      History: '#9C27B0',
-      Geography: '#00BCD4',
-      'Computer Science': '#E91E63',
-      Physics: '#3F51B5',
-      Chemistry: '#009688',
-      Biology: '#4CAF50',
-      'Physical Education': '#FF5722',
-      Art: '#9C27B0',
-      Music: '#E91E63',
+      Mathematics: '#2E7D32',
+      Science: '#1565C0',
+      English: '#E65100',
+      History: '#6A1B9A',
+      Geography: '#00838F',
+      'Computer Science': '#C2185B',
+      Physics: '#283593',
+      Chemistry: '#00695C',
     };
-    return colors[subject] || '#607D8B';
+    return colors[subject] || '#455A64';
   };
 
   const handleLoadMore = async (event: CustomEvent) => {
@@ -143,7 +136,6 @@ const ClassHomeworkListScreen: React.FC = () => {
       event.detail.complete();
       return;
     }
-    
     const nextPage = page + 1;
     setPage(nextPage);
     await fetchHomework(false);
@@ -153,8 +145,8 @@ const ClassHomeworkListScreen: React.FC = () => {
   if (loading && homework.length === 0) {
     return (
       <IonPage>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center homework-loading">
-          <IonSpinner name="crescent" />
+        <IonContent className="ion-padding ion-text-center homework-loading">
+          <IonSpinner name="crescent" color="primary" />
           <IonText color="medium">
             <p className="loading-text">Loading homework...</p>
           </IonText>
@@ -165,9 +157,12 @@ const ClassHomeworkListScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Homework</IonTitle>
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="light-toolbar">
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/class-controller/dashboard" />
+          </IonButtons>
+          <IonTitle>Class Homework</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -179,82 +174,98 @@ const ClassHomeworkListScreen: React.FC = () => {
           />
         </IonRefresher>
 
-        {/* Header */}
         <div className="header-section">
-          <h1 className="header-title">Homework</h1>
-          <p className="header-subtitle">
-            {homework.length} assignment{homework.length !== 1 ? 's' : ''} total
-          </p>
+          <div>
+            <h1 className="header-title">Assignments</h1>
+            <p className="header-subtitle">
+              {homework.length} total assignment{homework.length !== 1 ? 's' : ''}
+            </p>
+          </div>
         </div>
 
         {homework.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📝</div>
+            <div className="empty-icon">📚</div>
             <IonText>
-              <h3>No homework assigned</h3>
-              <p className="empty-subtext">Create your first homework assignment</p>
+              <h3>No homework assigned yet</h3>
+              <p className="empty-subtext">
+                Tap the '+' button below to create a new homework assignment for your class.
+              </p>
             </IonText>
           </div>
         ) : (
-          <IonList>
+          <div className="homework-container">
             {homework.map((item) => {
               const overdue = isOverdue(item.dueDate);
               const subjectColor = getSubjectColor(item.subject);
 
               return (
-                <IonItem
+                <IonCard
                   key={item.id}
                   className="homework-card"
-                  button
                   onClick={() => handleHomeworkPress(item)}
-                  detail={false}
                 >
-                  <div
-                    className="subject-badge"
-                    style={{ backgroundColor: subjectColor }}
-                    slot="start"
-                  >
-                    <span className="subject-badge-text">
-                      {item.subject.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  
-                  <IonLabel className="homework-content">
-                    <h3 className="homework-title">{item.title}</h3>
-                    <p className="homework-description">{item.description}</p>
-                    
-                    <div className="homework-meta">
-                      <div className="meta-item">
-                        <IonIcon icon={calendarOutline} className="meta-icon" />
-                        <span className={`meta-text ${overdue ? 'overdue-text' : ''}`}>
-                          {item.dueDate ? formatDate(item.dueDate) : 'No due date'}
-                          {overdue && ' (Overdue)'}
-                        </span>
-                      </div>
-                      <div className="meta-item">
-                        <IonIcon icon={bookOutline} className="meta-icon" />
-                        <span className="meta-text">{item.subject}</span>
+                  <IonCardContent className="card-content">
+                    <div className="card-top-row">
+                      <span
+                        className="subject-pill"
+                        style={{ backgroundColor: `${subjectColor}15`, color: subjectColor }}
+                      >
+                        <IonIcon icon={bookOutline} /> {item.subject}
+                      </span>
+
+                      <div className="status-and-actions">
+                        {item.isPublished ? (
+                          <IonBadge color="success" className="status-badge">
+                            <IonIcon icon={checkmarkCircleOutline} /> Published
+                          </IonBadge>
+                        ) : (
+                          <IonBadge color="warning" className="status-badge">
+                            <IonIcon icon={timeOutline} /> Draft
+                          </IonBadge>
+                        )}
                       </div>
                     </div>
-                  </IonLabel>
 
-                  <div className="homework-status" slot="end">
-                    {item.isPublished ? (
-                      <IonBadge color="success" className="status-badge published">
-                        <IonIcon icon={checkmarkCircleOutline} slot="start" />
-                        Published
-                      </IonBadge>
-                    ) : (
-                      <IonBadge color="warning" className="status-badge draft">
-                        <IonIcon icon={timeOutline} slot="start" />
-                        Draft
-                      </IonBadge>
-                    )}
-                  </div>
-                </IonItem>
+                    <h2 className="homework-title">{item.title}</h2>
+                    <p className="homework-description">{item.description}</p>
+
+                    <div className="card-bottom-row">
+                      <div className="meta-info">
+                        <div className={`meta-item ${overdue ? 'overdue-text' : ''}`}>
+                          <IonIcon icon={calendarOutline} />
+                          <span>
+                            {item.dueDate ? formatDate(item.dueDate) : 'No due date'}
+                            {overdue && ' (Overdue)'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons Added Here */}
+                      <div className="card-actions">
+                        <IonButton
+                          fill="clear"
+                          size="small"
+                          color="primary"
+                          onClick={(e) => handleEditHomework(e, item)}
+                        >
+                          <IonIcon slot="icon-only" icon={createOutline} />
+                        </IonButton>
+                        <IonButton
+                          fill="clear"
+                          size="small"
+                          color="danger"
+                          onClick={(e) => handleDeleteHomework(e, item)}
+                        >
+                          <IonIcon slot="icon-only" icon={trashOutline} />
+                        </IonButton>
+                      </div>
+                    </div>
+                  </IonCardContent>
+                </IonCard>
               );
             })}
-          </IonList>
+          </div>
         )}
 
         <IonInfiniteScroll
@@ -263,38 +274,34 @@ const ClassHomeworkListScreen: React.FC = () => {
         >
           <IonInfiniteScrollContent
             loadingSpinner="crescent"
-            loadingText="Loading more homework..."
+            loadingText="Loading more..."
           />
         </IonInfiniteScroll>
+
+        <IonFab vertical="bottom" horizontal="end" slot="fixed">
+          <IonFabButton
+            color="primary"
+            onClick={() => history.push('/class-controller/homework/create')}
+          >
+            <IonIcon icon={addOutline} />
+          </IonFabButton>
+        </IonFab>
+
+        <IonAlert
+          isOpen={showDeleteAlert}
+          onDidDismiss={() => setShowDeleteAlert(false)}
+          header="Delete Homework"
+          message={`Are you sure you want to delete "${selectedHomework?.title}"?`}
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Delete',
+              role: 'destructive',
+              handler: confirmDelete,
+            },
+          ]}
+        />
       </IonContent>
-
-      {/* Floating Add Button */}
-      <IonFab
-        vertical="bottom"
-        horizontal="end"
-        slot="fixed"
-        onClick={() => history.push('/class-controller/homework/create')}
-      >
-        <IonFabButton color="secondary">
-          <IonIcon icon={addCircleOutline} />
-        </IonFabButton>
-      </IonFab>
-
-      {/* Delete Confirmation Alert */}
-      <IonAlert
-        isOpen={showDeleteAlert}
-        onDidDismiss={() => setShowDeleteAlert(false)}
-        header="Delete Homework"
-        message={`Are you sure you want to delete "${selectedHomework?.title}"?`}
-        buttons={[
-          { text: 'Cancel', role: 'cancel' },
-          {
-            text: 'Delete',
-            role: 'destructive',
-            handler: confirmDelete,
-          },
-        ]}
-      />
     </IonPage>
   );
 };

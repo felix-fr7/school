@@ -18,7 +18,6 @@ import {
   IonItem,
   IonCard,
   IonCardContent,
-  IonText,
   IonSpinner,
   IonRefresher,
   IonRefresherContent,
@@ -28,7 +27,7 @@ import { useHistory } from 'react-router-dom';
 import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import { Class } from '../../types';
-import './ClassesListScreen.css';
+import './AdminTheme.css';
 
 const ClassesListScreen: React.FC = () => {
   const history = useHistory();
@@ -102,14 +101,16 @@ const ClassesListScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader className="classes-list-header">
-        <IonToolbar>
+      {/* Dynamic Nav Header */}
+      <IonHeader className="classes-list-header ion-no-border">
+        <IonToolbar className="custom-nav-toolbar">
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/dashboard" />
+            <IonBackButton defaultHref="/admin/dashboard" className="custom-nav-back-btn" />
           </IonButtons>
-          <IonTitle>Classes & Sections</IonTitle>
+          <IonTitle className="custom-nav-title">Classes & Sections</IonTitle>
           <IonButton
             slot="end"
+            fill="clear"
             className="add-header-btn"
             onClick={() => history.push('/admin/classes/create')}
           >

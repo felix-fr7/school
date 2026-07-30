@@ -1,38 +1,190 @@
+/* ============================================================================
+   CREATE STUDENT SCREEN - Royal Light Theme
+   Page-specific CSS for Student Registration
+   ============================================================================ */
+
+/* ============================================================================
+   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+   ============================================================================ */
+:root {
+  --royal-bg-main: #f8fafc;
+  --royal-bg-card: #ffffff;
+  --royal-navy: #1e293b;
+  --royal-blue-primary: #2563eb;
+  --royal-blue-dark: #1d4ed8;
+  --royal-blue-light: #3b82f6;
+  --royal-border-light: #e2e8f0;
+  --royal-border-input: #cbd5e1;
+  --royal-text-primary: #0f172a;
+  --royal-text-secondary: #475569;
+  --royal-text-muted: #64748b;
+  --royal-text-placeholder: #94a3b8;
+  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  --royal-radius-sm: 6px;
+  --royal-radius-md: 8px;
+  --royal-radius-lg: 12px;
+  --royal-radius-xl: 16px;
+  --royal-transition: all 0.2s ease-in-out;
+}
+
+/* ============================================================================
+   1. PAGE BACKGROUND & HEADER
+   ============================================================================ */
 .create-student-content {
-  --background: #f5f5f5;
+  --background: var(--royal-bg-main);
+  background: var(--royal-bg-main);
 }
 
+.create-student-content ion-header,
+.create-student-content ion-toolbar {
+  --background: var(--royal-navy) !important;
+  --border-color: transparent !important;
+}
+
+.create-student-content ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
+}
+
+.create-student-content ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+}
+
+/* ============================================================================
+   2. FORM CONTAINER
+   ============================================================================ */
 .form-container {
-  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px;
 }
 
+/* ============================================================================
+   3. INPUT GROUPS
+   ============================================================================ */
 .input-group {
   margin-bottom: 20px;
 }
 
-.input-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
+.input-group:last-child {
+  margin-bottom: 0;
 }
 
+.input-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--royal-blue-primary) !important;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   4. IONIC INPUTS
+   ============================================================================ */
+.input-group ion-input {
+  --background: var(--royal-bg-card) !important;
+  --color: var(--royal-text-primary) !important;
+  --placeholder-color: var(--royal-text-placeholder) !important;
+  --padding-start: 16px !important;
+  --padding-end: 16px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  font-size: 14px;
+  transition: var(--royal-transition);
+}
+
+.input-group ion-input:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
+}
+
+/* ============================================================================
+   5. SELECT
+   ============================================================================ */
+.class-select {
+  --background: var(--royal-bg-card);
+  --placeholder-color: var(--royal-text-placeholder);
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  font-size: 14px;
+}
+
+.class-select:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
+}
+
+/* Picker loading state */
 .picker-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: var(--royal-bg-main);
+  border-radius: var(--royal-radius-md);
+  border: 1px solid var(--royal-border-light);
+  font-size: 13px;
+  color: var(--royal-text-muted);
+  min-height: 48px;
 }
 
-.class-select {
-  width: 100%;
-}
-
+/* ============================================================================
+   6. BUTTON ROW
+   ============================================================================ */
 .button-row {
   display: flex;
   gap: 12px;
   margin-top: 24px;
+}
+
+.button-row ion-button {
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  flex: 1;
+}
+
+.button-row ion-button[color="primary"] {
+  --background: var(--royal-blue-primary) !important;
+  --background-activated: var(--royal-blue-dark) !important;
+}
+
+/* ============================================================================
+   7. MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 16px 12px;
+  }
+
+  .input-group ion-input,
+  .class-select {
+    min-height: 48px;
+  }
+
+  .button-row {
+    flex-direction: column-reverse;
+  }
+
+  /* Prevent horizontal scroll */
+  ion-content {
+    --overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    padding: 12px 8px;
+  }
 }

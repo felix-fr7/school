@@ -8,7 +8,7 @@
 // User & Role Types
 // ============================================
 
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'TEACHER' | 'STUDENT';
+export type UserRole = 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'ADMIN' | 'TEACHER' | 'STUDENT' | 'PARENT' | 'CUSTOMER';
 
 // User types
 export interface User {
@@ -424,18 +424,6 @@ export type StudentStackParamList = {
   WeeklyLessonView: undefined;
 };
 
-// Teacher Stack
-export type TeacherStackParamList = {
-  TeacherDashboard: { title: string };
-  TeacherStudents: { title: string };
-  TeacherHomework: { title: string };
-  TeacherMarks: { title: string };
-  TeacherNews: { title: string };
-  TeacherCirculars: { title: string };
-  WeeklyLessonGrid: undefined;
-  WeeklyTimetable: undefined;
-};
-
 // Class Controller Stack (For Class ID login - CLS-X)
 export type ClassControllerStackParamList = {
   ClassControllerDashboard: undefined;
@@ -445,8 +433,6 @@ export type ClassControllerStackParamList = {
   ClassHomeworkList: { classId: string } | undefined;
   ClassHomeworkDetail: { homeworkId: string };
   ClassCreateHomework: { classId: string };
-  ClassAttendanceList: { classId: string } | undefined;
-  ClassMarkAttendance: { classId: string; date: string };
   ClassNewsList: { classId: string } | undefined;
   ClassNewsDetail: { newsId: string };
   ClassCircularsList: { classId: string } | undefined;
@@ -462,7 +448,6 @@ export type RootStackParamList = {
   SuperAdmin: SuperAdminStackParamList;
   Admin: AdminStackParamList;
   Student: StudentStackParamList;
-  Teacher: TeacherStackParamList;
   ClassController: ClassControllerStackParamList;
   Main: MainStackParamList;
 };

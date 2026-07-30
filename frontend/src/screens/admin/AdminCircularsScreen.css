@@ -1,530 +1,718 @@
-/* ==========================================================================
-   Admin Circulars Screen - Professional Console Styling
-   ========================================================================== */
+/* ============================================================================
+   ADMIN CIRCULARS SCREEN - Royal Light Theme
+   Page-specific CSS for Circulars & Announcements management
+   ============================================================================ */
 
+/* ============================================================================
+   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+   ============================================================================ */
+:root {
+  --royal-bg-main: #f8fafc;
+  --royal-bg-card: #ffffff;
+  --royal-navy: #1e293b;
+  --royal-blue-primary: #2563eb;
+  --royal-blue-dark: #1d4ed8;
+  --royal-blue-light: #3b82f6;
+  --royal-border-light: #e2e8f0;
+  --royal-border-input: #cbd5e1;
+  --royal-text-primary: #0f172a;
+  --royal-text-secondary: #475569;
+  --royal-text-muted: #64748b;
+  --royal-text-placeholder: #94a3b8;
+  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  --royal-radius-sm: 6px;
+  --royal-radius-md: 8px;
+  --royal-radius-lg: 12px;
+  --royal-radius-xl: 16px;
+  --royal-transition: all 0.2s ease-in-out;
+}
+
+/* ============================================================================
+   1. PAGE BACKGROUND & HEADER
+   ============================================================================ */
 .admin-circulars-content {
-  --background: #F1F5F9;
+  --background: var(--royal-bg-main);
+  background: var(--royal-bg-main);
 }
 
-.admin-circulars-content .container {
-  max-width: 820px;
+.admin-toolbar {
+  --background: var(--royal-navy) !important;
+  --border-color: transparent !important;
+}
+
+.admin-toolbar ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
+}
+
+.admin-toolbar ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+}
+
+/* ============================================================================
+   2. CONTAINER
+   ============================================================================ */
+.container {
+  max-width: 800px;
   margin: 0 auto;
-  padding: 20px 16px 40px 16px;
+  padding: 20px 16px;
 }
 
-/* Page Header */
+/* ============================================================================
+   3. HEADER SECTION
+   ============================================================================ */
 .header-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .header-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: #0F172A;
-  margin: 0 0 4px 0;
-  letter-spacing: -0.3px;
+  color: var(--royal-text-primary);
+  margin: 0 0 8px 0;
 }
 
 .header-subtitle {
-  font-size: 13px;
-  color: #64748B;
+  font-size: 14px;
+  color: var(--royal-text-muted);
   margin: 0;
+  line-height: 1.5;
 }
 
-/* Cards Shared Styles */
+/* ============================================================================
+   4. FORM CARD
+   ============================================================================ */
 .form-card,
 .list-card {
-  background: #FFFFFF;
-  border-radius: 12px;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin: 0 0 20px 0;
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-xl);
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
+  margin-bottom: 24px;
+  --background: var(--royal-bg-card);
 }
 
 .form-card ion-card-header,
 .list-card ion-card-header {
-  padding: 18px 20px 12px 20px;
-  border-bottom: 1px solid #F1F5F9;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--royal-border-light);
 }
 
 .form-card ion-card-title,
 .list-card ion-card-title {
   font-size: 16px;
-  font-weight: 600;
-  color: #1E293B;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0;
 }
 
 .form-card ion-card-content,
 .list-card ion-card-content {
-  padding: 20px;
+  padding: 24px;
 }
 
-/* Form Inputs & Controls */
+/* ============================================================================
+   5. INPUT GROUPS
+   ============================================================================ */
 .input-group {
-  margin-bottom: 18px;
+  margin-bottom: 24px;
+}
+
+.input-group:last-child {
+  margin-bottom: 0;
 }
 
 .input-label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--royal-blue-primary) !important;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+/* ============================================================================
+   6. MODE SELECTOR (TEXT / IMAGE)
+   ============================================================================ */
+.mode-container {
+  display: flex;
+  gap: 12px;
+}
+
+.mode-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  background: var(--royal-bg-card);
+  cursor: pointer;
+  transition: var(--royal-transition);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--royal-text-secondary);
+}
+
+.mode-option:hover {
+  border-color: var(--royal-blue-light);
+}
+
+.mode-option.active {
+  border-color: var(--royal-blue-primary);
+  background: #eff6ff;
+  color: var(--royal-blue-primary);
+}
+
+.mode-icon {
+  font-size: 28px;
+}
+
+/* ============================================================================
+   7. INPUT WRAPPER
+   ============================================================================ */
 .admin-input-wrapper {
-  background: #F8FAFC;
-  border: 1px solid #CBD5E1;
-  border-radius: 8px;
-  padding: 2px 10px;
-  transition: all 0.2s ease;
+  background: var(--royal-bg-card);
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  padding: 2px;
+  transition: var(--royal-transition);
 }
 
 .admin-input-wrapper:focus-within {
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  background: #FFFFFF;
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
 }
 
 .admin-input-wrapper ion-input,
 .admin-input-wrapper ion-textarea {
-  --padding-start: 0;
-  --padding-end: 0;
-  font-size: 14px;
-  color: #0F172A;
+  --background: transparent !important;
+  --color: var(--royal-text-primary) !important;
+  --placeholder-color: var(--royal-text-placeholder) !important;
+  --padding-start: 16px !important;
+  --padding-end: 16px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
 }
 
-/* Segment & Mode Selectors */
-.mode-container,
-.visibility-container {
-  display: flex;
-  gap: 10px;
-}
-
-.mode-option,
-.visibility-option {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 14px;
-  background: #F8FAFC;
-  border: 1px solid #CBD5E1;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 13px;
-  font-weight: 500;
-  color: #475569;
-}
-
-.mode-option:hover,
-.visibility-option:hover {
-  background: #F1F5F9;
-  border-color: #94A3B8;
-}
-
-.mode-option.active,
-.visibility-option.active {
-  border-color: #2563EB;
-  background: #EFF6FF;
-  color: #1D4ED8;
-  font-weight: 600;
-}
-
-.mode-icon,
-.visibility-option ion-icon {
-  font-size: 18px;
-}
-
-/* Custom File Picker */
+/* ============================================================================
+   8. FILE PICKER
+   ============================================================================ */
 .file-picker-button {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   padding: 16px;
-  background: #F8FAFC;
-  border: 2px dashed #CBD5E1;
-  border-radius: 8px;
+  border: 2px dashed var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  background: var(--royal-bg-main);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--royal-transition);
+  font-size: 14px;
+  color: var(--royal-text-muted);
+  font-weight: 600;
 }
 
 .file-picker-button:hover {
-  border-color: #2563EB;
-  background: #EFF6FF;
+  border-color: var(--royal-blue-primary);
+  background: #eff6ff;
+  color: var(--royal-blue-primary);
 }
 
 .file-icon {
-  font-size: 22px;
-  color: #2563EB;
+  font-size: 28px;
+  color: var(--royal-blue-light);
 }
 
-.file-picker-button span {
-  font-size: 13px;
-  color: #475569;
-  font-weight: 500;
-}
-
+/* Image preview */
 .image-preview-container {
-  margin-top: 10px;
-  border-radius: 8px;
+  margin-top: 16px;
+  border-radius: var(--royal-radius-md);
   overflow: hidden;
-  border: 1px solid #E2E8F0;
+  max-width: 300px;
 }
 
 .image-preview {
   width: 100%;
-  max-height: 220px;
-  object-fit: cover;
   display: block;
 }
 
-/* Target Class Indicator */
+/* ============================================================================
+   9. VISIBILITY OPTIONS
+   ============================================================================ */
+.visibility-container {
+  display: flex;
+  gap: 12px;
+}
+
+.visibility-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  background: var(--royal-bg-card);
+  cursor: pointer;
+  transition: var(--royal-transition);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--royal-text-secondary);
+}
+
+.visibility-option:hover {
+  border-color: var(--royal-blue-light);
+}
+
+.visibility-option.active {
+  border-color: var(--royal-blue-primary);
+  background: #eff6ff;
+  color: var(--royal-blue-primary);
+}
+
+.visibility-option ion-icon {
+  font-size: 20px;
+}
+
+/* Selected classes info */
 .selected-classes-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
-  padding: 10px 14px;
-  background: #EFF6FF;
-  border-radius: 8px;
-  border: 1px solid #BFDBFE;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--royal-bg-main);
+  border-radius: var(--royal-radius-md);
+  border: 1px solid var(--royal-border-light);
 }
 
 .selected-classes-label {
-  font-size: 12px;
-  color: #1E40AF;
-  font-weight: 500;
+  font-size: 13px;
+  color: var(--royal-text-secondary);
 }
 
 .selected-classes-link {
-  font-size: 12px;
-  color: #2563EB;
-  font-weight: 600;
-  background: none;
+  background: transparent;
   border: none;
+  color: var(--royal-blue-primary);
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
 }
 
-/* Action Buttons */
+/* ============================================================================
+   10. BUTTONS
+   ============================================================================ */
 .button-group {
-  margin-top: 20px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .admin-submit-btn {
-  --background: #2563EB;
-  --background-hover: #1D4ED8;
-  --border-radius: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  height: 44px;
-  margin: 0;
+  --background: var(--royal-blue-primary) !important;
+  --background-activated: var(--royal-blue-dark) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  --box-shadow: none !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  font-size: 14px !important;
 }
 
 .admin-cancel-btn {
-  --color: #64748B;
-  margin-top: 8px;
-  font-size: 13px;
+  --color: var(--royal-text-secondary) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  height: 44px !important;
+  font-size: 14px !important;
 }
 
-/* Published Circular List Cards */
+/* ============================================================================
+   11. EMPTY STATE
+   ============================================================================ */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--royal-border-input);
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+  margin: 0;
+}
+
+/* Load more button */
+.load-more-button {
+  --color: var(--royal-blue-primary) !important;
+  --border-color: var(--royal-blue-primary) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  margin-top: 16px;
+}
+
+/* ============================================================================
+   12. CIRCULAR CARDS (LIST ITEMS)
+   ============================================================================ */
 .circular-card {
   display: flex;
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
+  gap: 16px;
   padding: 16px;
+  border: 1px solid var(--royal-border-light);
+  border-radius: var(--royal-radius-lg);
+  background: var(--royal-bg-card);
   margin-bottom: 12px;
-  transition: all 0.2s ease;
+  transition: var(--royal-transition);
+  cursor: pointer;
+}
+
+.circular-card:last-child {
+  margin-bottom: 0;
 }
 
 .circular-card:hover {
-  border-color: #CBD5E1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--royal-shadow-card);
+  border-color: var(--royal-blue-light);
 }
 
 .circular-card-content {
   flex: 1;
-  margin-right: 12px;
 }
 
 .circular-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .circular-title {
   font-size: 15px;
-  font-weight: 600;
-  color: #0F172A;
+  font-weight: 700;
+  color: var(--royal-text-primary);
   margin: 0;
 }
 
 .visibility-badge {
-  font-size: 10px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
-.circular-content {
-  font-size: 13px;
-  color: #475569;
-  line-height: 1.5;
-  margin: 0 0 10px 0;
-}
-
+/* Image wrapper */
 .image-wrapper {
-  border-radius: 6px;
+  margin-bottom: 12px;
+  border-radius: var(--royal-radius-md);
   overflow: hidden;
-  margin-bottom: 10px;
+  max-height: 200px;
 }
 
 .circular-image {
   width: 100%;
-  height: 140px;
+  height: 100%;
   object-fit: cover;
-  display: block;
+}
+
+.circular-content {
+  font-size: 14px;
+  color: var(--royal-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 12px 0;
 }
 
 .circular-meta-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--royal-text-muted);
 }
 
 .circular-date {
-  font-size: 11px;
-  color: #94A3B8;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Action Buttons (Edit / Delete) */
+/* Circular actions */
 .circular-card-actions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  justify-content: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .action-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--royal-radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--royal-transition);
+  background: var(--royal-bg-main);
+  color: var(--royal-text-muted);
 }
 
-.action-button ion-icon {
-  font-size: 16px;
-  color: #64748B;
+.action-button:hover {
+  background: var(--royal-border-light);
+}
+
+.action-button.edit {
+  color: var(--royal-blue-primary);
+  background: #eff6ff;
 }
 
 .action-button.edit:hover {
-  background: #EFF6FF;
-  border-color: #BFDBFE;
+  background: #dbeafe;
 }
 
-.action-button.edit:hover ion-icon {
-  color: #2563EB;
+.action-button.delete {
+  color: #dc2626;
+  background: #fef2f2;
 }
 
 .action-button.delete:hover {
-  background: #FEF2F2;
-  border-color: #FECACA;
+  background: #fee2e2;
 }
 
-.action-button.delete:hover ion-icon {
-  color: #DC2626;
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 36px 16px;
-}
-
-.empty-icon {
-  font-size: 40px;
-  color: #CBD5E1;
-  margin-bottom: 8px;
-}
-
-.empty-state p {
-  font-size: 14px;
-  color: #64748B;
-  margin: 0;
-}
-
-.load-more-button {
-  --color: #2563EB;
-  --border-color: #CBD5E1;
-  --border-radius: 8px;
-  margin-top: 12px;
-  font-weight: 500;
-}
-
-/* Class Selection Modal */
-.class-selector-modal {
-  --height: auto;
-  --max-height: 85%;
-  --border-radius: 16px 16px 0 0;
-}
-
-@media (min-width: 600px) {
-  .class-selector-modal {
-    --width: 500px;
-    --border-radius: 16px;
-  }
-}
-
-.class-selector-modal .modal-content {
-  background: #FFFFFF;
+/* ============================================================================
+   13. LOADING STATE
+   ============================================================================ */
+.loading-container {
   display: flex;
   flex-direction: column;
-  max-height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+  min-height: 300px;
+}
+
+.loading-container p {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+}
+
+/* ============================================================================
+   14. MODAL STYLES
+   ============================================================================ */
+.class-selector-modal {
+  --width: 90%;
+  --max-width: 400px;
+  --border-radius: var(--royal-radius-xl);
+}
+
+.class-selector-modal ion-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-xl);
+  overflow: hidden;
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #E2E8F0;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--royal-border-light);
 }
 
 .modal-header h2 {
   font-size: 16px;
-  font-weight: 600;
-  color: #0F172A;
+  font-weight: 700;
+  color: var(--royal-text-primary);
   margin: 0;
 }
 
 .modal-close {
   background: transparent;
   border: none;
-  font-size: 20px;
-  color: #64748B;
+  color: var(--royal-text-muted);
   cursor: pointer;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  font-size: 20px;
 }
 
 .modal-subtitle {
   font-size: 13px;
-  color: #64748B;
-  padding: 12px 20px 0 20px;
+  color: var(--royal-text-muted);
+  padding: 16px 24px;
   margin: 0;
 }
 
 .class-list {
-  padding: 12px 20px;
+  padding: 0 24px 16px;
   max-height: 300px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .class-item {
   display: flex;
   align-items: center;
-  padding: 12px 14px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  margin-bottom: 8px;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--royal-border-light);
+  border-radius: var(--royal-radius-md);
   cursor: pointer;
-  background: #F8FAFC;
-  transition: all 0.2s ease;
+  transition: var(--royal-transition);
+  background: var(--royal-bg-card);
 }
 
 .class-item:hover {
-  background: #F1F5F9;
+  border-color: var(--royal-blue-light);
 }
 
 .class-item.active {
-  background: #EFF6FF;
-  border-color: #2563EB;
+  border-color: var(--royal-blue-primary);
+  background: #eff6ff;
 }
 
 .class-item-checkbox {
-  width: 18px;
-  height: 18px;
-  border: 1px solid #CBD5E1;
-  border-radius: 4px;
-  margin-right: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: bold;
-  color: #FFFFFF;
-  background: #FFFFFF;
-}
-
-.class-item.active .class-item-checkbox {
-  background: #2563EB;
-  border-color: #2563EB;
+  font-size: 16px;
+  color: var(--royal-blue-primary);
+  width: 20px;
+  text-align: center;
 }
 
 .class-item-text {
   font-size: 14px;
-  color: #334155;
-  font-weight: 500;
-}
-
-.class-item.active .class-item-text {
-  color: #1D4ED8;
   font-weight: 600;
+  color: var(--royal-text-primary);
 }
 
 .modal-footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-top: 1px solid #E2E8F0;
-  background: #F8FAFC;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid var(--royal-border-light);
 }
 
 .selected-count {
   font-size: 13px;
-  color: #64748B;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--royal-text-muted);
 }
 
 .modal-done-btn {
-  --background: #2563EB;
-  --border-radius: 6px;
-  font-size: 13px;
-  margin: 0;
+  --background: var(--royal-blue-primary) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  height: 40px !important;
+  padding: 0 24px !important;
 }
 
-/* Loading State */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
+/* ============================================================================
+   15. MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px 12px;
+  }
+
+  .header-title {
+    font-size: 20px;
+  }
+
+  .form-card,
+  .list-card {
+    border-radius: var(--royal-radius-lg);
+  }
+
+  .form-card ion-card-content,
+  .list-card ion-card-content {
+    padding: 16px;
+  }
+
+  .mode-container {
+    flex-direction: column;
+  }
+
+  .mode-option {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .visibility-container {
+    flex-direction: column;
+  }
+
+  .visibility-option {
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .circular-card {
+    flex-direction: column;
+    padding: 14px;
+  }
+
+  .circular-card-actions {
+    flex-direction: row;
+    align-self: flex-end;
+  }
+
+  .action-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Ensure touch targets are 48px minimum */
+  .mode-option,
+  .visibility-option,
+  .file-picker-button,
+  .class-item {
+    min-height: 48px;
+  }
+
+  /* Prevent horizontal scroll */
+  ion-content {
+    --overflow-x: hidden;
+  }
 }
 
-.loading-container p {
-  margin-top: 12px;
-  font-size: 13px;
-  color: #64748B;
+@media (max-width: 480px) {
+  .container {
+    padding: 12px 8px;
+  }
+
+  .form-card ion-card-content,
+  .list-card ion-card-content {
+    padding: 12px;
+  }
+
+  .circular-card {
+    padding: 12px;
+  }
 }

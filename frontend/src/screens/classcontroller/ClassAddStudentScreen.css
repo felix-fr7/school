@@ -1,195 +1,209 @@
-/**
- * Class Add Student Screen (Ionic React Styles)
- * Add a new student to the class
- */
-
 /* ============================================
-   Content Container
+   Light Theme Workspace & Form Styling
    ============================================ */
+
 .add-student-content {
-  --background: #FFF5F0;
+  --background: #F8FAFC !important;
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
 }
 
-/* ============================================
-   Form Container
-   ============================================ */
 .form-container {
-  padding: 16px;
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 40px;
 }
 
-/* ============================================
-   Form Header
-   ============================================ */
-.form-header {
-  margin-bottom: 24px;
+/* Toolbar Header */
+.light-toolbar {
+  --background: #FFFFFF;
+  --color: #0F172A;
+  border-bottom: 1px solid #E2E8F0;
 }
 
-.form-title {
-  font-size: 28px;
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
   font-weight: 800;
-  color: var(--ion-color-dark);
-  margin: 0 0 4px 0;
+  color: #0F172A;
 }
 
-.form-subtitle {
-  font-size: 14px;
-  color: var(--ion-color-medium);
+.brand-icon {
+  font-size: 22px;
+  color: #2563EB;
+}
+
+/* Hero Section Banner */
+.light-hero-card {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  padding: 22px;
+  border-radius: 20px;
+  color: #FFFFFF;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+  margin-bottom: 20px;
+}
+
+.hero-main .class-title {
+  font-size: 24px;
+  font-weight: 800;
   margin: 0;
 }
 
-/* ============================================
-   Preview Card
-   ============================================ */
+.teacher-greeting {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #E0E7FF;
+  line-height: 1.4;
+}
+
+/* Next Student ID Preview Card */
 .preview-card {
-  --background: #FFFFFF;
-  border-radius: 16px;
-  margin-bottom: 24px;
-  border: 2px solid var(--ion-color-secondary);
-  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.1);
+  background: #FFFFFF;
+  border-radius: 18px;
+  margin: 0 0 20px 0;
+  border: 1px solid #BFDBFE;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
   text-align: center;
 }
 
 .preview-card ion-card-content {
-  padding: 20px;
+  padding: 18px;
 }
 
 .preview-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #2563EB;
+  letter-spacing: 1px;
   display: block;
-  margin-bottom: 8px;
 }
 
 .preview-value {
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 800;
-  color: var(--ion-color-secondary);
-  letter-spacing: 2px;
-  margin: 8px 0;
+  color: #0F172A;
+  letter-spacing: 1.5px;
+  margin: 6px 0;
 }
 
 .preview-note {
   font-size: 12px;
+  color: #64748B;
   display: block;
 }
 
-/* ============================================
-   Form
-   ============================================ */
-.form {
-  margin-bottom: 24px;
+/* Main Form Card */
+.form-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
-/* ============================================
-   Input Items
-   ============================================ */
-.input-item {
-  --background: transparent;
-  --padding-start: 0;
-  --padding-end: 0;
-  margin-bottom: 20px;
+.input-group {
+  margin-bottom: 18px;
 }
 
-.input-item ion-label {
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
-  font-weight: 600;
-  color: var(--ion-color-dark);
+  font-weight: 700;
+  color: #334155;
   margin-bottom: 8px;
 }
 
-.input-item ion-input {
-  --background: #FFFFFF;
-  --border-radius: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 14px;
-  --padding-bottom: 14px;
-  font-size: 15px;
-  border: 1px solid #E0E0E0;
+.label-icon {
+  font-size: 16px;
+  color: #2563EB;
+}
+
+.custom-input-box {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
   border-radius: 12px;
+  transition: all 0.2s ease;
 }
 
-/* ============================================
-   Password Field
-   ============================================ */
-.password-item {
-  --padding-bottom: 0;
+.custom-input-box:focus-within {
+  border-color: #2563EB;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.password-wrapper {
+.custom-input-box ion-input {
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-size: 15px;
+  color: #0F172A;
+  font-weight: 500;
+}
+
+.password-box {
   display: flex;
   align-items: center;
-  background: #FFFFFF;
-  border: 1px solid #E0E0E0;
-  border-radius: 12px;
 }
 
-.password-wrapper ion-input {
-  --background: transparent;
-  --border-radius: 0;
-  --padding-start: 16px;
-  --padding-end: 8px;
-  border: none;
+.password-box ion-input {
   flex: 1;
 }
 
 .password-toggle {
   --padding-start: 8px;
-  --padding-end: 8px;
-  color: var(--ion-color-medium);
+  --padding-end: 12px;
+  color: #64748B;
+  margin: 0;
 }
 
-.input-hint {
-  font-size: 12px;
-  margin-top: 6px;
-  display: block;
-}
-
-/* ============================================
-   Info Box
-   ============================================ */
+/* Info Box */
 .info-box {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  background: #FFF5F0;
+  gap: 10px;
+  background: #EFF6FF;
+  border: 1px solid #DBEAFE;
   border-radius: 12px;
-  padding: 16px;
-  margin-top: 16px;
+  padding: 12px 14px;
+  margin-bottom: 22px;
 }
 
 .info-icon {
   font-size: 18px;
-  color: var(--ion-color-secondary);
+  color: #2563EB;
   flex-shrink: 0;
   margin-top: 2px;
 }
 
-.info-box small {
-  font-size: 13px;
-  color: var(--ion-color-medium);
-  line-height: 1.5;
+.info-box p {
+  font-size: 12.5px;
+  color: #1E40AF;
+  line-height: 1.45;
+  margin: 0;
 }
 
 .id-highlight {
-  color: var(--ion-color-secondary);
-  font-weight: 700;
-  background: #FFE8DD;
-  padding: 0 4px;
+  color: #1E3A8A;
+  background: #DBEAFE;
+  padding: 2px 6px;
   border-radius: 4px;
 }
 
-/* ============================================
-   Submit Button
-   ============================================ */
+/* Submit Button */
 .submit-button {
-  --border-radius: 16px;
-  --box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
-  margin-top: 8px;
+  --border-radius: 12px;
+  --background: #2563EB;
+  --background-hover: #1D4ED8;
+  --box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  font-weight: 700;
+  height: 48px;
+  margin: 0;
 }
 
 /* ============================================
@@ -198,76 +212,73 @@
 .success-modal {
   --height: auto;
   --max-height: 90vh;
-  --width: 85%;
-  --max-width: 400px;
+  --width: 90%;
+  --max-width: 420px;
+  --border-radius: 24px;
 }
 
 .modal-container {
   padding: 24px;
-  background: var(--ion-color-light);
-  border-radius: 24px;
+  background: #FFFFFF;
   text-align: center;
 }
 
 .success-icon-container {
-  width: 80px;
-  height: 80px;
-  border-radius: 40px;
-  background: #E8F5E9;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #ECFDF5;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 16px auto;
 }
 
 .success-icon {
-  font-size: 40px;
-  color: #4CAF50;
+  font-size: 38px;
+  color: #10B981;
 }
 
 .modal-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
-  color: var(--ion-color-dark);
-  margin: 0 0 24px 0;
+  color: #0F172A;
+  margin: 0 0 18px 0;
 }
 
-/* ============================================
-   Modal Details
-   ============================================ */
 .modal-details {
   width: 100%;
-  background: #F9F9F9;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
   border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 20px;
+  padding: 14px;
+  margin-bottom: 16px;
   text-align: left;
 }
 
 .student-id-highlight {
-  background: var(--ion-color-secondary);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px;
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .student-id-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 10px;
+  font-weight: 700;
+  color: #93C5FD;
   text-transform: uppercase;
   letter-spacing: 1px;
   display: block;
-  margin-bottom: 4px;
 }
 
 .student-id-value {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: #FFFFFF;
-  letter-spacing: 2px;
-  margin: 0;
+  letter-spacing: 1.5px;
+  margin: 2px 0 0 0;
 }
 
 .detail-row {
@@ -275,28 +286,24 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #EEEEEE;
-}
-
-.detail-row:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .detail-label {
-  font-size: 13px;
-  color: var(--ion-color-medium);
-  font-weight: 500;
+  font-size: 12.5px;
+  color: #64748B;
+  font-weight: 600;
 }
 
 .detail-value {
-  font-size: 14px;
-  color: var(--ion-color-dark);
-  font-weight: 600;
+  font-size: 13.5px;
+  color: #0F172A;
+  font-weight: 700;
 }
 
 .password-row {
   border-bottom: none;
-  padding-top: 12px;
+  padding-top: 10px;
   flex-direction: column;
   align-items: flex-start;
 }
@@ -304,145 +311,71 @@
 .modal-password-container {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-  width: 100%;
   justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  width: 100%;
 }
 
 .password-value {
   font-size: 14px;
-  color: var(--ion-color-secondary);
+  color: #1E40AF;
   font-weight: 700;
-  background: #FFF5F0;
-  padding: 4px 8px;
-  border-radius: 6px;
+  background: #EFF6FF;
+  border: 1px solid #DBEAFE;
+  padding: 6px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
 }
 
 .copy-button {
   --border-radius: 8px;
+  --background: #2563EB;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  height: 34px;
+  margin: 0;
 }
 
-/* ============================================
-   Modal Warning
-   ============================================ */
+/* Modal Warning */
 .modal-warning {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  background: #FFF8E1;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px 12px;
   margin-bottom: 20px;
   text-align: left;
 }
 
 .warning-icon {
   font-size: 16px;
-  color: #F57F17;
+  color: #D97706;
   flex-shrink: 0;
   margin-top: 2px;
 }
 
-.modal-warning small {
-  font-size: 12px;
-  color: #F57F17;
-  line-height: 1.5;
+.modal-warning p {
+  font-size: 11.5px;
+  color: #92400E;
+  line-height: 1.4;
+  margin: 0;
+  font-weight: 600;
 }
 
-/* ============================================
-   Modal Actions
-   ============================================ */
+/* Modal Actions */
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
 
-.modal-actions ion-button {
+.modal-btn {
   flex: 1;
-}
-
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
-@media (min-width: 768px) {
-  .form-container {
-    padding: 24px;
-  }
-}
-
-/* ============================================
-   Dark Mode Support
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-  .add-student-content {
-    --background: #121212;
-  }
-
-  .form-title {
-    color: #fff;
-  }
-
-  .form-subtitle {
-    color: #888;
-  }
-
-  .preview-card {
-    --background: #1e1e1e;
-    border-color: var(--ion-color-secondary);
-  }
-
-  .preview-value {
-    color: var(--ion-color-secondary);
-  }
-
-  .input-item ion-label {
-    color: #fff;
-  }
-
-  .input-item ion-input {
-    --background: #2a2a2a;
-    border-color: #444;
-    color: #fff;
-  }
-
-  .password-wrapper {
-    background: #2a2a2a;
-    border-color: #444;
-  }
-
-  .info-box {
-    background: #1e1e1e;
-  }
-
-  .info-box small {
-    color: #888;
-  }
-
-  .modal-container {
-    background: #1e1e1e;
-  }
-
-  .modal-details {
-    background: #2a2a2a;
-  }
-
-  .detail-row {
-    border-bottom-color: #444;
-  }
-
-  .detail-label {
-    color: #888;
-  }
-
-  .detail-value {
-    color: #fff;
-  }
-
-  .modal-title {
-    color: #fff;
-  }
+  --border-radius: 10px;
+  font-weight: 700;
+  height: 42px;
+  margin: 0;
 }

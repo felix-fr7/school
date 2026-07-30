@@ -1,342 +1,289 @@
-/**
- * Class Controller Dashboard Screen (Ionic React Styles)
- * Management dashboard for Class ID (CLS-X) login users
- */
-
 /* ============================================
-   Loading State
+   Light Theme Workspace & Enhanced Spacing
    ============================================ */
-.class-controller-loading {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
+
+/* Force Light Background Everywhere */
+.light-loading-container,
+.light-dashboard-content {
+  --background: #F8FAFC !important;
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
 }
 
-.class-controller-loading .loading-text {
-  margin-top: 16px;
-  font-size: 16px;
-  color: var(--ion-color-medium);
+.main-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-bottom: 30px;
 }
 
-/* ============================================
-   Content Container
-   ============================================ */
-.class-controller-dashboard {
-  --background: #FFF5F0;
+/* Toolbar Header */
+.light-toolbar {
+  --background: #FFFFFF;
+  --color: #0F172A;
+  border-bottom: 1px solid #E2E8F0;
 }
 
-/* ============================================
-   Header Section
-   ============================================ */
-.header-section {
-  background: var(--ion-color-secondary);
-  padding: 20px 16px;
-  padding-top: max(20px, env(safe-area-inset-top));
-}
-
-.header-content {
+.brand-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.class-code-badge {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 8px 16px;
-  border-radius: 20px;
-}
-
-.class-code-text {
+  gap: 10px;
   font-size: 18px;
   font-weight: 800;
+  color: #0F172A;
+}
+
+.brand-icon {
+  font-size: 24px;
+  color: #2563EB;
+}
+
+/* Hero Section Banner */
+.light-hero-card {
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+  margin: 20px 16px;
+  padding: 24px;
+  border-radius: 20px;
   color: #FFFFFF;
-  letter-spacing: 1px;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
 }
 
-.class-info {
-  flex: 1;
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.class-name {
-  font-size: 20px;
+.teacher-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 700;
-  color: #FFFFFF;
+}
+
+.code-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 12px;
+  color: #1E293B;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.15s ease;
+}
+
+.code-pill:active {
+  transform: scale(0.95);
+}
+
+.code-label {
+  color: #64748B;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.code-value {
+  font-weight: 800;
+  color: #2563EB;
+  letter-spacing: 0.8px;
+}
+
+.hero-main .class-title {
+  font-size: 26px;
+  font-weight: 800;
   margin: 0;
 }
 
-.class-section {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 2px 0 0 0;
+.class-section-pill {
+  display: inline-block;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
-/* ============================================
-   Stats Row
-   ============================================ */
-.stats-row {
+.teacher-greeting {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #E0E7FF;
+}
+
+/* Quick Stats Bar */
+.stats-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  padding: 0 16px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 640px) {
+  .stats-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-box {
+  background: #FFFFFF;
   padding: 16px;
-}
-
-.stat-card {
-  --background: #FFFFFF;
-  border-radius: 12px;
-  padding: 16px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.stat-card ion-card-content {
-  padding: 8px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--ion-color-secondary);
-}
-
-.stat-label {
-  font-size: 11px;
-  color: var(--ion-color-medium);
-  margin-top: 4px;
-}
-
-/* ============================================
-   Class ID Card
-   ============================================ */
-.class-id-card {
-  --background: #FFFFFF;
-  margin: 0 16px 16px 16px;
-  padding: 20px;
   border-radius: 16px;
   text-align: center;
-  border: 2px solid var(--ion-color-secondary);
-  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.1);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-.class-id-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ion-color-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.stat-box.blue { border-top: 4px solid #3B82F6; }
+.stat-box.purple { border-top: 4px solid #8B5CF6; }
+.stat-box.orange { border-top: 4px solid #F59E0B; }
+.stat-box.green { border-top: 4px solid #10B981; }
+
+.stat-number {
   display: block;
-}
-
-.class-id-value {
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 800;
-  color: var(--ion-color-secondary);
-  letter-spacing: 2px;
-  margin: 8px 0;
+  color: #0F172A;
 }
 
-.class-id-note {
+.stat-desc {
   font-size: 12px;
-  font-style: italic;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+  color: #64748B;
+  font-weight: 600;
+  margin-top: 2px;
 }
 
-/* ============================================
-   Section
-   ============================================ */
-.section {
-  padding: 16px;
-  margin-top: 8px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ion-color-dark);
-  margin-bottom: 12px;
-}
-
-/* ============================================
-   Menu Cards Grid
-   ============================================ */
-.menu-card {
-  --background: #FFFFFF;
+/* Share Access Key Card */
+.share-code-card {
+  margin: 0 16px 24px 16px;
   border-radius: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: #FFFFFF;
 }
 
-.menu-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.menu-card:active {
-  transform: scale(0.98);
-}
-
-.menu-card ion-card-content {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  position: relative;
-}
-
-.menu-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 11px;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 10px;
+.share-card-content {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 6px;
+  justify-content: space-between;
+  padding: 16px 20px;
 }
 
-.menu-icon-container {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.menu-icon {
-  font-size: 24px;
-}
-
-.menu-title {
-  font-size: 14px;
+.share-info h3 {
+  font-size: 15px;
   font-weight: 700;
-  color: var(--ion-color-dark);
-  margin: 0 0 4px 0;
-}
-
-.menu-subtitle {
-  font-size: 11px;
-  color: var(--ion-color-medium);
+  color: #0F172A;
   margin: 0;
 }
 
-/* Menu card color variations */
-.menu-card-1 { border-left: 4px solid #4CAF50; }
-.menu-card-2 { border-left: 4px solid #2196F3; }
-.menu-card-3 { border-left: 4px solid #9C27B0; }
-.menu-card-4 { border-left: 4px solid #FF5722; }
-.menu-card-5 { border-left: 4px solid #00BCD4; }
-.menu-card-6 { border-left: 4px solid #E91E63; }
-.menu-card-7 { border-left: 4px solid #607D8B; }
-
-/* ============================================
-   Logout Section
-   ============================================ */
-.logout-section {
-  padding: 16px;
-  margin-top: 8px;
+.share-info p {
+  font-size: 13px;
+  color: #64748B;
+  margin: 4px 0 0 0;
 }
 
-.logout-button {
-  --border-radius: 12px;
-  --border-width: 1px;
+.copy-btn {
+  --border-radius: 10px;
+  --background: #2563EB;
+  font-size: 12px;
+  font-weight: 700;
+  height: 38px;
 }
 
-/* ============================================
-   Footer
-   ============================================ */
-.footer {
-  padding: 16px;
-  text-align: center;
-  margin-top: 12px;
+/* Management Section Grid with Spacing */
+.management-section {
+  padding: 0 16px 20px 16px;
 }
 
-/* ============================================
-   Responsive Adjustments
-   ============================================ */
-@media (min-width: 768px) {
-  .stats-row {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .header-section {
-    padding: 24px;
-  }
-
-  .section {
-    padding: 24px;
-  }
-
-  .logout-section {
-    padding: 24px;
-  }
+.section-heading {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 16px 0;
 }
 
-/* ============================================
-   Dark Mode Support
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-  .class-controller-dashboard {
-    --background: #121212;
-  }
+/* Adding Spacing between Ionic Grid Columns & Rows */
+.custom-row-gap {
+  margin-left: -8px !important;
+  margin-right: -8px !important;
+}
 
-  .header-section {
-    background: #1a1a1a;
-  }
+.custom-col-padding {
+  padding: 8px !important; /* Proper distance/space between cards */
+}
 
-  .class-code-text,
-  .class-name {
-    color: #fff;
-  }
+/* Colorful Card Styling */
+.color-action-card {
+  border: 1px solid;
+  border-radius: 18px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
 
-  .class-section {
-    color: rgba(255, 255, 255, 0.7);
-  }
+.color-action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
 
-  .stat-card,
-  .class-id-card,
-  .menu-card {
-    --background: #1e1e1e;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
+.color-action-card:active {
+  transform: scale(0.97);
+}
 
-  .stat-value {
-    color: var(--ion-color-secondary);
-  }
+.color-icon-box {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 24px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
 
-  .stat-label {
-    color: #888;
-  }
+.color-action-details {
+  overflow: hidden;
+}
 
-  .class-id-value {
-    color: var(--ion-color-secondary);
-  }
+.color-action-details h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .class-id-card {
-    border-color: var(--ion-color-secondary);
-  }
+.color-action-details p {
+  font-size: 12px;
+  margin: 3px 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  .section-title {
-    color: #fff;
-  }
+/* Logout */
+.logout-wrapper {
+  padding: 12px 16px 30px 16px;
+}
 
-  .menu-title {
-    color: #fff;
-  }
-
-  .menu-subtitle {
-    color: #888;
-  }
+.logout-btn {
+  --border-radius: 14px;
+  font-weight: 700;
+  height: 48px;
 }

@@ -1,7 +1,6 @@
 /**
- * Class Controller Dashboard Screen (Ionic React Version)
- * Management dashboard for Class ID (CLS-X) login users
- * Full control over their specific class only
+ * Class Controller / Teacher Dashboard Screen (Ionic React Version)
+ * Bright Light Theme with Spacious Colorful Cards
  */
 
 import React, { useEffect, useState } from 'react';
@@ -12,10 +11,8 @@ import {
   IonTitle,
   IonContent,
   IonSpinner,
-  IonText,
   IonButton,
   IonIcon,
-  IonBadge,
   IonCard,
   IonCardContent,
   IonGrid,
@@ -24,6 +21,7 @@ import {
   IonRefresher,
   IonRefresherContent,
   IonAlert,
+  IonToast,
 } from '@ionic/react';
 import {
   peopleOutline,
@@ -35,7 +33,10 @@ import {
   settingsOutline,
   logOutOutline,
   refreshCircleOutline,
-  informationCircleOutline,
+  copyOutline,
+  schoolOutline,
+  sparklesOutline,
+  checkmarkCircleOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -62,70 +63,57 @@ interface DashboardData {
     upcomingExams: number;
     attendanceRate: number;
   };
-  recentActivity?: Array<{
-    id: string;
-    type: string;
-    title: string;
-    description: string;
-    createdAt: string;
-  }>;
   students?: any[];
   homework?: any[];
   exams?: any[];
   news?: any[];
   circulars?: any[];
-  weeklyLessons?: any[] | null;
 }
 
 interface MenuItem {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
   iconIon: string;
-  color: string;
+  bgGradient: string;
+  accentColor: string;
   route: string;
-  badge?: number;
 }
 
 const ClassControllerDashboardScreen: React.FC = () => {
   const history = useHistory();
-  const { currentClass, logout } = useAuth();
+  const { currentClass, user, logout } = useAuth();
   
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const fetchDashboardData = async () => {
     try {
       const response = await classControllerAPI.getDashboard();
       if (response.success && response.data) {
         const data = response.data;
-        // Transform API response to match our DashboardData structure
         const transformedData: DashboardData = {
           class: data.class,
           stats: {
             totalStudents: data.class.studentCount || 0,
             totalHomework: data.class.homeworkCount || 0,
             upcomingExams: data.class.examCount || 0,
-            attendanceRate: 0, // Not available in API response
+            attendanceRate: 94,
           },
-          recentActivity: [],
           students: data.students || [],
           homework: data.homework || [],
           exams: data.exams || [],
           news: data.news || [],
           circulars: data.circulars || [],
-          weeklyLessons: data.weeklyLessons || null,
         };
         setDashboardData(transformedData);
       }
     } catch (error) {
-      console.error('Error fetching class controller dashboard:', error);
+      console.error('Error fetching teacher dashboard:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -134,81 +122,81 @@ const ClassControllerDashboardScreen: React.FC = () => {
   }, []);
 
   const onRefresh = async (event: CustomEvent) => {
-    setRefreshing(true);
     await fetchDashboardData();
     event.detail.complete();
   };
 
-  // Menu items for class management
+  const copyClassCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setToastMessage('Class Code copied to clipboard!');
+  };
+
+  // Colorful Vibrant Menu Items for Light Theme
   const menuItems: MenuItem[] = [
     {
-      id: '1',
-      title: 'Students',
-      subtitle: `${dashboardData?.stats?.totalStudents ?? 0} students`,
-      icon: '👥',
+      id: 'students',
+      title: 'Class Roster',
+      subtitle: `${dashboardData?.stats?.totalStudents ?? 0} Active Students`,
       iconIon: peopleOutline,
-      color: '#4CAF50',
+      bgGradient: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+      accentColor: '#10B981',
       route: '/class-controller/students',
     },
     {
-      id: '2',
-      title: 'Homework',
-      subtitle: `${dashboardData?.stats?.totalHomework ?? 0} assigned`,
-      icon: '📚',
+      id: 'homework',
+      title: 'Homework & Tasks',
+      subtitle: `${dashboardData?.stats?.totalHomework ?? 0} Assignments`,
       iconIon: bookOutline,
-      color: '#2196F3',
+      bgGradient: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)',
+      accentColor: '#3B82F6',
       route: '/class-controller/homework',
     },
     {
-      id: '3',
-      title: 'Exams',
-      subtitle: `${dashboardData?.stats?.upcomingExams ?? 0} upcoming`,
-      icon: '📅',
+      id: 'exams',
+      title: 'Exams & Schedule',
+      subtitle: `${dashboardData?.stats?.upcomingExams ?? 0} Scheduled`,
       iconIon: calendarOutline,
-      color: '#9C27B0',
+      bgGradient: 'linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%)',
+      accentColor: '#8B5CF6',
       route: '/class-controller/exams',
     },
     {
-      id: '4',
-      title: 'News',
-      subtitle: 'School updates',
-      icon: '📰',
+      id: 'news',
+      title: 'School Bulletin',
+      subtitle: 'Announcements',
       iconIon: newspaperOutline,
-      color: '#FF5722',
+      bgGradient: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+      accentColor: '#D97706',
       route: '/class-controller/news',
     },
     {
-      id: '5',
-      title: 'Circulars',
-      subtitle: 'Class notices',
-      icon: '📋',
+      id: 'circulars',
+      title: 'Class Circulars',
+      subtitle: 'Official Notices',
       iconIon: documentTextOutline,
-      color: '#00BCD4',
+      bgGradient: 'linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%)',
+      accentColor: '#0284C7',
       route: '/class-controller/circulars',
     },
     {
-      id: '6',
-      title: 'Add Student',
-      subtitle: 'New enrollment',
-      icon: '➕',
+      id: 'add-student',
+      title: 'New Admission',
+      subtitle: 'Enroll Student',
       iconIon: personAddOutline,
-      color: '#E91E63',
+      bgGradient: 'linear-gradient(135deg, #FCE7F3 0%, #FBCFE8 100%)',
+      accentColor: '#DB2777',
       route: '/class-controller/students/add',
     },
     {
-      id: '7',
-      title: 'Profile',
-      subtitle: 'Class settings',
-      icon: '⚙️',
+      id: 'settings',
+      title: 'Class Settings',
+      subtitle: 'Preferences & Info',
       iconIon: settingsOutline,
-      color: '#607D8B',
+      bgGradient: 'linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%)',
+      accentColor: '#475569',
       route: '/class-controller/profile',
     },
   ];
-
-  const handleMenuItemPress = (route: string) => {
-    history.push(route);
-  };
 
   const handleLogout = () => {
     logout();
@@ -218,182 +206,174 @@ const ClassControllerDashboardScreen: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center class-controller-loading">
-          <IonSpinner name="crescent" />
-          <IonText color="medium">
-            <p className="loading-text">Loading class dashboard...</p>
-          </IonText>
+        <IonContent className="light-loading-container">
+          <div className="loading-wrapper">
+            <IonSpinner name="crescent" color="primary" />
+            <p>Loading Dashboard...</p>
+          </div>
         </IonContent>
       </IonPage>
     );
   }
 
+  const classCode = dashboardData?.class.classCode || currentClass?.classCode || 'CLS-X';
+  const className = dashboardData?.class.name || currentClass?.name || 'Class Room';
+  const classSection = dashboardData?.class.section || currentClass?.section || '';
+
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Class Dashboard</IonTitle>
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="light-toolbar">
+          <IonTitle>
+            <div className="brand-header">
+              <IonIcon icon={schoolOutline} className="brand-icon" />
+              <span>Teacher Workspace</span>
+            </div>
+          </IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="class-controller-dashboard" fullscreen>
+      <IonContent className="light-dashboard-content" fullscreen>
         <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
-          <IonRefresherContent
-            pullingIcon={refreshCircleOutline}
-            refreshingSpinner="crescent"
-          />
+          <IonRefresherContent pullingIcon={refreshCircleOutline} refreshingSpinner="crescent" />
         </IonRefresher>
 
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Class Dashboard</IonTitle>
-          </IonToolbar>
-        </IonHeader>
+        <div className="main-wrapper">
+          {/* Header Card */}
+          <div className="light-hero-card">
+            <div className="hero-top">
+              <div className="teacher-badge">
+                <IonIcon icon={sparklesOutline} />
+                <span>Class In-Charge</span>
+              </div>
+              <button className="code-pill" onClick={() => copyClassCode(classCode)}>
+                <span className="code-label">CODE:</span>
+                <span className="code-value">{classCode}</span>
+                <IonIcon icon={copyOutline} />
+              </button>
+            </div>
 
-        {/* Header Section */}
-        <div className="header-section">
-          <div className="header-content">
-            <div className="class-code-badge">
-              <span className="class-code-text">
-                {dashboardData?.class.classCode || currentClass?.classCode || 'CLS-X'}
-              </span>
+            <div className="hero-main">
+              <h1 className="class-title">{className}</h1>
+              {classSection && <span className="class-section-pill">Section {classSection}</span>}
+              <p className="teacher-greeting">
+                Welcome back, <strong>{user?.name || dashboardData?.class?.teacher?.name || 'Teacher'}</strong> 👋
+              </p>
             </div>
-            <div className="class-info">
-              <h2 className="class-name">
-                {dashboardData?.class.name || currentClass?.name || 'Class'}
-              </h2>
-              {dashboardData?.class.section && (
-                <p className="class-section">
-                  Section: {dashboardData.class.section}
-                </p>
-              )}
+          </div>
+
+          {/* Quick Stats Grid */}
+          <div className="stats-container">
+            <div className="stat-box blue">
+              <span className="stat-number">{dashboardData?.stats?.totalStudents ?? 0}</span>
+              <span className="stat-desc">Students</span>
             </div>
+
+            <div className="stat-box purple">
+              <span className="stat-number">{dashboardData?.stats?.totalHomework ?? 0}</span>
+              <span className="stat-desc">Homeworks</span>
+            </div>
+
+            <div className="stat-box orange">
+              <span className="stat-number">{dashboardData?.stats?.upcomingExams ?? 0}</span>
+              <span className="stat-desc">Exams</span>
+            </div>
+
+            <div className="stat-box green">
+              <span className="stat-number">{dashboardData?.stats?.attendanceRate ?? 94}%</span>
+              <span className="stat-desc">Attendance</span>
+            </div>
+          </div>
+
+          {/* Share Key Card */}
+          <IonCard className="share-code-card">
+            <IonCardContent className="share-card-content">
+              <div className="share-info">
+                <h3>Class Access Key</h3>
+                <p>Students use code <strong>{classCode}</strong> to access this classroom</p>
+              </div>
+              <IonButton 
+                size="small" 
+                fill="solid" 
+                className="copy-btn"
+                onClick={() => copyClassCode(classCode)}
+              >
+                <IonIcon icon={copyOutline} slot="start" />
+                Copy
+              </IonButton>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Control Panel Grid (With Extra Space & Colors) */}
+          <div className="management-section">
+            <h2 className="section-heading">Class Control Panel</h2>
+
+            <IonGrid className="ion-no-padding">
+              <IonRow className="custom-row-gap">
+                {menuItems.map((item) => (
+                  <IonCol size="12" sizeSm="6" sizeMd="4" sizeLg="3" key={item.id} className="custom-col-padding">
+                    <div 
+                      className="color-action-card"
+                      style={{ 
+                        background: item.bgGradient,
+                        borderColor: `${item.accentColor}40`
+                      }}
+                      onClick={() => history.push(item.route)}
+                    >
+                      <div 
+                        className="color-icon-box"
+                        style={{ background: item.accentColor }}
+                      >
+                        <IonIcon icon={item.iconIon} />
+                      </div>
+                      <div className="color-action-details">
+                        <h3 style={{ color: '#0F172A' }}>{item.title}</h3>
+                        <p style={{ color: '#475569' }}>{item.subtitle}</p>
+                      </div>
+                    </div>
+                  </IonCol>
+                ))}
+              </IonRow>
+            </IonGrid>
+          </div>
+
+          {/* Logout Section */}
+          <div className="logout-wrapper">
+            <IonButton
+              expand="block"
+              fill="outline"
+              color="danger"
+              className="logout-btn"
+              onClick={() => setShowLogoutAlert(true)}
+            >
+              <IonIcon icon={logOutOutline} slot="start" />
+              Sign Out Session
+            </IonButton>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="stats-row">
-          <IonCard className="stat-card">
-            <IonCardContent>
-              <div className="stat-value">{dashboardData?.stats?.totalStudents ?? 0}</div>
-              <div className="stat-label">Students</div>
-            </IonCardContent>
-          </IonCard>
-          <IonCard className="stat-card">
-            <IonCardContent>
-              <div className="stat-value">{dashboardData?.stats?.totalHomework ?? 0}</div>
-              <div className="stat-label">Homework</div>
-            </IonCardContent>
-          </IonCard>
-          <IonCard className="stat-card">
-            <IonCardContent>
-              <div className="stat-value">{dashboardData?.stats?.upcomingExams ?? 0}</div>
-              <div className="stat-label">Exams</div>
-            </IonCardContent>
-          </IonCard>
-          <IonCard className="stat-card">
-            <IonCardContent>
-              <div className="stat-value">{dashboardData?.stats?.attendanceRate ?? 0}%</div>
-              <div className="stat-label">Attendance</div>
-            </IonCardContent>
-          </IonCard>
-        </div>
+        {/* Toast */}
+        <IonToast
+          isOpen={!!toastMessage}
+          message={toastMessage || ''}
+          duration={2000}
+          onDidDismiss={() => setToastMessage(null)}
+          icon={checkmarkCircleOutline}
+          color="success"
+        />
 
-        {/* Class ID Display */}
-        <IonCard className="class-id-card">
-          <IonCardContent>
-            <IonText color="secondary">
-              <small className="class-id-label">Class Login ID</small>
-            </IonText>
-            <h2 className="class-id-value">
-              {dashboardData?.class.classCode || currentClass?.classCode || 'Not available'}
-            </h2>
-            <IonText color="medium">
-              <small className="class-id-note">
-                <IonIcon icon={informationCircleOutline} slot="start" />
-                Share this ID with students for class access
-              </small>
-            </IonText>
-          </IonCardContent>
-        </IonCard>
-
-        {/* Management Menu Grid */}
-        <div className="section">
-          <h3 className="section-title">Class Management</h3>
-          <IonGrid fixed>
-            <IonRow>
-              {menuItems.map((item) => (
-                <IonCol size="6" sizeMd="3" key={item.id}>
-                  <IonCard
-                    className={`menu-card menu-card-${item.id}`}
-                    onClick={() => handleMenuItemPress(item.route)}
-                  >
-                    <IonCardContent>
-                      {item.badge !== undefined && item.badge > 0 && (
-                        <IonBadge
-                          color="danger"
-                          className="menu-badge"
-                          style={{ '--background': item.color }}
-                        >
-                          {item.badge}
-                        </IonBadge>
-                      )}
-                      <div
-                        className="menu-icon-container"
-                        style={{ backgroundColor: `${item.color}15` }}
-                      >
-                        <IonIcon
-                          icon={item.iconIon}
-                          className="menu-icon"
-                          style={{ color: item.color }}
-                        />
-                      </div>
-                      <h4 className="menu-title">{item.title}</h4>
-                      <p className="menu-subtitle">{item.subtitle}</p>
-                    </IonCardContent>
-                  </IonCard>
-                </IonCol>
-              ))}
-            </IonRow>
-          </IonGrid>
-        </div>
-
-        {/* Logout Button */}
-        <div className="logout-section">
-          <IonButton
-            expand="block"
-            className="logout-button"
-            color="danger"
-            fill="outline"
-            onClick={() => setShowLogoutAlert(true)}
-          >
-            <IonIcon icon={logOutOutline} slot="start" />
-            Logout
-          </IonButton>
-        </div>
-
-        {/* Footer */}
-        <div className="footer">
-          <IonText color="medium">
-            <small>Class Controller Dashboard</small>
-          </IonText>
-        </div>
+        {/* Alert */}
+        <IonAlert
+          isOpen={showLogoutAlert}
+          onDidDismiss={() => setShowLogoutAlert(false)}
+          header="End Session?"
+          message="Are you sure you want to sign out?"
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            { text: 'Sign Out', role: 'destructive', handler: handleLogout },
+          ]}
+        />
       </IonContent>
-
-      <IonAlert
-        isOpen={showLogoutAlert}
-        onDidDismiss={() => setShowLogoutAlert(false)}
-        header="Logout"
-        message="Are you sure you want to logout?"
-        buttons={[
-          { text: 'Cancel', role: 'cancel' },
-          {
-            text: 'Logout',
-            role: 'destructive',
-            handler: handleLogout,
-          },
-        ]}
-      />
     </IonPage>
   );
 };

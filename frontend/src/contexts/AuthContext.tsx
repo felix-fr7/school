@@ -2,15 +2,31 @@
  * Authentication Context
  * Provides authentication state and methods throughout the app
  * Multi-Tenant School Management System
- * Now supports both User login and Class-based login
+ * 
+ * Features:
+ * - Multi-tab sync via localStorage events
+ * - Cache invalidation on tenant switch
+ * - Suspended tenant handling
  */
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
 import { User, ClassLoginResponse, AuthContextType } from '../types';
-import { authAPI, storage } from '../services/api';
+import { authAPI, storage, setTenantId, getTenantId, clearTenantCache } from '../services/api';
 
-// Create context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Extended Auth Context Type with tenant support
+export interface ExtendedAuthContextType extends AuthContextType {
+  tenantId: string | null;
+  isTenantAdmin: boolean;
+  switchTenant: (tenantId: string) => Promise<void>;
+  isTenantSuspended: boolean;
+  clearCache: () => void;
+}
+
+// Create context with extended type
+const AuthContext = createContext<ExtendedAuthContextType | undefined>(undefined);
+
+// Storage key for tenant ID
+const TENANT_ID_KEY = 'tenantId';
 
 // Provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -18,10 +34,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [currentClass, setCurrentClass] = useState<ClassLoginResponse['class'] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [tenantId, setTenantIdState] = useState<string | null>(null);
+  const [isTenantSuspended, setIsTenantSuspended] = useState(false);
 
   // Initialize auth state from storage on app start
   useEffect(() => {
     initializeAuth();
+  }, []);
+
+  // Multi-tab sync: Listen for storage events from other tabs
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Only handle tenantId changes
+      if (event.key === TENANT_ID_KEY && event.newValue !== event.oldValue) {
+        console.log('[AuthContext] Tenant ID changed in another tab:', event.newValue);
+        
+        const newTenantId = event.newValue;
+        
+        if (newTenantId) {
+          // Sync tenant ID from another tab
+          setTenantIdState(newTenantId);
+          // Clear cache to prevent stale data
+          clearTenantCache();
+        } else {
+          // Tenant ID was cleared
+          setTenantIdState(null);
+          clearTenantCache();
+        }
+      }
+      
+      // Handle auth clearance from another tab (logout)
+      if (event.key === 'authToken' && !event.newValue) {
+        console.log('[AuthContext] Auth cleared in another tab');
+        setUser(null);
+        setToken(null);
+        setTenantIdState(null);
+        setIsTenantSuspended(false);
+      }
+    };
+
+    // Add event listener for storage changes
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const initializeAuth = async () => {
@@ -29,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const storedToken = await storage.getToken();
       const storedUser = await storage.getUser();
       const storedClass = await storage.getClass();
+      const storedTenantId = getTenantId();
 
       // If we have a stored token, verify it with the backend
       if (storedToken) {
@@ -43,44 +101,72 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (storedClass) {
               setCurrentClass(storedClass);
             }
+            // Set tenant ID from user data or stored value
+            const userTenantId = response.data.tenantId || storedTenantId;
+            if (userTenantId) {
+              setTenantIdState(userTenantId);
+              setTenantId(userTenantId);
+            }
           } else {
             // Token invalid or response failed - clear storage
-            await storage.clearAuth();
-            await storage.clearClass();
-            setUser(null);
-            setToken(null);
-            setCurrentClass(null);
+            await clearAllData();
           }
         } catch (verifyError) {
           // Token verification failed - clear storage
           console.log('Token verification failed, clearing stored auth');
-          await storage.clearAuth();
-          await storage.clearClass();
-          setUser(null);
-          setToken(null);
-          setCurrentClass(null);
+          await clearAllData();
         }
       } else {
         // No stored token - ensure clean state
-        setUser(null);
-        setToken(null);
-        setCurrentClass(null);
+        await clearAllData();
       }
     } catch (error) {
       console.error('Error initializing auth:', error);
-      // On any error, ensure clean state
-      setUser(null);
-      setToken(null);
-      setCurrentClass(null);
+      await clearAllData();
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Clear all cached data for current tenant
+  const clearCache = useCallback(() => {
+    console.log('[AuthContext] Clearing cache for tenant:', tenantId);
+    clearTenantCache();
+    
+    // Clear any component-level cached data
+    // This can be extended based on your caching strategy
+    const cacheKeys = [
+      'products_cache',
+      'tenants_cache',
+      'students_cache',
+      'teachers_cache',
+      'classes_cache',
+      'homework_cache',
+      'news_cache',
+      'exams_cache'
+    ];
+    
+    cacheKeys.forEach(key => {
+      localStorage.removeItem(`${key}_${tenantId}`);
+      sessionStorage.removeItem(`${key}_${tenantId}`);
+    });
+  }, [tenantId]);
+
+  // Clear all auth data
+  const clearAllData = async () => {
+    await storage.clearAuth();
+    await storage.clearClass();
+    setUser(null);
+    setToken(null);
+    setCurrentClass(null);
+    setTenantIdState(null);
+    setTenantId(null);
+    setIsTenantSuspended(false);
+    clearTenantCache();
+  };
+
   /**
    * Login user with dual support: email OR studentId (roll number)
-   * @param usernameOrEmailOrId - Email address or Student ID/Roll Number
-   * @param password - User password
    */
   const login = async (usernameOrEmailOrId: string, password: string) => {
     try {
@@ -102,6 +188,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Update state
         setUser(userData);
         setToken(authToken);
+        
+        // Set tenant ID for multi-tenant support
+        if (userData.tenantId) {
+          setTenantIdState(userData.tenantId);
+          setTenantId(userData.tenantId);
+        } else if (userData.role === 'SUPER_ADMIN') {
+          // SUPER_ADMIN doesn't have a tenant
+          setTenantIdState(null);
+          setTenantId(null);
+        }
       } else {
         throw new Error(response.error?.message || 'Login failed');
       }
@@ -112,8 +208,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * Login as a class using class code and password
-   * @param classCode - Class code (e.g., CLS-1)
-   * @param password - Class password
    */
   const classLogin = async (classCode: string, password: string) => {
     try {
@@ -162,6 +256,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Update state
         setUser(userData);
         setToken(authToken);
+        
+        // Set tenant ID if available
+        if (userData.tenantId) {
+          setTenantIdState(userData.tenantId);
+          setTenantId(userData.tenantId);
+        }
       } else {
         throw new Error(response.error?.message || 'Registration failed');
       }
@@ -171,19 +271,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
-   * Logout user
+   * Logout user - clears all data and notifies other tabs
    */
   const logout = async () => {
     try {
-      await storage.clearAuth();
-      await storage.clearClass();
-      setUser(null);
-      setToken(null);
-      setCurrentClass(null);
+      // Clear cache first
+      clearCache();
+      
+      // Clear all auth data
+      await clearAllData();
+      
+      // Storage event will automatically notify other tabs
+      // since we're removing the authToken
     } catch (error) {
       console.error('Error during logout:', error);
       throw error;
     }
+  };
+
+  /**
+   * Switch tenant context (for SUPER_ADMIN only)
+   * Clears cache before switching to prevent stale data
+   */
+  const switchTenant = async (newTenantId: string) => {
+    if (user?.role !== 'SUPER_ADMIN') {
+      console.warn('Only SUPER_ADMIN can switch tenants');
+      return;
+    }
+
+    // Don't switch to the same tenant
+    if (newTenantId === tenantId) {
+      return;
+    }
+
+    console.log('[AuthContext] Switching tenant from', tenantId, 'to', newTenantId);
+
+    // Step 1: Clear cache for current tenant BEFORE switching
+    clearCache();
+    
+    // Step 2: Update state
+    setTenantIdState(newTenantId);
+    
+    // Step 3: Update localStorage (this will trigger storage event in other tabs)
+    setTenantId(newTenantId);
+    
+    // Step 4: Clear cache for new tenant to ensure fresh data
+    // (In case there's cached data from a previous session)
+    const newCacheKeys = [
+      'products_cache',
+      'tenants_cache',
+      'students_cache',
+      'teachers_cache',
+      'classes_cache',
+      'homework_cache',
+      'news_cache',
+      'exams_cache'
+    ];
+    
+    newCacheKeys.forEach(key => {
+      localStorage.removeItem(`${key}_${newTenantId}`);
+      sessionStorage.removeItem(`${key}_${newTenantId}`);
+    });
+
+    // Reset suspended state
+    setIsTenantSuspended(false);
   };
 
   /**
@@ -202,6 +353,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAdmin = user?.role === 'ADMIN';
 
   /**
+   * Check if user is Tenant Admin
+   */
+  const isTenantAdmin = user?.role === 'TENANT_ADMIN';
+
+  /**
    * Check if user is Student
    */
   const isStudent = user?.role === 'STUDENT';
@@ -215,6 +371,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * Check if currently logged in as a class
    */
   const isClass = !!currentClass;
+
+  // Handle tenant suspended state
+  const handleTenantSuspended = useCallback(() => {
+    console.log('[AuthContext] Tenant suspended detected');
+    setIsTenantSuspended(true);
+    // Optionally redirect to suspended page
+    // window.location.href = '/tenant-suspended';
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -233,6 +397,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isStudent,
         isTeacher,
         isClass,
+        tenantId,
+        isTenantAdmin,
+        switchTenant,
+        isTenantSuspended,
+        clearCache,
       }}
     >
       {children}

@@ -1,181 +1,185 @@
+/* ============================================================================
+   CLASS DASHBOARD SCREEN - Royal Light Theme
+   Page-specific CSS for Class Overview Dashboard
+   ============================================================================ */
+
+/* ============================================================================
+   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+   ============================================================================ */
+:root {
+  --royal-bg-main: #f8fafc;
+  --royal-bg-card: #ffffff;
+  --royal-navy: #1e293b;
+  --royal-blue-primary: #2563eb;
+  --royal-blue-dark: #1d4ed8;
+  --royal-blue-light: #3b82f6;
+  --royal-purple: #7c3aed;
+  --royal-emerald: #10b981;
+  --royal-border-light: #e2e8f0;
+  --royal-border-input: #cbd5e1;
+  --royal-text-primary: #0f172a;
+  --royal-text-secondary: #475569;
+  --royal-text-muted: #64748b;
+  --royal-text-placeholder: #94a3b8;
+  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  --royal-radius-sm: 6px;
+  --royal-radius-md: 8px;
+  --royal-radius-lg: 12px;
+  --royal-radius-xl: 16px;
+  --royal-transition: all 0.2s ease-in-out;
+}
+
+/* ============================================================================
+   1. PAGE BACKGROUND & HEADER
+   ============================================================================ */
 .class-dashboard-content {
-  --background: #f5f5f5;
+  --background: var(--royal-bg-main);
+  background: var(--royal-bg-main);
 }
 
-.header-card {
-  background-color: #2e7d32;
-  padding: 24px 20px;
+.admin-toolbar {
+  --background: var(--royal-navy) !important;
+  --border-color: transparent !important;
 }
 
-.class-name {
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff;
-  margin: 0 0 16px 0;
+.admin-toolbar ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
 }
 
-.teacher-info {
-  background-color: rgba(255, 255, 255, 0.15);
-  padding: 12px;
-  border-radius: 8px;
+.admin-toolbar ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
 }
 
-.teacher-label {
-  font-size: 12px;
-  color: #a5d6a7;
-  margin: 0 0 4px 0;
+.edit-header-btn {
+  --color: #ffffff !important;
+  font-size: 18px !important;
 }
 
-.teacher-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
+/* ============================================================================
+   2. DASHBOARD CONTAINER
+   ============================================================================ */
+.dashboard-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ============================================================================
+   3. LOADING & ERROR STATES
+   ============================================================================ */
+.admin-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+  gap: 16px;
+}
+
+.error-container h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #dc2626;
   margin: 0;
 }
 
-.teacher-email {
-  font-size: 13px;
-  color: #c8e6c9;
-  margin: 2px 0 0 0;
+.btn-retry {
+  --border-radius: var(--royal-radius-md) !important;
 }
 
-/* Bento Cards */
-.class-id-bento-card {
-  margin: 16px;
-  border-radius: 16px;
-  border: 2px solid #007AFF;
-}
-
-.class-id-bento-card IonCardContent {
-  padding: 20px;
-}
-
-.password-bento-card {
-  margin: 16px;
-  border-radius: 16px;
-}
-
-.password-bento-card IonCardContent {
-  padding: 20px;
-}
-
-.bento-header {
+/* ============================================================================
+   4. HEADER CARD
+   ============================================================================ */
+.header-card {
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-xl);
+  padding: 24px;
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
   display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header-title-container {
+  flex: 1;
+}
+
+.badge-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 4px 12px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
   margin-bottom: 8px;
 }
 
-.bento-icon {
-  font-size: 20px;
-  color: #007AFF;
+.class-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0;
 }
 
-.bento-title {
-  font-size: 12px;
+.teacher-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.teacher-label {
+  font-size: 11px;
   font-weight: 700;
-  color: #007AFF;
+  color: var(--royal-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.bento-value-container {
-  background-color: #F0F7FF;
-  padding: 16px;
-  border-radius: 12px;
-  text-align: center;
-  margin-bottom: 8px;
+.teacher-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--royal-text-primary);
 }
 
-.bento-value {
-  font-size: 32px;
-  font-weight: 800;
-  color: #007AFF;
-  letter-spacing: 2px;
-}
-
-.bento-note {
+.teacher-email {
   font-size: 12px;
-  color: #666;
-  font-style: italic;
-  text-align: center;
-  margin: 0;
+  color: var(--royal-text-muted);
 }
 
-.password-bento-card .bento-icon {
-  color: #333;
-}
-
-.password-bento-card .bento-title {
-  color: #333;
-}
-
-.password-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-top: 12px;
-}
-
-.password-input-field {
-  flex: 1;
-}
-
-.reset-password-button {
-  min-width: 120px;
-}
-
-/* Edit Class Card */
-.edit-class-card {
-  margin: 16px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.edit-class-card IonCardContent {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
-}
-
-.edit-icon {
-  font-size: 18px;
-  color: #007AFF;
-}
-
-.edit-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: #007AFF;
-}
-
-/* Section Cards */
-.section {
-  margin: 16px;
-  border-radius: 12px;
-}
-
-.section IonCardContent {
-  padding: 16px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 12px 0;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-/* Metrics Grid */
+/* ============================================================================
+   5. METRICS GRID
+   ============================================================================ */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -183,27 +187,162 @@
 }
 
 .metric-card {
-  background-color: #f5f5f5;
-  padding: 16px;
-  border-radius: 8px;
+  --background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-lg);
+  padding: 20px;
+  border: 2px solid;
   text-align: center;
 }
 
+.metric-card.border-blue {
+  border-color: #bfdbfe;
+}
+
+.metric-card.border-emerald {
+  border-color: #a7f3d0;
+}
+
 .metric-value {
-  font-size: 28px;
-  font-weight: bold;
-  color: #2e7d32;
   display: block;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--royal-text-primary);
 }
 
 .metric-label {
-  font-size: 12px;
-  color: #666;
   display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--royal-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin-top: 4px;
 }
 
-/* Actions Grid */
+/* ============================================================================
+   6. BENTO CARDS
+   ============================================================================ */
+.admin-card {
+  --background: var(--royal-bg-card);
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-xl);
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
+}
+
+.admin-card ion-card-content {
+  padding: 24px;
+}
+
+.bento-card {
+  /* Additional bento styling */
+}
+
+.bento-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bento-icon-blue {
+  font-size: 24px;
+  color: var(--royal-blue-primary);
+}
+
+.bento-icon-dark {
+  font-size: 24px;
+  color: var(--royal-text-secondary);
+}
+
+.bento-title-blue {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+}
+
+.bento-title-dark {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+}
+
+.bento-value-container {
+  background: var(--royal-bg-main);
+  border-radius: var(--royal-radius-md);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.bento-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--royal-blue-primary);
+  font-family: monospace;
+  letter-spacing: 2px;
+}
+
+.bento-note {
+  font-size: 12px;
+  color: var(--royal-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.bento-note-left {
+  font-size: 13px;
+  color: var(--royal-text-secondary);
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   7. PASSWORD MANAGEMENT
+   ============================================================================ */
+.password-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.password-input-field {
+  flex: 1;
+  --background: var(--royal-bg-card) !important;
+  --color: var(--royal-text-primary) !important;
+  --placeholder-color: var(--royal-text-placeholder) !important;
+  --padding-start: 16px !important;
+  --padding-end: 16px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  font-size: 14px;
+}
+
+.reset-password-button {
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   8. SECTION BLOCKS
+   ============================================================================ */
+.section-block {
+  margin-top: 8px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--royal-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0 0 12px 4px;
+}
+
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -211,34 +350,120 @@
 }
 
 .action-button {
-  background-color: #f5f5f5;
-  padding: 16px;
-  border-radius: 8px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-lg);
+  border: 1px solid var(--royal-border-light);
   cursor: pointer;
+  transition: var(--royal-transition);
+}
+
+.action-button:hover {
+  border-color: var(--royal-blue-light);
+  box-shadow: var(--royal-shadow-card);
+}
+
+.action-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--royal-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-blue-light {
+  background: #dbeafe;
+}
+
+.bg-purple-light {
+  background: #ede9fe;
 }
 
 .action-icon {
-  font-size: 28px;
-  color: #2e7d32;
-  display: block;
-  margin-bottom: 8px;
+  font-size: 22px;
+}
+
+.text-blue {
+  color: var(--royal-blue-primary);
+}
+
+.text-purple {
+  color: var(--royal-purple);
 }
 
 .action-text {
   font-size: 13px;
-  font-weight: 500;
-  color: #333;
-  text-align: center;
+  font-weight: 600;
+  color: var(--royal-text-primary);
 }
 
-/* List Items */
+/* ============================================================================
+   9. SECTION CARDS (Homework, Exams, Announcements)
+   ============================================================================ */
+.section-card {
+  /* Inherits from admin-card */
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-header-icon {
+  font-size: 20px;
+}
+
+.text-blue {
+  color: var(--royal-blue-primary);
+}
+
+.text-purple {
+  color: var(--royal-purple);
+}
+
+.text-emerald {
+  color: var(--royal-emerald);
+}
+
+.section-header .section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.see-all-btn {
+  --color: var(--royal-blue-primary) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  height: 32px !important;
+}
+
+/* List items */
 .list-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--royal-border-light);
+  gap: 12px;
 }
 
 .list-item:last-child {
@@ -250,30 +475,50 @@
 }
 
 .list-item-title {
+  display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
-  display: block;
+  color: var(--royal-text-primary);
+  margin-bottom: 2px;
 }
 
 .list-item-subtitle {
-  font-size: 13px;
-  color: #666;
   display: block;
-  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--royal-blue-primary);
+  margin-bottom: 4px;
 }
 
 .list-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
-  color: #999;
-  display: block;
-  margin-top: 2px;
+  color: var(--royal-text-muted);
 }
 
-/* Announcement Items */
+.list-item-meta ion-icon {
+  font-size: 14px;
+}
+
+.item-action-btn {
+  --color: var(--royal-blue-primary) !important;
+  --border-color: var(--royal-blue-primary) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  height: 32px !important;
+  flex-shrink: 0;
+}
+
+/* Announcement items */
 .announcement-item {
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--royal-border-light);
+  gap: 4px;
 }
 
 .announcement-item:last-child {
@@ -283,44 +528,117 @@
 .announcement-title {
   font-size: 14px;
   font-weight: 600;
-  color: #333;
-  display: block;
+  color: var(--royal-text-primary);
 }
 
 .announcement-summary {
   font-size: 13px;
-  color: #666;
-  display: block;
-  margin-top: 4px;
+  color: var(--royal-text-secondary);
+  line-height: 1.5;
 }
 
 .announcement-date {
   font-size: 12px;
-  color: #999;
-  display: block;
+  color: var(--royal-text-muted);
   margin-top: 4px;
 }
 
-/* Empty State */
+/* Empty state */
 .empty-state {
   text-align: center;
-  padding: 20px;
+  padding: 32px 24px;
 }
 
 .empty-icon {
-  font-size: 32px;
-  color: #999;
+  font-size: 36px;
+  color: var(--royal-border-input);
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-/* Error Container */
-.error-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 24px;
-  text-align: center;
-  gap: 16px;
+.empty-text {
+  font-size: 13px;
+  color: var(--royal-text-muted);
+}
+
+/* ============================================================================
+   10. MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px 12px;
+  }
+
+  .header-card {
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .teacher-info {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metric-value {
+    font-size: 24px;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .password-input-row {
+    flex-direction: column;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .item-action-btn {
+    align-self: flex-end;
+  }
+
+  /* Ensure touch targets are 48px minimum */
+  .action-button {
+    min-height: 48px;
+  }
+
+  /* Prevent horizontal scroll */
+  ion-content {
+    --overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 12px 8px;
+  }
+
+  .header-card {
+    padding: 16px;
+  }
+
+  .admin-card ion-card-content {
+    padding: 16px;
+  }
+
+  .class-name {
+    font-size: 18px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
 }

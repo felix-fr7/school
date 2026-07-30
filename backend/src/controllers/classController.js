@@ -500,19 +500,30 @@ const deleteStudent = async (req, res, next) => {
 const getExams = async (req, res, next) => {
   try {
     const { page = 1, limit = 20 } = req.query;
+    const classId = req.user.classId;
+    const tenantId = req.user.tenantId;
+
+    if (!classId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Invalid class session. Please login again.',
+        },
+      });
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Get total count - fetch all published exams
+    // Get total count - fetch published exams for this class (including school-wide)
     const countQuery = `
       SELECT COUNT(*) as total FROM "Exam"
-      WHERE "is_published" = true
+      WHERE "is_published" = true AND "tenant_id" = $1 AND ("class_id" = $2 OR "class_id" IS NULL)
     `;
-    const countResult = await db.query(countQuery);
+    const countResult = await db.query(countQuery, [tenantId, classId]);
     const total = parseInt(countResult.rows[0].total);
 
-    // Get exams - fetch all published exams, ordered by creation date
+    // Get exams - fetch published exams for this class (including school-wide), ordered by creation date
     const examsQuery = `
       SELECT 
         e.*,
@@ -521,12 +532,12 @@ const getExams = async (req, res, next) => {
         c.section as "classSection"
       FROM "Exam" e
       LEFT JOIN "Class" c ON e."class_id" = c.id
-      WHERE e."is_published" = true
+      WHERE e."is_published" = true AND e."tenant_id" = $1 AND (e."class_id" = $2 OR e."class_id" IS NULL)
       ORDER BY e."created_at" DESC
-      LIMIT $1 OFFSET $2
+      LIMIT $3 OFFSET $4
     `;
 
-    const examsResult = await db.query(examsQuery, [take, skip]);
+    const examsResult = await db.query(examsQuery, [tenantId, classId, take, skip]);
 
     const exams = examsResult.rows.map(item => ({
       id: item.id,

@@ -1,142 +1,128 @@
 /**
  * File Upload Middleware
- * Configures multer for handling file uploads (CSV, Excel, and lesson attachments)
+ * Handles image, document, audio, and video uploads
  */
 
 const multer = require('multer');
 const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Ensure upload directories exist
+const uploadDir = path.join(__dirname, '../../uploads');
+const imageDir = path.join(uploadDir, 'images');
+const documentDir = path.join(uploadDir, 'documents');
+const audioDir = path.join(uploadDir, 'audio');
+const videoDir = path.join(uploadDir, 'videos');
 
-// Configure storage
+[uploadDir, imageDir, documentDir, audioDir, videoDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsDir);
+    let targetDir = uploadDir;
+    
+    if (file.mimetype.startsWith('image/')) {
+      targetDir = imageDir;
+    } else if (file.mimetype.startsWith('audio/')) {
+      targetDir = audioDir;
+    } else if (file.mimetype.startsWith('video/')) {
+      targetDir = videoDir;
+    } else {
+      targetDir = documentDir;
+    }
+    
+    cb(null, targetDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  },
+    const ext = path.extname(file.originalname);
+    const filename = `${uuidv4()}${ext}`;
+    cb(null, filename);
+  }
 });
 
-// File filter - only allow CSV and Excel files (for student import)
-const csvFileFilter = (req, file, cb) => {
-  const allowedMimes = [
-    'text/csv',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  ];
+// File filter
+const fileFilter = (req, file, cb) => {
+  const allowedMimeTypes = {
+    image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+    document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/plain'],
+    audio: ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mp4'],
+    video: ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm']
+  };
 
-  if (allowedMimes.includes(file.mimetype)) {
+  const allAllowedTypes = Object.values(allowedMimeTypes).flat();
+
+  if (allAllowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only CSV and Excel files are allowed'), false);
+    cb(new Error(`File type ${file.mimetype} is not allowed`), false);
   }
 };
 
-// File filter - allow exam schedule uploads (PDF, Images only)
-const examScheduleFileFilter = (req, file, cb) => {
-  const allowedMimes = [
-    // Images
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-    // PDF
-    'application/pdf',
-  ];
-
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('File type not allowed. Allowed types: PDF, Images (JPG, PNG, WebP)'), false);
-  }
-};
-
-// File filter - allow lesson attachments (PDF, Images, Documents)
-const lessonFileFilter = (req, file, cb) => {
-  const allowedMimes = [
-    // Documents
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    // Images
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-  ];
-
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('File type not allowed. Allowed types: PDF, Images (JPG, PNG, GIF, WebP), Documents (DOC, DOCX, XLS, XLSX)'), false);
-  }
-};
-
-// Configure multer for CSV uploads (existing)
+// Upload configuration
 const upload = multer({
   storage,
-  fileFilter: csvFileFilter,
+  fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-    files: 1,
-  },
-});
-
-// Configure multer for exam schedule uploads
-const uploadExamSchedule = multer({
-  storage,
-  fileFilter: examScheduleFileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit for exam schedules
-    files: 1,
-  },
-});
-
-// Configure multer for lesson attachments (new)
-const uploadLesson = multer({
-  storage,
-  fileFilter: lessonFileFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit for lesson attachments
-    files: 1,
-  },
-});
-
-// Middleware to handle file upload errors
-const handleFileUploadError = (err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'File too large. Maximum size is 5MB.',
-        },
-      });
-    }
-    return res.status(400).json({
-      success: false,
-      error: {
-        message: err.message,
-      },
-    });
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024, // 10MB default
+    files: 5 // Maximum 5 files per request
   }
-  if (err) {
-    return res.status(400).json({
-      success: false,
-      error: {
-        message: err.message,
-      },
-    });
-  }
-  next();
+});
+
+// Single file upload
+const uploadSingle = (fieldName) => {
+  return upload.single(fieldName);
 };
 
-module.exports = { upload, uploadLesson, uploadExamSchedule, handleFileUploadError };
+// Multiple file upload
+const uploadArray = (fieldName, maxCount) => {
+  return upload.array(fieldName, maxCount);
+};
+
+// Fields upload (different field names)
+const uploadFields = (fields) => {
+  return upload.fields(fields);
+};
+
+// File deletion helper
+const deleteFile = (filePath) => {
+  return new Promise((resolve, reject) => {
+    if (!filePath) {
+      resolve(true);
+      return;
+    }
+    
+    // Extract relative path from URL
+    const relativePath = filePath.replace('/uploads/', '');
+    const fullPath = path.join(__dirname, '../../', relativePath);
+    
+    fs.unlink(fullPath, (err) => {
+      if (err && err.code !== 'ENOENT') {
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+};
+
+// File URL helper
+const getFileUrl = (filename, subfolder = '') => {
+  const baseUrl = `${process.env.API_URL || 'http://localhost:3000'}/uploads`;
+  return subfolder 
+    ? `${baseUrl}/${subfolder}/${filename}`
+    : `${baseUrl}/${filename}`;
+};
+
+module.exports = {
+  uploadSingle,
+  uploadArray,
+  uploadFields,
+  deleteFile,
+  getFileUrl,
+  uploadDir
+};

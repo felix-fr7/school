@@ -1,0 +1,398 @@
+/* ============================================================================
+   CREATE NEWS SCREEN - Royal Light Theme
+   Page-specific CSS for News Post Creation
+   ============================================================================ */
+
+/* ============================================================================
+   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+   ============================================================================ */
+:root {
+  --royal-bg-main: #f8fafc;
+  --royal-bg-card: #ffffff;
+  --royal-navy: #1e293b;
+  --royal-blue-primary: #2563eb;
+  --royal-blue-dark: #1d4ed8;
+  --royal-blue-light: #3b82f6;
+  --royal-border-light: #e2e8f0;
+  --royal-border-input: #cbd5e1;
+  --royal-text-primary: #0f172a;
+  --royal-text-secondary: #475569;
+  --royal-text-muted: #64748b;
+  --royal-text-placeholder: #94a3b8;
+  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  --royal-radius-sm: 6px;
+  --royal-radius-md: 8px;
+  --royal-radius-lg: 12px;
+  --royal-radius-xl: 16px;
+  --royal-transition: all 0.2s ease-in-out;
+}
+
+/* ============================================================================
+   1. PAGE BACKGROUND & HEADER
+   ============================================================================ */
+.create-news-content {
+  --background: var(--royal-bg-main);
+  background: var(--royal-bg-main);
+}
+
+.create-news-header,
+.create-news-header .admin-toolbar {
+  --background: var(--royal-navy) !important;
+  --border-color: transparent !important;
+}
+
+.create-news-header ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
+}
+
+.create-news-header ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+}
+
+/* ============================================================================
+   2. CONTAINER
+   ============================================================================ */
+.create-news-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+/* ============================================================================
+   3. PAGE HEADER
+   ============================================================================ */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0 0 8px 0;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   4. ADMIN CARD MODERN
+   ============================================================================ */
+.admin-card-modern {
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-xl);
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
+  --background: var(--royal-bg-card);
+}
+
+.admin-card-modern ion-card-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--royal-border-light);
+}
+
+.admin-card-modern ion-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-card-modern ion-card-content {
+  padding: 24px;
+}
+
+/* ============================================================================
+   5. FORM GRID
+   ============================================================================ */
+.form-grid-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-row-two-col {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row-two-col .input-field-modern {
+  flex: 1;
+}
+
+.input-field-modern {
+  margin-bottom: 0;
+}
+
+/* ============================================================================
+   6. FIELD LABELS
+   ============================================================================ */
+.field-label-modern {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--royal-blue-primary) !important;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   7. CUSTOM INPUT ITEMS
+   ============================================================================ */
+.custom-input-item-modern {
+  --background: var(--royal-bg-card);
+  --border-radius: var(--royal-radius-md);
+  --inner-border-width: 0;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  transition: var(--royal-transition);
+}
+
+.custom-input-item-modern:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
+}
+
+.custom-text-input-modern {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: var(--royal-text-primary);
+  min-height: 48px;
+}
+
+.custom-text-input-modern::placeholder {
+  color: var(--royal-text-placeholder);
+}
+
+.custom-textarea-modern {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: var(--royal-text-primary);
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+.textarea-item-modern {
+  min-height: auto;
+}
+
+/* Field icon */
+.field-icon-modern {
+  font-size: 18px;
+  color: var(--royal-text-muted);
+  margin-right: 8px;
+}
+
+/* ============================================================================
+   8. ADMIN SELECT MODERN
+   ============================================================================ */
+.admin-select-modern {
+  --background: transparent;
+  --color: var(--royal-text-primary);
+  --placeholder-color: var(--royal-text-placeholder);
+  font-size: 14px;
+  min-height: 48px;
+}
+
+/* ============================================================================
+   9. FILE UPLOAD
+   ============================================================================ */
+.file-upload-dropzone-modern {
+  border: 2px dashed var(--royal-border-input);
+  background: var(--royal-bg-main);
+  border-radius: var(--royal-radius-lg);
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--royal-transition);
+}
+
+.file-upload-dropzone-modern:hover {
+  border-color: var(--royal-blue-primary);
+  background: #eff6ff;
+}
+
+.upload-icon-modern {
+  font-size: 32px;
+  color: var(--royal-blue-light);
+  margin-bottom: 12px;
+}
+
+.upload-text-modern {
+  font-size: 14px;
+  color: var(--royal-text-secondary);
+  margin: 0 0 4px 0;
+}
+
+.upload-hint-modern {
+  font-size: 12px;
+  color: var(--royal-text-muted);
+}
+
+/* File preview */
+.file-preview-card-modern {
+  background: var(--royal-bg-main);
+  border: 1px solid var(--royal-border-light);
+  border-radius: var(--royal-radius-md);
+  padding: 16px;
+}
+
+.file-info-row-modern {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-type-icon-modern {
+  font-size: 24px;
+  color: var(--royal-blue-primary);
+}
+
+.file-details-modern {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name-modern {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--royal-text-primary);
+}
+
+.file-size-modern {
+  font-size: 11px;
+  color: var(--royal-text-muted);
+}
+
+.remove-file-btn-modern {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.image-preview-container-modern {
+  margin-top: 16px;
+  max-height: 200px;
+  overflow: hidden;
+  border-radius: var(--royal-radius-md);
+}
+
+.image-preview-modern {
+  width: 100%;
+  object-fit: cover;
+}
+
+/* ============================================================================
+   10. INFO BOX
+   ============================================================================ */
+.info-box-modern {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #eff6ff;
+  border-radius: var(--royal-radius-md);
+  color: var(--royal-blue-dark);
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid #bfdbfe;
+}
+
+.info-box-modern ion-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   11. PRIMARY BUTTON
+   ============================================================================ */
+.primary-btn-modern {
+  --background: var(--royal-blue-primary) !important;
+  --background-activated: var(--royal-blue-dark) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  --box-shadow: none !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  font-size: 14px !important;
+  margin-top: 8px;
+}
+
+/* ============================================================================
+   12. MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .create-news-container {
+    padding: 16px 12px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .admin-card-modern ion-card-content {
+    padding: 16px;
+  }
+
+  .form-row-two-col {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .custom-input-item-modern,
+  .custom-text-input-modern,
+  .custom-textarea-modern,
+  .admin-select-modern {
+    min-height: 48px;
+  }
+
+  .file-upload-dropzone-modern {
+    padding: 24px;
+  }
+
+  /* Prevent horizontal scroll */
+  ion-content {
+    --overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-news-container {
+    padding: 12px 8px;
+  }
+
+  .page-title {
+    font-size: 18px;
+  }
+}

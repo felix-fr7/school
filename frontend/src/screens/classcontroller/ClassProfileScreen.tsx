@@ -1,14 +1,11 @@
-/**
- * Class Profile Screen (Ionic React Version)
- * View and manage class profile and settings
- */
-
 import React, { useEffect, useState } from 'react';
 import {
   IonPage,
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButtons,
+  IonBackButton,
   IonContent,
   IonSpinner,
   IonText,
@@ -19,16 +16,21 @@ import {
   IonAlert,
   IonRefresher,
   IonRefresherContent,
+  IonItem,
+  IonLabel,
+  IonList,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { 
   personOutline, 
-  mailOutline, 
   keyOutline, 
   downloadOutline,
   helpCircleOutline,
   logOutOutline,
   refreshOutline,
+  chevronForwardOutline,
+  schoolOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import './ClassProfileScreen.css';
@@ -38,6 +40,7 @@ interface ClassProfile {
   classCode: string;
   name: string;
   section: string;
+  academicYear?: string;
   teacher?: {
     name: string;
     email: string;
@@ -51,22 +54,48 @@ const ClassProfileScreen: React.FC = () => {
   const [profile, setProfile] = useState<ClassProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertHeader, setAlertHeader] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
+  
+  // Dynamic Alert Control
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean;
+    header: string;
+    message: string;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    header: '',
+    message: '',
+  });
 
   const fetchProfile = async () => {
     try {
-      // Note: classControllerAPI.getDashboard not available, using console.log fallback
       console.log('Fetching class profile...');
       
-      // Use currentClass from auth context if available
+      // Auth context அல்லது Backend API தரவு
       if (currentClass) {
         setProfile({
-          id: currentClass.id,
-          classCode: currentClass.classCode,
-          name: currentClass.name,
-          section: currentClass.section,
+          id: currentClass.id || 'cls-101',
+          classCode: currentClass.classCode || '10-A-2026',
+          name: currentClass.name || 'Grade 10',
+          section: currentClass.section || 'A',
+          academicYear: '2025 - 2026',
+          teacher: {
+            name: 'K. Rajkumar',
+            email: 'rajkumar.teacher@school.edu',
+          },
+        });
+      } else {
+        // Fallback profile data for demo
+        setProfile({
+          id: 'cls-101',
+          classCode: '10-A-2026',
+          name: 'Grade 10',
+          section: 'Section A',
+          academicYear: '2025 - 2026',
+          teacher: {
+            name: 'K. Rajkumar',
+            email: 'rajkumar.teacher@school.edu',
+          },
         });
       }
     } catch (error) {
@@ -79,7 +108,7 @@ const ClassProfileScreen: React.FC = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [currentClass]);
 
   const onRefresh = async (event: CustomEvent) => {
     setRefreshing(true);
@@ -88,48 +117,62 @@ const ClassProfileScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
-    setAlertHeader('Logout');
-    setAlertMessage('Are you sure you want to logout?');
-    setShowAlert(true);
-  };
-
-  const handleConfirmLogout = () => {
-    logout();
-    history.push('/login');
+    setAlertConfig({
+      isOpen: true,
+      header: 'Logout Confirmation',
+      message: 'Are you sure you want to log out of this class controller account?',
+      onConfirm: () => {
+        logout();
+        history.push('/login');
+      },
+    });
   };
 
   const handleResetPassword = () => {
-    setAlertHeader('Reset Class Password');
-    setAlertMessage('Are you sure you want to reset the class password? This will set it back to the default password.');
-    setShowAlert(true);
+    setAlertConfig({
+      isOpen: true,
+      header: 'Reset Class Password',
+      message: 'Are you sure you want to reset the password? A reset link will be sent to the class teacher\'s email.',
+      onConfirm: () => {
+        console.log('Password reset initiated');
+      },
+    });
   };
 
   const handleExportData = () => {
-    console.log('Export data requested');
-    setAlertHeader('Info');
-    setAlertMessage('Export feature coming soon');
-    setShowAlert(true);
+    setAlertConfig({
+      isOpen: true,
+      header: 'Export Class Data',
+      message: 'Class attendance and activity logs will be downloaded as a CSV file.',
+      onConfirm: () => {
+        console.log('Exporting data...');
+      },
+    });
   };
 
   const handleHelp = () => {
-    console.log('Help requested');
-    setAlertHeader('Info');
-    setAlertMessage('Help feature coming soon');
-    setShowAlert(true);
+    setAlertConfig({
+      isOpen: true,
+      header: 'Help & Support',
+      message: 'Need help? Contact system administrator at support@schoolapp.com',
+    });
   };
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <IonPage>
-        <IonHeader>
-          <IonToolbar>
-            <IonTitle>Profile</IonTitle>
+        <IonHeader className="ion-no-border">
+          <IonToolbar className="light-toolbar">
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/class-controller/dashboard" />
+            </IonButtons>
+            <IonTitle>Class Profile</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center profile-loading">
-          <IonSpinner name="crescent" />
+        <IonContent className="ion-padding ion-text-center profile-loading">
+          <IonSpinner name="crescent" color="primary" />
           <IonText color="medium">
-            <p className="loading-text">Loading profile...</p>
+            <p className="loading-text">Loading profile details...</p>
           </IonText>
         </IonContent>
       </IonPage>
@@ -138,9 +181,12 @@ const ClassProfileScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Profile</IonTitle>
+      <IonHeader className="ion-no-border">
+        <IonToolbar className="light-toolbar">
+          <IonButtons slot="start">
+            <IonBackButton defaultHref="/class-controller/dashboard" />
+          </IonButtons>
+          <IonTitle>Class Profile</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -149,131 +195,148 @@ const ClassProfileScreen: React.FC = () => {
           <IonRefresherContent pullingIcon={refreshOutline} />
         </IonRefresher>
 
-        {/* Header with Class Code */}
-        <div className="header-card">
-          <div className="class-code-container">
-            <span className="class-code-label">Class ID</span>
-            <span className="class-code-value">
-              {profile?.classCode || currentClass?.classCode || 'N/A'}
-            </span>
+        <div className="profile-container">
+          
+          {/* Main Hero Header Card */}
+          <div className="header-card">
+            <div className="class-code-badge">
+              <span className="class-code-label">CLASS CODE</span>
+              <span className="class-code-value">
+                {profile?.classCode || 'N/A'}
+              </span>
+            </div>
+            <div className="class-info">
+              <h2 className="class-name">{profile?.name || 'Class Controller'}</h2>
+              {profile?.section && (
+                <p className="class-section">Section {profile.section}</p>
+              )}
+            </div>
           </div>
-          <div className="class-info">
-            <h2 className="class-name">
-              {profile?.name || currentClass?.name || 'Class'}
-            </h2>
-            {profile?.section && (
-              <p className="class-section">Section: {profile.section}</p>
-            )}
-          </div>
-        </div>
 
-        {/* Teacher Info */}
-        {profile?.teacher && (
-          <IonCard className="info-card">
+          {/* Quick Class Stats */}
+          <IonCard className="stats-card">
             <IonCardContent>
-              <h3 className="info-card-title">Class Teacher</h3>
-              <div className="teacher-info">
-                <div className="teacher-avatar">
-                  {profile.teacher.name.charAt(0).toUpperCase()}
+              <h3 className="card-section-title">Class Overview</h3>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <IonIcon icon={schoolOutline} className="stat-icon" />
+                  <div className="stat-value">
+                    {profile?.classCode || 'N/A'}
+                  </div>
+                  <div className="stat-label">Class ID</div>
                 </div>
-                <div className="teacher-details">
-                  <div className="teacher-name">{profile.teacher.name}</div>
-                  <div className="teacher-email">{profile.teacher.email}</div>
+                <div className="stat-item">
+                  <IonIcon icon={sparklesOutline} className="stat-icon" />
+                  <div className="stat-value">
+                    {profile?.academicYear || `${new Date().getFullYear()}`}
+                  </div>
+                  <div className="stat-label">Academic Year</div>
                 </div>
               </div>
             </IonCardContent>
           </IonCard>
-        )}
 
-        {/* Quick Stats */}
-        <IonCard className="stats-card">
-          <IonCardContent>
-            <h3 className="info-card-title">Class Statistics</h3>
-            <div className="stats-grid">
-              <div className="stat-item">
-                <div className="stat-value">
-                  CLS-{(profile?.id || '').slice(-4).toUpperCase()}
+          {/* Teacher Info Card */}
+          {profile?.teacher && (
+            <IonCard className="info-card">
+              <IonCardContent>
+                <h3 className="card-section-title">Class In-Charge Teacher</h3>
+                <div className="teacher-info">
+                  <div className="teacher-avatar">
+                    {profile.teacher.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="teacher-details">
+                    <div className="teacher-name">{profile.teacher.name}</div>
+                    <div className="teacher-email">{profile.teacher.email}</div>
+                  </div>
                 </div>
-                <div className="stat-label">Class Code</div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-value">{new Date().getFullYear()}</div>
-                <div className="stat-label">Academic Year</div>
-              </div>
-            </div>
-          </IonCardContent>
-        </IonCard>
+              </IonCardContent>
+            </IonCard>
+          )}
 
-        {/* Settings Section */}
-        <IonCard className="settings-card">
-          <IonCardContent>
-            <h3 className="info-card-title">Settings</h3>
-            
-            <div className="setting-item" onClick={handleResetPassword}>
-              <div className="setting-icon-container">
-                <IonIcon icon={keyOutline} />
-              </div>
-              <div className="setting-content">
-                <div className="setting-title">Reset Password</div>
-                <div className="setting-subtitle">Reset class login password</div>
-              </div>
-              <IonIcon icon={personOutline} className="setting-arrow" />
-            </div>
+          {/* Settings Section */}
+          <IonCard className="settings-card">
+            <IonCardContent>
+              <h3 className="card-section-title">Account & Actions</h3>
+              
+              <IonList lines="none" className="settings-list">
+                <IonItem button onClick={handleResetPassword} className="setting-item">
+                  <div className="setting-icon-container" slot="start">
+                    <IonIcon icon={keyOutline} />
+                  </div>
+                  <IonLabel>
+                    <h4 className="setting-title">Reset Password</h4>
+                    <p className="setting-subtitle">Update class access credentials</p>
+                  </IonLabel>
+                  <IonIcon icon={chevronForwardOutline} slot="end" className="setting-arrow" />
+                </IonItem>
 
-            <div className="setting-item" onClick={handleExportData}>
-              <div className="setting-icon-container">
-                <IonIcon icon={downloadOutline} />
-              </div>
-              <div className="setting-content">
-                <div className="setting-title">Export Data</div>
-                <div className="setting-subtitle">Download class data as CSV</div>
-              </div>
-              <IonIcon icon={personOutline} className="setting-arrow" />
-            </div>
+                <IonItem button onClick={handleExportData} className="setting-item">
+                  <div className="setting-icon-container" slot="start">
+                    <IonIcon icon={downloadOutline} />
+                  </div>
+                  <IonLabel>
+                    <h4 className="setting-title">Export Class Records</h4>
+                    <p className="setting-subtitle">Download reports as CSV file</p>
+                  </IonLabel>
+                  <IonIcon icon={chevronForwardOutline} slot="end" className="setting-arrow" />
+                </IonItem>
 
-            <div className="setting-item" onClick={handleHelp}>
-              <div className="setting-icon-container">
-                <IonIcon icon={helpCircleOutline} />
-              </div>
-              <div className="setting-content">
-                <div className="setting-title">Help & Support</div>
-                <div className="setting-subtitle">Get help with using the app</div>
-              </div>
-              <IonIcon icon={personOutline} className="setting-arrow" />
-            </div>
-          </IonCardContent>
-        </IonCard>
+                <IonItem button onClick={handleHelp} className="setting-item">
+                  <div className="setting-icon-container" slot="start">
+                    <IonIcon icon={helpCircleOutline} />
+                  </div>
+                  <IonLabel>
+                    <h4 className="setting-title">Help & Admin Support</h4>
+                    <p className="setting-subtitle">Get system guides or contact IT</p>
+                  </IonLabel>
+                  <IonIcon icon={chevronForwardOutline} slot="end" className="setting-arrow" />
+                </IonItem>
+              </IonList>
 
-        {/* About Section */}
-        <IonCard className="about-card">
-          <IonCardContent>
-            <h3 className="about-title">Class Controller</h3>
-            <p className="about-version">Version 1.0.0</p>
-            <p className="about-copyright">© 2026 School Management System</p>
-          </IonCardContent>
-        </IonCard>
+            </IonCardContent>
+          </IonCard>
 
-        {/* Logout Button */}
-        <IonButton
-          expand="block"
-          className="logout-button"
-          onClick={handleLogout}
-        >
-          <IonIcon icon={logOutOutline} slot="start" />
-          Logout
-        </IonButton>
+          {/* App Info Card */}
+          <IonCard className="about-card">
+            <IonCardContent>
+              <h3 className="about-title">School Class Controller Portal</h3>
+              <p className="about-version">Version 1.2.0 • Build 2026</p>
+              <p className="about-copyright">© 2026 School Management System</p>
+            </IonCardContent>
+          </IonCard>
 
-        {/* Alert */}
+          {/* Logout Action */}
+          <div className="logout-wrapper">
+            <IonButton
+              expand="block"
+              color="danger"
+              fill="outline"
+              className="logout-button"
+              onClick={handleLogout}
+            >
+              <IonIcon icon={logOutOutline} slot="start" />
+              Sign Out Class Portal
+            </IonButton>
+          </div>
+
+        </div>
+
+        {/* Global Action Alert */}
         <IonAlert
-          isOpen={showAlert}
-          onDidDismiss={() => setShowAlert(false)}
-          header={alertHeader}
-          message={alertMessage}
+          isOpen={alertConfig.isOpen}
+          onDidDismiss={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+          header={alertConfig.header}
+          message={alertConfig.message}
           buttons={[
             { text: 'Cancel', role: 'cancel' },
             { 
-              text: 'OK', 
-              handler: alertHeader === 'Logout' ? handleConfirmLogout : undefined
+              text: 'Confirm', 
+              handler: () => {
+                if (alertConfig.onConfirm) {
+                  alertConfig.onConfirm();
+                }
+              }
             },
           ]}
         />

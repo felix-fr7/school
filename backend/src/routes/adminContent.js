@@ -10,7 +10,6 @@ const adminContentController = require('../controllers/adminContentController');
 const { protect, requireAdmin } = require('../middleware/auth');
 const { uploadLesson, handleFileUploadError } = require('../middleware/fileUpload');
 const storageService = require('../services/storageService');
-const fs = require('fs');
 
 const router = express.Router();
 
@@ -242,7 +241,7 @@ router.post(
       // Fallback if storage service isn't configured
       if (!storageService.isConfigured()) {
         console.warn('[Upload] Storage service not configured, returning mock URL.');
-        fs.unlinkSync(req.file.path);
+        // No cleanup needed - using memory storage
 
         const isPdf = req.file.mimetype === 'application/pdf';
         const mockUrl = isPdf
@@ -261,19 +260,15 @@ router.post(
         });
       }
 
-      // Upload to Supabase Storage
-      const fileBuffer = fs.readFileSync(req.file.path);
+      // Upload to Supabase Storage using buffer from memory storage
       const uploadResult = await storageService.uploadFile(
-        fileBuffer,
+        req.file.buffer,
         req.file.originalname,
         tenantId,
         null, // classId is optional for admin uploads
         null, // lessonLogId is optional for admin uploads
         req.file.mimetype
       );
-
-      // Clean up local temp file
-      fs.unlinkSync(req.file.path);
 
       res.status(200).json({
         success: true,
@@ -285,9 +280,7 @@ router.post(
         },
       });
     } catch (error) {
-      if (req.file && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
+      // No file cleanup needed - using memory storage
       next(error);
     }
   }

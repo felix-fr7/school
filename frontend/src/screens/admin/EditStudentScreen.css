@@ -1,0 +1,263 @@
+/* ============================================================================
+   EDIT STUDENT SCREEN - Royal Light Theme
+   Page-specific CSS for Student Profile Editing
+   ============================================================================ */
+
+/* ============================================================================
+   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+   ============================================================================ */
+:root {
+  --royal-bg-main: #f8fafc;
+  --royal-bg-card: #ffffff;
+  --royal-navy: #1e293b;
+  --royal-blue-primary: #2563eb;
+  --royal-blue-dark: #1d4ed8;
+  --royal-blue-light: #3b82f6;
+  --royal-border-light: #e2e8f0;
+  --royal-border-input: #cbd5e1;
+  --royal-text-primary: #0f172a;
+  --royal-text-secondary: #475569;
+  --royal-text-muted: #64748b;
+  --royal-text-placeholder: #94a3b8;
+  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  --royal-radius-sm: 6px;
+  --royal-radius-md: 8px;
+  --royal-radius-lg: 12px;
+  --royal-radius-xl: 16px;
+  --royal-transition: all 0.2s ease-in-out;
+}
+
+/* ============================================================================
+   1. PAGE BACKGROUND & HEADER
+   ============================================================================ */
+.edit-student-content {
+  --background: var(--royal-bg-main);
+  background: var(--royal-bg-main);
+}
+
+.admin-toolbar {
+  --background: var(--royal-navy) !important;
+  --border-color: transparent !important;
+}
+
+.admin-toolbar ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
+}
+
+.admin-toolbar ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+}
+
+/* Loading container */
+.admin-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+}
+
+/* ============================================================================
+   2. FORM CONTAINER
+   ============================================================================ */
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+/* ============================================================================
+   3. ADMIN CARDS
+   ============================================================================ */
+.admin-card {
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-xl);
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
+  margin-bottom: 20px;
+  --background: var(--royal-bg-card);
+}
+
+.admin-card ion-card-content {
+  padding: 24px;
+}
+
+.card-header-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--royal-border-light);
+}
+
+.card-header-icon {
+  font-size: 20px;
+  color: var(--royal-blue-primary);
+}
+
+.card-header-badge span {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+}
+
+/* ============================================================================
+   4. INPUT FIELD GROUPS
+   ============================================================================ */
+.input-field-group {
+  margin-bottom: 20px;
+}
+
+.input-field-group:last-child {
+  margin-bottom: 0;
+}
+
+.admin-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--royal-blue-primary) !important;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.helper-text {
+  font-size: 12px;
+  margin-top: 6px;
+  display: block;
+}
+
+/* ============================================================================
+   5. INPUT WITH ICON
+   ============================================================================ */
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--royal-text-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-with-icon .admin-input {
+  --background: var(--royal-bg-card) !important;
+  --color: var(--royal-text-primary) !important;
+  --placeholder-color: var(--royal-text-placeholder) !important;
+  --padding-start: 48px !important;
+  --padding-end: 16px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  font-size: 14px;
+  transition: var(--royal-transition);
+}
+
+.input-with-icon .admin-input:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
+}
+
+/* ============================================================================
+   6. ADMIN SELECT
+   ============================================================================ */
+.admin-select {
+  --background: var(--royal-bg-card);
+  --color: var(--royal-text-primary);
+  --placeholder-color: var(--royal-text-placeholder);
+  --padding-start: 16px;
+  --padding-end: 16px;
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  min-height: 48px;
+  font-size: 14px;
+  transition: var(--royal-transition);
+}
+
+.admin-select:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
+}
+
+/* ============================================================================
+   7. BUTTON ACTIONS
+   ============================================================================ */
+.button-actions-container {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.button-actions-container ion-button {
+  flex: 1;
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+}
+
+.btn-save {
+  --background: var(--royal-blue-primary) !important;
+  --background-activated: var(--royal-blue-dark) !important;
+}
+
+.btn-cancel {
+  --color: var(--royal-text-secondary) !important;
+  --border-color: var(--royal-border-input) !important;
+}
+
+/* ============================================================================
+   8. MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 16px 12px;
+  }
+
+  .admin-card ion-card-content {
+    padding: 16px;
+  }
+
+  .button-actions-container {
+    flex-direction: column-reverse;
+  }
+
+  .input-with-icon .admin-input,
+  .admin-select {
+    min-height: 48px;
+  }
+
+  ion-content {
+    --overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-container {
+    padding: 12px 8px;
+  }
+
+  .admin-card ion-card-content {
+    padding: 12px;
+  }
+}

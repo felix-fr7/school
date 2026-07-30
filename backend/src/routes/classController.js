@@ -122,7 +122,24 @@ router.delete('/homework/:id', adminController.deleteHomework);
 router.get('/circulars', contentController.getCirculars);
 
 // ============================================
-// Exam Schedule Routes (using contentController)
+// Exam Schedule Routes (New Exam table - PDF/Image based)
+// ============================================
+
+/**
+ * GET /api/class-controller/exams
+ * List all published exams (including school-wide) for the class
+ * Query params: page, limit
+ */
+router.get('/exams', classController.getExams);
+
+/**
+ * GET /api/class-controller/exams/:id
+ * Get single exam details
+ */
+router.get('/exams/:id', classController.getExamById);
+
+// ============================================
+// Exam Schedule Routes (Legacy - using contentController)
 // ============================================
 
 /**

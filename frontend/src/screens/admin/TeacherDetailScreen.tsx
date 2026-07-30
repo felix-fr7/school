@@ -25,6 +25,7 @@ import { useParams, useHistory } from 'react-router-dom';
 import { mailOutline, callOutline, bookOutline, trashOutline, createOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import { User } from '../../types';
+import './AdminTheme.css';
 
 interface TeacherDetailParams {
   teacherId: string;

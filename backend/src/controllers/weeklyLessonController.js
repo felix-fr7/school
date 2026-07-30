@@ -5,8 +5,6 @@
  */
 
 const db = require('../config/db');
-const storageService = require('../services/storageService');
-const fs = require('fs');
 
 // ============================================
 // TEACHER ENDPOINTS
@@ -192,17 +190,6 @@ const deleteWeeklyLesson = async (req, res, next) => {
 
     const lesson = lessonResult.rows[0];
 
-    // Delete all attachments from storage
-    const attachments = lesson.attachments || [];
-    for (const attachment of attachments) {
-      try {
-        await storageService.deleteFile(attachment.path);
-      } catch (err) {
-        console.error('Error deleting attachment from storage:', err);
-        // Continue even if storage delete fails
-      }
-    }
-
     // Delete lesson from database
     await db.query('DELETE FROM "WeeklyLessonLog" WHERE id = $1', [id]);
 
@@ -243,8 +230,6 @@ const uploadAttachment = async (req, res, next) => {
     const lessonResult = await db.query(lessonQuery, [id, tenantId]);
 
     if (lessonResult.rows.length === 0) {
-      // Clean up uploaded file
-      fs.unlinkSync(req.file.path);
       return res.status(404).json({
         success: false,
         error: { message: 'Lesson not found or you do not have permission to upload.' },
@@ -253,32 +238,23 @@ const uploadAttachment = async (req, res, next) => {
 
     const lesson = lessonResult.rows[0];
 
-    // Check if Supabase storage is configured
-    if (!storageService.isConfigured()) {
-      fs.unlinkSync(req.file.path);
-      return res.status(503).json({
-        success: false,
-        error: { message: 'File storage is not configured. Please contact the administrator.' },
-      });
-    }
+    // Store file directly in database as BYTEA
+    const fileBuffer = req.file.buffer;
+    const fileMimeType = req.file.mimetype;
+    const fileName = req.file.originalname;
 
-    // Upload to Supabase Storage
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const uploadResult = await storageService.uploadFile(
-      fileBuffer,
-      req.file.originalname,
-      tenantId,
-      lesson.classId,
-      lesson.id,
-      req.file.mimetype
-    );
-
-    // Clean up local file
-    fs.unlinkSync(req.file.path);
+    // Create attachment record
+    const attachmentRecord = {
+      fileName,
+      mimeType: fileMimeType,
+      size: fileBuffer.length,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: teacherId
+    };
 
     // Update lesson attachments JSONB
-    const attachments = lesson.attachments || [];
-    attachments.push(uploadResult);
+    const attachments = lesson.attachments ? JSON.parse(lesson.attachments) : [];
+    attachments.push(attachmentRecord);
 
     const updateQuery = `
       UPDATE "WeeklyLessonLog" 
@@ -296,16 +272,12 @@ const uploadAttachment = async (req, res, next) => {
       success: true,
       data: {
         lesson: updateResult.rows[0],
-        attachment: uploadResult,
+        attachment: attachmentRecord,
       },
       message: 'Attachment uploaded successfully',
     });
   } catch (error) {
     console.error('UploadAttachment Error:', error);
-    // Clean up file on error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
     next(error);
   }
 };
@@ -350,15 +322,6 @@ const deleteAttachment = async (req, res, next) => {
         success: false,
         error: { message: 'Attachment not found.' },
       });
-    }
-
-    // Delete from storage
-    const attachment = attachments[index];
-    try {
-      await storageService.deleteFile(attachment.path);
-    } catch (err) {
-      console.error('Error deleting attachment from storage:', err);
-      // Continue to remove from database even if storage delete fails
     }
 
     // Remove from array

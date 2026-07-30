@@ -1,297 +1,348 @@
-/* ============================================
-   Teachers List Screen - Modern Admin Design
-   ============================================ */
+/* ============================================================================
+   TEACHERS LIST SCREEN - Royal Light Theme
+   Page-specific CSS for Teachers Management List
+   ============================================================================ */
 
-@import './AdminDesignSystem.css';
+/* ============================================================================
+   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+   ============================================================================ */
+:root {
+  --royal-bg-main: #f8fafc;
+  --royal-bg-card: #ffffff;
+  --royal-navy: #1e293b;
+  --royal-blue-primary: #2563eb;
+  --royal-blue-dark: #1d4ed8;
+  --royal-blue-light: #3b82f6;
+  --royal-border-light: #e2e8f0;
+  --royal-border-input: #cbd5e1;
+  --royal-text-primary: #0f172a;
+  --royal-text-secondary: #475569;
+  --royal-text-muted: #64748b;
+  --royal-text-placeholder: #94a3b8;
+  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  --royal-radius-sm: 6px;
+  --royal-radius-md: 8px;
+  --royal-radius-lg: 12px;
+  --royal-radius-xl: 16px;
+  --royal-transition: all 0.2s ease-in-out;
+}
 
+/* ============================================================================
+   1. PAGE BACKGROUND & HEADER
+   ============================================================================ */
 .teachers-list-content {
-  --background: var(--admin-bg);
+  --background: var(--royal-bg-main);
+  background: var(--royal-bg-main);
 }
 
-/* Modern Header */
-.teachers-list-header {
-  box-shadow: var(--admin-shadow-sm);
+.teachers-list-header,
+.teachers-list-header .admin-toolbar {
+  --background: var(--royal-navy) !important;
+  --border-color: transparent !important;
 }
 
-.teachers-list-header ion-toolbar {
-  --background: var(--admin-white);
-  --border-color: transparent;
+.teachers-list-header ion-title {
+  --color: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
 }
 
-/* Filter Bar */
-.filter-bar-modern {
-  padding: var(--admin-spacing-xl) var(--admin-spacing-2xl);
-  background-color: var(--admin-white);
-  border-bottom: 1px solid var(--admin-border);
+.teachers-list-header ion-back-button {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
 }
 
-.search-container-modern {
-  max-width: 500px;
+.add-header-btn {
+  --color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+/* ============================================================================
+   2. CONTAINER WRAPPER
+   ============================================================================ */
+.teachers-container-wrapper {
+  max-width: 800px;
   margin: 0 auto;
-  position: relative;
+  padding: 20px 16px;
 }
 
-.search-input-modern {
-  --background: var(--admin-bg-light);
-  --border-radius: var(--admin-radius-full);
-  --padding-start: 44px;
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius-full);
-  transition: var(--admin-transition);
-}
-
-.search-input-modern:focus-within {
-  border-color: var(--admin-primary);
-  box-shadow: var(--admin-shadow-focus);
-}
-
-.search-icon-slot {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--admin-text-muted);
-  pointer-events: none;
-}
-
-/* Filter Row */
-.filter-row-modern {
-  padding: var(--admin-spacing-md) var(--admin-spacing-2xl);
-  background-color: var(--admin-white);
-  border-bottom: 1px solid var(--admin-border);
+/* ============================================================================
+   3. SUMMARY CARD
+   ============================================================================ */
+.teachers-summary-card {
   display: flex;
   align-items: center;
-  gap: var(--admin-spacing-md);
+  justify-content: space-between;
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
+  margin-bottom: 24px;
 }
 
-.class-filter-modern {
-  flex: 1;
-  max-width: 300px;
+.teachers-summary-card h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0 0 4px 0;
 }
 
-/* Teacher List */
+.teachers-summary-card p {
+  font-size: 13px;
+  color: var(--royal-text-muted);
+  margin: 0;
+}
+
+.summary-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--royal-blue-primary);
+  background: #eff6ff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   4. LOADING STATE
+   ============================================================================ */
+.loading-state-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+  min-height: 300px;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+}
+
+/* ============================================================================
+   5. EMPTY STATE
+   ============================================================================ */
+.empty-container-modern {
+  text-align: center;
+  padding: 64px 24px;
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-lg);
+  border: 1px solid var(--royal-border-light);
+}
+
+.empty-icon-modern {
+  font-size: 48px;
+  color: var(--royal-border-input);
+  margin-bottom: 16px;
+}
+
+.empty-title-modern {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--royal-text-secondary);
+  margin: 0 0 8px 0;
+}
+
+.empty-text-modern {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+  margin: 0;
+}
+
+/* ============================================================================
+   6. TEACHER LIST
+   ============================================================================ */
 .teacher-list-modern {
-  padding: var(--admin-spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  background: transparent;
 }
 
 .teacher-item-modern {
-  --inner-padding-end: 0;
-  --padding-top: 0;
-  --padding-bottom: 0;
-  --padding-start: 0;
-  --padding-end: 0;
   --background: transparent;
-  margin-bottom: var(--admin-spacing-md);
+  --padding-start: 0;
+  --inner-border-width: 0;
+  padding: 0;
 }
 
 .teacher-card-modern {
-  margin: 0;
-  border-radius: var(--admin-radius-lg);
-  border: 1px solid var(--admin-border);
-  box-shadow: var(--admin-shadow-sm);
-  transition: var(--admin-transition);
-  overflow: hidden;
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-lg);
+  box-shadow: var(--royal-shadow-card);
+  border: 1px solid var(--royal-border-light);
+  transition: var(--royal-transition);
+  --background: var(--royal-bg-card);
+  width: 100%;
 }
 
 .teacher-card-modern:hover {
-  border-color: var(--admin-primary-border);
-  box-shadow: var(--admin-shadow);
-  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.08);
+  border-color: var(--royal-blue-light);
 }
 
 .teacher-card-content-modern {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: var(--admin-spacing-lg) var(--admin-spacing-xl);
+  justify-content: space-between;
+  padding: 16px 20px;
+  gap: 16px;
 }
 
-/* Teacher Info */
-.teacher-info-modern {
-  flex: 1;
+.teacher-card-left {
   display: flex;
-  flex-direction: column;
-  gap: var(--admin-spacing-xs);
+  align-items: center;
+  gap: 16px;
+  flex: 1;
 }
 
 .teacher-avatar-modern {
   width: 48px;
   height: 48px;
-  border-radius: var(--admin-radius-full);
-  background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-hover) 100%);
+  border-radius: 50%;
+  background: var(--royal-blue-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: var(--admin-text-lg);
-  margin-right: var(--admin-spacing-md);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
+.teacher-info-modern {
+  flex: 1;
+}
+
 .teacher-name-modern {
-  font-size: var(--admin-text-lg);
-  font-weight: 600;
-  color: var(--admin-text-primary);
-  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0 0 4px 0;
 }
 
 .teacher-email-modern {
-  font-size: var(--admin-text-sm);
-  color: var(--admin-text-muted);
-  margin: 0;
+  font-size: 13px;
+  color: var(--royal-text-muted);
+  margin: 0 0 8px 0;
 }
 
-.teacher-phone-modern {
-  font-size: var(--admin-text-sm);
-  color: var(--admin-text-muted);
-  margin: 0;
+.teacher-class-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--royal-blue-primary);
+  background: #eff6ff;
+  padding: 3px 10px;
+  border-radius: 10px;
 }
 
-.teacher-class-badge-modern {
-  font-size: var(--admin-text-xs);
-  padding: 4px 10px;
-  border-radius: var(--admin-radius-full);
-  background: var(--admin-primary-light);
-  color: var(--admin-primary);
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: var(--admin-spacing-xs);
+.teacher-class-badge.unassigned {
+  color: var(--royal-text-muted);
+  background: var(--royal-bg-main);
 }
 
-/* Teacher Actions */
+/* ============================================================================
+   7. ACTION BUTTONS
+   ============================================================================ */
 .teacher-actions-modern {
   display: flex;
-  gap: var(--admin-spacing-sm);
-  margin-left: var(--admin-spacing-lg);
+  gap: 8px;
   flex-shrink: 0;
 }
 
 .action-btn-small {
   width: 36px;
   height: 36px;
-  border-radius: var(--admin-radius);
   border: none;
+  border-radius: var(--royal-radius-sm);
+  background: var(--royal-bg-main);
+  color: var(--royal-text-muted);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: var(--admin-transition);
-  background: var(--admin-bg-light);
-  color: var(--admin-text-muted);
+  transition: var(--royal-transition);
 }
 
 .action-btn-small:hover {
-  background: var(--admin-primary-light);
-  color: var(--admin-primary);
-  transform: scale(1.05);
-}
-
-.action-btn-small.delete-btn {
-  background: var(--admin-danger-light);
-  color: var(--admin-danger);
-}
-
-.action-btn-small.delete-btn:hover {
-  background: var(--admin-danger-lighter);
+  background: var(--royal-border-light);
 }
 
 .action-btn-small ion-icon {
   font-size: 16px;
 }
 
-/* Empty State */
-.empty-container-modern {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: var(--admin-spacing-3xl) * 2 var(--admin-spacing-2xl);
-  text-align: center;
+.action-btn-small.delete-btn {
+  color: #dc2626;
+  background: #fef2f2;
 }
 
-.empty-icon-modern {
-  font-size: 64px;
-  color: var(--admin-text-disabled);
-  margin-bottom: var(--admin-spacing-lg);
+.action-btn-small.delete-btn:hover {
+  background: #fee2e2;
 }
 
-.empty-title-modern {
-  font-size: var(--admin-text-2xl);
-  font-weight: 600;
-  color: var(--admin-text-secondary);
-  margin: 0 0 var(--admin-spacing-sm) 0;
-}
+/* ============================================================================
+   8. MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .teachers-container-wrapper {
+    padding: 16px 12px;
+  }
 
-.empty-text-modern {
-  font-size: var(--admin-text-base);
-  color: var(--admin-text-muted);
-  margin: 0;
-}
+  .teachers-summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
 
-/* Pagination */
-.pagination-modern {
-  padding: var(--admin-spacing-lg) var(--admin-spacing-2xl);
-  text-align: center;
-  background-color: var(--admin-white);
-  border-top: 1px solid var(--admin-border);
-}
+  .teachers-summary-card h2 {
+    font-size: 16px;
+  }
 
-.pagination-text {
-  font-size: var(--admin-text-sm);
-  color: var(--admin-text-muted);
-  margin: 0;
-}
-
-/* Loading State */
-.loading-state-modern {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-  gap: var(--admin-spacing-lg);
-}
-
-.loading-text {
-  font-size: var(--admin-text-base);
-  color: var(--admin-text-muted);
-}
-
-/* Responsive */
-@media (max-width: 575px) {
   .teacher-card-content-modern {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--admin-spacing-md);
+    padding: 14px 16px;
   }
 
-  .teacher-avatar-modern {
-    display: none;
+  .teacher-card-left {
+    width: 100%;
   }
 
   .teacher-actions-modern {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-end;
+    align-self: flex-end;
+    margin-top: 8px;
   }
 
-  .filter-bar-modern {
-    padding: var(--admin-spacing-md) var(--admin-spacing-lg);
+  .action-btn-small {
+    min-height: 44px;
+    min-width: 44px;
   }
 
-  .teacher-list-modern {
-    padding: var(--admin-spacing-md);
+  ion-content {
+    --overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .teachers-container-wrapper {
+    padding: 12px 8px;
   }
 
-  .filter-row-modern {
-    flex-direction: column;
-    align-items: stretch;
+  .teachers-summary-card {
+    padding: 14px;
   }
 
-  .class-filter-modern {
-    max-width: none;
+  .teacher-card-content-modern {
+    padding: 12px;
   }
 }

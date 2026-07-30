@@ -1,6 +1,6 @@
 /**
  * Class Controller Homework Detail Screen (Ionic React Version)
- * Displays full homework details with sent date, due date, subject, and description
+ * Styled with Class Royal Blue Theme
  */
 
 import React, { useEffect, useState } from 'react';
@@ -26,6 +26,10 @@ import {
   trashOutline,
   personOutline,
   bookOutline,
+  alertCircleOutline,
+  arrowBackOutline,
+  checkmarkCircleOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
@@ -67,21 +71,19 @@ const ClassHomeworkDetailScreen: React.FC = () => {
   const fetchHomeworkDetail = async () => {
     try {
       setLoading(true);
-      // Note: getHomework API not available in classControllerAPI
-      // Simulating with a placeholder - in production this would fetch the actual homework
       console.log('Fetching homework detail for:', homeworkId);
       
-      // For demo purposes, create a mock homework
+      // Simulated mock homework payload
       setHomework({
-        id: homeworkId,
-        title: 'Sample Homework',
-        description: 'This is a sample homework description. In production, this would be fetched from the API.',
+        id: homeworkId || 'hw-101',
+        title: 'Chapter 4: Quadratic Equations Worksheet',
+        description: 'Complete questions 1 to 15 from Exercise 4.2 in your homework notebook. Submit hard copies or scanned PDFs before the due date.',
         subject: 'Mathematics',
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         createdAt: new Date().toISOString(),
         isPublished: true,
         class: { id: '1', name: 'Class 10', section: 'A' },
-        assignedByUser: { id: '1', name: 'Teacher' },
+        assignedByUser: { id: '1', name: 'Math Faculty' },
       });
     } catch (error) {
       console.error('Error fetching homework detail:', error);
@@ -92,13 +94,17 @@ const ClassHomeworkDetailScreen: React.FC = () => {
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return 'Not set';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
   };
 
   const isOverdue = () => {
@@ -109,9 +115,7 @@ const ClassHomeworkDetailScreen: React.FC = () => {
 
   const handleDelete = async () => {
     try {
-      // Note: deleteHomework API not available in classControllerAPI
       console.log('Deleting homework:', homeworkId);
-      // Simulate success
       history.goBack();
     } catch (error) {
       console.error('Error deleting homework:', error);
@@ -122,10 +126,18 @@ const ClassHomeworkDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <IonPage>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center homework-detail-loading">
-          <IonSpinner name="crescent" />
+        <IonHeader className="ion-no-border">
+          <IonToolbar color="primary" className="class-toolbar">
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/class-controller/homework" />
+            </IonButtons>
+            <IonTitle>Homework Detail</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding ion-text-center homework-detail-loading">
+          <IonSpinner name="crescent" color="primary" />
           <IonText color="medium">
-            <p className="loading-text">Loading homework details...</p>
+            <p className="loading-text">Loading Homework Details...</p>
           </IonText>
         </IonContent>
       </IonPage>
@@ -135,22 +147,22 @@ const ClassHomeworkDetailScreen: React.FC = () => {
   if (!homework) {
     return (
       <IonPage>
-        <IonHeader>
-          <IonToolbar>
+        <IonHeader className="ion-no-border">
+          <IonToolbar color="primary" className="class-toolbar">
             <IonButtons slot="start">
               <IonBackButton defaultHref="/class-controller/homework" />
             </IonButtons>
             <IonTitle>Homework Detail</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+        <IonContent className="ion-padding">
           <div className="empty-state">
-            <div className="empty-icon">📚</div>
+            <IonIcon icon={alertCircleOutline} className="empty-icon" />
             <IonText>
-              <h3>Homework not found</h3>
+              <h3>Homework Record Not Found</h3>
             </IonText>
-            <IonButton color="secondary" onClick={() => history.goBack()}>
-              Go Back
+            <IonButton color="primary" className="retry-btn" onClick={() => history.goBack()}>
+              Go Back to List
             </IonButton>
           </div>
         </IonContent>
@@ -158,10 +170,13 @@ const ClassHomeworkDetailScreen: React.FC = () => {
     );
   }
 
+  const rawDueDate = homework.dueDate || homework.due_date;
+  const rawCreatedAt = homework.createdAt || homework.created_at;
+
   return (
     <IonPage>
-      <IonHeader>
-        <IonToolbar>
+      <IonHeader className="ion-no-border">
+        <IonToolbar color="primary" className="class-toolbar">
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller/homework" />
           </IonButtons>
@@ -169,85 +184,106 @@ const ClassHomeworkDetailScreen: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="homework-detail-content">
-        {/* Subject Badge */}
-        <div className="subject-badge-container">
-          <IonBadge color="secondary" className="subject-badge">
-            {homework.subject}
-          </IonBadge>
-        </div>
-
-        {/* Title */}
-        <h1 className="homework-title">{homework.title}</h1>
-
-        {/* Dates Row */}
-        <div className="dates-row">
-          <IonCard className="date-card">
+      <IonContent className="homework-detail-content" fullscreen>
+        <div className="homework-detail-wrapper">
+          
+          {/* Main Info Card */}
+          <IonCard className="homework-main-card">
             <IonCardContent>
-              <IonText color="medium">
-                <small className="date-label">Sent Date</small>
-              </IonText>
-              <p className="date-value">
-                {formatDate(homework.createdAt || homework.created_at || '')}
-              </p>
-            </IonCardContent>
-          </IonCard>
+              {/* Header Badges */}
+              <div className="badge-header-row">
+                <IonBadge className="subject-badge">
+                  <IonIcon icon={bookOutline} />
+                  {homework.subject}
+                </IonBadge>
+                {isOverdue() ? (
+                  <IonBadge color="danger" className="status-badge overdue">
+                    <IonIcon icon={timeOutline} />
+                    Overdue
+                  </IonBadge>
+                ) : (
+                  <IonBadge color="success" className="status-badge active">
+                    <IonIcon icon={checkmarkCircleOutline} />
+                    Active
+                  </IonBadge>
+                )}
+              </div>
 
-          <IonCard className={`date-card ${isOverdue() ? 'date-card-overdue' : ''}`}>
-            <IonCardContent>
-              <IonText color="medium">
-                <small className="date-label">Due Date</small>
-              </IonText>
-              <p className={`date-value ${isOverdue() ? 'date-value-overdue' : ''}`}>
-                {(homework.dueDate || homework.due_date)
-                  ? formatDate(homework.dueDate || homework.due_date || '')
-                  : 'No due date'}
-              </p>
-            </IonCardContent>
-          </IonCard>
-        </div>
+              {/* Homework Title */}
+              <h1 className="homework-title">{homework.title}</h1>
 
-        {/* Class Info */}
-        {homework.class && (
-          <IonCard className="class-info-card">
-            <IonCardContent>
-              <IonText color="medium">
-                <small className="class-label">Class</small>
-              </IonText>
-              <div className="class-value">
-                <IonIcon icon={personOutline} className="class-icon" />
-                <span>{homework.class.name}{homework.class.section ? ` - ${homework.class.section}` : ''}</span>
+              {/* Dates Row */}
+              <div className="dates-grid">
+                <div className="date-card">
+                  <IonIcon icon={calendarOutline} className="date-icon" />
+                  <div className="date-info">
+                    <span className="date-label">Assigned Date</span>
+                    <p className="date-value">{formatDate(rawCreatedAt || '')}</p>
+                  </div>
+                </div>
+
+                <div className={`date-card ${isOverdue() ? 'overdue-card' : ''}`}>
+                  <IonIcon icon={calendarOutline} className={`date-icon ${isOverdue() ? 'overdue-icon' : ''}`} />
+                  <div className="date-info">
+                    <span className="date-label">Due Date</span>
+                    <p className={`date-value ${isOverdue() ? 'overdue-text' : 'highlight'}`}>
+                      {rawDueDate ? formatDate(rawDueDate) : 'No due date'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Target Class Info */}
+              {homework.class && (
+                <div className="class-info-box">
+                  <IonIcon icon={personOutline} className="class-info-icon" />
+                  <div className="class-info-text">
+                    <span className="class-info-label">Target Class</span>
+                    <p className="class-info-val">
+                      {homework.class.name}
+                      {homework.class.section ? ` - ${homework.class.section}` : ''}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Homework Description */}
+              <div className="description-section">
+                <h3 className="description-label">Homework Description</h3>
+                <div className="description-box">
+                  <p className="description-text">{homework.description}</p>
+                </div>
+              </div>
+
+              {/* Actions Container */}
+              <div className="actions-container">
+                <IonButton
+                  expand="block"
+                  color="danger"
+                  fill="outline"
+                  className="delete-button"
+                  onClick={() => setShowDeleteAlert(true)}
+                >
+                  <IonIcon icon={trashOutline} slot="start" />
+                  Delete Homework
+                </IonButton>
+
+                <IonButton 
+                  expand="block" 
+                  fill="clear" 
+                  onClick={() => history.goBack()}
+                  className="back-button"
+                >
+                  <IonIcon icon={arrowBackOutline} slot="start" />
+                  Back to Homework List
+                </IonButton>
               </div>
             </IonCardContent>
           </IonCard>
-        )}
 
-        {/* Description */}
-        <IonCard className="description-card">
-          <IonCardContent>
-            <IonText color="dark">
-              <h3 className="description-label">Description</h3>
-            </IonText>
-            <div className="description-box">
-              <p className="description-text">{homework.description}</p>
-            </div>
-          </IonCardContent>
-        </IonCard>
-
-        {/* Actions */}
-        <div className="actions-container">
-          <IonButton
-            expand="block"
-            color="danger"
-            fill="outline"
-            onClick={() => setShowDeleteAlert(true)}
-          >
-            <IonIcon icon={trashOutline} slot="start" />
-            Delete Homework
-          </IonButton>
         </div>
 
-        {/* Delete Alert */}
+        {/* Delete Confirmation Alert */}
         <IonAlert
           isOpen={showDeleteAlert}
           onDidDismiss={() => setShowDeleteAlert(false)}
