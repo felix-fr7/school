@@ -60,7 +60,7 @@ const getNews = async (req, res, next) => {
       FROM "News" n
       LEFT JOIN "User" u ON n."postedBy" = u.id
       WHERE ${whereClause}
-      ORDER BY n."createdAt" DESC
+      ORDER BY n."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -312,8 +312,8 @@ const mapExamRow = (row) => {
     pdfUrl: fileUrl, // fallback
     imageUrl: fileUrl, // fallback
     dueDate: row.due_date,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
     class: row.classId ? {
       id: row.classId,
       name: row.className,

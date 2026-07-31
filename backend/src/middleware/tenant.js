@@ -1,9 +1,10 @@
 /**
  * Tenant Middleware
  * Extracts tenant information from request headers and attaches to request object
+ * Uses MongoDB/Mongoose queries
  */
 
-const { query } = require('../config/db');
+const Tenant = require('../models/Tenant');
 
 /**
  * Tenant Middleware
@@ -29,29 +30,26 @@ const tenantMiddleware = async (req, res, next) => {
       });
     }
 
-    // Validate tenant ID format (UUID)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(tenantId)) {
+    // Validate tenant ID format (ObjectId)
+    if (!tenantId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid tenant ID format. Must be a valid UUID.'
+        message: 'Invalid tenant ID format. Must be a valid MongoDB ObjectId.'
       });
     }
 
     // Check if tenant exists and is active
-    const tenants = await query(
-      'SELECT id, name, domain_slug, status, subscription_plan, settings FROM tenants WHERE id = $1 AND deleted_at IS NULL',
-      [tenantId]
-    );
+    const tenant = await Tenant.findOne({ 
+      _id: tenantId, 
+      deletedAt: null 
+    });
 
-    if (!tenants || tenants.length === 0) {
+    if (!tenant) {
       return res.status(404).json({
         success: false,
         message: 'Tenant not found or has been deleted.'
       });
     }
-
-    const tenant = tenants[0];
 
     if (tenant.status !== 'ACTIVE') {
       return res.status(403).json({
@@ -61,12 +59,12 @@ const tenantMiddleware = async (req, res, next) => {
     }
 
     // Attach tenant info to request
-    req.tenantId = tenant.id;
+    req.tenantId = tenant._id.toString();
     req.tenant = {
-      id: tenant.id,
+      id: tenant._id.toString(),
       name: tenant.name,
-      domainSlug: tenant.domain_slug,
-      subscriptionPlan: tenant.subscription_plan,
+      domainSlug: tenant.domainSlug,
+      subscriptionPlan: tenant.subscriptionPlan,
       settings: tenant.settings
     };
 
@@ -91,22 +89,21 @@ const optionalTenantMiddleware = async (req, res, next) => {
     const tenantId = req.headers['x-tenant-id'];
 
     if (tenantId) {
-      // Validate UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (uuidRegex.test(tenantId)) {
-        const tenants = await query(
-          'SELECT id, name, domain_slug, status FROM tenants WHERE id = $1 AND deleted_at IS NULL AND status = $2',
-          [tenantId, 'ACTIVE']
-        );
+      // Validate ObjectId format
+      if (tenantId.match(/^[0-9a-fA-F]{24}$/)) {
+        const tenant = await Tenant.findOne({
+          _id: tenantId,
+          deletedAt: null,
+          status: 'ACTIVE'
+        });
 
-        if (tenants && tenants.length > 0) {
-          const tenant = tenants[0];
-          req.tenantId = tenant.id;
+        if (tenant) {
+          req.tenantId = tenant._id.toString();
           req.tenant = {
-            id: tenant.id,
+            id: tenant._id.toString(),
             name: tenant.name,
-            domainSlug: tenant.domain_slug,
-            subscriptionPlan: tenant.subscription_plan,
+            domainSlug: tenant.domainSlug,
+            subscriptionPlan: tenant.subscriptionPlan,
             settings: tenant.settings
           };
         }
@@ -144,19 +141,17 @@ const domainTenantMiddleware = async (req, res, next) => {
     }
 
     // Look up tenant by domain_slug
-    const tenants = await query(
-      'SELECT id, name, domain_slug, status, subscription_plan, settings FROM tenants WHERE domain_slug = $1 AND deleted_at IS NULL',
-      [subdomain]
-    );
+    const tenant = await Tenant.findOne({
+      domainSlug: subdomain.toLowerCase(),
+      deletedAt: null
+    });
 
-    if (!tenants || tenants.length === 0) {
+    if (!tenant) {
       return res.status(404).json({
         success: false,
         message: 'Tenant not found for this domain.'
       });
     }
-
-    const tenant = tenants[0];
 
     if (tenant.status !== 'ACTIVE') {
       return res.status(403).json({
@@ -166,12 +161,12 @@ const domainTenantMiddleware = async (req, res, next) => {
     }
 
     // Attach tenant info
-    req.tenantId = tenant.id;
+    req.tenantId = tenant._id.toString();
     req.tenant = {
-      id: tenant.id,
+      id: tenant._id.toString(),
       name: tenant.name,
-      domainSlug: tenant.domain_slug,
-      subscriptionPlan: tenant.subscription_plan,
+      domainSlug: tenant.domainSlug,
+      subscriptionPlan: tenant.subscriptionPlan,
       settings: tenant.settings
     };
 

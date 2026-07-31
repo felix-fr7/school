@@ -1,10 +1,12 @@
 /**
- * Weekly Lesson Controller
+ * Weekly Lesson Controller (Mongoose Version)
  * Handles Homework & Classwork management organized by date-based timetable
  * All operations are scoped to tenantId and classId for multi-tenant isolation
  */
 
-const db = require('../config/db');
+const WeeklyLessonLog = require('../models/WeeklyLessonLog'); // Neenga create pannira Model path-ah check pannikonga
+const Class = require('../models/Class');
+const User = require('../models/User');
 
 // ============================================
 // TEACHER ENDPOINTS
@@ -21,51 +23,40 @@ const getWeeklyLessons = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // Find the teacher's class
-    const classQuery = `
-      SELECT id, name, section FROM "Class" 
-      WHERE "teacherId" = $1 AND "tenantId" = $2 LIMIT 1
-    `;
-    const classResult = await db.query(classQuery, [teacherId, tenantId]);
+    const teacherClass = await Class.findOne({ teacherId, tenantId }).lean();
 
-    if (classResult.rows.length === 0) {
+    if (!teacherClass) {
       return res.status(404).json({
         success: false,
         error: { message: 'No class assigned. Please contact your administrator.' },
       });
     }
 
-    const classId = classResult.rows[0].id;
-    const className = classResult.rows[0].section 
-      ? `${classResult.rows[0].name} - ${classResult.rows[0].section}`
-      : classResult.rows[0].name;
+    const classId = teacherClass._id;
+    const className = teacherClass.section 
+      ? `${teacherClass.name} - ${teacherClass.section}`
+      : teacherClass.name;
 
     // Get all lesson logs for this class, ordered by date (newest first)
-    const lessonsQuery = `
-      SELECT 
-        wll.id,
-        wll."classworkText",
-        wll."homeworkText",
-        wll."lessonDate",
-        wll."subject",
-        wll."attachments",
-        wll."createdBy",
-        wll."createdAt",
-        wll."updatedAt",
-        u.name as "creatorName"
-      FROM "WeeklyLessonLog" wll
-      LEFT JOIN "User" u ON wll."createdBy" = u.id
-      WHERE wll."classId" = $1 AND wll."tenantId" = $2
-      ORDER BY wll."lessonDate" DESC, wll."subject" ASC
-    `;
-    const lessonsResult = await db.query(lessonsQuery, [classId, tenantId]);
+    const lessons = await WeeklyLessonLog.find({ classId, tenantId })
+      .populate('createdBy', 'name')
+      .sort({ lessonDate: -1, subject: 1 })
+      .lean();
 
-    // Return lessons as a flat array (date-based, not weekday grid)
+    // Format output to match existing response structure
+    const formattedLessons = lessons.map(lesson => ({
+      ...lesson,
+      id: lesson._id,
+      creatorName: lesson.createdBy ? lesson.createdBy.name : null,
+      createdBy: lesson.createdBy ? lesson.createdBy._id : lesson.createdBy
+    }));
+
     res.status(200).json({
       success: true,
       data: {
         classId,
         className,
-        lessons: lessonsResult.rows,
+        lessons: formattedLessons,
       },
     });
   } catch (error) {
@@ -78,7 +69,6 @@ const getWeeklyLessons = async (req, res, next) => {
  * Create or update a weekly lesson entry (UPSERT)
  * POST /api/teacher/weekly-lessons
  * Body: { lessonDate, subject, classworkText?, homeworkText? }
- * Uses ON CONFLICT to update existing entries for the same class/subject/date
  */
 const upsertWeeklyLesson = async (req, res, next) => {
   try {
@@ -112,50 +102,38 @@ const upsertWeeklyLesson = async (req, res, next) => {
     }
 
     // Find the teacher's class
-    const classQuery = `
-      SELECT id FROM "Class" 
-      WHERE "teacherId" = $1 AND "tenantId" = $2 LIMIT 1
-    `;
-    const classResult = await db.query(classQuery, [teacherId, tenantId]);
+    const teacherClass = await Class.findOne({ teacherId, tenantId }).lean();
 
-    if (classResult.rows.length === 0) {
+    if (!teacherClass) {
       return res.status(404).json({
         success: false,
         error: { message: 'No class assigned. Please contact your administrator.' },
       });
     }
 
-    const classId = classResult.rows[0].id;
+    const classId = teacherClass._id;
 
-    // Upsert the lesson entry using ON CONFLICT
-    // Parameter order: tenantId, classId, subject, lessonDate, classworkText, homeworkText, createdBy, updatedBy
-    const upsertQuery = `
-      INSERT INTO "WeeklyLessonLog" 
-        ("tenantId", "classId", "subject", "lessonDate", "classworkText", "homeworkText", "createdBy", "updatedBy")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      ON CONFLICT ("tenantId", "classId", "subject", "lessonDate") 
-      DO UPDATE SET 
-        "classworkText" = EXCLUDED."classworkText",
-        "homeworkText" = EXCLUDED."homeworkText",
-        "updatedBy" = EXCLUDED."updatedBy",
-        "updatedAt" = NOW()
-      RETURNING *
-    `;
+    // Upsert using findOneAndUpdate with upsert: true
+    const filter = { tenantId, classId, subject: subject.trim(), lessonDate };
+    const update = {
+      $set: {
+        classworkText: classworkText || null,
+        homeworkText: homeworkText || null,
+        updatedBy: teacherId,
+        updated_at: Date.now(),
+      },
+      $setOnInsert: {
+        createdBy: teacherId,
+        created_at: Date.now(),
+      }
+    };
+    const options = { new: true, upsert: true, setDefaultsOnInsert: true };
 
-    const result = await db.query(upsertQuery, [
-      tenantId,
-      classId,
-      subject.trim(),
-      lessonDate,
-      classworkText || null,
-      homeworkText || null,
-      teacherId,
-      teacherId,
-    ]);
+    const savedLesson = await WeeklyLessonLog.findOneAndUpdate(filter, update, options);
 
     res.status(200).json({
       success: true,
-      data: result.rows[0],
+      data: savedLesson,
       message: 'Lesson saved successfully',
     });
   } catch (error) {
@@ -167,31 +145,20 @@ const upsertWeeklyLesson = async (req, res, next) => {
 /**
  * Delete a weekly lesson entry
  * DELETE /api/teacher/weekly-lessons/:id
- * Also cleans up all associated attachments from storage
  */
 const deleteWeeklyLesson = async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
 
-    // Get lesson with attachments
-    const lessonQuery = `
-      SELECT * FROM "WeeklyLessonLog" 
-      WHERE id = $1 AND "tenantId" = $2
-    `;
-    const lessonResult = await db.query(lessonQuery, [id, tenantId]);
+    const deletedLesson = await WeeklyLessonLog.findOneAndDelete({ _id: id, tenantId });
 
-    if (lessonResult.rows.length === 0) {
+    if (!deletedLesson) {
       return res.status(404).json({
         success: false,
         error: { message: 'Lesson not found or you do not have permission to delete it.' },
       });
     }
-
-    const lesson = lessonResult.rows[0];
-
-    // Delete lesson from database
-    await db.query('DELETE FROM "WeeklyLessonLog" WHERE id = $1', [id]);
 
     res.status(200).json({
       success: true,
@@ -223,22 +190,15 @@ const uploadAttachment = async (req, res, next) => {
     }
 
     // Verify the lesson belongs to tenant
-    const lessonQuery = `
-      SELECT * FROM "WeeklyLessonLog" 
-      WHERE id = $1 AND "tenantId" = $2
-    `;
-    const lessonResult = await db.query(lessonQuery, [id, tenantId]);
+    const lesson = await WeeklyLessonLog.findOne({ _id: id, tenantId });
 
-    if (lessonResult.rows.length === 0) {
+    if (!lesson) {
       return res.status(404).json({
         success: false,
         error: { message: 'Lesson not found or you do not have permission to upload.' },
       });
     }
 
-    const lesson = lessonResult.rows[0];
-
-    // Store file directly in database as BYTEA
     const fileBuffer = req.file.buffer;
     const fileMimeType = req.file.mimetype;
     const fileName = req.file.originalname;
@@ -252,26 +212,18 @@ const uploadAttachment = async (req, res, next) => {
       uploadedBy: teacherId
     };
 
-    // Update lesson attachments JSONB
-    const attachments = lesson.attachments ? JSON.parse(lesson.attachments) : [];
-    attachments.push(attachmentRecord);
+    // Push to attachments array
+    lesson.attachments = lesson.attachments || [];
+    lesson.attachments.push(attachmentRecord);
+    lesson.updatedBy = teacherId;
+    lesson.updated_at = Date.now();
 
-    const updateQuery = `
-      UPDATE "WeeklyLessonLog" 
-      SET "attachments" = $1, "updatedBy" = $2, "updatedAt" = NOW()
-      WHERE id = $3
-      RETURNING *
-    `;
-    const updateResult = await db.query(updateQuery, [
-      JSON.stringify(attachments),
-      teacherId,
-      id,
-    ]);
+    await lesson.save();
 
     res.status(200).json({
       success: true,
       data: {
-        lesson: updateResult.rows[0],
+        lesson,
         attachment: attachmentRecord,
       },
       message: 'Attachment uploaded successfully',
@@ -300,21 +252,15 @@ const deleteAttachment = async (req, res, next) => {
       });
     }
 
-    // Get lesson
-    const lessonQuery = `
-      SELECT * FROM "WeeklyLessonLog" 
-      WHERE id = $1 AND "tenantId" = $2
-    `;
-    const lessonResult = await db.query(lessonQuery, [id, tenantId]);
+    const lesson = await WeeklyLessonLog.findOne({ _id: id, tenantId });
 
-    if (lessonResult.rows.length === 0) {
+    if (!lesson) {
       return res.status(404).json({
         success: false,
         error: { message: 'Lesson not found.' },
       });
     }
 
-    const lesson = lessonResult.rows[0];
     const attachments = lesson.attachments || [];
 
     if (index >= attachments.length) {
@@ -326,22 +272,14 @@ const deleteAttachment = async (req, res, next) => {
 
     // Remove from array
     attachments.splice(index, 1);
+    lesson.attachments = attachments;
+    lesson.updated_at = Date.now();
 
-    // Update lesson
-    const updateQuery = `
-      UPDATE "WeeklyLessonLog" 
-      SET "attachments" = $1, "updatedAt" = NOW()
-      WHERE id = $2
-      RETURNING *
-    `;
-    const updateResult = await db.query(updateQuery, [
-      JSON.stringify(attachments),
-      id,
-    ]);
+    await lesson.save();
 
     res.status(200).json({
       success: true,
-      data: updateResult.rows[0],
+      data: lesson,
       message: 'Attachment deleted successfully',
     });
   } catch (error) {
@@ -357,7 +295,6 @@ const deleteAttachment = async (req, res, next) => {
 /**
  * Get weekly lessons for student's assigned class
  * GET /api/student/weekly-lessons
- * Students can only see entries for their own class
  */
 const getStudentLessons = async (req, res, next) => {
   try {
@@ -365,43 +302,27 @@ const getStudentLessons = async (req, res, next) => {
     const tenantId = req.user.tenantId;
 
     // Get student's class
-    const studentQuery = `
-      SELECT "classId" FROM "User" 
-      WHERE id = $1 AND "tenantId" = $2 AND role = 'STUDENT'
-    `;
-    const studentResult = await db.query(studentQuery, [studentId, tenantId]);
+    const student = await User.findOne({ _id: studentId, tenantId, role: 'STUDENT' }).lean();
 
-    if (studentResult.rows.length === 0) {
+    if (!student || !student.classId) {
       return res.status(404).json({
         success: false,
         error: { message: 'Student not found or no class assigned.' },
       });
     }
 
-    const classId = studentResult.rows[0].classId;
+    const classId = student.classId;
 
     // Get all lesson logs for this class, ordered by date
-    const lessonsQuery = `
-      SELECT 
-        wll.id,
-        wll."classworkText",
-        wll."homeworkText",
-        wll."lessonDate",
-        wll."subject",
-        wll."attachments",
-        wll."createdAt",
-        wll."updatedAt"
-      FROM "WeeklyLessonLog" wll
-      WHERE wll."classId" = $1 AND wll."tenantId" = $2
-      ORDER BY wll."lessonDate" DESC, wll."subject" ASC
-    `;
-    const lessonsResult = await db.query(lessonsQuery, [classId, tenantId]);
+    const lessons = await WeeklyLessonLog.find({ classId, tenantId })
+      .sort({ lessonDate: -1, subject: 1 })
+      .lean();
 
     res.status(200).json({
       success: true,
       data: {
         classId,
-        lessons: lessonsResult.rows,
+        lessons,
       },
     });
   } catch (error) {
@@ -429,43 +350,27 @@ const getLessonsByDate = async (req, res, next) => {
     }
 
     // Get student's class
-    const studentQuery = `
-      SELECT "classId" FROM "User" 
-      WHERE id = $1 AND "tenantId" = $2 AND role = 'STUDENT'
-    `;
-    const studentResult = await db.query(studentQuery, [studentId, tenantId]);
+    const student = await User.findOne({ _id: studentId, tenantId, role: 'STUDENT' }).lean();
 
-    if (studentResult.rows.length === 0) {
+    if (!student || !student.classId) {
       return res.status(404).json({
         success: false,
         error: { message: 'Student not found or no class assigned.' },
       });
     }
 
-    const classId = studentResult.rows[0].classId;
+    const classId = student.classId;
 
     // Get lessons for specific date
-    const lessonsQuery = `
-      SELECT 
-        wll.id,
-        wll."classworkText",
-        wll."homeworkText",
-        wll."lessonDate",
-        wll."subject",
-        wll."attachments",
-        wll."createdAt",
-        wll."updatedAt"
-      FROM "WeeklyLessonLog" wll
-      WHERE wll."classId" = $1 AND wll."tenantId" = $2 AND wll."lessonDate" = $3
-      ORDER BY wll."subject" ASC
-    `;
-    const lessonsResult = await db.query(lessonsQuery, [classId, tenantId, date]);
+    const lessons = await WeeklyLessonLog.find({ classId, tenantId, lessonDate: date })
+      .sort({ subject: 1 })
+      .lean();
 
     res.status(200).json({
       success: true,
       data: {
         date,
-        lessons: lessonsResult.rows,
+        lessons,
       },
     });
   } catch (error) {
@@ -475,13 +380,11 @@ const getLessonsByDate = async (req, res, next) => {
 };
 
 module.exports = {
-  // Teacher endpoints
   getWeeklyLessons,
   upsertWeeklyLesson,
   deleteWeeklyLesson,
   uploadAttachment,
   deleteAttachment,
-  // Student endpoints
   getStudentLessons,
   getLessonsByDate,
 };

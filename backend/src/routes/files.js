@@ -1,18 +1,16 @@
 /**
  * Files Routes
- * General file upload and management
+ * General file upload and management (Storage independent)
  */
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
 const { authenticate, isAdmin } = require('../middleware/auth');
-const { uploadSingle, uploadArray, deleteFile, getFileUrl } = require('../middleware/fileUpload');
+const { uploadSingle, uploadArray } = require('../middleware/fileUpload');
 const path = require('path');
 const fs = require('fs');
 
-// Upload file
+// Upload single file
 router.post('/upload', authenticate, isAdmin, uploadSingle('file'), async (req, res, next) => {
   try {
     if (!req.file) {

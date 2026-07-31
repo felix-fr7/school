@@ -1,46 +1,48 @@
 /**
  * Leave Routes
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/db');
-const { authenticate, isAdmin, isTeacher, isAdminOrTeacher } = require('../middleware/auth');
+const LeaveRequest = require('../models/LeaveRequest');
+const { authenticate, isAdminOrTeacher } = require('../middleware/auth');
 
 // Get leave requests
 router.get('/', authenticate, async (req, res, next) => {
   try {
     const { status, classId, page = 1, limit = 50 } = req.query;
-    const offset = (page - 1) * limit;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    let whereClause = 'l.tenant_id = ?';
-    let params = [req.user.tenantId];
+    let query = { tenantId: req.user.tenantId };
 
-    if (status) { whereClause += ' AND l.status = ?'; params.push(status); }
-    if (classId) { whereClause += ' AND l.class_id = ?'; params.push(classId); }
-
-    // Admin sees all, teachers see their class, students see their own
-    if (req.user.role === 'TEACHER') {
-      whereClause += ' AND l.class_id IN (SELECT id FROM classes WHERE class_teacher_id = ?)';
-      params.push(req.user.id);
-    } else if (req.user.role === 'STUDENT') {
-      whereClause += ' AND l.student_id = ?';
-      params.push(req.user.id);
+    if (status) {
+      query.status = status;
+    }
+    if (classId) {
+      query.classId = classId;
     }
 
-    const leaves = await query(
-      `SELECT l.*, u.name as student_name, u.avatar_url, sp.student_id, 
-              c.name as class_name, c.section, approver.name as approved_by_name
-       FROM leave_requests l
-       JOIN users u ON l.student_id = u.id
-       JOIN student_profiles sp ON u.id = sp.user_id
-       JOIN classes c ON l.class_id = c.id
-       LEFT JOIN users approver ON l.approved_by = approver.id
-       WHERE ${whereClause}
-       ORDER BY l.createdAt DESC
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), parseInt(offset)]
-    );
+    // Role-based filtering
+    if (req.user.role === 'TEACHER') {
+      // Assuming teacher's assigned classes are handled or queried based on teacher ID
+      // If your LeaveRequest or Class model stores class teacher reference:
+      query.classId = { $in: req.user.assignedClasses || [] }; // Adjust based on your schema structure
+    } else if (req.user.role === 'STUDENT') {
+      query.studentId = req.user.id;
+    }
+
+    const leaves = await LeaveRequest.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate({
+        path: 'studentId',
+        select: 'name avatarUrl',
+        populate: { path: 'studentProfile', select: 'studentId' }
+      })
+      .populate('classId', 'name section')
+      .populate('approvedBy', 'name');
 
     res.json({ success: true, data: leaves });
   } catch (error) {
@@ -53,13 +55,28 @@ router.put('/:id/status', authenticate, isAdminOrTeacher, async (req, res, next)
   try {
     const { status, remarks } = req.body;
 
-    await query(
-      `UPDATE leave_requests SET status = ?, remarks = ?, approved_by = ?, approved_at = NOW(), updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
-      [status, remarks || null, req.user.id, req.params.id, req.user.tenantId]
+    const leaveRequest = await LeaveRequest.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.user.tenantId },
+      {
+        $set: {
+          status,
+          remarks: remarks || null,
+          approvedBy: req.user.id,
+          approvedAt: new Date(),
+          updatedAt: new Date()
+        }
+      },
+      { new: true, runValidators: true }
     );
 
-    res.json({ success: true });
+    if (!leaveRequest) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Leave request not found' }
+      });
+    }
+
+    res.json({ success: true, data: leaveRequest });
   } catch (error) {
     next(error);
   }

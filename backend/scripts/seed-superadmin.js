@@ -8,15 +8,38 @@
  *   node scripts/seed-superadmin.js
  */
 
-require('dotenv').config({ path: '../.env' });
+// Load environment variables from .env file in the current working directory (backend/)
+require('dotenv').config();
+
 const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 
-// Database connection configuration with SSL
-// Using the same SSL configuration as backend/src/config/db.js
-// ssl.rejectUnauthorized: false handles Supabase self-signed certificates
+// Debug: Log environment variables
+console.log('🔍 Environment Check:');
+console.log('   DATABASE_URL:', process.env.DATABASE_URL ? '✅ Set' : '❌ Not set');
+console.log('   DATABASE_URL (partial):', process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 50) + '...' : 'N/A');
+console.log('');
+
+// Verify DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+  console.error('❌ ERROR: DATABASE_URL environment variable is not set!');
+  console.error('   Please ensure .env file exists in the backend/ directory');
+  console.error('   Current working directory:', process.cwd());
+  process.exit(1);
+}
+
+// Parse DATABASE_URL to extract components
+// This allows us to override SSL settings properly
+const url = new URL(process.env.DATABASE_URL);
+
+// Database connection configuration with explicit SSL settings
+// Using rejectUnauthorized: false to handle Supabase self-signed certificates
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  host: url.hostname,
+  port: parseInt(url.port) || 5432,
+  database: url.pathname.slice(1), // Remove leading '/'
+  user: decodeURIComponent(url.username),
+  password: decodeURIComponent(url.password),
   ssl: {
     rejectUnauthorized: false
   },
@@ -25,6 +48,10 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
 });
+
+console.log('🔒 SSL Configuration: rejectUnauthorized = false (for Supabase compatibility)');
+console.log(`🔗 Connecting to: ${url.hostname}:${url.port || 5432}/${url.pathname.slice(1)}`);
+console.log('');
 
 // SUPER_ADMIN credentials
 const SUPER_ADMIN = {
@@ -118,15 +145,26 @@ async function seedSuperAdmin() {
   } catch (error) {
     console.error('❌ Error seeding SUPER_ADMIN:', error.message);
     
-    // Provide specific help for SSL errors
-    if (error.code === 'SELF_SIGNED_CERT_IN_CHAIN') {
-      console.error('\n🔒 SSL Certificate Error Detected!');
+    // Provide specific help for connection errors
+    if (error.code === 'ECONNREFUSED') {
+      console.error('\n🔌 Connection Refused Error!');
+      console.error('   Could not connect to the database.');
+      console.error('   Check your DATABASE_URL in .env file:');
+      console.error('   - Ensure the host is correct: aws-0-ap-south-1.pooler.supabase.com');
+      console.error('   - Ensure the port is correct: 5432');
+      console.error('   - Ensure your internet connection is working');
+    } else if (error.code === 'ENOTFOUND') {
+      console.error('\n🔍 DNS Error!');
+      console.error('   Could not resolve database hostname.');
+      console.error('   Check your DATABASE_URL in .env file.');
+    } else if (error.code === 'SELF_SIGNED_CERT_IN_CHAIN') {
+      console.error('\n🔒 SSL Certificate Error!');
       console.error('   The server certificate is self-signed.');
-      console.error('   Solution: Ensure ssl.rejectUnauthorized is set to false in the connection config.');
-      console.error('   Current config: ssl: { rejectUnauthorized: false }');
+      console.error('   This is unexpected as ssl.rejectUnauthorized is set to false.');
+      console.error('   Try removing ?sslmode=require from DATABASE_URL in .env');
     }
     
-    console.error('Full error:', error);
+    console.error('\nFull error:', error);
     process.exit(1);
   } finally {
     client.release();
@@ -136,6 +174,6 @@ async function seedSuperAdmin() {
 
 // Run the seed script
 console.log('🚀 Starting SUPER_ADMIN seed script...\n');
-console.log('🔒 SSL Configuration: rejectUnauthorized = false (for Supabase compatibility)');
+console.log('📂 Working directory:', process.cwd());
 console.log('');
 seedSuperAdmin();

@@ -1,51 +1,78 @@
 /**
  * Profile Routes
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/db');
-const { authenticate } = require('../middleware/auth');
-const { uploadSingle } = require('../middleware/fileUpload');
+const User = require('../models/User');
+const { authenticate } = require('../middleware/authMiddleware');
 
-// Get profile
-router.get('/', authenticate, async (req, res, next) => {
+// All routes require authentication
+router.use(authenticate);
+
+/**
+ * @route   GET /api/profile
+ * @desc    Get current user profile
+ * @access  Authenticated users
+ */
+router.get('/', async (req, res, next) => {
   try {
-    const userId = req.user.id;
-
-    const users = await query(
-      `SELECT u.*, sp.*, tp.*, c.name as class_name, c.section, c.grade_level
-       FROM users u
-       LEFT JOIN student_profiles sp ON u.id = sp.user_id
-       LEFT JOIN teacher_profiles tp ON u.id = tp.user_id
-       LEFT JOIN classes c ON sp.class_id = c.id
-       WHERE u.id = ?`,
-      [userId]
-    );
-
-    if (!users || users.length === 0) {
-      return res.status(404).json({ success: false, message: 'Profile not found' });
+    const user = await User.findOne({ _id: req.user.id })
+      .populate('tenantId', 'name')
+      .populate('classId', 'name section gradeLevel');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Profile not found' }
+      });
     }
-
-    res.json({ success: true, data: users[0] });
+    
+    res.status(200).json({
+      success: true,
+      data: user
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Update profile
-router.put('/', authenticate, uploadSingle('avatar'), async (req, res, next) => {
+/**
+ * @route   PUT /api/profile
+ * @desc    Update current user profile
+ * @body    { name, phone, email, avatarUrl }
+ * @access  Authenticated users
+ */
+router.put('/', async (req, res, next) => {
   try {
-    const { name, phone, email } = req.body;
-    const avatarUrl = req.file ? `/uploads/images/${req.file.filename}` : null;
-
-    await query(
-      `UPDATE users SET name = ?, phone = ?, email = ?, avatar_url = COALESCE(?, avatar_url), updatedAt = NOW()
-       WHERE id = ?`,
-      [name, phone, email, avatarUrl, req.user.id]
-    );
-
-    res.json({ success: true });
+    const { name, phone, email, avatarUrl } = req.body;
+    
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+    if (email !== undefined) updates.email = email;
+    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+    
+    const user = await User.findOneAndUpdate(
+      { _id: req.user.id },
+      { $set: updates },
+      { new: true, runValidators: true }
+    )
+    .select('-password');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Profile not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: user,
+      message: 'Profile updated successfully'
+    });
   } catch (error) {
     next(error);
   }

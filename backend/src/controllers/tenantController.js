@@ -1,21 +1,22 @@
 /**
- * Tenant (School) Controller
- * Handles CRUD operations for schools/tenants using raw SQL queries
+ * Tenant (School) Controller - MongoDB / Mongoose Version
+ * Handles CRUD operations for schools/tenants using Mongoose models
  */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../config/db');
+const mongoose = require('mongoose');
+const School = require('../models/School'); // Ungaloda School Mongoose Model
+const User = require('../models/User');     // Ungaloda User Mongoose Model
+const Class = require('../models/Class');   // Ungaloda Class Mongoose Model
 
 /**
  * Generate JWT token for user
- * @param {Object} user - User object containing id, email, role, and tenantId
- * @returns {string} JWT token
  */
 const generateToken = (user) => {
   return jwt.sign(
     {
-      id: user.id,
+      id: user._id,
       email: user.email,
       role: user.role,
       tenantId: user.tenantId,
@@ -28,87 +29,58 @@ const generateToken = (user) => {
 };
 
 /**
- * Get all tenants (schools)
+ * Get all tenants (schools) with search and pagination
  * GET /api/tenants
- * 
- * Note: This function safely handles cases where some child tables may not exist
- * in the database schema by using a simplified query that only counts core entities.
  */
 const getAllTenants = async (req, res, next) => {
   try {
-    console.log('[getAllTenants] Request received with query:', req.query);
-    
-    const { 
-      page = 1, 
-      limit = 10, 
-      search
-    } = req.query;
-
+    const { page = 1, limit = 10, search } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    console.log('[getAllTenants] Pagination:', { page, limit, skip, take });
-
-    // Build where clause dynamically
-    let whereClause = '1=1';
-    let params = [];
-    let paramIndex = 1;
-
+    let query = {};
     if (search) {
-      params.push(`%${search}%`);
-      whereClause += ` AND (name ILIKE $${paramIndex} OR code ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`;
-      paramIndex++;
+      const searchRegex = new RegExp(search, 'i');
+      query = {
+        $or: [
+          { schoolName: searchRegex },
+          { schoolCode: searchRegex },
+          { contactEmail: searchRegex }
+        ]
+      };
     }
 
-    console.log('[getAllTenants] Where clause:', whereClause);
-    console.log('[getAllTenants] Params:', params);
+    const total = await School.countDocuments(query);
+    const schools = await School.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(take)
+      .lean();
 
-    // Get total count
-    const countQuery = `SELECT COUNT(*) as total FROM "Tenant" WHERE ${whereClause}`;
-    console.log('[getAllTenants] Count query:', countQuery);
-    const countResult = await db.query(countQuery, params);
-    const total = parseInt(countResult.rows[0].total);
-    console.log('[getAllTenants] Total count:', total);
+    // Attach counts for users and classes dynamically
+    const tenants = await Promise.all(
+      schools.map(async (school) => {
+        const userCount = await User.countDocuments({ tenantId: school._id });
+        const classCount = await Class.countDocuments({ tenantId: school._id });
 
-    // Get tenants with basic stats (only core tables that are guaranteed to exist)
-    // We avoid referencing potentially non-existent tables like Homework
-    const tenantsQuery = `
-      SELECT 
-        t.*,
-        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
-        (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount"
-      FROM "Tenant" t
-      WHERE ${whereClause}
-      ORDER BY t."createdAt" DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-    
-    console.log('[getAllTenants] Tenants query:', tenantsQuery);
-    console.log('[getAllTenants] Tenants params:', [...params, take, skip]);
-    
-    const tenantsParams = [...params, take, skip];
-    const tenantsResult = await db.query(tenantsQuery, tenantsParams);
-    console.log('[getAllTenants] Query result rows:', tenantsResult.rows.length);
-
-    // Format the response to match the expected structure
-    const tenants = tenantsResult.rows.map(tenant => ({
-      id: tenant.id,
-      name: tenant.name,
-      code: tenant.code,
-      address: tenant.address,
-      phone: tenant.phone,
-      email: tenant.email,
-      createdAt: tenant.createdAt,
-      updatedAt: tenant.updatedAt,
-      _count: {
-        users: parseInt(tenant.userCount || 0),
-        classes: parseInt(tenant.classCount || 0),
-        homeworks: 0, // Default to 0 since Homework table may not exist
-        news: 0,      // Default to 0 since News table may not exist
-      }
-    }));
-
-    console.log('[getAllTenants] Success! Returning', tenants.length, 'tenants');
+        return {
+          id: school._id,
+          name: school.schoolName,
+          code: school.schoolCode,
+          address: school.address,
+          phone: school.contactPhone,
+          email: school.contactEmail,
+          createdAt: school.createdAt,
+          updatedAt: school.updatedAt,
+          _count: {
+            users: userCount,
+            classes: classCount,
+            homeworks: 0,
+            news: 0,
+          }
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
@@ -123,16 +95,6 @@ const getAllTenants = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error('═══════════════════════════════════════════════════════════');
-    console.error('CRITICAL GET_ALL_TENANTS ERROR:');
-    console.error('  Error Name:', error.name);
-    console.error('  Error Message:', error.message);
-    console.error('  Error Code:', error.code);
-    console.error('  Error Detail:', error.detail);
-    console.error('  Error Hint:', error.hint);
-    console.error('  Error Position:', error.position);
-    console.error('  Full Stack:', error.stack);
-    console.error('═══════════════════════════════════════════════════════════');
     next(error);
   }
 };
@@ -140,70 +102,47 @@ const getAllTenants = async (req, res, next) => {
 /**
  * Get single tenant by ID
  * GET /api/tenants/:id
- * 
- * Note: This function safely handles cases where some child tables may not exist
- * by using a simplified query that only counts core entities (User, Class).
  */
 const getTenantById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // UUID regex guard - reject non-UUID values before database query
-    // This prevents PostgreSQL errors like "22P02: invalid input syntax for type uuid"
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        error: {
-          message: 'Invalid Tenant ID format. Expected UUID (e.g., 550e8400-e29b-41d4-a716-446655440000).',
-        },
+        error: { message: 'Invalid Tenant ID format.' },
       });
     }
 
-    // Get tenant with basic stats (only core tables that are guaranteed to exist)
-    // We avoid referencing potentially non-existent tables like Homework, News, Circular
-    const tenantQuery = `
-      SELECT 
-        t.*,
-        (SELECT COUNT(*) FROM "User" u WHERE u."tenantId" = t.id) as "userCount",
-        (SELECT COUNT(*) FROM "Class" c WHERE c."tenantId" = t.id) as "classCount"
-      FROM "Tenant" t
-      WHERE t.id = $1
-    `;
-    
-    const tenantResult = await db.query(tenantQuery, [id]);
-    
-    if (tenantResult.rows.length === 0) {
+    const tenant = await School.findById(id).lean();
+    if (!tenant) {
       return res.status(404).json({
         success: false,
-        error: {
-          message: 'School not found',
-        },
+        error: { message: 'School not found' },
       });
     }
 
-    const tenant = tenantResult.rows[0];
-
-    // Get admin users for this tenant
-    const adminsQuery = `
-      SELECT id, email, name, "createdAt"
-      FROM "User"
-      WHERE "tenantId" = $1 AND role = 'ADMIN'
-    `;
-    const adminsResult = await db.query(adminsQuery, [id]);
+    const userCount = await User.countDocuments({ tenantId: id });
+    const classCount = await Class.countDocuments({ tenantId: id });
+    const admins = await User.find({ tenantId: id, role: 'School Admin' }).select('email name createdAt').lean();
 
     res.status(200).json({
       success: true,
       data: {
         ...tenant,
+        id: tenant._id,
+        name: tenant.schoolName,
+        code: tenant.schoolCode,
+        phone: tenant.contactPhone,
+        email: tenant.contactEmail,
         _count: {
-          users: parseInt(tenant.userCount || 0),
-          classes: parseInt(tenant.classCount || 0),
-          homeworks: 0,     // Default to 0 since Homework table may not exist
-          news: 0,          // Default to 0 since News table may not exist
-          circulars: 0,     // Default to 0 since Circular table may not exist
+          users: userCount,
+          classes: classCount,
+          homeworks: 0,
+          news: 0,
+          circulars: 0,
         },
-        users: adminsResult.rows,
+        users: admins,
       },
     });
   } catch (error) {
@@ -212,138 +151,90 @@ const getTenantById = async (req, res, next) => {
 };
 
 /**
- * Create a new tenant (school) with admin credentials
+ * Create a new tenant (school) with admin credentials using Transactions
  * POST /api/tenants
  */
 const createTenant = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
-      name,
-      code,
+      schoolName,
+      schoolCode,
       address,
-      phone,
-      email,
+      contactPhone,
+      contactEmail,
       adminEmail,
       adminPassword,
       adminName,
     } = req.body;
 
-    // Check if code already exists
-    const codeCheckQuery = 'SELECT id FROM "Tenant" WHERE code = $1';
-    const codeCheckResult = await db.query(codeCheckQuery, [code]);
-
-    if (codeCheckResult.rows.length > 0) {
+    const existingCode = await School.findOne({ schoolCode }).session(session);
+    if (existingCode) {
+      await session.endSession();
       return res.status(409).json({
         success: false,
-        error: {
-          message: 'School code already exists. Please use a unique code.',
-        },
+        error: { message: 'School code already exists. Please use a unique code.' },
       });
     }
 
-    // Check if admin email already exists
-    // Note: adminEmail has been normalized (lowercased) by express-validator's normalizeEmail()
-    console.log(`CreateTenant: Checking if admin email exists: "${adminEmail}"`);
-    const emailCheckQuery = 'SELECT id FROM "User" WHERE email = $1';
-    const emailCheckResult = await db.query(emailCheckQuery, [adminEmail]);
-
-    if (emailCheckResult.rows.length > 0) {
-      console.log(`CreateTenant: Admin email already exists: "${adminEmail}"`);
+    const existingAdmin = await User.findOne({ email: adminEmail }).session(session);
+    if (existingAdmin) {
+      await session.endSession();
       return res.status(409).json({
         success: false,
-        error: {
-          message: 'Admin with this email already exists.',
-        },
+        error: { message: 'Admin with this email already exists.' },
       });
     }
 
-    // Hash admin password
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
-    console.log(`CreateTenant: Password hashed successfully. Hash starts with: ${hashedPassword.substring(0, 20)}...`);
 
-    // Create tenant and admin in a transaction
-    console.log('CreateTenant: Starting database transaction');
-    const result = await db.transaction(async (query) => {
-      try {
-        console.log('CreateTenant: Transaction BEGIN executed');
-        
-        // Create tenant
-        console.log('CreateTenant: Inserting tenant with data:', {
-          name,
-          code,
-          address,
-          phone,
-          email
-        });
-        const tenantQuery = `
-          INSERT INTO "Tenant" (name, code, address, phone, email, "createdAt", "updatedAt")
-          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-          RETURNING *
-        `;
-        const tenantParams = [name, code, address, phone, email];
-        console.log('CreateTenant: Executing tenant INSERT query with params:', tenantParams);
-        const tenantResult = await query(tenantQuery, tenantParams);
-        console.log('CreateTenant: Tenant INSERT result:', {
-          rowCount: tenantResult.rowCount,
-          rows: tenantResult.rows,
-          fields: tenantResult.fields
-        });
-        const tenant = tenantResult.rows[0];
-        console.log('CreateTenant: Tenant created successfully with id:', tenant.id);
-
-        // Create admin user
-        console.log(`CreateTenant: Creating admin user with email="${adminEmail}", name="${adminName}", tenantId="${tenant.id}"`);
-        const adminQuery = `
-          INSERT INTO "User" (email, password, name, role, "tenantId", "createdAt", "updatedAt")
-          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-          RETURNING id, email, name, role, "tenantId", "createdAt"
-        `;
-        const adminParams = [adminEmail, hashedPassword, adminName, 'ADMIN', tenant.id];
-        console.log('CreateTenant: Executing admin INSERT query with params:', adminParams);
-        const adminResult = await query(adminQuery, adminParams);
-        console.log('CreateTenant: Admin INSERT result:', {
-          rowCount: adminResult.rowCount,
-          rows: adminResult.rows,
-          fields: adminResult.fields
-        });
-        const admin = adminResult.rows[0];
-        console.log(`CreateTenant: Admin user created successfully with id="${admin.id}", email="${admin.email}"`);
-
-        console.log('CreateTenant: Transaction about to COMMIT');
-        return { tenant, admin };
-      } catch (transactionError) {
-        console.error('CreateTenant: ERROR inside transaction:', {
-          message: transactionError.message,
-          code: transactionError.code,
-          detail: transactionError.detail,
-          constraint: transactionError.constraint,
-          stack: transactionError.stack
-        });
-        throw transactionError; // Re-throw to trigger ROLLBACK
-      }
+    // Create School using exact schema keys
+    const newSchool = new School({
+      schoolName,
+      schoolCode,
+      address,
+      contactPhone,
+      contactEmail,
     });
-    console.log('CreateTenant: Transaction COMMIT successful, result:', {
-      tenantId: result.tenant.id,
-      adminId: result.admin.id,
-      adminEmail: result.admin.email
-    });
+    await newSchool.save({ session });
 
-    // Generate token for admin
-    const token = generateToken(result.admin);
+    // Create Admin User mapped to School's ID (tenantId)
+    const newAdmin = new User({
+      email: adminEmail,
+      password: hashedPassword,
+      name: adminName,
+      role: 'School Admin', // <-- Fixed role enum value
+      tenantId: newSchool._id,
+    });
+    await newAdmin.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    const token = generateToken(newAdmin);
 
     res.status(201).json({
       success: true,
       data: {
-        tenant: result.tenant,
+        tenant: newSchool,
         admin: {
-          ...result.admin,
+          id: newAdmin._id,
+          email: newAdmin.email,
+          name: newAdmin.name,
+          role: newAdmin.role,
+          tenantId: newAdmin.tenantId,
+          createdAt: newAdmin.createdAt,
           token,
         },
       },
       message: 'School and admin created successfully',
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };
@@ -355,261 +246,104 @@ const createTenant = async (req, res, next) => {
 const updateTenant = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, address, phone, email } = req.body;
+    const { schoolName, schoolCode, address, contactPhone, contactEmail } = req.body;
 
-    // Check if tenant exists
-    const checkQuery = 'SELECT * FROM "Tenant" WHERE id = $1';
-    const checkResult = await db.query(checkQuery, [id]);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid Tenant ID format.' },
+      });
+    }
 
-    if (checkResult.rows.length === 0) {
+    const existingTenant = await School.findById(id);
+    if (!existingTenant) {
       return res.status(404).json({
         success: false,
-        error: {
-          message: 'School not found',
-        },
+        error: { message: 'School not found' },
       });
     }
 
-    const existingTenant = checkResult.rows[0];
+    let updateData = {};
+    if (schoolName !== undefined) updateData.schoolName = schoolName.trim();
+    if (address !== undefined) updateData.address = address.trim();
+    if (contactPhone !== undefined) updateData.contactPhone = contactPhone.trim();
+    if (contactEmail !== undefined) updateData.contactEmail = contactEmail.trim();
 
-    // Build update fields dynamically
-    const updateFields = [];
-    const updateParams = [];
-    let paramIndex = 1;
-
-    // Trim and validate name if provided
-    if (name !== undefined) {
-      const trimmedName = name.trim();
-      if (!trimmedName) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            message: 'School name cannot be empty',
-          },
-        });
-      }
-      if (trimmedName.length > 200) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            message: 'School name must be less than 200 characters',
-          },
-        });
-      }
-      updateFields.push(`name = $${paramIndex}`);
-      updateParams.push(trimmedName);
-      paramIndex++;
-    }
-
-    // Check if code is being changed and if it's unique
-    if (req.body.code !== undefined && req.body.code !== existingTenant.code) {
-      const trimmedCode = req.body.code.trim();
-      if (!trimmedCode) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            message: 'School code cannot be empty',
-          },
-        });
-      }
-      
-      const codeCheckQuery = 'SELECT id FROM "Tenant" WHERE code = $1 AND id != $2';
-      const codeCheckResult = await db.query(codeCheckQuery, [trimmedCode, id]);
-      
-      if (codeCheckResult.rows.length > 0) {
+    if (schoolCode !== undefined && schoolCode.trim() !== existingTenant.schoolCode) {
+      const codeCheck = await School.findOne({ schoolCode: schoolCode.trim(), _id: { $ne: id } });
+      if (codeCheck) {
         return res.status(409).json({
           success: false,
-          error: {
-            message: 'School code already exists. Please use a unique code.',
-          },
+          error: { message: 'School code already exists. Please use a unique code.' },
         });
       }
-      
-      updateFields.push(`code = $${paramIndex}`);
-      updateParams.push(trimmedCode);
-      paramIndex++;
+      updateData.schoolCode = schoolCode.trim();
     }
 
-    // Trim and validate address if provided
-    if (address !== undefined) {
-      updateFields.push(`address = $${paramIndex}`);
-      updateParams.push(address.trim() || null);
-      paramIndex++;
-    }
-
-    // Trim and validate phone if provided
-    if (phone !== undefined) {
-      updateFields.push(`phone = $${paramIndex}`);
-      updateParams.push(phone.trim() || null);
-      paramIndex++;
-    }
-
-    // Trim and validate email if provided
-    if (email !== undefined) {
-      const trimmedEmail = email.trim();
-      if (trimmedEmail && !trimmedEmail.includes('@')) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            message: 'Please provide a valid email address',
-          },
-        });
-      }
-      updateFields.push(`email = $${paramIndex}`);
-      updateParams.push(trimmedEmail || null);
-      paramIndex++;
-    }
-
-    // If no fields to update, return existing tenant
-    if (updateFields.length === 0) {
-      return res.status(200).json({
-        success: true,
-        data: existingTenant,
-        message: 'No changes to update',
-      });
-    }
-
-    // Add id parameter and updated_at
-    updateFields.push(`"updatedAt" = NOW()`);
-    updateParams.push(id);
-
-    // Execute update
-    const updateQuery = `
-      UPDATE "Tenant"
-      SET ${updateFields.join(', ')}
-      WHERE id = $${paramIndex}
-      RETURNING *
-    `;
-
-    const updateResult = await db.query(updateQuery, updateParams);
-    const tenant = updateResult.rows[0];
+    const updatedTenant = await School.findByIdAndUpdate(id, { $set: updateData }, { new: true, runValidators: true });
 
     res.status(200).json({
       success: true,
-      data: tenant,
+      data: updatedTenant,
       message: 'School updated successfully',
     });
   } catch (error) {
-    console.error('UpdateTenant Error:', error);
     next(error);
   }
 };
 
 /**
- * Delete a tenant (hard delete with cascade)
+ * Delete a tenant and its related records (Users, Classes)
  * DELETE /api/tenants/:id
- * 
- * This performs a hard delete of the tenant and all associated data.
- * Cascade delete relationships should be configured in Supabase SQL Editor.
- * 
- * Note: This function safely handles cases where some child tables may not exist
- * in the database schema, wrapping table existence checks in try-catch blocks.
  */
 const deleteTenant = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
 
-    // Check if tenant exists (basic check without child table counts)
-    const basicCheckQuery = 'SELECT * FROM "Tenant" WHERE id = $1';
-    const basicCheckResult = await db.query(basicCheckQuery, [id]);
-
-    if (basicCheckResult.rows.length === 0) {
-      return res.status(404).json({
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      await session.endSession();
+      return res.status(400).json({
         success: false,
-        error: {
-          message: 'School not found',
-        },
+        error: { message: 'Invalid Tenant ID format.' },
       });
     }
 
-    const existingTenant = basicCheckResult.rows[0];
+    const existingTenant = await School.findById(id).session(session);
+    if (!existingTenant) {
+      await session.endSession();
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School not found' },
+      });
+    }
 
-    // Safe helper function to count records in a table, returning 0 if table/column doesn't exist
-    const safeCount = async (tableName, columnName, columnValue) => {
-      try {
-        // First check if table exists
-        const tableCheck = await db.query(`
-          SELECT COUNT(*) as exists 
-          FROM information_schema.tables 
-          WHERE table_name = $1
-        `, [tableName.toLowerCase()]);
-        
-        if (parseInt(tableCheck.rows[0].exists) === 0) {
-          return 0; // Table doesn't exist
-        }
-        
-        // Check if column exists
-        const columnCheck = await db.query(`
-          SELECT COUNT(*) as exists 
-          FROM information_schema.columns 
-          WHERE table_name = $1 AND column_name = $2
-        `, [tableName.toLowerCase(), columnName.toLowerCase()]);
-        
-        if (parseInt(columnCheck.rows[0].exists) === 0) {
-          return 0; // Column doesn't exist
-        }
-        
-        // Safe to query the count
-        const countResult = await db.query(
-          `SELECT COUNT(*) as count FROM "${tableName}" WHERE "${columnName}" = $1`,
-          [columnValue]
-        );
-        return parseInt(countResult.rows[0].count);
-      } catch (err) {
-        // If any error occurs (table doesn't exist, permission issues, etc.), return 0
-        console.warn(`[deleteTenant] Could not count records in ${tableName}.${columnName}: ${err.message}`);
-        return 0;
-      }
-    };
+    const userCount = await User.countDocuments({ tenantId: id }).session(session);
+    const classCount = await Class.countDocuments({ tenantId: id }).session(session);
 
-    // Gather dependency info safely (won't fail if tables don't exist)
-    const dependencyInfo = {
-      userCount: await safeCount('User', 'tenantId', id),
-      classCount: await safeCount('Class', 'tenantId', id),
-      homeworkCount: await safeCount('Homework', 'tenant_id', id),
-      markCount: await safeCount('Mark', 'tenantId', id),
-      newsCount: await safeCount('News', 'tenantId', id),
-      circularCount: await safeCount('Circular', 'tenantId', id),
-      examScheduleCount: await safeCount('ExamSchedule', 'tenantId', id),
-      attendanceCount: await safeCount('Attendance', 'tenant_id', id),
-      feeCount: await safeCount('Fee', 'tenantId', id),
-    };
+    // Delete associated records inside transaction
+    await User.deleteMany({ tenantId: id }).session(session);
+    await Class.deleteMany({ tenantId: id }).session(session);
+    await School.findByIdAndDelete(id).session(session);
 
-    // Delete the tenant - cascade will handle all related records
-    // The CASCADE option on foreign keys will automatically delete child records
-    const deleteQuery = 'DELETE FROM "Tenant" WHERE id = $1';
-    await db.query(deleteQuery, [id]);
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
       message: 'School and all associated data deleted successfully',
       data: {
         deletedTenantId: id,
-        tenantName: existingTenant.name,
-        tenantCode: existingTenant.code,
-        dependenciesHandled: dependencyInfo,
+        tenantName: existingTenant.schoolName,
+        tenantCode: existingTenant.schoolCode,
+        dependenciesHandled: { userCount, classCount },
       },
     });
   } catch (error) {
-    console.error('DeleteTenant Error:', error);
-    
-    // Handle foreign key constraint errors
-    if (error.code === '23503') {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'Cannot delete school: It has related records. Please remove dependencies first.',
-          code: 'FOREIGN_KEY_CONSTRAINT',
-        },
-      });
-    }
-
-    // Handle "table doesn't exist" errors gracefully
-    if (error.code === '42P01') {
-      console.warn('[deleteTenant] Referenced table does not exist, attempting delete anyway:', error.message);
-      // Continue with delete - the cascade will handle what exists
-    }
-
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };
@@ -617,70 +351,47 @@ const deleteTenant = async (req, res, next) => {
 /**
  * Get tenant statistics
  * GET /api/tenants/:id/stats
- * 
- * Note: This function safely handles cases where some child tables may not exist
- * by using a simplified query that only counts core entities (User, Class).
  */
 const getTenantStats = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // UUID regex guard - reject non-UUID values before database query
-    // This prevents PostgreSQL errors like "22P02: invalid input syntax for type uuid"
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        error: {
-          message: 'Invalid Tenant ID format. Expected UUID (e.g., 550e8400-e29b-41d4-a716-446655440000).',
-        },
+        error: { message: 'Invalid Tenant ID format.' },
       });
     }
 
-    // Check if tenant exists
-    const checkQuery = 'SELECT id, name, code FROM "Tenant" WHERE id = $1';
-    const checkResult = await db.query(checkQuery, [id]);
-
-    if (checkResult.rows.length === 0) {
+    const tenant = await School.findById(id).lean();
+    if (!tenant) {
       return res.status(404).json({
         success: false,
-        error: {
-          message: 'School not found',
-        },
+        error: { message: 'School not found' },
       });
     }
 
-    const tenant = checkResult.rows[0];
-
-    // Get counts using a single query with only core tables that are guaranteed to exist
-    // We avoid referencing potentially non-existent tables like Homework, Mark, News, Circular, ExamSchedule
-    const statsQuery = `
-      SELECT 
-        (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'STUDENT') as "totalStudents",
-        (SELECT COUNT(*) FROM "User" WHERE "tenantId" = $1 AND role = 'ADMIN') as "totalAdmins",
-        (SELECT COUNT(*) FROM "Class" WHERE "tenantId" = $1) as "totalClasses"
-    `;
-
-    const statsResult = await db.query(statsQuery, [id]);
-    const stats = statsResult.rows[0];
+    const totalStudents = await User.countDocuments({ tenantId: id, role: 'Student' });
+    const totalAdmins = await User.countDocuments({ tenantId: id, role: 'School Admin' });
+    const totalClasses = await Class.countDocuments({ tenantId: id });
 
     res.status(200).json({
       success: true,
       data: {
         tenant: {
-          id,
-          name: tenant.name,
-          code: tenant.code,
+          id: tenant._id,
+          name: tenant.schoolName,
+          code: tenant.schoolCode,
         },
         stats: {
-          totalStudents: parseInt(stats.totalStudents || 0),
-          totalAdmins: parseInt(stats.totalAdmins || 0),
-          totalClasses: parseInt(stats.totalClasses || 0),
-          totalHomeworks: 0,           // Default to 0 since Homework table may not exist
-          totalMarks: 0,               // Default to 0 since Mark table may not exist
-          totalNews: 0,                // Default to 0 since News table may not exist
-          totalCirculars: 0,           // Default to 0 since Circular table may not exist
-          totalExamSchedules: 0,       // Default to 0 since ExamSchedule table may not exist
+          totalStudents,
+          totalAdmins,
+          totalClasses,
+          totalHomeworks: 0,
+          totalMarks: 0,
+          totalNews: 0,
+          totalCirculars: 0,
+          totalExamSchedules: 0,
         },
       },
     });

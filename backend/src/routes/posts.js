@@ -1,19 +1,22 @@
 /**
  * Post Routes
- * Handles CRUD operations for posts
+ * Using MongoDB/Mongoose with Express Validator
  */
 
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const postController = require('../controllers/postController');
-const { protect } = require('../middleware/auth');
+const { authenticate } = require('../middleware/authMiddleware');
 
 const router = express.Router();
+
+// All routes require authentication (or adjust based on public access)
+// router.use(authenticate); // Uncomment if all routes need auth, or apply per route as below
 
 /**
  * @route   GET /api/posts
  * @desc    Get all posts with pagination and search
- * @access  Public
+ * @access  Public / Authenticated
  * @query   page, limit, search
  */
 router.get(
@@ -42,19 +45,19 @@ router.get(
  * @access  Private
  * @query   page, limit
  */
-router.get('/my-posts', protect, postController.getMyPosts);
+router.get('/my-posts', authenticate, postController.getMyPosts);
 
 /**
  * @route   GET /api/posts/:id
  * @desc    Get single post by ID
- * @access  Public
- * @param   id - Post UUID
+ * @access  Public / Authenticated
+ * @param   id - Post MongoDB ObjectId
  */
 router.get(
   '/:id',
   [
     param('id')
-      .isUUID()
+      .isMongoId()
       .withMessage('Invalid post ID format'),
   ],
   postController.getPostById
@@ -69,7 +72,7 @@ router.get(
 router.post(
   '/',
   [
-    protect,
+    authenticate,
     body('title')
       .trim()
       .notEmpty()
@@ -90,15 +93,15 @@ router.post(
  * @route   PUT /api/posts/:id
  * @desc    Update post
  * @access  Private
- * @param   id - Post UUID
+ * @param   id - Post MongoDB ObjectId
  * @body    { title, content }
  */
 router.put(
   '/:id',
   [
-    protect,
+    authenticate,
     param('id')
-      .isUUID()
+      .isMongoId()
       .withMessage('Invalid post ID format'),
     body('title')
       .optional()
@@ -122,14 +125,14 @@ router.put(
  * @route   DELETE /api/posts/:id
  * @desc    Delete post
  * @access  Private
- * @param   id - Post UUID
+ * @param   id - Post MongoDB ObjectId
  */
 router.delete(
   '/:id',
   [
-    protect,
+    authenticate,
     param('id')
-      .isUUID()
+      .isMongoId()
       .withMessage('Invalid post ID format'),
   ],
   postController.deletePost

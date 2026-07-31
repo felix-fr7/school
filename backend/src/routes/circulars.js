@@ -1,104 +1,191 @@
 /**
  * Circulars Routes
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
-const { authenticate, isAdmin } = require('../middleware/auth');
-const { uploadSingle } = require('../middleware/fileUpload');
+const Circular = require('../models/Circular');
+const { authenticate } = require('../middleware/authMiddleware');
+const { requireAdmin } = require('../middleware/rbacMiddleware');
 
-// Get circulars
-router.get('/', authenticate, async (req, res, next) => {
+// All routes require authentication
+router.use(authenticate);
+
+/**
+ * @route   GET /api/circulars
+ * @desc    Get all circulars
+ * @query   page, limit
+ * @access  Authenticated users
+ */
+router.get('/', async (req, res, next) => {
   try {
-    const { type, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
-
-    let whereClause = 'c.tenant_id = ? AND c.is_published = TRUE';
-    let params = [req.user.tenantId];
-
-    if (type) { whereClause += ' AND c.type = ?'; params.push(type); }
-
-    const circulars = await query(
-      `SELECT c.*, u.name as author_name
-       FROM circulars c
-       JOIN users u ON c.created_by = u.id
-       WHERE ${whereClause}
-       ORDER BY c.publish_date DESC, c.createdAt DESC
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), parseInt(offset)]
-    );
-
-    res.json({ success: true, data: circulars });
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const circulars = await Circular.find({
+      tenantId: req.user.tenantId,
+      isPublished: true
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate('authorId', 'name email');
+    
+    const total = await Circular.countDocuments({
+      tenantId: req.user.tenantId,
+      isPublished: true
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: circulars,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Get single circular
-router.get('/:id', authenticate, async (req, res, next) => {
+/**
+ * @route   GET /api/circulars/:id
+ * @desc    Get single circular
+ * @access  Authenticated users
+ */
+router.get('/:id', async (req, res, next) => {
   try {
-    const circular = await query(
-      `SELECT c.*, u.name as author_name
-       FROM circulars c
-       JOIN users u ON c.created_by = u.id
-       WHERE c.id = ? AND c.tenant_id = ?`,
-      [req.params.id, req.user.tenantId]
-    );
-
-    if (!circular || circular.length === 0) {
-      return res.status(404).json({ success: false, message: 'Circular not found' });
+    const circular = await Circular.findOne({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    }).populate('authorId', 'name email');
+    
+    if (!circular) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Circular not found' }
+      });
     }
-
-    res.json({ success: true, data: circular[0] });
+    
+    res.status(200).json({
+      success: true,
+      data: circular
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Create circular (Admin)
-router.post('/', authenticate, isAdmin, uploadSingle('attachment'), async (req, res, next) => {
+/**
+ * @route   POST /api/circulars
+ * @desc    Create circular
+ * @body    { title, content, attachmentUrl, expiryDate }
+ * @access  Admin only
+ */
+router.post('/', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const { title, content, type, circularNumber, publishDate } = req.body;
-    const attachmentUrl = req.file ? `/uploads/documents/${req.file.filename}` : null;
-    const circularId = uuidv4();
+    const {
+      title,
+      content,
+      attachmentUrl,
+      expiryDate
+    } = req.body;
+    
+    const circular = new Circular({
+      tenantId: req.user.tenantId,
+      authorId: req.user.id,
+      title,
+      content,
+      attachmentUrl,
+      expiryDate: expiryDate ? new Date(expiryDate) : null,
+      isPublished: true,
+      publishedAt: new Date()
+    });
+    
+    await circular.save();
+    
+    res.status(201).json({
+      success: true,
+      data: circular,
+      message: 'Circular created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-    await query(
-      `INSERT INTO circulars (id, tenant_id, circular_number, title, content, type, attachment_url, 
-              is_published, publish_date, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, ?, ?)`,
-      [circularId, req.user.tenantId, circularNumber, title, content, type, attachmentUrl, publishDate, req.user.id]
+/**
+ * @route   PUT /api/circulars/:id
+ * @desc    Update circular
+ * @access  Admin only
+ */
+router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const {
+      title,
+      content,
+      attachmentUrl,
+      expiryDate,
+      isPublished
+    } = req.body;
+    
+    const updates = {};
+    if (title !== undefined) updates.title = title;
+    if (content !== undefined) updates.content = content;
+    if (attachmentUrl !== undefined) updates.attachmentUrl = attachmentUrl;
+    if (expiryDate !== undefined) updates.expiryDate = new Date(expiryDate);
+    if (isPublished !== undefined) updates.isPublished = isPublished;
+    
+    const circular = await Circular.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.user.tenantId },
+      { $set: updates },
+      { new: true, runValidators: true }
     );
-
-    res.status(201).json({ success: true, data: { id: circularId } });
+    
+    if (!circular) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Circular not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: circular,
+      message: 'Circular updated successfully'
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Update circular
-router.put('/:id', authenticate, isAdmin, async (req, res, next) => {
+/**
+ * @route   DELETE /api/circulars/:id
+ * @desc    Delete circular
+ * @access  Admin only
+ */
+router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const { title, content, type, isPublished, publishDate } = req.body;
-
-    await query(
-      `UPDATE circulars SET title = ?, content = ?, type = ?, is_published = ?, publish_date = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
-      [title, content, type, isPublished, publishDate, req.params.id, req.user.tenantId]
-    );
-
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Delete circular
-router.delete('/:id', authenticate, isAdmin, async (req, res, next) => {
-  try {
-    await query('DELETE FROM circulars WHERE id = ? AND tenant_id = ?', [req.params.id, req.user.tenantId]);
-    res.json({ success: true });
+    const circular = await Circular.findOneAndDelete({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    });
+    
+    if (!circular) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Circular not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Circular deleted successfully'
+    });
   } catch (error) {
     next(error);
   }

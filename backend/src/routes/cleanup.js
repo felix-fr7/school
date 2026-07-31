@@ -13,8 +13,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect } = require('../middleware/auth');
-const { requireSuperAdmin } = require('../middleware/auth');
+const { authenticate, isSuperAdmin } = require('../middleware/auth');
 const {
   getCleanupStats,
   executeCleanup,
@@ -22,8 +21,8 @@ const {
 } = require('../controllers/cleanupController');
 
 // All cleanup routes require authentication and SUPER_ADMIN role
-router.use(protect);
-router.use(requireSuperAdmin);
+router.use(authenticate);
+router.use(isSuperAdmin);
 
 /**
  * @route   GET /api/cleanup/stats

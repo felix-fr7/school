@@ -4,18 +4,19 @@
  * 
  * IMPORTANT: Static routes MUST be defined before dynamic parameter routes
  * to prevent "create" from being interpreted as an ID parameter
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const { body, param } = require('express-validator');
 const tenantController = require('../controllers/tenantController');
-const { protect, requireSuperAdmin } = require('../middleware/auth');
+const { authenticate, isSuperAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
 // All routes require Super Admin role
-router.use(protect);
-router.use(requireSuperAdmin);
+router.use(authenticate);
+router.use(isSuperAdmin);
 
 /**
  * @route   GET /api/tenants
@@ -32,7 +33,7 @@ router.get('/', tenantController.getAllTenants);
  * @body    { name, code, address, phone, email, adminEmail, adminPassword, adminName }
  * 
  * NOTE: This POST route is defined BEFORE the /:id routes to prevent
- * "create" or other static paths from being interpreted as UUID parameters
+ * "create" or other static paths from being interpreted as ID parameters
  */
 router.post(
   '/',
@@ -81,14 +82,14 @@ router.post(
  * @route   GET /api/tenants/:id
  * @desc    Get single tenant by ID
  * @access  Super Admin
- * @params  id (UUID)
+ * @params  id (MongoDB ObjectId)
  * 
  * NOTE: Dynamic parameter routes MUST come after static routes
  */
 router.get(
   '/:id',
   [
-    param('id').isUUID().withMessage('Invalid tenant ID format'),
+    param('id').isMongoId().withMessage('Invalid tenant ID format'),
   ],
   tenantController.getTenantById
 );
@@ -97,13 +98,13 @@ router.get(
  * @route   PUT /api/tenants/:id
  * @desc    Update tenant information
  * @access  Super Admin
- * @params  id (UUID)
+ * @params  id (MongoDB ObjectId)
  * @body    { name, address, phone, email }
  */
 router.put(
   '/:id',
   [
-    param('id').isUUID().withMessage('Invalid tenant ID format'),
+    param('id').isMongoId().withMessage('Invalid tenant ID format'),
     body('name')
       .optional()
       .trim()
@@ -128,12 +129,12 @@ router.put(
  * @route   DELETE /api/tenants/:id
  * @desc    Delete a tenant (hard delete with cascade)
  * @access  Super Admin
- * @params  id (UUID)
+ * @params  id (MongoDB ObjectId)
  */
 router.delete(
   '/:id',
   [
-    param('id').isUUID().withMessage('Invalid tenant ID format'),
+    param('id').isMongoId().withMessage('Invalid tenant ID format'),
   ],
   tenantController.deleteTenant
 );
@@ -142,12 +143,12 @@ router.delete(
  * @route   GET /api/tenants/:id/stats
  * @desc    Get tenant statistics (students count, classes count, etc.)
  * @access  Super Admin
- * @params  id (UUID)
+ * @params  id (MongoDB ObjectId)
  */
 router.get(
   '/:id/stats',
   [
-    param('id').isUUID().withMessage('Invalid tenant ID format'),
+    param('id').isMongoId().withMessage('Invalid tenant ID format'),
   ],
   tenantController.getTenantStats
 );

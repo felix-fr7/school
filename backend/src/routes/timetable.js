@@ -1,78 +1,138 @@
 /**
  * Timetable Routes
+ * Handles class timetable management CRUD operations
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
-const { authenticate, isAdmin } = require('../middleware/auth');
+const { body, query, param } = require('express-validator');
+const Timetable = require('../models/Timetable');
+const { authenticate } = require('../middleware/authMiddleware');
+const { requireAdmin } = require('../middleware/rbacMiddleware'); // Correct Admin middleware import
 
-// Get timetable for a class
-router.get('/class/:classId', authenticate, async (req, res, next) => {
-  try {
-    const timetable = await query(
-      `SELECT t.*, s.name as subject_name, u.name as teacher_name
-       FROM timetables t
-       JOIN subjects s ON t.subject_id = s.id
-       JOIN users u ON t.teacher_id = u.id
-       WHERE t.class_id = ? AND t.is_active = TRUE
-       ORDER BY FIELD(t.day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), 
-                t.period_number`,
-      [req.params.classId]
-    );
+// All routes require authentication
+router.use(authenticate);
 
-    res.json({ success: true, data: timetable });
-  } catch (error) {
-    next(error);
+/**
+ * @route   GET /api/timetable
+ * @desc    Get class timetable (filtered by classId and optional dayOfWeek)
+ * @query   classId, dayOfWeek
+ * @access  Authenticated users
+ */
+router.get(
+  '/',
+  [
+    query('classId').isMongoId().withMessage('Valid class ID is required'),
+    query('dayOfWeek')
+      .optional()
+      .isIn(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+      .withMessage('Invalid day of the week')
+  ],
+  async (req, res, next) => {
+    try {
+      const { classId, dayOfWeek } = req.query;
+      const tenantId = req.user.tenantId;
+
+      const filter = { tenantId, classId };
+      if (dayOfWeek) {
+        filter.dayOfWeek = dayOfWeek;
+      }
+
+      const timetable = await Timetable.find(filter)
+        .populate('subjectId', 'name code')
+        .populate('teacherId', 'name email avatarUrl')
+        .sort({ dayOfWeek: 1, startTime: 1 });
+
+      res.status(200).json({
+        success: true,
+        data: timetable
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-// Create timetable entry (Admin)
-router.post('/', authenticate, isAdmin, async (req, res, next) => {
-  try {
-    const { classId, dayOfWeek, periodNumber, subjectId, teacherId, roomNumber, startTime, endTime } = req.body;
-    const timetableId = uuidv4();
+/**
+ * @route   POST /api/timetable
+ * @desc    Create a new timetable entry
+ * @access  Admin / Tenant Admin
+ */
+router.post(
+  '/',
+  requireAdmin, // Using correct admin middleware
+  [
+    body('classId').isMongoId().withMessage('Valid class ID is required'),
+    body('subjectId').isMongoId().withMessage('Valid subject ID is required'),
+    body('teacherId').isMongoId().withMessage('Valid teacher ID is required'),
+    body('dayOfWeek')
+      .isIn(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+      .withMessage('Valid day of the week is required'),
+    body('startTime').notEmpty().withMessage('Start time is required (e.g., 09:00 AM)'),
+    body('endTime').notEmpty().withMessage('End time is required (e.g., 10:00 AM)'),
+    body('roomNumber').optional().trim()
+  ],
+  async (req, res, next) => {
+    try {
+      const { classId, subjectId, teacherId, dayOfWeek, startTime, endTime, roomNumber } = req.body;
+      const tenantId = req.user.tenantId;
 
-    await query(
-      `INSERT INTO timetables (id, tenant_id, class_id, day_of_week, period_number, subject_id, 
-              teacher_id, room_number, start_time, end_time, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
-      [timetableId, req.user.tenantId, classId, dayOfWeek, periodNumber, subjectId, teacherId, roomNumber, startTime, endTime]
-    );
+      const timetableEntry = new Timetable({
+        tenantId,
+        classId,
+        subjectId,
+        teacherId,
+        dayOfWeek,
+        startTime,
+        endTime,
+        roomNumber: roomNumber || null
+      });
 
-    res.status(201).json({ success: true, data: { id: timetableId } });
-  } catch (error) {
-    next(error);
+      await timetableEntry.save();
+
+      res.status(201).json({
+        success: true,
+        message: 'Timetable entry created successfully',
+        data: timetableEntry
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-// Update timetable entry
-router.put('/:id', authenticate, isAdmin, async (req, res, next) => {
-  try {
-    const { dayOfWeek, periodNumber, subjectId, teacherId, roomNumber, startTime, endTime, isActive } = req.body;
+/**
+ * @route   DELETE /api/timetable/:id
+ * @desc    Delete a timetable entry
+ * @access  Admin / Tenant Admin
+ */
+router.delete(
+  '/:id',
+  requireAdmin, // Using correct admin middleware
+  [
+    param('id').isMongoId().withMessage('Invalid timetable entry ID format')
+  ],
+  async (req, res, next) => {
+    try {
+      const tenantId = req.user.tenantId;
+      const deletedEntry = await Timetable.findOneAndDelete({ _id: req.params.id, tenantId });
 
-    await query(
-      `UPDATE timetables SET day_of_week = ?, period_number = ?, subject_id = ?, teacher_id = ?, 
-              room_number = ?, start_time = ?, end_time = ?, is_active = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
-      [dayOfWeek, periodNumber, subjectId, teacherId, roomNumber, startTime, endTime, isActive !== undefined ? isActive : true, req.params.id, req.user.tenantId]
-    );
+      if (!deletedEntry) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Timetable entry not found' }
+        });
+      }
 
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
+      res.status(200).json({
+        success: true,
+        message: 'Timetable entry deleted successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
-
-// Delete timetable entry
-router.delete('/:id', authenticate, isAdmin, async (req, res, next) => {
-  try {
-    await query('DELETE FROM timetables WHERE id = ? AND tenant_id = ?', [req.params.id, req.user.tenantId]);
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
+);
 
 module.exports = router;

@@ -1,0 +1,31 @@
+/* Placeholder Screen Styles */
+.placeholder-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.placeholder-icon {
+  font-size: 4rem;
+  color: var(--ion-color-primary);
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.placeholder-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--ion-text-color);
+  margin-bottom: 0.5rem;
+}
+
+.placeholder-description {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  max-width: 400px;
+  line-height: 1.5;
+}

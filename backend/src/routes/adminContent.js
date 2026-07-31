@@ -7,15 +7,15 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const adminContentController = require('../controllers/adminContentController');
-const { protect, requireAdmin } = require('../middleware/auth');
-const { uploadLesson, handleFileUploadError } = require('../middleware/fileUpload');
+const { authenticate, isAdmin } = require('../middleware/auth');
+const { uploadSingle } = require('../middleware/fileUpload');
 const storageService = require('../services/storageService');
 
 const router = express.Router();
 
 // All routes require authentication and Admin role
-router.use(protect);
-router.use(requireAdmin);
+router.use(authenticate);
+router.use(isAdmin);
 
 // ============================================
 // News Management Routes (with Visibility)
@@ -225,8 +225,7 @@ router.delete(
  */
 router.post(
   '/upload',
-  uploadLesson.single('file'),
-  handleFileUploadError,
+  uploadSingle('file'),
   async (req, res, next) => {
     try {
       if (!req.file) {

@@ -1,16 +1,32 @@
 /**
  * Teacher Routes
  * Teacher-specific endpoints for class management
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
-const { authenticate, isTeacher, isAdmin } = require('../middleware/auth');
+const User = require('../models/User');
+const ClassModel = require('../models/Class');
+const StudentProfile = require('../models/StudentProfile');
+const Homework = require('../models/Homework');
+const HomeworkSubmission = require('../models/HomeworkSubmission');
+const ClassCircular = require('../models/ClassCircular');
+const ClassSubject = require('../models/ClassSubject');
+const { authenticate } = require('../middleware/authMiddleware');
 
-// All routes require authentication
 router.use(authenticate);
+
+// Middleware to ensure user is a Teacher or Admin
+router.use((req, res, next) => {
+  if (req.user.role !== 'TEACHER' && req.user.role !== 'ADMIN' && req.user.role !== 'TENANT_ADMIN') {
+    return res.status(403).json({
+      success: false,
+      error: { message: 'Access denied. Teachers only.' }
+    });
+  }
+  next();
+});
 
 // ============================================
 // Dashboard Stats (Teacher)
@@ -20,48 +36,56 @@ router.get('/dashboard', async (req, res, next) => {
     const userId = req.user.id;
     const tenantId = req.user.tenantId;
 
-    // Get classes where user is the class teacher or subject teacher
-    const classes = await query(
-      `SELECT DISTINCT c.id, c.name, c.section, c.grade_level,
-              COUNT(DISTINCT sp.user_id) as student_count
-       FROM classes c
-       LEFT JOIN student_profiles sp ON c.id = sp.class_id AND sp.is_active = TRUE
-       LEFT JOIN class_subjects cs ON c.id = cs.class_id
-       WHERE (c.class_teacher_id = ? OR cs.teacher_id = ?) 
-         AND c.tenant_id = ? AND c.is_active = TRUE
-       GROUP BY c.id`,
-      [userId, userId, tenantId]
+    // Get class subjects taught by this teacher
+    const taughtSubjects = await ClassSubject.find({ tenantId, teacherId: userId }).select('classId');
+    const subjectClassIds = taughtSubjects.map(cs => cs.classId);
+
+    // Get classes where user is class teacher or subject teacher
+    const classes = await ClassModel.find({
+      tenantId,
+      isActive: true,
+      $or: [
+        { classTeacherId: userId },
+        { _id: { $in: subjectClassIds } }
+      ]
+    });
+
+    const classIds = classes.map(c => c._id);
+
+    // Calculate student counts for these classes
+    const classesWithCounts = await Promise.all(
+      classes.map(async (cls) => {
+        const studentCount = await StudentProfile.countDocuments({
+          tenantId,
+          classId: cls._id,
+          isActive: true
+        });
+        return {
+          ...cls.toObject(),
+          student_count: studentCount
+        };
+      })
     );
 
-    // Get today's attendance for their classes
-    const [todayAttendance] = await query(
-      `SELECT 
-        COUNT(CASE WHEN status = 'present' THEN 1 END) as present,
-        COUNT(CASE WHEN status = 'absent' THEN 1 END) as absent,
-        COUNT(CASE WHEN status = 'late' THEN 1 END) as late
-       FROM attendance a
-       JOIN classes c ON a.class_id = c.id
-       WHERE (c.class_teacher_id = ? OR a.class_id IN (SELECT class_id FROM class_subjects WHERE teacher_id = ?))
-         AND a.attendance_date = CURDATE()`,
-      [userId, userId]
-    );
+    // Get homeworks created by this teacher or for their classes
+    const teacherHomeworks = await Homework.find({
+      tenantId,
+      $or: [{ createdBy: userId }, { classId: { $in: classIds } }]
+    }).select('_id');
 
-    // Get pending homework submissions
-    const [pendingSubmissions] = await query(
-      `SELECT COUNT(*) as count FROM homework_submissions hs
-       JOIN homework h ON hs.homework_id = h.id
-       JOIN classes c ON h.class_id = c.id
-       WHERE (c.class_teacher_id = ? OR h.created_by = ?)
-         AND hs.status = 'submitted'`,
-      [userId, userId]
-    );
+    const homeworkIds = teacherHomeworks.map(h => h._id);
+
+    const pendingSubmissionsCount = await HomeworkSubmission.countDocuments({
+      tenantId,
+      homeworkId: { $in: homeworkIds },
+      status: 'submitted'
+    });
 
     res.json({
       success: true,
       data: {
-        classes,
-        todayAttendance,
-        pendingSubmissions: pendingSubmissions.count
+        classes: classesWithCounts,
+        pendingSubmissions: pendingSubmissionsCount
       }
     });
   } catch (error) {
@@ -75,22 +99,38 @@ router.get('/dashboard', async (req, res, next) => {
 router.get('/classes', async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const tenantId = req.user.tenantId;
 
-    const classes = await query(
-      `SELECT DISTINCT c.*, ct.name as class_teacher_name,
-              COUNT(DISTINCT sp.user_id) as student_count
-       FROM classes c
-       LEFT JOIN users ct ON c.class_teacher_id = ct.id
-       LEFT JOIN student_profiles sp ON c.id = sp.class_id AND sp.is_active = TRUE
-       LEFT JOIN class_subjects cs ON c.id = cs.class_id
-       WHERE (c.class_teacher_id = ? OR cs.teacher_id = ?) 
-         AND c.is_active = TRUE
-       GROUP BY c.id
-       ORDER BY c.grade_level, c.section`,
-      [userId, userId]
+    const taughtSubjects = await ClassSubject.find({ tenantId, teacherId: userId }).select('classId');
+    const subjectClassIds = taughtSubjects.map(cs => cs.classId);
+
+    const classes = await ClassModel.find({
+      tenantId,
+      isActive: true,
+      $or: [
+        { classTeacherId: userId },
+        { _id: { $in: subjectClassIds } }
+      ]
+    })
+      .populate('classTeacherId', 'name')
+      .sort({ gradeLevel: 1, section: 1 });
+
+    const classesWithCounts = await Promise.all(
+      classes.map(async (cls) => {
+        const studentCount = await StudentProfile.countDocuments({
+          tenantId,
+          classId: cls._id,
+          isActive: true
+        });
+        return {
+          ...cls.toObject(),
+          class_teacher_name: cls.classTeacherId?.name || null,
+          student_count: studentCount
+        };
+      })
     );
 
-    res.json({ success: true, data: classes });
+    res.json({ success: true, data: classesWithCounts });
   } catch (error) {
     next(error);
   }
@@ -103,95 +143,53 @@ router.get('/students', async (req, res, next) => {
   try {
     const { classId } = req.query;
     const userId = req.user.id;
+    const tenantId = req.user.tenantId;
 
-    let classFilter = '(c.class_teacher_id = ? OR cs.teacher_id = ?)';
-    let params = [userId, userId];
+    let targetClassIds = [];
 
     if (classId) {
-      classFilter = 'c.id = ?';
-      params = [classId];
+      targetClassIds = [classId];
+    } else {
+      const taughtSubjects = await ClassSubject.find({ tenantId, teacherId: userId }).select('classId');
+      const subjectClassIds = taughtSubjects.map(cs => cs.classId);
+
+      const classes = await ClassModel.find({
+        tenantId,
+        isActive: true,
+        $or: [
+          { classTeacherId: userId },
+          { _id: { $in: subjectClassIds } }
+        ]
+      }).select('_id');
+
+      targetClassIds = classes.map(c => c._id);
     }
 
-    const students = await query(
-      `SELECT u.id, u.name, u.email, u.phone, u.avatar_url,
-              sp.student_id, sp.roll_number, sp.class_id,
-              c.name as class_name, c.section
-       FROM users u
-       JOIN student_profiles sp ON u.id = sp.user_id
-       JOIN classes c ON sp.class_id = c.id
-       LEFT JOIN class_subjects cs ON c.id = cs.class_id
-       WHERE ${classFilter} AND u.role = 'STUDENT' AND u.is_active = TRUE AND sp.is_active = TRUE
-       ORDER BY c.grade_level, c.section, sp.roll_number`,
-      params
-    );
+    const studentProfiles = await StudentProfile.find({
+      tenantId,
+      classId: { $in: targetClassIds },
+      isActive: true
+    })
+      .populate({
+        path: 'userId',
+        match: { role: 'STUDENT', isActive: true, tenantId },
+        select: 'name email phone avatarUrl role isActive'
+      })
+      .populate('classId', 'name section gradeLevel')
+      .sort({ rollNumber: 1 });
 
-    res.json({ success: true, data: students });
-  } catch (error) {
-    next(error);
-  }
-});
+    const validProfiles = studentProfiles.filter(sp => sp.userId !== null);
 
-// ============================================
-// Attendance Management
-// ============================================
-router.get('/attendance', async (req, res, next) => {
-  try {
-    const { classId, date } = req.query;
-    const userId = req.user.id;
+    const formattedStudents = validProfiles.map(sp => ({
+      ...sp.userId.toObject(),
+      student_id: sp._id,
+      roll_number: sp.rollNumber,
+      class_id: sp.classId?._id,
+      class_name: sp.classId?.name,
+      section: sp.classId?.section
+    }));
 
-    const attendanceDate = date || new Date().toISOString().split('T')[0];
-
-    // Get students in class
-    const students = await query(
-      `SELECT u.id, u.name, u.avatar_url, sp.student_id, sp.roll_number,
-              a.status, a.remarks
-       FROM users u
-       JOIN student_profiles sp ON u.id = sp.user_id
-       JOIN classes c ON sp.class_id = c.id
-       LEFT JOIN attendance a ON a.student_id = u.id AND a.attendance_date = ?
-       WHERE c.id = ? AND u.role = 'STUDENT' AND u.is_active = TRUE AND sp.is_active = TRUE
-       ORDER BY sp.roll_number`,
-      [attendanceDate, classId]
-    );
-
-    res.json({ success: true, data: students });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/attendance', async (req, res, next) => {
-  try {
-    const { classId, attendanceDate, attendances } = req.body;
-    const userId = req.user.id;
-
-    // Verify teacher has access to this class
-    const [classAccess] = await query(
-      `SELECT c.id FROM classes c
-       LEFT JOIN class_subjects cs ON c.id = cs.class_id
-       WHERE c.id = ? AND (c.class_teacher_id = ? OR cs.teacher_id = ?)`,
-      [classId, userId, userId]
-    );
-
-    if (!classAccess) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
-
-    // Insert attendance records
-    for (const att of attendances) {
-      await query(
-        `INSERT INTO attendance (id, tenant_id, student_id, class_id, attendance_date, status, remarks, marked_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE 
-           status = VALUES(status), 
-           remarks = VALUES(remarks), 
-           marked_by = VALUES(marked_by),
-           updatedAt = NOW()`,
-        [uuidv4(), req.user.tenantId, att.studentId, classId, attendanceDate, att.status, att.remarks || null, userId]
-      );
-    }
-
-    res.json({ success: true, message: 'Attendance marked successfully' });
+    res.json({ success: true, data: formattedStudents });
   } catch (error) {
     next(error);
   }
@@ -204,28 +202,35 @@ router.get('/homework', async (req, res, next) => {
   try {
     const { classId } = req.query;
     const userId = req.user.id;
+    const tenantId = req.user.tenantId;
 
-    let whereClause = 'h.created_by = ?';
-    let params = [userId];
-
+    let queryFilter = { tenantId, createdBy: userId };
     if (classId) {
-      whereClause = '(h.created_by = ? OR h.class_id = ?)';
-      params = [userId, classId];
+      queryFilter = { tenantId, $or: [{ createdBy: userId }, { classId }] };
     }
 
-    const homework = await query(
-      `SELECT h.*, s.name as subject_name, c.name as class_name, c.section,
-              (SELECT COUNT(*) FROM homework_submissions WHERE homework_id = h.id) as total_submissions,
-              (SELECT COUNT(*) FROM homework_submissions WHERE homework_id = h.id AND status = 'submitted') as submitted_count
-       FROM homework h
-       JOIN subjects s ON h.subject_id = s.id
-       JOIN classes c ON h.class_id = c.id
-       WHERE ${whereClause}
-       ORDER BY h.due_date DESC`,
-      params
+    const homeworks = await Homework.find(queryFilter)
+      .populate('subjectId', 'name')
+      .populate('classId', 'name section')
+      .sort({ dueDate: -1 });
+
+    const homeworkWithCounts = await Promise.all(
+      homeworks.map(async (hw) => {
+        const totalSubmissions = await HomeworkSubmission.countDocuments({ tenantId, homeworkId: hw._id });
+        const submittedCount = await HomeworkSubmission.countDocuments({ tenantId, homeworkId: hw._id, status: 'submitted' });
+
+        return {
+          ...hw.toObject(),
+          subject_name: hw.subjectId?.name,
+          class_name: hw.classId?.name,
+          section: hw.classId?.section,
+          total_submissions: totalSubmissions,
+          submitted_count: submittedCount
+        };
+      })
     );
 
-    res.json({ success: true, data: homework });
+    res.json({ success: true, data: homeworkWithCounts });
   } catch (error) {
     next(error);
   }
@@ -235,42 +240,37 @@ router.post('/homework', async (req, res, next) => {
   try {
     const { classId, subjectId, title, description, dueDate, attachmentUrl } = req.body;
     const userId = req.user.id;
+    const tenantId = req.user.tenantId;
 
-    // Verify teacher has access to this class
-    const [classAccess] = await query(
-      `SELECT c.id FROM classes c
-       LEFT JOIN class_subjects cs ON c.id = cs.class_id
-       WHERE c.id = ? AND (c.class_teacher_id = ? OR cs.teacher_id = ?)`,
-      [classId, userId, userId]
-    );
+    const homework = new Homework({
+      tenantId,
+      classId,
+      subjectId,
+      title,
+      description,
+      attachmentUrl: attachmentUrl || null,
+      dueDate: new Date(dueDate),
+      createdBy: userId,
+      isPublished: true
+    });
 
-    if (!classAccess) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
+    await homework.save();
 
-    const homeworkId = uuidv4();
+    const students = await StudentProfile.find({ tenantId, classId, isActive: true });
 
-    await query(
-      `INSERT INTO homework (id, tenant_id, class_id, subject_id, title, description, attachment_url, due_date, created_by, is_published)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
-      [homeworkId, req.user.tenantId, classId, subjectId, title, description, attachmentUrl || null, dueDate, userId]
-    );
+    const submissionPromises = students.map(student => {
+      const sub = new HomeworkSubmission({
+        tenantId,
+        homeworkId: homework._id,
+        studentId: student.userId,
+        status: 'pending'
+      });
+      return sub.save();
+    });
 
-    // Create pending submissions for all students
-    const students = await query(
-      `SELECT user_id FROM student_profiles WHERE class_id = ? AND is_active = TRUE`,
-      [classId]
-    );
+    await Promise.all(submissionPromises);
 
-    for (const student of students) {
-      await query(
-        `INSERT INTO homework_submissions (id, homework_id, student_id, tenant_id, status)
-         VALUES (?, ?, ?, ?, 'pending')`,
-        [uuidv4(), homeworkId, student.user_id, req.user.tenantId]
-      );
-    }
-
-    res.status(201).json({ success: true, data: { id: homeworkId } });
+    res.status(201).json({ success: true, data: { id: homework._id } });
   } catch (error) {
     next(error);
   }
@@ -279,11 +279,19 @@ router.post('/homework', async (req, res, next) => {
 router.put('/homework/:id', async (req, res, next) => {
   try {
     const { title, description, dueDate, isPublished } = req.body;
+    const tenantId = req.user.tenantId;
 
-    await query(
-      `UPDATE homework SET title = ?, description = ?, due_date = ?, is_published = ?, updatedAt = NOW()
-       WHERE id = ? AND created_by = ?`,
-      [title, description, dueDate, isPublished !== undefined ? isPublished : true, req.params.id, req.user.id]
+    await Homework.findOneAndUpdate(
+      { tenantId, _id: req.params.id, createdBy: req.user.id },
+      {
+        $set: {
+          title,
+          description,
+          dueDate: new Date(dueDate),
+          isPublished: isPublished !== undefined ? isPublished : true,
+          updatedAt: new Date()
+        }
+      }
     );
 
     res.json({ success: true });
@@ -294,28 +302,38 @@ router.put('/homework/:id', async (req, res, next) => {
 
 router.delete('/homework/:id', async (req, res, next) => {
   try {
-    await query(`DELETE FROM homework WHERE id = ? AND created_by = ?`, 
-      [req.params.id, req.user.id]);
+    const tenantId = req.user.tenantId;
+    await Homework.findOneAndDelete({ tenantId, _id: req.params.id, createdBy: req.user.id });
+    await HomeworkSubmission.deleteMany({ tenantId, homeworkId: req.params.id });
     res.json({ success: true });
   } catch (error) {
     next(error);
   }
 });
 
-// Grade homework submissions
 router.get('/homework/:id/submissions', async (req, res, next) => {
   try {
-    const submissions = await query(
-      `SELECT hs.*, u.name as student_name, u.avatar_url, sp.student_id, sp.roll_number
-       FROM homework_submissions hs
-       JOIN users u ON hs.student_id = u.id
-       JOIN student_profiles sp ON u.id = sp.user_id
-       WHERE hs.homework_id = ?
-       ORDER BY sp.roll_number, u.name`,
-      [req.params.id]
+    const tenantId = req.user.tenantId;
+    const submissions = await HomeworkSubmission.find({ tenantId, homeworkId: req.params.id })
+      .populate('studentId', 'name avatarUrl')
+      .lean();
+
+    const formattedSubmissions = await Promise.all(
+      submissions.map(async (sub) => {
+        const studentProfile = await StudentProfile.findOne({ tenantId, userId: sub.studentId?._id });
+        return {
+          ...sub,
+          student_name: sub.studentId?.name,
+          avatar_url: sub.studentId?.avatarUrl,
+          student_id: studentProfile?._id,
+          roll_number: studentProfile?.rollNumber
+        };
+      })
     );
 
-    res.json({ success: true, data: submissions });
+    formattedSubmissions.sort((a, b) => (a.roll_number || 0) - (b.roll_number || 0));
+
+    res.json({ success: true, data: formattedSubmissions });
   } catch (error) {
     next(error);
   }
@@ -324,11 +342,19 @@ router.get('/homework/:id/submissions', async (req, res, next) => {
 router.put('/homework/:id/submissions/:studentId', async (req, res, next) => {
   try {
     const { grade, remarks } = req.body;
+    const tenantId = req.user.tenantId;
 
-    await query(
-      `UPDATE homework_submissions SET grade = ?, remarks = ?, status = 'graded', graded_at = NOW(), graded_by = ?
-       WHERE homework_id = ? AND student_id = ?`,
-      [grade, remarks, req.user.id, req.params.id, req.params.studentId]
+    await HomeworkSubmission.findOneAndUpdate(
+      { tenantId, homeworkId: req.params.id, studentId: req.params.studentId },
+      {
+        $set: {
+          grade,
+          remarks,
+          status: 'graded',
+          gradedAt: new Date(),
+          gradedBy: req.user.id
+        }
+      }
     );
 
     res.json({ success: true });
@@ -344,26 +370,26 @@ router.get('/circulars', async (req, res, next) => {
   try {
     const { classId } = req.query;
     const userId = req.user.id;
+    const tenantId = req.user.tenantId;
 
-    let whereClause = 'cc.created_by = ?';
-    let params = [userId];
-
+    let queryFilter = { tenantId, createdBy: userId };
     if (classId) {
-      whereClause = 'cc.class_id = ? AND cc.created_by = ?';
-      params = [classId, userId];
+      queryFilter = { tenantId, classId, createdBy: userId };
     }
 
-    const circulars = await query(
-      `SELECT cc.*, u.name as created_by_name, c.name as class_name
-       FROM class_circular cc
-       JOIN users u ON cc.created_by = u.id
-       JOIN classes c ON cc.class_id = c.id
-       WHERE ${whereClause}
-       ORDER BY cc.issue_date DESC, cc.createdAt DESC`,
-      params
-    );
+    const circulars = await ClassCircular.find(queryFilter)
+      .populate('createdBy', 'name')
+      .populate('classId', 'name section')
+      .sort({ issueDate: -1, createdAt: -1 });
 
-    res.json({ success: true, data: circulars });
+    const formattedCirculars = circulars.map(c => ({
+      ...c.toObject(),
+      created_by_name: c.createdBy?.name,
+      class_name: c.classId?.name,
+      section: c.classId?.section
+    }));
+
+    res.json({ success: true, data: formattedCirculars });
   } catch (error) {
     next(error);
   }
@@ -373,15 +399,22 @@ router.post('/circulars', async (req, res, next) => {
   try {
     const { classId, title, content, circularNo } = req.body;
     const userId = req.user.id;
-    const circularId = uuidv4();
+    const tenantId = req.user.tenantId;
 
-    await query(
-      `INSERT INTO class_circular (id, class_id, tenant_id, title, content, circular_no, created_by, is_published, issue_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, CURDATE())`,
-      [circularId, classId, req.user.tenantId, title, content, circularNo || null, userId]
-    );
+    const circular = new ClassCircular({
+      tenantId,
+      classId,
+      title,
+      content,
+      circularNo: circularNo || null,
+      createdBy: userId,
+      isPublished: true,
+      issueDate: new Date()
+    });
 
-    res.status(201).json({ success: true, data: { id: circularId } });
+    await circular.save();
+
+    res.status(201).json({ success: true, data: { id: circular._id } });
   } catch (error) {
     next(error);
   }

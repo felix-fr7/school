@@ -1,45 +1,73 @@
 /**
- * MACVEL School Management Mobile App - Backend Server
+ * MACVEL School Management Backend Server
  * Smart. Secure. Connected.
+ * 
+ * Multi-tenant SaaS architecture with MongoDB/Mongoose
+ * Phase 5 Implementation - Final Wireup
  */
 
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const path = require('path');
 
+// Import database connection
+const { connectDB } = require('./config/db');
+
+// Import new Phase 4/5 middleware
+const { authenticate, optionalAuth } = require('./middleware/authMiddleware');
+const { verifyRole, enforceSchoolIsolation } = require('./middleware/rbacMiddleware');
+
 // Import routes
+const superAdminRoutes = require('./routes/superAdminRoutes');
 const authRoutes = require('./routes/auth');
-const superadminRoutes = require('./routes/superadmin');
-const productRoutes = require('./routes/products');
 const adminRoutes = require('./routes/admin');
 const teacherRoutes = require('./routes/teacher');
 const studentRoutes = require('./routes/student');
-const newsRoutes = require('./routes/news');
-const messageRoutes = require('./routes/messages');
 const homeworkRoutes = require('./routes/homework');
-const examRoutes = require('./routes/exams');
-const attendanceRoutes = require('./routes/attendance');
-const leaveRoutes = require('./routes/leave');
-const circularRoutes = require('./routes/circulars');
-const timetableRoutes = require('./routes/timetable');
-const calendarRoutes = require('./routes/calendar');
+const newsRoutes = require('./routes/news');
+const circularsRoutes = require('./routes/circulars');
 const galleryRoutes = require('./routes/gallery');
-const videoRoutes = require('./routes/videos');
-const voiceRoutes = require('./routes/voice');
-const contactRoutes = require('./routes/contacts');
+const examsRoutes = require('./routes/exams');
+const timetableRoutes = require('./routes/timetable');
+const leaveRoutes = require('./routes/leave');
+const messagesRoutes = require('./routes/messages');
 const profileRoutes = require('./routes/profile');
-const fileRoutes = require('./routes/files');
+const filesRoutes = require('./routes/files');
+const postsRoutes = require('./routes/posts');
+const contentRoutes = require('./routes/content');
+const adminContentRoutes = require('./routes/adminContent');
+const tenantsRoutes = require('./routes/tenants');
+const cleanupRoutes = require('./routes/cleanup');
+const weeklyLessonsRoutes = require('./routes/weeklyLessons');
+const calendarRoutes = require('./routes/calendar');
+const contactsRoutes = require('./routes/contacts');
+const videosRoutes = require('./routes/videos');
+const productsRoutes = require('./routes/products');
+const classControllerRoutes = require('./routes/classController');
 
-// Import middleware
+// Import error handler
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// ============================================
+// Security Middleware (Helmet)
+// ============================================
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for API use
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false
+}));
+
+// ============================================
 // CORS Configuration
+// ============================================
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
-  : ['http://localhost:5173', 'http://localhost:3001'];
+  : ['http://localhost:5173', 'http://localhost:3001', 'http://localhost:8100'];
 
 app.use(cors({
   origin: function(origin, callback) {
@@ -51,66 +79,122 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'ngrok-skip-browser-warning', '*']
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'ngrok-skip-browser-warning']
 }));
 
-// Handle preflight OPTIONS requests for all routes
+// Handle preflight OPTIONS requests
 app.options('*', cors());
 
-// Body parsing middleware
+// ============================================
+// Body Parsing Middleware
+// ============================================
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files for uploads
+// ============================================
+// Static Files for Uploads
+// ============================================
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health check endpoint
+// ============================================
+// Database Connection
+// ============================================
+connectDB().catch(err => {
+  console.error('[Server] Failed to connect to database:', err);
+  process.exit(1);
+});
+
+// ============================================
+// Health Check Endpoint
+// ============================================
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'MACVEL School Management API is running',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '3.0.0'
   });
 });
 
+// ============================================
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/superadmin', superadminRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/teacher', teacherRoutes);
-app.use('/api/student', studentRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/homework', homeworkRoutes);
-app.use('/api/exams', examRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/leave', leaveRoutes);
-app.use('/api/circulars', circularRoutes);
-app.use('/api/timetable', timetableRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/gallery', galleryRoutes);
-app.use('/api/videos', videoRoutes);
-app.use('/api/voice', voiceRoutes);
-app.use('/api/contacts', contactRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/files', fileRoutes);
+// ============================================
 
-// 404 handler
+// Super Admin Routes (Placed BEFORE global authenticate middleware)
+app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/superadmin', superAdminRoutes);
+
+// Auth Routes (public/login)
+app.use('/api/auth', authRoutes);
+
+// All routes below require authentication
+app.use(authenticate);
+
+// School Admin Routes
+app.use('/api/admin', adminRoutes);
+
+// Teacher Routes
+app.use('/api/teacher', teacherRoutes);
+
+// Student Routes
+app.use('/api/student', studentRoutes);
+
+// Class Controller Routes
+app.use('/api/class-controller', classControllerRoutes);
+
+// Homework Routes
+app.use('/api/homework', homeworkRoutes);
+
+// Content Routes (News, Circulars, Gallery, etc.)
+app.use('/api/news', newsRoutes);
+app.use('/api/circulars', circularsRoutes);
+app.use('/api/gallery', galleryRoutes);
+app.use('/api/exams', examsRoutes);
+app.use('/api/timetable', timetableRoutes);
+app.use('/api/leave', leaveRoutes);
+app.use('/api/messages', messagesRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/files', filesRoutes);
+app.use('/api/posts', postsRoutes);
+app.use('/api/content', contentRoutes);
+app.use('/api/admin-content', adminContentRoutes);
+app.use('/api/weekly-lessons', weeklyLessonsRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/videos', videosRoutes);
+
+// Tenant Management Routes
+app.use('/api/tenants', tenantsRoutes);
+
+// Cleanup Routes (Super Admin only)
+app.use('/api/cleanup', cleanupRoutes);
+
+// Products Routes (legacy/demo)
+app.use('/api/products', productsRoutes);
+
+// ============================================
+// 404 Handler
+// ============================================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Endpoint not found',
-    path: req.path
+    error: {
+      message: 'Endpoint not found',
+      path: req.path,
+      method: req.method
+    }
   });
 });
 
-// Error handling middleware
+// ============================================
+// Global Error Handler
+// ============================================
 app.use(errorHandler);
 
-// Start server
+// ============================================
+// Start Server
+// ============================================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
@@ -120,15 +204,17 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('║                                                          ║');
   console.log('║     Smart. Secure. Connected.                            ║');
   console.log('║                                                          ║');
-  console.log(`║     Server running on port ${PORT}                          ║`);
-  console.log(`║     Environment: ${process.env.NODE_ENV || 'development'}                            ║`);
+  console.log(`║     Server running on port ${PORT.toString().padEnd(34)}║`);
+  console.log(`║     Environment: ${(process.env.NODE_ENV || 'development').padEnd(27)}║`);
   console.log('║                                                          ║');
   console.log('║     API Endpoints:                                       ║');
-  console.log('║     - GET  /health           - Health check              ║');
-  console.log('║     - POST /api/auth/login   - User login                ║');
-  console.log('║     - GET  /api/admin/*      - Admin endpoints           ║');
-  console.log('║     - GET  /api/teacher/*    - Teacher endpoints         ║');
-  console.log('║     - GET  /api/student/*    - Student endpoints         ║');
+  console.log('║     - GET  /health            - Health check             ║');
+  console.log('║     - POST /api/auth/*        - Authentication           ║');
+  console.log('║     - GET  /api/super-admin/* - Super Admin              ║');
+  console.log('║     - *    /api/admin/*       - School Admin             ║');
+  console.log('║     - *    /api/teacher/*     - Teacher                  ║');
+  console.log('║     - *    /api/student/*     - Student                  ║');
+  console.log('║     - *    /api/class-controller/* - Class Login         ║');
   console.log('║                                                          ║');
   console.log('╚══════════════════════════════════════════════════════════╝');
 });

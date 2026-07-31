@@ -1,87 +1,205 @@
 /**
  * Academic Calendar Routes
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
-const { authenticate, isAdmin } = require('../middleware/auth');
+const AcademicCalendar = require('../models/AcademicCalendar');
+const { authenticate } = require('../middleware/authMiddleware');
+const { requireAdmin } = require('../middleware/rbacMiddleware');
 
-// Get calendar events
-router.get('/', authenticate, async (req, res, next) => {
+// All routes require authentication
+router.use(authenticate);
+
+/**
+ * @route   GET /api/calendar
+ * @desc    Get calendar events with filtering
+ * @query   month, year, eventType
+ * @access  Authenticated users
+ */
+router.get('/', async (req, res, next) => {
   try {
     const { month, year, eventType } = req.query;
-
-    let whereClause = 'c.tenant_id = ? AND c.is_active = TRUE';
-    let params = [req.user.tenantId];
-
+    
+    // Build query
+    let query = { tenantId: req.user.tenantId, isActive: true };
+    
     if (month && year) {
-      whereClause += ' AND MONTH(c.start_date) = ? AND YEAR(c.start_date) = ?';
-      params.push(parseInt(month), parseInt(year));
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      query.startDate = { $gte: startDate, $lte: endDate };
     }
-
+    
     if (eventType) {
-      whereClause += ' AND c.event_type = ?';
-      params.push(eventType);
+      query.eventType = eventType;
     }
-
-    const events = await query(
-      `SELECT c.*
-       FROM academic_calendar c
-       WHERE ${whereClause}
-       ORDER BY c.start_date DESC`,
-      params
-    );
-
-    res.json({ success: true, data: events });
+    
+    const events = await AcademicCalendar.find(query)
+      .sort({ startDate: -1 })
+      .populate('tenantId', 'name');
+    
+    res.status(200).json({
+      success: true,
+      data: events
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Create calendar event (Admin)
-router.post('/', authenticate, isAdmin, async (req, res, next) => {
+/**
+ * @route   GET /api/calendar/:id
+ * @desc    Get single calendar event
+ * @access  Authenticated users
+ */
+router.get('/:id', async (req, res, next) => {
   try {
-    const { title, description, eventType, startDate, endDate, isRecurring, recurringPattern, targetAudience, color } = req.body;
-    const eventId = uuidv4();
-
-    await query(
-      `INSERT INTO academic_calendar (id, tenant_id, title, description, event_type, start_date, end_date, 
-              is_recurring, recurring_pattern, target_audience, color, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
-      [eventId, req.user.tenantId, title, description, eventType, startDate, endDate, isRecurring, recurringPattern, targetAudience, color]
-    );
-
-    res.status(201).json({ success: true, data: { id: eventId } });
+    const event = await AcademicCalendar.findOne({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    }).populate('tenantId', 'name');
+    
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Calendar event not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: event
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Update calendar event
-router.put('/:id', authenticate, isAdmin, async (req, res, next) => {
+/**
+ * @route   POST /api/calendar
+ * @desc    Create calendar event
+ * @body    { title, description, eventType, startDate, endDate, isRecurring, recurringPattern, targetAudience, color }
+ * @access  Admin only
+ */
+router.post('/', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const { title, description, eventType, startDate, endDate, isRecurring, recurringPattern, targetAudience, color, isActive } = req.body;
-
-    await query(
-      `UPDATE academic_calendar SET title = ?, description = ?, event_type = ?, start_date = ?, end_date = ?, 
-              is_recurring = ?, recurring_pattern = ?, target_audience = ?, color = ?, is_active = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
-      [title, description, eventType, startDate, endDate, isRecurring, recurringPattern, targetAudience, color, isActive !== undefined ? isActive : true, req.params.id, req.user.tenantId]
-    );
-
-    res.json({ success: true });
+    const {
+      title,
+      description,
+      eventType,
+      startDate,
+      endDate,
+      isRecurring,
+      recurringPattern,
+      targetAudience,
+      color
+    } = req.body;
+    
+    const event = new AcademicCalendar({
+      tenantId: req.user.tenantId,
+      title,
+      description,
+      eventType,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      isRecurring: isRecurring || false,
+      recurringPattern,
+      targetAudience: targetAudience || 'ALL',
+      color: color || '#007AFF',
+      isActive: true
+    });
+    
+    await event.save();
+    
+    res.status(201).json({
+      success: true,
+      data: event,
+      message: 'Calendar event created successfully'
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Delete calendar event
-router.delete('/:id', authenticate, isAdmin, async (req, res, next) => {
+/**
+ * @route   PUT /api/calendar/:id
+ * @desc    Update calendar event
+ * @access  Admin only
+ */
+router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    await query('DELETE FROM academic_calendar WHERE id = ? AND tenant_id = ?', [req.params.id, req.user.tenantId]);
-    res.json({ success: true });
+    const {
+      title,
+      description,
+      eventType,
+      startDate,
+      endDate,
+      isRecurring,
+      recurringPattern,
+      targetAudience,
+      color,
+      isActive
+    } = req.body;
+    
+    const updates = {};
+    if (title !== undefined) updates.title = title;
+    if (description !== undefined) updates.description = description;
+    if (eventType !== undefined) updates.eventType = eventType;
+    if (startDate !== undefined) updates.startDate = new Date(startDate);
+    if (endDate !== undefined) updates.endDate = new Date(endDate);
+    if (isRecurring !== undefined) updates.isRecurring = isRecurring;
+    if (recurringPattern !== undefined) updates.recurringPattern = recurringPattern;
+    if (targetAudience !== undefined) updates.targetAudience = targetAudience;
+    if (color !== undefined) updates.color = color;
+    if (isActive !== undefined) updates.isActive = isActive;
+    
+    const event = await AcademicCalendar.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.user.tenantId },
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+    
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Calendar event not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: event,
+      message: 'Calendar event updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   DELETE /api/calendar/:id
+ * @desc    Delete calendar event
+ * @access  Admin only
+ */
+router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const event = await AcademicCalendar.findOneAndDelete({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    });
+    
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Calendar event not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Calendar event deleted successfully'
+    });
   } catch (error) {
     next(error);
   }

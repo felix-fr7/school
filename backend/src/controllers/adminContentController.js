@@ -62,7 +62,7 @@ const getAllNews = async (req, res, next) => {
       FROM "News" n
       LEFT JOIN "User" u ON n."postedBy" = u.id
       WHERE ${whereClause}
-      ORDER BY n."createdAt" DESC
+      ORDER BY n."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -151,7 +151,7 @@ const createNews = async (req, res, next) => {
     }
 
     const createQuery = `
-      INSERT INTO "News" (title, content, "imageUrl", "pdfUrl", visibility, "class_id", "tenantId", "postedBy", "isPublished", "createdAt", "updatedAt")
+      INSERT INTO "News" (title, content, "imageUrl", "pdfUrl", visibility, "class_id", "tenantId", "postedBy", "isPublished", "created_at", "updated_at")
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
       RETURNING *
     `;
@@ -254,7 +254,7 @@ const updateNews = async (req, res, next) => {
 
     const updateQuery = `
       UPDATE "News"
-      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
+      SET ${updateFields.join(', ')}, "updated_at" = NOW()
       WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
       RETURNING *
     `;
@@ -362,7 +362,7 @@ const getAllCirculars = async (req, res, next) => {
       FROM "Circular" c
       LEFT JOIN "User" u ON c."issuedBy" = u.id
       WHERE ${whereClause}
-      ORDER BY c."createdAt" DESC
+      ORDER BY c."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -453,7 +453,7 @@ const createCircular = async (req, res, next) => {
     }
 
     const createQuery = `
-      INSERT INTO "Circular" (title, content, "imageUrl", visibility, "class_id", "tenantId", "issuedBy", "isPublished", "createdAt", "updatedAt")
+      INSERT INTO "Circular" (title, content, "imageUrl", visibility, "class_id", "tenantId", "issuedBy", "isPublished", "created_at", "updated_at")
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
       RETURNING *
     `;
@@ -546,7 +546,7 @@ const updateCircular = async (req, res, next) => {
 
     const updateQuery = `
       UPDATE "Circular"
-      SET ${updateFields.join(', ')}, "updatedAt" = NOW()
+      SET ${updateFields.join(', ')}, "updated_at" = NOW()
       WHERE id = $${paramIndex} AND "tenantId" = $${paramIndex + 1}
       RETURNING *
     `;
@@ -617,8 +617,8 @@ const mapExamRow = (row) => {
     pdfUrl: fileUrl, // fallback
     imageUrl: fileUrl, // fallback
     dueDate: row.due_date,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
     class: row.classId ? {
       id: row.classId,
       name: row.className,

@@ -1,10 +1,11 @@
 /**
  * Authentication Middleware
  * JWT token verification and role-based access control
+ * Uses MongoDB/Mongoose queries
  */
 
 const jwt = require('jsonwebtoken');
-const { query } = require('../config/db');
+const User = require('../models/User');
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -30,48 +31,33 @@ const authenticate = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Get user from database
-    const users = await query(
-      `SELECT u.id, u.email, u.name, u.role, u.tenant_id, u.avatar_url, u.is_active,
-              sp.student_id, sp.class_id, sp.roll_number,
-              tp.teacher_id
-       FROM users u
-       LEFT JOIN student_profiles sp ON u.id = sp.user_id
-       LEFT JOIN teacher_profiles tp ON u.id = tp.user_id
-       WHERE u.id = ? AND u.is_active = TRUE`,
-      [decoded.userId]
-    );
+    // Get user from MongoDB database
+    const user = await User.findOne({
+      _id: decoded.userId,
+      isActive: true
+    }).select('-password'); // Exclude password from response
 
-    if (!users || users.length === 0) {
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid token or user not found.'
       });
     }
 
-    const user = users[0];
-
-    if (!user.is_active) {
-      return res.status(401).json({
-        success: false,
-        message: 'User account is deactivated.'
-      });
-    }
-
     // Attach user to request
     req.user = {
-      id: user.id,
+      id: user._id.toString(),
       email: user.email,
       name: user.name,
       role: user.role,
-      tenantId: user.tenant_id,
-      avatarUrl: user.avatar_url,
+      tenantId: user.tenantId ? user.tenantId.toString() : null,
+      avatarUrl: user.avatarUrl || null,
       // Student specific
-      studentId: user.student_id,
-      classId: user.class_id,
-      rollNumber: user.roll_number,
+      studentId: user.studentId || null,
+      classId: user.classId ? user.classId.toString() : null,
+      rollNumber: user.rollNumber || null,
       // Teacher specific
-      teacherId: user.teacher_id
+      teacherId: user.teacherId ? user.teacherId.toString() : null
     };
 
     next();
@@ -119,7 +105,23 @@ const authorize = (...roles) => {
 /**
  * Check if user is SUPER_ADMIN
  */
-const isSuperAdmin = authorize('SUPER_ADMIN');
+const isSuperAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required.'
+    });
+  }
+  
+  if (req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({
+      success: false,
+      message: 'Insufficient permissions. SUPER_ADMIN role required.'
+    });
+  }
+  
+  next();
+};
 
 /**
  * Check if user is TENANT_ADMIN
@@ -173,29 +175,23 @@ const optionalAuth = async (req, res, next) => {
       const token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
       
-      const users = await query(
-        `SELECT u.id, u.email, u.name, u.role, u.tenant_id, u.avatar_url,
-                sp.student_id, sp.class_id,
-                tp.teacher_id
-         FROM users u
-         LEFT JOIN student_profiles sp ON u.id = sp.user_id
-         LEFT JOIN teacher_profiles tp ON u.id = tp.user_id
-         WHERE u.id = ? AND u.is_active = TRUE`,
-        [decoded.userId]
-      );
+      // Get user from MongoDB
+      const user = await User.findOne({
+        _id: decoded.userId,
+        isActive: true
+      }).select('-password');
 
-      if (users && users.length > 0) {
-        const user = users[0];
+      if (user) {
         req.user = {
-          id: user.id,
+          id: user._id.toString(),
           email: user.email,
           name: user.name,
           role: user.role,
-          tenantId: user.tenant_id,
-          avatarUrl: user.avatar_url,
-          studentId: user.student_id,
-          classId: user.class_id,
-          teacherId: user.teacher_id
+          tenantId: user.tenantId ? user.tenantId.toString() : null,
+          avatarUrl: null,
+          studentId: null,
+          classId: null,
+          teacherId: null
         };
       }
     }

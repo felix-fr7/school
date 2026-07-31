@@ -1,25 +1,35 @@
 /**
  * Storage Service
- * Handles file operations with Supabase Storage for lesson attachments
+ * Handles file operations with local file storage
+ * Files are stored in the uploads/ directory
  */
 
-const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const UPLOADS_DIR = path.join(__dirname, '../../uploads');
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn('[StorageService] Supabase credentials not configured. File uploads will be disabled.');
+// Ensure uploads directory exists
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-const supabase = supabaseUrl && supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey) 
-  : null;
-
-const BUCKET_NAME = 'lesson-attachments';
+/**
+ * Generate unique filename to avoid conflicts
+ * @param {string} fileName - Original filename
+ * @returns {string} Unique filename
+ */
+function generateUniqueFileName(fileName) {
+  const ext = path.extname(fileName);
+  const baseName = path.basename(fileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const timestamp = Date.now();
+  const random = crypto.randomBytes(4).toString('hex');
+  return `${baseName}_${timestamp}_${random}${ext}`;
+}
 
 /**
- * Generate storage path for a lesson attachment
+ * Generate storage path for a file
  * Path format: tenantId/classId/lessonLogId/filename
  */
 function generateStoragePath(tenantId, classId, lessonLogId, fileName) {
@@ -29,48 +39,45 @@ function generateStoragePath(tenantId, classId, lessonLogId, fileName) {
 }
 
 /**
- * Upload a file to Supabase Storage
+ * Upload a file to local storage
  * @param {Buffer} fileBuffer - The file content
  * @param {string} fileName - Original filename
  * @param {string} tenantId - Tenant UUID
  * @param {string} classId - Class UUID
- * @param {string} lessonLogId - Lesson log UUID
+ * @param {string} lessonLogId - Lesson log UUID (optional)
  * @param {string} mimeType - File MIME type
  * @returns {Promise<Object>} Attachment metadata
  */
 async function uploadFile(fileBuffer, fileName, tenantId, classId, lessonLogId, mimeType) {
-  if (!supabase) {
-    throw new Error('Supabase storage is not configured');
-  }
-
-  const path = generateStoragePath(tenantId, classId, lessonLogId, fileName);
+  // Create directory structure
+  const uniqueFileName = generateUniqueFileName(fileName);
+  let relativePath;
   
-  const { data, error } = await supabase
-    .storage
-    .from(BUCKET_NAME)
-    .upload(path, fileBuffer, {
-      contentType: mimeType,
-      upsert: false,
-    });
-
-  if (error) {
-    throw new Error(`Storage upload error: ${error.message}`);
+  if (lessonLogId) {
+    relativePath = `${tenantId}/${classId}/${lessonLogId}/${uniqueFileName}`;
+  } else {
+    relativePath = `${tenantId}/${classId}/${uniqueFileName}`;
   }
-
-  // Get signed URL for private bucket access (1 year expiry)
-  const { data: urlData, error: urlError } = await supabase
-    .storage
-    .from(BUCKET_NAME)
-    .createSignedUrl(path, 60 * 60 * 24 * 365);
-
-  if (urlError) {
-    throw new Error(`Storage URL error: ${urlError.message}`);
+  
+  const fullPath = path.join(UPLOADS_DIR, relativePath);
+  const dirPath = path.dirname(fullPath);
+  
+  // Ensure directory exists
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
   }
-
+  
+  // Write file
+  fs.writeFileSync(fullPath, fileBuffer);
+  
+  // Generate URL for accessing the file
+  const url = `/uploads/${relativePath}`;
+  
   return {
-    path,
-    url: urlData.signedUrl,
-    name: fileName,
+    path: relativePath,
+    url: url,
+    name: uniqueFileName,
+    originalName: fileName,
     type: mimeType,
     size: fileBuffer.length,
     uploadedAt: new Date().toISOString(),
@@ -78,59 +85,58 @@ async function uploadFile(fileBuffer, fileName, tenantId, classId, lessonLogId, 
 }
 
 /**
- * Delete a file from Supabase Storage
- * @param {string} filePath - The storage path to delete
+ * Delete a file from local storage
+ * @param {string} filePath - The relative storage path to delete
  */
 async function deleteFile(filePath) {
-  if (!supabase) {
-    throw new Error('Supabase storage is not configured');
-  }
-
-  const { error } = await supabase
-    .storage
-    .from(BUCKET_NAME)
-    .remove([filePath]);
-
-  if (error) {
-    throw new Error(`Storage delete error: ${error.message}`);
+  const fullPath = path.join(UPLOADS_DIR, filePath);
+  
+  if (fs.existsSync(fullPath)) {
+    fs.unlinkSync(fullPath);
+    
+    // Remove empty parent directories (but not the uploads root)
+    let dirPath = path.dirname(fullPath);
+    while (dirPath !== UPLOADS_DIR) {
+      try {
+        fs.rmdirSync(dirPath);
+        dirPath = path.dirname(dirPath);
+      } catch (e) {
+        // Directory not empty or other error, stop
+        break;
+      }
+    }
   }
 }
 
 /**
- * Get a signed URL for a file
- * @param {string} filePath - The storage path
- * @param {number} expiresIn - Seconds until expiry (default 1 hour)
- * @returns {Promise<string>} Signed URL
+ * Get file URL
+ * @param {string} filePath - The relative storage path
+ * @returns {string} URL path
  */
-async function getSignedUrl(filePath, expiresIn = 3600) {
-  if (!supabase) {
-    throw new Error('Supabase storage is not configured');
-  }
-
-  const { data, error } = await supabase
-    .storage
-    .from(BUCKET_NAME)
-    .createSignedUrl(filePath, expiresIn);
-
-  if (error) {
-    throw new Error(`Storage URL error: ${error.message}`);
-  }
-
-  return data.signedUrl;
+function getFileUrl(filePath) {
+  return `/uploads/${filePath}`;
 }
 
 /**
  * Check if storage service is configured
  */
 function isConfigured() {
-  return supabase !== null;
+  return fs.existsSync(UPLOADS_DIR);
+}
+
+/**
+ * Get upload directory path
+ */
+function getUploadsDir() {
+  return UPLOADS_DIR;
 }
 
 module.exports = {
   uploadFile,
   deleteFile,
-  getSignedUrl,
+  getFileUrl,
   generateStoragePath,
-  BUCKET_NAME,
+  generateUniqueFileName,
   isConfigured,
+  getUploadsDir,
 };

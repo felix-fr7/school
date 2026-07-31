@@ -1,0 +1,450 @@
+/**
+ * Create School Screen - Super Admin (Ionic React Version)
+ * Form to create a new school and assign admin
+ * Enhanced with robust validation, state management, and back navigation
+ */
+
+import React, { useState } from 'react';
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonInput,
+  IonButton,
+  IonSpinner,
+  IonAlert,
+  IonIcon,
+  IonButtons,
+  IonBackButton,
+} from '@ionic/react';
+import { schoolOutline, checkmarkCircleOutline, alertCircleOutline } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
+import { tenantsAPI } from '../../services/api';
+import './CreateSchoolScreen.css';
+
+// Form validation patterns
+const VALIDATIONS = {
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  phone: /^[\d\s\-\+\(\)]{10,}$/,
+  code: /^[A-Za-z0-9]{2,20}$/,
+  name: /^.{3,200}$/,
+  password: /^(?=.*\d).{6,}$/,
+};
+
+interface FormData {
+  name: string;
+  code: string;
+  address: string;
+  phone: string;
+  email: string;
+  adminName: string;
+  adminEmail: string;
+  adminPassword: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
+}
+
+const CreateSchoolScreen: React.FC = () => {
+  const history = useHistory();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    code: '',
+    address: '',
+    phone: '',
+    email: '',
+    adminName: '',
+    adminEmail: '',
+    adminPassword: '',
+  });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertHeader, setAlertHeader] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertSuccess, setAlertSuccess] = useState(false);
+
+  /**
+   * Generate a URL-safe, lowercase tenant ID from the school name
+   */
+  const generateTenantId = (name: string): string => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 30);
+  };
+
+  /**
+   * Validate a single field
+   */
+  const validateField = (name: string, value: string): string => {
+    switch (name) {
+      case 'name':
+        if (!value.trim()) return 'School name is required';
+        if (value.trim().length < 3) return 'School name must be at least 3 characters';
+        if (value.trim().length > 200) return 'School name must be less than 200 characters';
+        break;
+      case 'code':
+        if (!value.trim()) return 'School code is required';
+        if (!VALIDATIONS.code.test(value.trim())) return 'Code must be 2-20 alphanumeric characters';
+        break;
+      case 'email':
+        if (value && !VALIDATIONS.email.test(value)) return 'Please provide a valid email address';
+        break;
+      case 'phone':
+        if (value && !VALIDATIONS.phone.test(value)) return 'Please provide a valid phone number';
+        break;
+      case 'adminName':
+        if (!value.trim()) return 'Admin name is required';
+        if (value.trim().length < 2) return 'Admin name must be at least 2 characters';
+        if (value.trim().length > 100) return 'Admin name must be less than 100 characters';
+        break;
+      case 'adminEmail':
+        if (!value.trim()) return 'Admin email is required';
+        if (!VALIDATIONS.email.test(value.trim())) return 'Please provide a valid admin email address';
+        break;
+      case 'adminPassword':
+        if (!value) return 'Admin password is required';
+        if (!VALIDATIONS.password.test(value)) return 'Password must be at least 6 characters with 1 number';
+        break;
+    }
+    return '';
+  };
+
+  /**
+   * Validate entire form
+   */
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+    const fieldsToValidate = ['name', 'code', 'email', 'phone', 'adminName', 'adminEmail', 'adminPassword'];
+    
+    for (const field of fieldsToValidate) {
+      const error = validateField(field, formData[field as keyof FormData]);
+      if (error) {
+        errors[field] = error;
+      }
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  /**
+   * Handle input change safely across IonInput events
+   */
+  const handleInputChange = (value: string | undefined | null, name: string) => {
+    const val = value ?? '';
+    const cleanedValue = name === 'code' ? val.toUpperCase() : val;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: cleanedValue,
+    }));
+    
+    if (touched[name]) {
+      const error = validateField(name, cleanedValue);
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: error,
+      }));
+    }
+  };
+
+  /**
+   * Mark field as touched
+   */
+  const handleBlur = (name: string) => {
+    setTouched(prev => ({
+      ...prev,
+      [name]: true,
+    }));
+    
+    const error = validateField(name, formData[name as keyof FormData]);
+    setFormErrors(prev => ({
+      ...prev,
+      [name]: error,
+    }));
+  };
+
+  /**
+   * Handle form submission
+   */
+  const handleCreate = async () => {
+    const allFields = ['name', 'code', 'email', 'phone', 'adminName', 'adminEmail', 'adminPassword'];
+    const newTouched: Record<string, boolean> = {};
+    allFields.forEach(field => newTouched[field] = true);
+    setTouched(newTouched);
+
+    if (!validateForm()) {
+      setAlertHeader('Validation Error');
+      setAlertMessage('Please correct the errors in the form');
+      setAlertSuccess(false);
+      setShowAlert(true);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Payload matching standard backend schema fields
+      const submissionData = {
+        schoolName: formData.name.trim(),
+        schoolCode: formData.code.trim().toUpperCase(),
+        address: formData.address.trim() || undefined,
+        contactPhone: formData.phone.trim() || undefined,
+        contactEmail: formData.email.trim() || undefined,
+        adminName: formData.adminName.trim(),
+        adminEmail: formData.adminEmail.trim().toLowerCase(),
+        adminPassword: formData.adminPassword,
+      };
+
+      const response = await tenantsAPI.createTenant(submissionData);
+      
+      if (response && (response.success || response.status === 201 || response.status === 200)) {
+        setAlertHeader('Success');
+        setAlertMessage('School created successfully!');
+        setAlertSuccess(true);
+        setShowAlert(true);
+        
+        setTimeout(() => {
+          history.push('/superadmin/dashboard');
+        }, 2000);
+      } else {
+        setAlertHeader('Error');
+        setAlertMessage(response?.error?.message || response?.message || 'Failed to create school');
+        setAlertSuccess(false);
+        setShowAlert(true);
+      }
+    } catch (error: any) {
+      console.error('Create school error:', error);
+      const errorMessage = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Failed to create school';
+      setAlertHeader('Error');
+      setAlertMessage(errorMessage);
+      setAlertSuccess(false);
+      setShowAlert(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasError = (name: string): boolean => {
+    return !!(touched[name] && formErrors[name]);
+  };
+
+  return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar className="premium-toolbar">
+          <IonButtons slot="start">
+            <IonBackButton 
+              defaultHref="/superadmin/dashboard" 
+              text="Dashboard" 
+              className="gold-back-btn" 
+            />
+          </IonButtons>
+          <IonTitle>Create School</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+
+      <IonContent className="create-school-content" fullscreen scrollY={true}>
+        <div className="container">
+          <div className="header-section">
+            <IonIcon icon={schoolOutline} className="header-icon" />
+            <h1 className="header-title">Create New School</h1>
+            <p className="header-subtitle">Set up a new school and assign an administrator</p>
+          </div>
+
+          {/* School Information */}
+          <IonCard className="form-card">
+            <IonCardHeader>
+              <IonCardTitle>School Information</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <div className="input-group">
+                <label className="input-label">School Name *</label>
+                <IonInput
+                  value={formData.name}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'name')}
+                  onIonBlur={() => handleBlur('name')}
+                  placeholder="Enter school name"
+                  className={hasError('name') ? 'input-error' : ''}
+                />
+                {hasError('name') && (
+                  <div className="error-message">
+                    <IonIcon icon={alertCircleOutline} className="error-icon" />
+                    <span>{formErrors.name}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">School Code * (e.g., SCH001)</label>
+                <IonInput
+                  value={formData.code}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'code')}
+                  onIonBlur={() => handleBlur('code')}
+                  placeholder="Enter unique school code"
+                  className={hasError('code') ? 'input-error' : ''}
+                />
+                {hasError('code') && (
+                  <div className="error-message">
+                    <IonIcon icon={alertCircleOutline} className="error-icon" />
+                    <span>{formErrors.code}</span>
+                  </div>
+                )}
+                {!hasError('code') && formData.code && (
+                  <div className="helper-text">
+                    Generated ID: {generateTenantId(formData.code)}
+                  </div>
+                )}
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Address</label>
+                <IonInput
+                  value={formData.address}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'address')}
+                  placeholder="Enter school address"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Phone</label>
+                <IonInput
+                  type="tel"
+                  value={formData.phone}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'phone')}
+                  onIonBlur={() => handleBlur('phone')}
+                  placeholder="Enter phone number"
+                  className={hasError('phone') ? 'input-error' : ''}
+                />
+                {hasError('phone') && (
+                  <div className="error-message">
+                    <IonIcon icon={alertCircleOutline} className="error-icon" />
+                    <span>{formErrors.phone}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Email</label>
+                <IonInput
+                  type="email"
+                  value={formData.email}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'email')}
+                  onIonBlur={() => handleBlur('email')}
+                  placeholder="Enter school email"
+                  className={hasError('email') ? 'input-error' : ''}
+                />
+                {hasError('email') && (
+                  <div className="error-message">
+                    <IonIcon icon={alertCircleOutline} className="error-icon" />
+                    <span>{formErrors.email}</span>
+                  </div>
+                )}
+              </div>
+            </IonCardContent>
+          </IonCard>
+
+          {/* Admin Credentials */}
+          <IonCard className="form-card">
+            <IonCardHeader>
+              <IonCardTitle>Admin Credentials</IonCardTitle>
+            </IonCardHeader>
+            <IonCardContent>
+              <div className="input-group">
+                <label className="input-label">Admin Name *</label>
+                <IonInput
+                  value={formData.adminName}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'adminName')}
+                  onIonBlur={() => handleBlur('adminName')}
+                  placeholder="Enter admin full name"
+                  className={hasError('adminName') ? 'input-error' : ''}
+                />
+                {hasError('adminName') && (
+                  <div className="error-message">
+                    <IonIcon icon={alertCircleOutline} className="error-icon" />
+                    <span>{formErrors.adminName}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Admin Email *</label>
+                <IonInput
+                  type="email"
+                  value={formData.adminEmail}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'adminEmail')}
+                  onIonBlur={() => handleBlur('adminEmail')}
+                  placeholder="Enter admin email"
+                  className={hasError('adminEmail') ? 'input-error' : ''}
+                />
+                {hasError('adminEmail') && (
+                  <div className="error-message">
+                    <IonIcon icon={alertCircleOutline} className="error-icon" />
+                    <span>{formErrors.adminEmail}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Admin Password * (min 6 chars, 1 number)</label>
+                <IonInput
+                  type="password"
+                  value={formData.adminPassword}
+                  onIonInput={(e) => handleInputChange(e.detail.value, 'adminPassword')}
+                  onIonBlur={() => handleBlur('adminPassword')}
+                  placeholder="Enter admin password"
+                  className={hasError('adminPassword') ? 'input-error' : ''}
+                />
+                {hasError('adminPassword') && (
+                  <div className="error-message">
+                    <IonIcon icon={alertCircleOutline} className="error-icon" />
+                    <span>{formErrors.adminPassword}</span>
+                  </div>
+                )}
+                {!hasError('adminPassword') && formData.adminPassword && VALIDATIONS.password.test(formData.adminPassword) && (
+                  <div className="success-message">
+                    <IonIcon icon={checkmarkCircleOutline} className="success-icon" />
+                    <span>Password meets requirements</span>
+                  </div>
+                )}
+              </div>
+            </IonCardContent>
+          </IonCard>
+
+          <div className="button-container">
+            <IonButton
+              expand="block"
+              className="submit-button"
+              onClick={handleCreate}
+              disabled={loading}
+            >
+              {loading ? <IonSpinner name="crescent" /> : 'Create School'}
+            </IonButton>
+          </div>
+        </div>
+
+        <IonAlert
+          isOpen={showAlert}
+          onDidDismiss={() => setShowAlert(false)}
+          header={alertHeader}
+          message={alertMessage}
+          buttons={['OK']}
+          cssClass={alertSuccess ? 'alert-success' : 'alert-error'}
+        />
+      </IonContent>
+    </IonPage>
+  );
+};
+
+export default CreateSchoolScreen;

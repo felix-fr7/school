@@ -1,157 +1,260 @@
 /**
  * Weekly Lesson Routes
  * Handles Homework & Classwork management organized by date-based timetable
- * All routes require authentication and appropriate role-based access
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
-const { body, param, query } = require('express-validator');
-const weeklyLessonController = require('../controllers/weeklyLessonController');
-const { protect, requireTeacher, requireStudent } = require('../middleware/auth');
-const { uploadLesson, handleFileUploadError } = require('../middleware/fileUpload');
-
 const router = express.Router();
+const { body, query, param } = require('express-validator');
+const WeeklyLesson = require('../models/WeeklyLesson');
+const { authenticate } = require('../middleware/authMiddleware');
+const { requireAdmin, requireTeacher, requireStudent } = require('../middleware/rbacMiddleware');
+
+// All routes require authentication
+router.use(authenticate);
 
 // ============================================
-// TEACHER ROUTES
+// Teacher Routes
 // ============================================
 
 /**
- * @route   GET /api/teacher/weekly-lessons
- * @desc    Get weekly lesson grid for teacher's assigned class
- * @access  Teacher
- * @response  { classId, className, lessons: [{ id, subject, lessonDate, classworkText, homeworkText, ... }] }
+ * @route   GET /api/weekly-lessons/teacher/weekly-lessons
+ * @desc    Get weekly lessons created by teacher or for teacher's assigned class/subject
+ * @query   classId, sectionId, startDate, endDate
+ * @access  Teacher, Admin
  */
-router.get('/teacher/weekly-lessons', protect, requireTeacher, weeklyLessonController.getWeeklyLessons);
+router.get(
+  '/teacher/weekly-lessons',
+  [
+    query('classId').optional().isMongoId().withMessage('Valid class ID is required'),
+    query('startDate').optional().isISO8601().withMessage('Valid start date is required'),
+    query('endDate').optional().isISO8601().withMessage('Valid end date is required')
+  ],
+  async (req, res, next) => {
+    try {
+      const { classId, startDate, endDate } = req.query;
+      const tenantId = req.user.tenantId;
+
+      let filter = { tenantId };
+
+      // If teacher, optionally restrict to their ID unless admin
+      if (req.user.role === 'TEACHER') {
+        filter.teacherId = req.user.id;
+      }
+
+      if (classId) filter.classId = classId;
+
+      if (startDate && endDate) {
+        filter.lessonDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        };
+      }
+
+      const lessons = await WeeklyLesson.find(filter)
+        .populate('classId', 'name')
+        .populate('subjectId', 'name code')
+        .sort({ lessonDate: -1, createdAt: -1 });
+
+      res.status(200).json({
+        success: true,
+        data: lessons
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 /**
- * @route   POST /api/teacher/weekly-lessons
- * @desc    Create or update a weekly lesson entry (UPSERT)
- * @access  Teacher
- * @body    { lessonDate: 'YYYY-MM-DD', subject: string, classworkText?: string, homeworkText?: string }
- * @note    Uses ON CONFLICT to update existing entries for same class/subject/date
+ * @route   POST /api/weekly-lessons/teacher/weekly-lessons
+ * @desc    Create a new weekly lesson (homework/classwork)
+ * @access  Teacher, Admin
  */
 router.post(
   '/teacher/weekly-lessons',
   [
-    body('lessonDate')
-      .matches(/^\d{4}-\d{2}-\d{2}$/)
-      .withMessage('Lesson date must be in YYYY-MM-DD format'),
-    body('subject')
-      .trim()
-      .notEmpty()
-      .withMessage('Subject is required')
-      .isLength({ max: 100 })
-      .withMessage('Subject must be less than 100 characters'),
-    body('classworkText')
-      .optional()
-      .trim()
-      .isLength({ max: 10000 })
-      .withMessage('Classwork text must be less than 10000 characters'),
-    body('homeworkText')
-      .optional()
-      .trim()
-      .isLength({ max: 10000 })
-      .withMessage('Homework text must be less than 10000 characters'),
+    body('classId').isMongoId().withMessage('Valid class ID is required'),
+    body('subjectId').isMongoId().withMessage('Valid subject ID is required'),
+    body('title').trim().notEmpty().withMessage('Lesson title is required').isLength({ max: 200 }),
+    body('description').optional().trim(),
+    body('type').isIn(['HOMEWORK', 'CLASSWORK', 'ASSIGNMENT']).withMessage('Valid lesson type is required'),
+    body('lessonDate').isISO8601().withMessage('Valid lesson date is required')
   ],
-  protect,
-  requireTeacher,
-  weeklyLessonController.upsertWeeklyLesson
+  async (req, res, next) => {
+    try {
+      const { classId, subjectId, title, description, type, lessonDate, attachments } = req.body;
+      const tenantId = req.user.tenantId;
+      const teacherId = req.user.id;
+
+      const weeklyLesson = new WeeklyLesson({
+        tenantId,
+        classId,
+        subjectId,
+        teacherId,
+        title,
+        description,
+        type,
+        lessonDate,
+        attachments: attachments || []
+      });
+
+      await weeklyLesson.save();
+
+      res.status(201).json({
+        success: true,
+        message: 'Weekly lesson created successfully',
+        data: weeklyLesson
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 /**
- * @route   DELETE /api/teacher/weekly-lessons/:id
- * @desc    Delete a weekly lesson entry and all its attachments
- * @access  Teacher
- * @param   id - Lesson UUID
+ * @route   DELETE /api/weekly-lessons/teacher/weekly-lessons/:id
+ * @desc    Delete a weekly lesson
+ * @access  Teacher, Admin
  */
 router.delete(
   '/teacher/weekly-lessons/:id',
   [
-    param('id')
-      .isUUID()
-      .withMessage('Valid lesson ID is required'),
+    param('id').isMongoId().withMessage('Invalid lesson ID format')
   ],
-  protect,
-  requireTeacher,
-  weeklyLessonController.deleteWeeklyLesson
-);
+  async (req, res, next) => {
+    try {
+      const tenantId = req.user.tenantId;
+      const filter = { _id: req.params.id, tenantId };
 
-/**
- * @route   POST /api/teacher/weekly-lessons/:id/attachments
- * @desc    Upload an attachment to a lesson entry
- * @access  Teacher
- * @param   id - Lesson UUID
- * @body    multipart/form-data with 'file' field
- * @note    Allowed file types: PDF, Images (JPG, PNG, GIF, WebP), Documents (DOC, DOCX, XLS, XLSX)
- * @note    Max file size: 10MB
- */
-router.post(
-  '/teacher/weekly-lessons/:id/attachments',
-  [
-    param('id')
-      .isUUID()
-      .withMessage('Valid lesson ID is required'),
-  ],
-  protect,
-  requireTeacher,
-  uploadLesson.single('file'),
-  handleFileUploadError,
-  weeklyLessonController.uploadAttachment
-);
+      // Teachers can only delete their own lessons, admins can delete any
+      if (req.user.role === 'TEACHER') {
+        filter.teacherId = req.user.id;
+      }
 
-/**
- * @route   DELETE /api/teacher/weekly-lessons/:id/attachments/:attachmentIndex
- * @desc    Delete an attachment from a lesson entry
- * @access  Teacher
- * @param   id - Lesson UUID
- * @param   attachmentIndex - Index of attachment in the array
- */
-router.delete(
-  '/teacher/weekly-lessons/:id/attachments/:attachmentIndex',
-  [
-    param('id')
-      .isUUID()
-      .withMessage('Valid lesson ID is required'),
-    param('attachmentIndex')
-      .isInt({ min: 0 })
-      .withMessage('Attachment index must be a non-negative integer'),
-  ],
-  protect,
-  requireTeacher,
-  weeklyLessonController.deleteAttachment
+      const deletedLesson = await WeeklyLesson.findOneAndDelete(filter);
+
+      if (!deletedLesson) {
+        return res.status(404).json({
+          success: false,
+          error: { message: 'Weekly lesson not found or unauthorized' }
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Weekly lesson deleted successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 // ============================================
-// STUDENT ROUTES
+// Student Routes
 // ============================================
 
 /**
- * @route   GET /api/student/weekly-lessons
- * @desc    Get weekly lesson grid for student's assigned class (READ-ONLY)
+ * @route   GET /api/weekly-lessons/student/weekly-lessons
+ * @desc    Get weekly lessons/homework for student's class
+ * @query   startDate, endDate, type
  * @access  Student
- * @response  { classId, lessons: [{ id, subject, lessonDate, classworkText, homeworkText, ... }] }
- * @note    Students can only see lessons for their own class
  */
-router.get('/student/weekly-lessons', protect, requireStudent, weeklyLessonController.getStudentLessons);
+router.get(
+  '/student/weekly-lessons',
+  [
+    query('startDate').optional().isISO8601().withMessage('Valid start date is required'),
+    query('endDate').optional().isISO8601().withMessage('Valid end date is required'),
+    query('type').optional().isIn(['HOMEWORK', 'CLASSWORK', 'ASSIGNMENT'])
+  ],
+  async (req, res, next) => {
+    try {
+      const { startDate, endDate, type } = req.query;
+      const tenantId = req.user.tenantId;
+      const classId = req.user.classId; // Assuming student model includes assigned classId
+
+      if (!classId) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Student is not assigned to any class' }
+        });
+      }
+
+      let filter = { tenantId, classId };
+      if (type) filter.type = type;
+
+      if (startDate && endDate) {
+        filter.lessonDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        };
+      }
+
+      const lessons = await WeeklyLesson.find(filter)
+        .populate('subjectId', 'name code')
+        .populate('teacherId', 'name email')
+        .sort({ lessonDate: -1 });
+
+      res.status(200).json({
+        success: true,
+        data: lessons
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 /**
- * @route   GET /api/student/weekly-lessons/by-date
- * @desc    Get lessons for a specific date (READ-ONLY)
+ * @route   GET /api/weekly-lessons/student/weekly-lessons/by-date
+ * @desc    Get weekly lessons filtered precisely by a specific date
+ * @query   date (YYYY-MM-DD)
  * @access  Student
- * @query   date - YYYY-MM-DD format
- * @note    Students can only see lessons for their own class
  */
 router.get(
   '/student/weekly-lessons/by-date',
   [
-    query('date')
-      .matches(/^\d{4}-\d{2}-\d{2}$/)
-      .withMessage('Date must be in YYYY-MM-DD format'),
+    query('date').isISO8601().withMessage('Valid date format is required (YYYY-MM-DD)')
   ],
-  protect,
-  requireStudent,
-  weeklyLessonController.getLessonsByDate
+  async (req, res, next) => {
+    try {
+      const { date } = req.query;
+      const tenantId = req.user.tenantId;
+      const classId = req.user.classId;
+
+      if (!classId) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Student is not assigned to any class' }
+        });
+      }
+
+      // Match start and end of the specified day
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
+      const lessons = await WeeklyLesson.find({
+        tenantId,
+        classId,
+        lessonDate: {
+          $gte: startOfDay,
+          $lte: endOfDay
+        }
+      })
+        .populate('subjectId', 'name code')
+        .populate('teacherId', 'name email');
+
+      res.status(200).json({
+        success: true,
+        data: lessons
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 );
 
 module.exports = router;

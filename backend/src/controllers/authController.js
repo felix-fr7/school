@@ -1,11 +1,17 @@
 /**
  * Authentication Controller
  * Handles user registration, login, and profile management
+ * Uses MongoDB/Mongoose queries
  */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../config/db');
+const User = require('../models/User');
+const Class = require('../models/Class');
+const Post = require('../models/Post');
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 /**
  * Generate JWT token for user
@@ -17,22 +23,19 @@ const generateToken = async (user) => {
   // For teachers, check if they are assigned to a class
   let classId = null;
   if (user.role === 'TEACHER') {
-    const classQuery = `
-      SELECT id FROM "Class" WHERE "teacherId" = $1 LIMIT 1
-    `;
-    const classResult = await db.query(classQuery, [user.id]);
-    classId = classResult.rows.length > 0 ? classResult.rows[0].id : null;
+    const classDoc = await Class.findOne({ teacherId: user.id }).select('_id');
+    classId = classDoc ? classDoc._id.toString() : null;
   }
 
   return jwt.sign(
     {
-      id: user.id,
+      userId: user.id,
       email: user.email,
       role: user.role,
       tenantId: user.tenantId,
       classId: classId, // Only set for teachers assigned to a class
     },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     }
@@ -48,10 +51,9 @@ const register = async (req, res, next) => {
     const { email, password, name } = req.body;
 
     // Check if user already exists
-    const existingQuery = 'SELECT id FROM "User" WHERE email = $1';
-    const existingResult = await db.query(existingQuery, [email]);
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
 
-    if (existingResult.rows.length > 0) {
+    if (existingUser) {
       return res.status(409).json({
         success: false,
         error: {
@@ -60,31 +62,44 @@ const register = async (req, res, next) => {
       });
     }
 
-    // Hash password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Create user (password will be hashed by pre-save hook in User model)
+    const user = new User({
+      email: email.toLowerCase(),
+      password: password, // Will be hashed by pre-save hook
+      name: name
+    });
 
-    // Create user
-    const createQuery = `
-      INSERT INTO "User" (email, password, name, "createdAt", "updatedAt")
-      VALUES ($1, $2, $3, NOW(), NOW())
-      RETURNING id, email, name, role, "tenantId", "createdAt"
-    `;
-    const createResult = await db.query(createQuery, [email, hashedPassword, name]);
-    const user = createResult.rows[0];
+    await user.save();
 
     // Generate token
-    const token = await generateToken(user);
+    const token = await generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+      tenantId: user.tenantId ? user.tenantId.toString() : null
+    });
+
+    // Remove password from response
+    const userObject = user.toObject();
+    delete userObject.password;
 
     res.status(201).json({
       success: true,
       data: {
-        user,
+        user: userObject,
         token,
       },
       message: 'User registered successfully',
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          message: 'User with this email already exists',
+        },
+      });
+    }
     next(error);
   }
 };
@@ -126,17 +141,16 @@ const login = async (req, res, next) => {
     }
 
     // Universal lookup: search by email or studentId using OR condition
-    // IMPORTANT: Lowercase both email and studentId for case-insensitive matching
-    // This ensures login works regardless of case used during registration or login
     const normalizedIdentifier = loginIdentifier.toLowerCase();
-    const userQuery = `
-      SELECT * FROM "User"
-      WHERE LOWER(email) = $1 OR LOWER("studentId") = $1
-      LIMIT 1
-    `;
-    const userResult = await db.query(userQuery, [normalizedIdentifier]);
+    const user = await User.findOne({
+      $or: [
+        { email: normalizedIdentifier },
+        { studentId: normalizedIdentifier }
+      ],
+      isActive: true
+    });
 
-    if (userResult.rows.length === 0) {
+    if (!user) {
       console.log(`Login failed: No user found with identifier "${loginIdentifier}" (normalized: "${normalizedIdentifier}")`);
       return res.status(401).json({
         success: false,
@@ -146,10 +160,8 @@ const login = async (req, res, next) => {
       });
     }
 
-    const user = userResult.rows[0];
-
     // Verify password using bcrypt.compare (secure comparison)
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -161,15 +173,22 @@ const login = async (req, res, next) => {
     }
 
     // Generate token
-    const token = await generateToken(user);
+    const token = await generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId ? user.tenantId.toString() : null
+    });
 
     // Remove password from response
-    const { password: userPassword, ...userWithoutPassword } = user;
+    const userObject = user.toObject();
+    delete userObject.password;
 
     res.status(200).json({
       success: true,
       data: {
-        user: userWithoutPassword,
+        user: userObject,
         token,
       },
       message: 'Login successful',
@@ -186,13 +205,10 @@ const login = async (req, res, next) => {
  */
 const getMe = async (req, res, next) => {
   try {
-    // User is attached to request by protect middleware
-    const userQuery = `
-      SELECT * FROM "User" WHERE id = $1
-    `;
-    const userResult = await db.query(userQuery, [req.user.id]);
+    // User is attached to request by authenticate middleware
+    const user = await User.findById(req.user.id).select('-password');
 
-    if (userResult.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: {
@@ -201,25 +217,16 @@ const getMe = async (req, res, next) => {
       });
     }
 
-    const user = userResult.rows[0];
-
     // Get user's posts
-    const postsQuery = `
-      SELECT * FROM "Post"
-      WHERE "userId" = $1
-      ORDER BY "createdAt" DESC
-      LIMIT 10
-    `;
-    const postsResult = await db.query(postsQuery, [req.user.id]);
-
-    // Remove password from response
-    const { password, ...userWithoutPassword } = user;
+    const posts = await Post.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(10);
 
     res.status(200).json({
       success: true,
       data: {
-        ...userWithoutPassword,
-        posts: postsResult.rows,
+        ...user.toObject(),
+        posts: posts,
       },
     });
   } catch (error) {
@@ -236,15 +243,13 @@ const updateProfile = async (req, res, next) => {
   try {
     const { name } = req.body;
 
-    const updateQuery = `
-      UPDATE "User"
-      SET name = $1, "updatedAt" = NOW()
-      WHERE id = $2
-      RETURNING id, email, name, role, "tenantId", "createdAt", "updatedAt"
-    `;
-    const updateResult = await db.query(updateQuery, [name, req.user.id]);
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { name: name },
+      { new: true, runValidators: true }
+    ).select('-password');
 
-    if (updateResult.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: {
@@ -253,11 +258,9 @@ const updateProfile = async (req, res, next) => {
       });
     }
 
-    const user = updateResult.rows[0];
-
     res.status(200).json({
       success: true,
-      data: user,
+      data: user.toObject(),
       message: 'Profile updated successfully',
     });
   } catch (error) {
@@ -275,10 +278,9 @@ const updatePassword = async (req, res, next) => {
     const { currentPassword, newPassword } = req.body;
 
     // Get user with password
-    const userQuery = 'SELECT password FROM "User" WHERE id = $1';
-    const userResult = await db.query(userQuery, [req.user.id]);
+    const user = await User.findById(req.user.id).select('+password');
 
-    if (userResult.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({
         success: false,
         error: {
@@ -287,10 +289,8 @@ const updatePassword = async (req, res, next) => {
       });
     }
 
-    const user = userResult.rows[0];
-
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isPasswordValid = await user.comparePassword(currentPassword);
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -301,17 +301,9 @@ const updatePassword = async (req, res, next) => {
       });
     }
 
-    // Hash new password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password
-    const updateQuery = `
-      UPDATE "User"
-      SET password = $1, "updatedAt" = NOW()
-      WHERE id = $2
-    `;
-    await db.query(updateQuery, [hashedPassword, req.user.id]);
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
 
     res.status(200).json({
       success: true,

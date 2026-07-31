@@ -3,7 +3,7 @@
  * Handles class-based login system where classes login with class_code and password
  */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
@@ -170,7 +170,7 @@ const getClassDashboard = async (req, res, next) => {
 
     // Get students in this class
     const studentsQuery = `
-      SELECT id, name, email, "studentId", "createdAt"
+      SELECT id, name, email, "studentId", "created_at"
       FROM "User"
       WHERE "classId" = $1 AND role = 'STUDENT'
       ORDER BY name ASC
@@ -207,7 +207,7 @@ const getClassDashboard = async (req, res, next) => {
       FROM "News" n
       LEFT JOIN "User" u ON n."postedBy" = u.id
       WHERE n."tenantId" = $1 AND n."isPublished" = true
-      ORDER BY n."createdAt" DESC
+      ORDER BY n."created_at" DESC
       LIMIT 5
     `;
     const newsResult = await db.query(newsQuery, [tenantId]);
@@ -216,7 +216,7 @@ const getClassDashboard = async (req, res, next) => {
     const circularsQuery = `
       SELECT * FROM "Circular"
       WHERE "tenantId" = $1 AND "isPublished" = true
-      ORDER BY "createdAt" DESC
+      ORDER BY "created_at" DESC
       LIMIT 5
     `;
     const circularsResult = await db.query(circularsQuery, [tenantId]);

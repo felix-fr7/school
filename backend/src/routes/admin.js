@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { query } = require('../config/db');
 const { authenticate, isAdmin } = require('../middleware/auth');
 
@@ -24,19 +24,19 @@ router.get('/dashboard', async (req, res, next) => {
     const [totalStudents] = await query(
       `SELECT COUNT(*) as count FROM users u 
        JOIN student_profiles sp ON u.id = sp.user_id 
-       WHERE u.tenant_id = ? AND u.role = 'STUDENT' AND u.is_active = TRUE`,
+       WHERE u.tenant_id = $1 AND u.role = 'STUDENT' AND u.is_active = TRUE`,
       [tenantId]
     );
 
     const [totalTeachers] = await query(
       `SELECT COUNT(*) as count FROM users u 
        JOIN teacher_profiles tp ON u.id = tp.user_id 
-       WHERE u.tenant_id = ? AND u.role = 'TEACHER' AND u.is_active = TRUE`,
+       WHERE u.tenant_id = $1 AND u.role = 'TEACHER' AND u.is_active = TRUE`,
       [tenantId]
     );
 
     const [totalClasses] = await query(
-      `SELECT COUNT(*) as count FROM classes WHERE tenant_id = ? AND is_active = TRUE`,
+      `SELECT COUNT(*) as count FROM classes WHERE tenant_id = $1 AND is_active = TRUE`,
       [tenantId]
     );
 
@@ -46,21 +46,21 @@ router.get('/dashboard', async (req, res, next) => {
         COUNT(CASE WHEN status = 'absent' THEN 1 END) as absent,
         COUNT(CASE WHEN status = 'late' THEN 1 END) as late
        FROM attendance 
-       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = ?) 
-       AND attendance_date = CURDATE()`,
+       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = $1) 
+       AND attendance_date = CURRENT_DATE`,
       [tenantId]
     );
 
     const [recentNews] = await query(
-      `SELECT id, title, type, is_published, createdAt 
-       FROM news WHERE tenant_id = ? 
-       ORDER BY createdAt DESC LIMIT 5`,
+      `SELECT id, title, type, is_published, created_at as createdAt 
+       FROM news WHERE tenant_id = $1 
+       ORDER BY created_at DESC LIMIT 5`,
       [tenantId]
     );
 
     const [pendingLeaves] = await query(
       `SELECT COUNT(*) as count FROM leave_requests 
-       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = ?) 
+       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = $1) 
        AND status = 'pending'`,
       [tenantId]
     );
@@ -92,8 +92,8 @@ router.get('/classes', async (req, res, next) => {
        FROM classes c
        LEFT JOIN users ct ON c.class_teacher_id = ct.id
        LEFT JOIN student_profiles sp ON c.id = sp.class_id AND sp.is_active = TRUE
-       WHERE c.tenant_id = ? AND c.is_active = TRUE
-       GROUP BY c.id
+       WHERE c.tenant_id = $1 AND c.is_active = TRUE
+       GROUP BY c.id, ct.name
        ORDER BY c.grade_level, c.section`,
       [req.user.tenantId]
     );
@@ -111,7 +111,7 @@ router.post('/classes', async (req, res, next) => {
 
     await query(
       `INSERT INTO classes (id, tenant_id, name, section, grade_level, class_teacher_id, room_number, capacity, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)`,
       [classId, req.user.tenantId, name, section, gradeLevel, classTeacherId, roomNumber, capacity]
     );
 
@@ -126,9 +126,9 @@ router.put('/classes/:id', async (req, res, next) => {
     const { name, section, gradeLevel, classTeacherId, roomNumber, capacity } = req.body;
 
     await query(
-      `UPDATE classes SET name = ?, section = ?, grade_level = ?, class_teacher_id = ?, 
-              room_number = ?, capacity = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
+      `UPDATE classes SET name = $1, section = $2, grade_level = $3, class_teacher_id = $4, 
+              room_number = $5, capacity = $6, updated_at = NOW()
+       WHERE id = $7 AND tenant_id = $8`,
       [name, section, gradeLevel, classTeacherId, roomNumber, capacity, req.params.id, req.user.tenantId]
     );
 
@@ -140,7 +140,7 @@ router.put('/classes/:id', async (req, res, next) => {
 
 router.delete('/classes/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE classes SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+    await query(`UPDATE classes SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
       [req.params.id, req.user.tenantId]);
     res.json({ success: true });
   } catch (error) {
@@ -156,16 +156,16 @@ router.get('/students', async (req, res, next) => {
     const { classId, search, page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
 
-    let whereClause = 'u.tenant_id = ? AND u.role = "STUDENT" AND u.is_active = TRUE';
-    let params = [req.user.tenantId];
+    let whereClause = 'u.tenant_id = $1 AND u.role = $2 AND u.is_active = TRUE';
+    let params = [req.user.tenantId, 'STUDENT'];
 
     if (classId) {
-      whereClause += ' AND sp.class_id = ?';
+      whereClause += ' AND sp.class_id = $' + (params.length + 1);
       params.push(classId);
     }
 
     if (search) {
-      whereClause += ' AND (u.name LIKE ? OR u.email LIKE ? OR sp.student_id LIKE ?)';
+      whereClause += ' AND (u.name ILIKE $' + (params.length + 1) + ' OR u.email ILIKE $' + (params.length + 2) + ' OR sp.student_id ILIKE $' + (params.length + 3) + ')';
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
@@ -178,7 +178,7 @@ router.get('/students', async (req, res, next) => {
        JOIN classes c ON sp.class_id = c.id
        WHERE ${whereClause}
        ORDER BY c.grade_level, c.section, sp.roll_number
-       LIMIT ? OFFSET ?`,
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
       [...params, parseInt(limit), parseInt(offset)]
     );
 
@@ -206,7 +206,7 @@ router.get('/students/:id', async (req, res, next) => {
        FROM users u
        JOIN student_profiles sp ON u.id = sp.user_id
        JOIN classes c ON sp.class_id = c.id
-       WHERE u.id = ? AND u.tenant_id = ?`,
+       WHERE u.id = $1 AND u.tenant_id = $2`,
       [req.params.id, req.user.tenantId]
     );
 
@@ -227,17 +227,17 @@ router.put('/students/:id', async (req, res, next) => {
 
     // Update user
     await query(
-      `UPDATE users SET name = ?, email = ?, phone = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
+      `UPDATE users SET name = $1, email = $2, phone = $3, updated_at = NOW()
+       WHERE id = $4 AND tenant_id = $5`,
       [name, email, phone, req.params.id, req.user.tenantId]
     );
 
     // Update student profile
     await query(
-      `UPDATE student_profiles SET class_id = ?, roll_number = ?, date_of_birth = ?, gender = ?,
-              blood_group = ?, address = ?, city = ?, state = ?, father_name = ?, father_phone = ?,
-              mother_name = ?, mother_phone = ?, updatedAt = NOW()
-       WHERE user_id = ?`,
+      `UPDATE student_profiles SET class_id = $1, roll_number = $2, date_of_birth = $3, gender = $4,
+              blood_group = $5, address = $6, city = $7, state = $8, father_name = $9, father_phone = $10,
+              mother_name = $11, mother_phone = $12, updated_at = NOW()
+       WHERE user_id = $13`,
       [classId, rollNumber, dateOfBirth, gender, bloodGroup, address, city, state,
        fatherName, fatherPhone, motherName, motherPhone, req.params.id]
     );
@@ -250,7 +250,7 @@ router.put('/students/:id', async (req, res, next) => {
 
 router.delete('/students/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE users SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+    await query(`UPDATE users SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
       [req.params.id, req.user.tenantId]);
     res.json({ success: true });
   } catch (error) {
@@ -269,7 +269,7 @@ router.get('/teachers', async (req, res, next) => {
               tp.subjects
        FROM users u
        JOIN teacher_profiles tp ON u.id = tp.user_id
-       WHERE u.tenant_id = ? AND u.role = 'TEACHER' AND u.is_active = TRUE
+       WHERE u.tenant_id = $1 AND u.role = 'TEACHER' AND u.is_active = TRUE
        ORDER BY u.name`,
       [req.user.tenantId]
     );
@@ -286,7 +286,7 @@ router.get('/teachers/:id', async (req, res, next) => {
       `SELECT u.*, tp.*
        FROM users u
        JOIN teacher_profiles tp ON u.id = tp.user_id
-       WHERE u.id = ? AND u.tenant_id = ?`,
+       WHERE u.id = $1 AND u.tenant_id = $2`,
       [req.params.id, req.user.tenantId]
     );
 
@@ -309,13 +309,13 @@ router.post('/teachers', async (req, res, next) => {
     // Create user
     await query(
       `INSERT INTO users (id, tenant_id, email, phone, password, name, role, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, 'TEACHER', TRUE)`,
+       VALUES ($1, $2, $3, $4, $5, $6, 'TEACHER', TRUE)`,
       [userId, req.user.tenantId, email, phone, hashedPassword, name]
     );
 
     // Generate teacher ID
     const [{ count }] = await query(
-      `SELECT COUNT(*) as count FROM teacher_profiles WHERE tenant_id = ?`,
+      `SELECT COUNT(*) as count FROM teacher_profiles WHERE tenant_id = $1`,
       [req.user.tenantId]
     );
     const teacherId = `TCH-${String(count + 1).padStart(4, '0')}`;
@@ -324,7 +324,7 @@ router.post('/teachers', async (req, res, next) => {
     await query(
       `INSERT INTO teacher_profiles (id, user_id, tenant_id, teacher_id, qualification, 
               experience_years, specialization, subjects, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)`,
       [uuidv4(), userId, req.user.tenantId, teacherId, qualification, experienceYears, specialization, 
        subjects ? JSON.stringify(subjects) : null]
     );
@@ -340,15 +340,15 @@ router.put('/teachers/:id', async (req, res, next) => {
     const { name, email, phone, qualification, experienceYears, specialization, subjects } = req.body;
 
     await query(
-      `UPDATE users SET name = ?, email = ?, phone = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
+      `UPDATE users SET name = $1, email = $2, phone = $3, updated_at = NOW()
+       WHERE id = $4 AND tenant_id = $5`,
       [name, email, phone, req.params.id, req.user.tenantId]
     );
 
     await query(
-      `UPDATE teacher_profiles SET qualification = ?, experience_years = ?, specialization = ?, 
-              subjects = ?, updatedAt = NOW()
-       WHERE user_id = ?`,
+      `UPDATE teacher_profiles SET qualification = $1, experience_years = $2, specialization = $3, 
+              subjects = $4, updated_at = NOW()
+       WHERE user_id = $5`,
       [qualification, experienceYears, specialization, subjects ? JSON.stringify(subjects) : null, req.params.id]
     );
 
@@ -360,7 +360,7 @@ router.put('/teachers/:id', async (req, res, next) => {
 
 router.delete('/teachers/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE users SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+    await query(`UPDATE users SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
       [req.params.id, req.user.tenantId]);
     res.json({ success: true });
   } catch (error) {
@@ -374,7 +374,7 @@ router.delete('/teachers/:id', async (req, res, next) => {
 router.get('/subjects', async (req, res, next) => {
   try {
     const subjects = await query(
-      `SELECT * FROM subjects WHERE tenant_id = ? AND is_active = TRUE ORDER BY name`,
+      `SELECT * FROM subjects WHERE tenant_id = $1 AND is_active = TRUE ORDER BY name`,
       [req.user.tenantId]
     );
     res.json({ success: true, data: subjects });
@@ -390,7 +390,7 @@ router.post('/subjects', async (req, res, next) => {
 
     await query(
       `INSERT INTO subjects (id, tenant_id, name, code, description, is_active)
-       VALUES (?, ?, ?, ?, ?, TRUE)`,
+       VALUES ($1, $2, $3, $4, $5, TRUE)`,
       [subjectId, req.user.tenantId, name, code, description]
     );
 
@@ -404,8 +404,8 @@ router.put('/subjects/:id', async (req, res, next) => {
   try {
     const { name, code, description } = req.body;
     await query(
-      `UPDATE subjects SET name = ?, code = ?, description = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
+      `UPDATE subjects SET name = $1, code = $2, description = $3, updated_at = NOW()
+       WHERE id = $4 AND tenant_id = $5`,
       [name, code, description, req.params.id, req.user.tenantId]
     );
     res.json({ success: true });
@@ -416,7 +416,7 @@ router.put('/subjects/:id', async (req, res, next) => {
 
 router.delete('/subjects/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE subjects SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+    await query(`UPDATE subjects SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
       [req.params.id, req.user.tenantId]);
     res.json({ success: true });
   } catch (error) {
@@ -430,7 +430,7 @@ router.delete('/subjects/:id', async (req, res, next) => {
 router.get('/contacts', async (req, res, next) => {
   try {
     const contacts = await query(
-      `SELECT * FROM school_contacts WHERE tenant_id = ? AND is_active = TRUE ORDER BY department`,
+      `SELECT * FROM school_contacts WHERE tenant_id = $1 AND is_active = TRUE ORDER BY department`,
       [req.user.tenantId]
     );
     res.json({ success: true, data: contacts });
@@ -446,7 +446,7 @@ router.post('/contacts', async (req, res, next) => {
 
     await query(
       `INSERT INTO school_contacts (id, tenant_id, department, name, designation, phone, email, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)`,
       [contactId, req.user.tenantId, department, name, designation, phone, email]
     );
 
@@ -460,8 +460,8 @@ router.put('/contacts/:id', async (req, res, next) => {
   try {
     const { department, name, designation, phone, email } = req.body;
     await query(
-      `UPDATE school_contacts SET department = ?, name = ?, designation = ?, phone = ?, email = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
+      `UPDATE school_contacts SET department = $1, name = $2, designation = $3, phone = $4, email = $5, updated_at = NOW()
+       WHERE id = $6 AND tenant_id = $7`,
       [department, name, designation, phone, email, req.params.id, req.user.tenantId]
     );
     res.json({ success: true });
@@ -472,7 +472,7 @@ router.put('/contacts/:id', async (req, res, next) => {
 
 router.delete('/contacts/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE school_contacts SET is_active = FALSE WHERE id = ? AND tenant_id = ?`, 
+    await query(`UPDATE school_contacts SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
       [req.params.id, req.user.tenantId]);
     res.json({ success: true });
   } catch (error) {

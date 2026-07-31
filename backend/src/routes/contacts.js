@@ -1,21 +1,20 @@
 /**
  * School Contacts Routes
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/db');
+const SchoolContact = require('../models/SchoolContact');
 const { authenticate } = require('../middleware/auth');
 
-// Get all contacts
+// Get all active contacts for the tenant
 router.get('/', authenticate, async (req, res, next) => {
   try {
-    const contacts = await query(
-      `SELECT * FROM school_contacts 
-       WHERE tenant_id = ? AND is_active = TRUE 
-       ORDER BY department, name`,
-      [req.user.tenantId]
-    );
+    const contacts = await SchoolContact.find({
+      tenantId: req.user.tenantId,
+      isActive: true
+    }).sort({ department: 1, name: 1 });
 
     res.json({ success: true, data: contacts });
   } catch (error) {

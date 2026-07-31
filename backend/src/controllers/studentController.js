@@ -36,7 +36,7 @@ const getDashboardStats = async (req, res, next) => {
         FROM "Homework" h
         LEFT JOIN "Class" c ON h."classId" = c.id
         WHERE h."classId" = $1 AND h."isPublished" = true
-        ORDER BY h."createdAt" DESC
+        ORDER BY h."created_at" DESC
         LIMIT 3
       `;
       const homeworkResult = await db.query(homeworkQuery, [classId]);
@@ -47,7 +47,7 @@ const getDashboardStats = async (req, res, next) => {
     const newsQuery = `
       SELECT * FROM "News"
       WHERE "tenantId" = $1 AND "isPublished" = true AND visibility = 'ALL'
-      ORDER BY "createdAt" DESC
+      ORDER BY "created_at" DESC
       LIMIT 3
     `;
     const newsResult = await db.query(newsQuery, [tenantId]);
@@ -159,8 +159,8 @@ const getHomework = async (req, res, next) => {
       assignedBy: hw.assigned_by,
       dueDate: hw.due_date,
       isPublished: hw.is_published,
-      createdAt: hw.created_at,
-      updatedAt: hw.updated_at,
+      created_at: hw.created_at,
+      updated_at: hw.updated_at,
       class: hw.class_id ? {
         id: hw.classId,
         name: hw.className,
@@ -234,8 +234,8 @@ const getHomeworkById = async (req, res, next) => {
         assignedBy: hw.assigned_by,
         dueDate: hw.due_date,
         isPublished: hw.is_published,
-        createdAt: hw.created_at,
-        updatedAt: hw.updated_at,
+        created_at: hw.created_at,
+        updated_at: hw.updated_at,
         class: hw.class_id ? {
           id: hw.classId,
           name: hw.className,
@@ -290,7 +290,7 @@ const getMarks = async (req, res, next) => {
     const marksQuery = `
       SELECT * FROM "Mark"
       WHERE ${whereClause}
-      ORDER BY "createdAt" DESC
+      ORDER BY "created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -394,7 +394,7 @@ const getNews = async (req, res, next) => {
       FROM "News" n
       LEFT JOIN "User" u ON n."postedBy" = u.id
       WHERE ${whereClause}
-      ORDER BY n."createdAt" DESC
+      ORDER BY n."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -739,8 +739,8 @@ const getExams = async (req, res, next) => {
       imageUrl: item.image_url || item.file_url,
       dueDate: item.due_date,
       isPublished: item.is_published,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
       class: item.classId ? {
         id: item.classId,
         name: item.className,
@@ -812,8 +812,8 @@ const getExamById = async (req, res, next) => {
       imageUrl: item.image_url || item.file_url,
       dueDate: item.due_date,
       isPublished: item.is_published,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
       class: item.classId ? {
         id: item.classId,
         name: item.className,
@@ -936,7 +936,7 @@ const getDashboardExtended = async (req, res, next) => {
       const homeworkQuery = `
         SELECT * FROM "Homework"
         WHERE "classId" = $1 AND "isPublished" = true
-        ORDER BY "createdAt" DESC
+        ORDER BY "created_at" DESC
         LIMIT 3
       `;
       const homeworkResult = await db.query(homeworkQuery, [classId]);
@@ -947,7 +947,7 @@ const getDashboardExtended = async (req, res, next) => {
     const newsQuery = `
       SELECT * FROM "News"
       WHERE "tenantId" = $1 AND "isPublished" = true AND visibility = 'ALL'
-      ORDER BY "createdAt" DESC
+      ORDER BY "created_at" DESC
       LIMIT 3
     `;
     const newsResult = await db.query(newsQuery, [tenantId]);
@@ -1025,14 +1025,14 @@ const updateProfile = async (req, res, next) => {
       });
     }
 
-    updateFields.push(`"updatedAt" = NOW()`);
+    updateFields.push(`"updated_at" = NOW()`);
     updateParams.push(studentId);
 
     const updateQuery = `
       UPDATE "User"
       SET ${updateFields.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, name, email, phone, "studentId", "createdAt", "updatedAt"
+      RETURNING id, name, email, phone, "studentId", "created_at", "updated_at"
     `;
 
     const updateResult = await db.query(updateQuery, updateParams);

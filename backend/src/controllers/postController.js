@@ -38,7 +38,7 @@ const getAllPosts = async (req, res, next) => {
       FROM "Post" p
       LEFT JOIN "User" u ON p."userId" = u.id
       WHERE ${whereClause}
-      ORDER BY p."createdAt" DESC
+      ORDER BY p."created_at" DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -135,7 +135,7 @@ const getMyPosts = async (req, res, next) => {
     const postsQuery = `
       SELECT * FROM "Post"
       WHERE "userId" = $1
-      ORDER BY "createdAt" DESC
+      ORDER BY "created_at" DESC
       LIMIT $2 OFFSET $3
     `;
 
@@ -168,7 +168,7 @@ const createPost = async (req, res, next) => {
     const userId = req.user.id;
 
     const createQuery = `
-      INSERT INTO "Post" (title, content, "userId", "createdAt", "updatedAt")
+      INSERT INTO "Post" (title, content, "userId", "created_at", "updated_at")
       VALUES ($1, $2, $3, NOW(), NOW())
       RETURNING *
     `;
@@ -221,7 +221,7 @@ const updatePost = async (req, res, next) => {
     // Update post
     const updateQuery = `
       UPDATE "Post"
-      SET title = $1, content = $2, "updatedAt" = NOW()
+      SET title = $1, content = $2, "updated_at" = NOW()
       WHERE id = $3
       RETURNING *
     `;

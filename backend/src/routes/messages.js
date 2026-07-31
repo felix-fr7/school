@@ -1,98 +1,189 @@
 /**
  * Messages Routes
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
-const { authenticate, isAdminOrTeacher } = require('../middleware/auth');
-const { uploadSingle } = require('../middleware/fileUpload');
+const Message = require('../models/Message');
+const { authenticate } = require('../middleware/authMiddleware');
+const { requireAdmin, requireTeacher } = require('../middleware/rbacMiddleware');
 
-// Get messages
-router.get('/', authenticate, async (req, res, next) => {
+// All routes require authentication
+router.use(authenticate);
+
+/**
+ * @route   GET /api/messages
+ * @desc    Get messages for current user
+ * @query   page, limit
+ * @access  Authenticated users
+ */
+router.get('/', async (req, res, next) => {
   try {
-    const userId = req.user.id;
     const { page = 1, limit = 50 } = req.query;
-    const offset = (page - 1) * limit;
-
-    // Messages sent to user or to their class
-    const messages = await query(
-      `SELECT m.*, u.name as sender_name, u.avatar_url as sender_avatar,
-              c.name as class_name
-       FROM messages m
-       JOIN users u ON m.sender_id = u.id
-       LEFT JOIN classes c ON m.class_id = c.id
-       WHERE m.tenant_id = ? 
-         AND (m.recipient_id = ? 
-              OR (m.recipient_type = 'class' AND m.class_id = ?)
-              OR m.recipient_type = 'all_students'
-              OR (m.recipient_type = 'all_teachers' AND ? = 'TEACHER'))
-       ORDER BY m.is_important DESC, m.createdAt DESC
-       LIMIT ? OFFSET ?`,
-      [req.user.tenantId, userId, req.user.classId, req.user.role, parseInt(limit), parseInt(offset)]
-    );
-
-    res.json({ success: true, data: messages });
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Build query for messages sent to this user or their class
+    let query = { tenantId: req.user.tenantId };
+    
+    // Messages can be sent to: specific user, class, or all students/teachers
+    const messageQuery = {
+      $or: [
+        { recipientId: req.user.id },
+        { 
+          recipientType: 'CLASS', 
+          classId: req.user.classId 
+        },
+        { recipientType: 'ALL' }
+      ]
+    };
+    
+    // If user is a teacher, also show messages to all teachers
+    if (req.user.role === 'Teacher') {
+      messageQuery.$or.push({ recipientType: 'ALL', targetAudience: 'TEACHERS' });
+    }
+    
+    const messages = await Message.find({
+      ...query,
+      ...messageQuery
+    })
+    .sort({ isImportant: -1, createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit))
+    .populate('senderId', 'name avatarUrl')
+    .populate('recipientId', 'name');
+    
+    const total = await Message.countDocuments({ ...query, ...messageQuery });
+    
+    res.status(200).json({
+      success: true,
+      data: messages,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Get single message
-router.get('/:id', authenticate, async (req, res, next) => {
+/**
+ * @route   GET /api/messages/:id
+ * @desc    Get single message
+ * @access  Authenticated users
+ */
+router.get('/:id', async (req, res, next) => {
   try {
-    const message = await query(
-      `SELECT m.*, u.name as sender_name
-       FROM messages m
-       JOIN users u ON m.sender_id = u.id
-       WHERE m.id = ? AND m.tenant_id = ?`,
-      [req.params.id, req.user.tenantId]
-    );
+    const message = await Message.findOne({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    })
+    .populate('senderId', 'name avatarUrl')
+    .populate('recipientId', 'name');
+    
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Message not found' }
+      });
+    }
+    
+    // Mark as read if current user is recipient
+    if (!message.isRead && message.recipientId && message.recipientId._id.toString() === req.user.id) {
+      message.isRead = true;
+      message.readAt = new Date();
+      await message.save();
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: message
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-    if (!message || message.length === 0) {
-      return res.status(404).json({ success: false, message: 'Message not found' });
+/**
+ * @route   POST /api/messages
+ * @desc    Send message
+ * @body    { subject, message, recipientType, recipientId, classId, isImportant }
+ * @access  Admin and Teachers
+ */
+router.post('/', authenticate, async (req, res, next) => {
+  try {
+    // Ensure only Admin or Teacher can send messages
+    if (req.user.role !== 'Admin' && req.user.role !== 'Teacher') {
+      return res.status(403).json({
+        success: false,
+        error: { message: 'Unauthorized to send messages' }
+      });
     }
 
-    // Mark as read
-    await query(
-      `UPDATE messages SET is_read = TRUE, read_at = NOW() WHERE id = ? AND recipient_id = ?`,
-      [req.params.id, req.user.id]
-    );
-
-    res.json({ success: true, data: message[0] });
+    const {
+      subject,
+      message: messageText,
+      recipientType,
+      recipientId,
+      classId,
+      isImportant
+    } = req.body;
+    
+    const message = new Message({
+      tenantId: req.user.tenantId,
+      senderId: req.user.id,
+      recipientType,
+      recipientId: recipientId || null,
+      classId: classId || null,
+      subject,
+      message: messageText,
+      isImportant: isImportant || false
+    });
+    
+    await message.save();
+    
+    res.status(201).json({
+      success: true,
+      data: message,
+      message: 'Message sent successfully'
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Send message
-router.post('/', authenticate, isAdminOrTeacher, uploadSingle('attachment'), async (req, res, next) => {
-  try {
-    const { subject, message, recipientType, recipientId, classId, isImportant } = req.body;
-    const attachmentUrl = req.file ? `/uploads/documents/${req.file.filename}` : null;
-    const messageId = uuidv4();
-
-    await query(
-      `INSERT INTO messages (id, tenant_id, sender_id, recipient_type, recipient_id, class_id, 
-              subject, message, attachment_url, is_important)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [messageId, req.user.tenantId, req.user.id, recipientType, recipientId || null, 
-       classId || null, subject, message, attachmentUrl, isImportant ? 1 : 0]
-    );
-
-    res.status(201).json({ success: true, data: { id: messageId } });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Delete message
+/**
+ * @route   DELETE /api/messages/:id
+ * @desc    Delete message (sender or recipient)
+ * @access  Authenticated users
+ */
 router.delete('/:id', authenticate, async (req, res, next) => {
   try {
-    await query('DELETE FROM messages WHERE id = ? AND (sender_id = ? OR recipient_id = ?)', 
-      [req.params.id, req.user.id, req.user.id]);
-    res.json({ success: true });
+    const message = await Message.findOne({
+      _id: req.params.id,
+      tenantId: req.user.tenantId,
+      $or: [
+        { senderId: req.user.id },
+        { recipientId: req.user.id }
+      ]
+    });
+    
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Message not found' }
+      });
+    }
+    
+    await message.deleteOne();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Message deleted successfully'
+    });
   } catch (error) {
     next(error);
   }

@@ -4,7 +4,7 @@
  * Full management of their specific class only
  */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 
 /**
@@ -115,7 +115,7 @@ const getClassDashboard = async (req, res, next) => {
           type: row.type,
           title: row.title,
           description: row.description,
-          createdAt: row.createdAt,
+          created_at: row.created_at,
         })),
       },
     });
@@ -157,7 +157,7 @@ const getClassStudents = async (req, res, next) => {
 
     // Get students (CORE TABLE uses CamelCase with double quotes)
     const studentsQuery = `
-      SELECT u.id, u.name, u.email, u."studentId", u."createdAt"
+      SELECT u.id, u.name, u.email, u."studentId", u."created_at"
       FROM "User" u
       WHERE ${whereClause}
       ORDER BY u.name ASC
@@ -253,9 +253,9 @@ const addClassStudent = async (req, res, next) => {
 
     // Create student (CORE TABLE uses CamelCase with double quotes)
     const createQuery = `
-      INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", "classId", "createdAt", "updatedAt")
+      INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", "classId", "created_at", "updated_at")
       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-      RETURNING id, email, name, "studentId", "classId", "createdAt"
+      RETURNING id, email, name, "studentId", "classId", "created_at"
     `;
 
     const createResult = await db.query(createQuery, [
@@ -276,7 +276,7 @@ const addClassStudent = async (req, res, next) => {
         id: student.id,
         name: student.name,
         studentId: student.studentId,
-        createdAt: student.createdAt,
+        created_at: student.created_at,
         password: finalPassword, // Return the password used (either provided or default)
       },
       message: 'Student created successfully. Please save the student ID and password.',
@@ -360,14 +360,14 @@ const updateStudent = async (req, res, next) => {
       });
     }
 
-    updateFields.push(`"updatedAt" = NOW()`);
+    updateFields.push(`"updated_at" = NOW()`);
     updateParams.push(id);
 
     const updateQuery = `
       UPDATE "User"
       SET ${updateFields.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, name, email, "studentId", "updatedAt"
+      RETURNING id, name, email, "studentId", "updated_at"
     `;
 
     const updateResult = await db.query(updateQuery, updateParams);
@@ -430,7 +430,7 @@ const resetStudentPassword = async (req, res, next) => {
     // Update password (CORE TABLE uses CamelCase)
     const updateQuery = `
       UPDATE "User"
-      SET password = $1, "updatedAt" = NOW()
+      SET password = $1, "updated_at" = NOW()
       WHERE id = $2
       RETURNING id, name, "studentId"
     `;
@@ -550,8 +550,8 @@ const getExams = async (req, res, next) => {
       imageUrl: item.image_url || item.file_url,
       dueDate: item.due_date,
       isPublished: item.is_published,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
       class: item.classId ? {
         id: item.classId,
         name: item.className,
@@ -632,8 +632,8 @@ const getExamById = async (req, res, next) => {
       imageUrl: item.image_url || item.file_url,
       dueDate: item.due_date,
       isPublished: item.is_published,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
       class: item.classId ? {
         id: item.classId,
         name: item.className,

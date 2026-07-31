@@ -1,146 +1,106 @@
 /**
  * Database Configuration
- * PostgreSQL connection pool (Supabase compatible)
- * Supports both connection string and individual env variables
- * 
- * SSL Configuration:
- * - Uses ssl: { rejectUnauthorized: false } to handle Supabase self-signed certificates
- * - This prevents SELF_SIGNED_CERT_IN_CHAIN errors while maintaining encrypted connection
+ * MongoDB connection using Mongoose
+ * Supports MongoDB Atlas connection
  */
 
-const { Pool } = require('pg');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-// Check if DATABASE_URL is provided (Supabase connection string)
-const connectionString = process.env.DATABASE_URL;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/macvel_school';
 
-// SSL configuration for Supabase
-// Supabase uses self-signed certificates which cause SELF_SIGNED_CERT_IN_CHAIN errors
-// Setting rejectUnauthorized: false allows the connection while still using SSL encryption
-const sslConfig = {
-  rejectUnauthorized: false
-};
+// Connection state
+let isConnected = false;
 
-// Database configuration - support both connection string and individual vars
-const dbConfig = connectionString
-  ? {
-      connectionString,
-      ssl: sslConfig,
-      // Additional pool settings for better connection management
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    }
-  : {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'postgres',
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-      ssl: sslConfig
-    };
-
-console.log('[DB] Database configuration:', 
-  connectionString 
-    ? `Using DATABASE_URL with SSL (rejectUnauthorized: false)` 
-    : `Host: ${dbConfig.host}:${dbConfig.port}, User: ${dbConfig.user}, SSL: ${dbConfig.ssl ? 'enabled' : 'disabled'}`
-);
-
-// Create connection pool
-let pool = null;
-
-const getDb = () => {
-  if (!pool) {
-    pool = new Pool(dbConfig);
-    console.log('[DB] PostgreSQL pool created successfully with SSL configuration');
-    
-    // Handle pool events for debugging
-    pool.on('connect', () => {
-      console.log('[DB] New client connected to PostgreSQL');
-    });
-    
-    pool.on('error', (err) => {
-      console.error('[DB] Unexpected PostgreSQL pool error:', err);
-    });
+/**
+ * Connect to MongoDB database
+ * Uses mongoose connection with proper error handling
+ */
+const connectDB = async () => {
+  if (isConnected) {
+    console.log('[DB] Using existing MongoDB connection');
+    return;
   }
-  return pool;
+
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    
+    isConnected = true;
+    console.log('[DB] MongoDB connected successfully');
+    console.log(`[DB] Connection host: ${mongoose.connection.host || 'Atlas'}`);
+    console.log(`[DB] Database name: ${mongoose.connection.name}`);
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      console.error('[DB] MongoDB connection error:', err);
+      isConnected = false;
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('[DB] MongoDB disconnected');
+      isConnected = false;
+    });
+
+    // Handle application termination
+    process.on('SIGINT', async () => {
+      await closeDB();
+      process.exit(0);
+    });
+
+  } catch (error) {
+    console.error('[DB] MongoDB connection failed:', error.message);
+    throw error;
+  }
 };
 
-// Test database connection with detailed error reporting
+/**
+ * Test database connection
+ */
 const testConnection = async () => {
-  const client = await getDb().connect();
   try {
-    console.log('[DB] Testing PostgreSQL connection...');
-    const result = await client.query('SELECT NOW() as current_time, version() as version');
-    console.log('[DB] PostgreSQL connection successful!');
-    console.log('[DB] Server time:', result.rows[0].current_time);
-    console.log('[DB] Server version:', result.rows[0].version);
+    await connectDB();
+    console.log('[DB] MongoDB connection test successful!');
     return true;
   } catch (error) {
-    console.error('[DB] PostgreSQL connection failed:', error.message);
-    if (error.code === 'SELF_SIGNED_CERT_IN_CHAIN') {
-      console.error('[DB] SSL Certificate Error: The server certificate is self-signed.');
-      console.error('[DB] Solution: Ensure ssl.rejectUnauthorized is set to false in db config.');
-    }
+    console.error('[DB] MongoDB connection test failed:', error.message);
     return false;
-  } finally {
-    client.release();
   }
 };
 
-// Execute query with error handling
-const query = async (sql, params = []) => {
-  try {
-    const result = await getDb().query(sql, params);
-    return result.rows;
-  } catch (error) {
-    console.error('[DB] PostgreSQL query error:', {
-      message: error.message,
-      code: error.code,
-      sql: sql.substring(0, 100) + (sql.length > 100 ? '...' : ''),
-      params: params ? params.length : 0
-    });
-    throw error;
+/**
+ * Close database connection gracefully
+ */
+const closeDB = async () => {
+  if (isConnected) {
+    console.log('[DB] Closing MongoDB connection...');
+    await mongoose.connection.close();
+    isConnected = false;
+    console.log('[DB] MongoDB connection closed');
   }
 };
 
-// Transaction helper with proper error handling
-const transaction = async (callback) => {
-  const client = await getDb().connect();
-  try {
-    await client.query('BEGIN');
-    const result = await callback(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('[DB] Transaction failed:', error.message);
-    throw error;
-  } finally {
-    client.release();
-  }
+/**
+ * Get mongoose connection instance
+ */
+const getConnection = () => {
+  return mongoose.connection;
 };
 
-// Close pool gracefully
-const closePool = async () => {
-  if (pool) {
-    console.log('[DB] Closing PostgreSQL pool...');
-    await pool.end();
-    pool = null;
-    console.log('[DB] PostgreSQL pool closed');
-  }
+/**
+ * Check if database is connected
+ */
+const isDBConnected = () => {
+  return isConnected && mongoose.connection.readyState === 1;
 };
-
-// Export configuration for external use (e.g., seed scripts)
-const config = dbConfig;
 
 module.exports = {
-  getDb,
-  query,
+  connectDB,
   testConnection,
-  transaction,
-  closePool,
-  config
+  closeDB,
+  getConnection,
+  isDBConnected,
+  mongoose
 };

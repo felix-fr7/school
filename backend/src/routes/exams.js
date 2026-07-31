@@ -1,123 +1,366 @@
 /**
  * Exams Routes
+ * Using MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/db');
-const { authenticate, isAdmin } = require('../middleware/auth');
+const Exam = require('../models/Exam');
+const ExamSchedule = require('../models/ExamSchedule');
+const { authenticate } = require('../middleware/authMiddleware');
+const { requireAdmin, requireTeacher } = require('../middleware/rbacMiddleware');
 
-// Get exams (for student's class or all for admin)
-router.get('/', authenticate, async (req, res, next) => {
+// All routes require authentication
+router.use(authenticate);
+
+/**
+ * @route   GET /api/exams
+ * @desc    Get all exams (filtered by user role)
+ * @query   classId, page, limit
+ * @access  Authenticated users
+ */
+router.get('/', async (req, res, next) => {
   try {
-    let exams;
+    const { classId, page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    if (req.user.role === 'STUDENT') {
-      exams = await query(
-        `SELECT DISTINCT e.*, 
-                (SELECT COUNT(*) FROM exam_schedules WHERE exam_id = e.id AND class_id = ?) as schedule_count
-         FROM exams e
-         WHERE e.tenant_id = ? AND e.is_published = TRUE
-         ORDER BY e.start_date DESC`,
-        [req.user.classId, req.user.tenantId]
-      );
-    } else {
-      exams = await query(
-        `SELECT e.*, 
-                (SELECT COUNT(*) FROM exam_schedules WHERE exam_id = e.id) as schedule_count
-         FROM exams e
-         WHERE e.tenant_id = ?
-         ORDER BY e.start_date DESC`,
-        [req.user.tenantId]
-      );
+    let query = { tenantId: req.user.tenantId };
+    
+    // Filter by role
+    if (req.user.role === 'Student') {
+      query.classId = req.user.classId;
+      query.isPublished = true;
+    } else if (req.user.role === 'Teacher' && classId) {
+      query.classId = classId;
     }
-
-    res.json({ success: true, data: exams });
+    
+    const exams = await Exam.find(query)
+      .sort({ startDate: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('classId', 'name section');
+    
+    const total = await Exam.countDocuments(query);
+    
+    res.status(200).json({
+      success: true,
+      data: exams,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Get exam schedule for student's class
-router.get('/schedule/:classId', authenticate, async (req, res, next) => {
+/**
+ * @route   GET /api/exams/schedule/:classId
+ * @desc    Get exam schedule for a class (Placed BEFORE /:id to prevent route clash)
+ * @access  Authenticated users
+ */
+router.get('/schedule/:classId', async (req, res, next) => {
   try {
-    const schedule = await query(
-      `SELECT es.*, e.name as exam_name, e.type as exam_type, s.name as subject_name
-       FROM exam_schedules es
-       JOIN exams e ON es.exam_id = e.id
-       JOIN subjects s ON es.subject_id = s.id
-       WHERE es.class_id = ? AND e.is_published = TRUE
-       ORDER BY es.schedule_date, es.start_time`,
-      [req.params.classId]
+    const schedules = await ExamSchedule.find({
+      classId: req.params.classId,
+      tenantId: req.user.tenantId,
+      isPublished: true
+    })
+    .sort({ date: 1, startTime: 1 })
+    .populate('examId', 'name type')
+    .populate('classId', 'name section');
+    
+    res.status(200).json({
+      success: true,
+      data: schedules
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   GET /api/exams/:id
+ * @desc    Get single exam with schedules
+ * @access  Authenticated users
+ */
+router.get('/:id', async (req, res, next) => {
+  try {
+    const exam = await Exam.findOne({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    })
+    .populate('classId', 'name section');
+    
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Exam not found' }
+      });
+    }
+    
+    // Get exam schedules
+    const schedules = await ExamSchedule.find({
+      examId: exam._id,
+      isPublished: true
+    }).populate('classId', 'name section');
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        ...exam.toObject(),
+        schedules
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/exams
+ * @desc    Create new exam
+ * @body    { name, type, classId, startDate, endDate, description, academicYear }
+ * @access  Admin only
+ */
+router.post('/', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const {
+      name,
+      type,
+      classId,
+      startDate,
+      endDate,
+      description,
+      academicYear
+    } = req.body;
+    
+    const exam = new Exam({
+      name,
+      type: type || 'OTHER',
+      classId,
+      tenantId: req.user.tenantId,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      description,
+      academicYear,
+      isPublished: false
+    });
+    
+    await exam.save();
+    
+    res.status(201).json({
+      success: true,
+      data: exam,
+      message: 'Exam created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   PUT /api/exams/:id
+ * @desc    Update exam
+ * @access  Admin only
+ */
+router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const {
+      name,
+      type,
+      startDate,
+      endDate,
+      description,
+      academicYear,
+      isPublished
+    } = req.body;
+    
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (type !== undefined) updates.type = type;
+    if (startDate !== undefined) updates.startDate = new Date(startDate);
+    if (endDate !== undefined) updates.endDate = new Date(endDate);
+    if (description !== undefined) updates.description = description;
+    if (academicYear !== undefined) updates.academicYear = academicYear;
+    if (isPublished !== undefined) updates.isPublished = isPublished;
+    
+    const exam = await Exam.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.user.tenantId },
+      { $set: updates },
+      { new: true, runValidators: true }
     );
-
-    res.json({ success: true, data: schedule });
+    
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Exam not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: exam,
+      message: 'Exam updated successfully'
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Create exam (Admin)
-router.post('/', authenticate, isAdmin, async (req, res, next) => {
+/**
+ * @route   DELETE /api/exams/:id
+ * @desc    Delete exam
+ * @access  Admin only
+ */
+router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const { name, type, academicYear, startDate, endDate, description } = req.body;
-    const examId = uuidv4();
+    const exam = await Exam.findOneAndDelete({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    });
+    
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Exam not found' }
+      });
+    }
+    
+    // Delete associated schedules
+    await ExamSchedule.deleteMany({ examId: req.params.id });
+    
+    res.status(200).json({
+      success: true,
+      message: 'Exam deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
-    await query(
-      `INSERT INTO exams (id, tenant_id, name, type, academic_year, start_date, end_date, is_published, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, ?)`,
-      [examId, req.user.tenantId, name, type, academicYear, startDate, endDate, description]
+/**
+ * @route   POST /api/exams/:id/schedule
+ * @desc    Create exam schedule
+ * @body    { title, subject, classId, date, startTime, endTime, duration, roomNo }
+ * @access  Admin only
+ */
+router.post('/:id/schedule', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const {
+      title,
+      subject,
+      classId,
+      date,
+      startTime,
+      endTime,
+      duration,
+      roomNo
+    } = req.body;
+    
+    const schedule = new ExamSchedule({
+      title,
+      subject,
+      examId: req.params.id,
+      classId,
+      tenantId: req.user.tenantId,
+      date: new Date(date),
+      startTime,
+      endTime,
+      duration: duration || 60,
+      roomNo,
+      isPublished: false
+    });
+    
+    await schedule.save();
+    
+    res.status(201).json({
+      success: true,
+      data: schedule,
+      message: 'Exam schedule created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   PUT /api/exams/schedule/:id
+ * @desc    Update exam schedule
+ * @access  Admin only
+ */
+router.put('/schedule/:id', authenticate, requireAdmin, async (req, res, next) => {
+  try {
+    const {
+      title,
+      subject,
+      date,
+      startTime,
+      endTime,
+      duration,
+      roomNo,
+      isPublished
+    } = req.body;
+    
+    const updates = {};
+    if (title !== undefined) updates.title = title;
+    if (subject !== undefined) updates.subject = subject;
+    if (date !== undefined) updates.date = new Date(date);
+    if (startTime !== undefined) updates.startTime = startTime;
+    if (endTime !== undefined) updates.endTime = endTime;
+    if (duration !== undefined) updates.duration = duration;
+    if (roomNo !== undefined) updates.roomNo = roomNo;
+    if (isPublished !== undefined) updates.isPublished = isPublished;
+    
+    const schedule = await ExamSchedule.findOneAndUpdate(
+      { _id: req.params.id, tenantId: req.user.tenantId },
+      { $set: updates },
+      { new: true, runValidators: true }
     );
-
-    res.status(201).json({ success: true, data: { id: examId } });
+    
+    if (!schedule) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Exam schedule not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: schedule,
+      message: 'Exam schedule updated successfully'
+    });
   } catch (error) {
     next(error);
   }
 });
 
-// Update exam
-router.put('/:id', authenticate, isAdmin, async (req, res, next) => {
+/**
+ * @route   DELETE /api/exams/schedule/:id
+ * @desc    Delete exam schedule
+ * @access  Admin only
+ */
+router.delete('/schedule/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const { name, type, academicYear, startDate, endDate, isPublished, description } = req.body;
-
-    await query(
-      `UPDATE exams SET name = ?, type = ?, academic_year = ?, start_date = ?, end_date = ?, 
-              is_published = ?, description = ?, updatedAt = NOW()
-       WHERE id = ? AND tenant_id = ?`,
-      [name, type, academicYear, startDate, endDate, isPublished, description, req.params.id, req.user.tenantId]
-    );
-
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Create exam schedule
-router.post('/:id/schedule', authenticate, isAdmin, async (req, res, next) => {
-  try {
-    const { classId, subjectId, scheduleDate, startTime, endTime, roomNumber } = req.body;
-    const scheduleId = uuidv4();
-
-    await query(
-      `INSERT INTO exam_schedules (id, exam_id, class_id, subject_id, tenant_id, schedule_date, 
-              start_time, end_time, room_number)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [scheduleId, req.params.id, classId, subjectId, req.user.tenantId, scheduleDate, startTime, endTime, roomNumber]
-    );
-
-    res.status(201).json({ success: true, data: { id: scheduleId } });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Delete exam
-router.delete('/:id', authenticate, isAdmin, async (req, res, next) => {
-  try {
-    await query('DELETE FROM exams WHERE id = ? AND tenant_id = ?', [req.params.id, req.user.tenantId]);
-    res.json({ success: true });
+    const schedule = await ExamSchedule.findOneAndDelete({
+      _id: req.params.id,
+      tenantId: req.user.tenantId
+    });
+    
+    if (!schedule) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Exam schedule not found' }
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: 'Exam schedule deleted successfully'
+    });
   } catch (error) {
     next(error);
   }

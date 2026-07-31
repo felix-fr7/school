@@ -11,8 +11,8 @@ const errorHandler = (err, req, res, next) => {
     method: req.method
   });
 
-  // MySQL error codes
-  if (err.code === 'ER_DUP_ENTRY') {
+  // PostgreSQL error codes
+  if (err.code === '23505') { // unique_violation
     return res.status(409).json({
       success: false,
       message: 'Duplicate entry. This record already exists.',
@@ -20,7 +20,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  if (err.code === 'ER_NO_REFERENCED_ROW' || err.code === 'ER_ROW_IS_REFERENCED_2') {
+  if (err.code === '23503') { // foreign_key_violation
     return res.status(409).json({
       success: false,
       message: 'Cannot perform this action. The record is referenced by other data.',

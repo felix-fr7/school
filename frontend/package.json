@@ -1,14 +1,24 @@
 {
   "name": "school-ionic-frontend",
-  "version": "1.0.0",
-  "description": "Ionic React School Management App",
+  "version": "2.0.0",
+  "description": "MACVEL School Management App - JavaScript/JSX Version",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "seed": "node src/utils/seed.js"
   },
+  "keywords": [
+    "ionic",
+    "react",
+    "school-management",
+    "javascript",
+    "jsx"
+  ],
+  "author": "MACVEL",
+  "license": "MIT",
   "dependencies": {
     "@ionic/react": "^7.6.0",
     "@ionic/react-router": "^7.6.0",
@@ -19,15 +29,9 @@
     "react-router-dom": "^5.3.4"
   },
   "devDependencies": {
-    "@types/react": "^18.2.45",
-    "@types/react-dom": "^18.2.18",
-    "@types/react-router-dom": "^5.3.3",
-    "@typescript-eslint/eslint-plugin": "^6.17.0",
-    "@typescript-eslint/parser": "^6.17.0",
     "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "typescript": "~5.3.3",
     "vite": "^5.0.11"
   },
   "private": true,
