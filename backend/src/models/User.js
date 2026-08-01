@@ -49,7 +49,16 @@ const UserSchema = new mongoose.Schema({
       message: 'Role must be one of: Super Admin, School Admin, Teacher, Student, Parent'
     },
     required: [true, 'User role is required'],
-    default: 'Student'
+    default: 'Student',
+    // Automatically formats any casing (e.g., "super admin", "SUPER ADMIN") into proper Title Case
+    set: function(v) {
+      if (!v) return v;
+      return v
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
   },
   schoolId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -78,6 +87,15 @@ const UserSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: ['Male', 'Female', 'Other', '']
+  },
+  age: {
+    type: Number,
+    min: [0, 'Age cannot be negative'],
+    max: [150, 'Age cannot exceed 150']
+  },
+  qualification: {
+    type: String,
+    trim: true
   },
   address: {
     street: String,

@@ -16,7 +16,10 @@ const {
   updateSchool,
   updateSchoolStatus,
   deleteSchool,
-  getSystemStats
+  getSystemStats,
+  getSchoolAdmins,
+  updateSchoolAdmin,
+  resetSchoolAdminPassword
 } = require('../controllers/superAdminController');
 
 const { authenticate } = require('../middleware/authMiddleware');
@@ -113,6 +116,54 @@ router.delete(
       .withMessage('Invalid school ID format')
   ],
   deleteSchool
+);
+
+/**
+ * @route   GET /api/super-admin/schools/:schoolId/admins
+ * @desc    Get all admins for a specific school
+ * @params  schoolId (school ID - MongoDB ObjectId)
+ * @access  Super Admin
+ */
+router.get(
+  '/schools/:schoolId/admins',
+  [
+    param('schoolId')
+      .isMongoId()
+      .withMessage('Invalid school ID format')
+  ],
+  getSchoolAdmins
+);
+
+/**
+ * @route   PUT /api/super-admin/schools/:schoolId/admins/:adminId
+ * @desc    Update a school admin's details
+ * @params  schoolId, adminId (MongoDB ObjectId)
+ * @body    { name?, email?, phone? }
+ * @access  Super Admin
+ */
+router.put(
+  '/schools/:schoolId/admins/:adminId',
+  [
+    param('schoolId').isMongoId().withMessage('Invalid school ID format'),
+    param('adminId').isMongoId().withMessage('Invalid admin ID format')
+  ],
+  updateSchoolAdmin
+);
+
+/**
+ * @route   POST /api/super-admin/schools/:schoolId/admins/:adminId/reset-password
+ * @desc    Reset a school admin's password
+ * @params  schoolId, adminId (MongoDB ObjectId)
+ * @body    { password }
+ * @access  Super Admin
+ */
+router.post(
+  '/schools/:schoolId/admins/:adminId/reset-password',
+  [
+    param('schoolId').isMongoId().withMessage('Invalid school ID format'),
+    param('adminId').isMongoId().withMessage('Invalid admin ID format')
+  ],
+  resetSchoolAdminPassword
 );
 
 module.exports = router;

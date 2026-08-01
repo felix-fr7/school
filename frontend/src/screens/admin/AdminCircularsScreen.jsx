@@ -1,5 +1,5 @@
 /**
- * Admin Circulars Screen (Ionic React Version)
+ * Admin Circulars Screen (Ionic React Version) - JSX Version
  * Modern Enterprise Admin Console Dashboard Style
  */
 
@@ -35,28 +35,18 @@ import {
   schoolOutline,
   cloudUploadOutline,
 } from 'ionicons/icons';
-import { Class, Circular, CreateCircularInput } from '../../types';
 import { adminAPI, fetchFileAsBlobUrl } from '../../services/api';
 import './ClassDashboardScreen.css';
 
-type VisibilityType = 'ALL' | 'SPECIFIC_CLASSES';
-type CircularMode = 'TEXT' | 'IMAGE';
-
-interface CircularItemProps {
-  item: Circular;
-  onDelete: (id: string) => void;
-  onEdit: (item: Circular) => void;
-}
-
-const getVisibilityLabel = (visibility: string) => {
+const getVisibilityLabel = (visibility) => {
   if (visibility === 'ALL') return 'All Classes';
   if (visibility === 'SPECIFIC_CLASSES') return 'Specific Classes';
   return 'All Classes';
 };
 
-const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) => {
+const CircularItem = ({ item, onDelete, onEdit }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [imageBlobUrl, setImageBlobUrl] = useState<string>('');
+  const [imageBlobUrl, setImageBlobUrl] = useState('');
 
   // Fetch image with auth on mount
   useEffect(() => {
@@ -128,28 +118,28 @@ const CircularItem: React.FC<CircularItemProps> = ({ item, onDelete, onEdit }) =
   );
 };
 
-const AdminCircularsScreen: React.FC = () => {
-  const imageInputRef = useRef<HTMLInputElement>(null);
+const AdminCircularsScreen = () => {
+  const imageInputRef = useRef(null);
 
-  const [circularList, setCircularList] = useState<Circular[]>([]);
+  const [circularList, setCircularList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState(null);
   const [imageName, setImageName] = useState('');
   const [imagePreview, setImagePreview] = useState('');
-  const [visibility, setVisibility] = useState<VisibilityType>('ALL');
-  const [mode, setMode] = useState<CircularMode>('TEXT');
+  const [visibility, setVisibility] = useState('ALL');
+  const [mode, setMode] = useState('TEXT');
   const [submitting, setSubmitting] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
+  const [classes, setClasses] = useState([]);
+  const [selectedClassIds, setSelectedClassIds] = useState([]);
   const [showClassSelector, setShowClassSelector] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [editingCircularId, setEditingCircularId] = useState<string | null>(null);
+  const [editingCircularId, setEditingCircularId] = useState(null);
 
   const fetchCirculars = async () => {
     try {
@@ -181,26 +171,26 @@ const AdminCircularsScreen: React.FC = () => {
     fetchClasses();
   }, []);
 
-  const showAlertMessage = (header: string, message: string) => {
+  const showAlertMessage = (header, message) => {
     setAlertHeader(header);
     setAlertMessage(message);
     setShowAlert(true);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       setImageFile(file);
       setImageName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const toggleClassSelection = (classId: string) => {
+  const toggleClassSelection = (classId) => {
     setSelectedClassIds(prev =>
       prev.includes(classId)
         ? prev.filter(id => id !== classId)
@@ -243,7 +233,7 @@ const AdminCircularsScreen: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const data: CreateCircularInput = {
+      const data = {
         title: title.trim(),
         content: mode === 'TEXT' ? message.trim() : undefined,
         imageUrl: imageFile ? `/uploads/circulars/${imageFile.name}` : undefined,
@@ -252,7 +242,7 @@ const AdminCircularsScreen: React.FC = () => {
 
       let response;
       if (editingCircularId) {
-        response = await adminAPI.updateNews(editingCircularId, data as any);
+        response = await adminAPI.updateNews(editingCircularId, data);
       } else {
         response = await adminAPI.createCircular(data);
       }
@@ -262,14 +252,14 @@ const AdminCircularsScreen: React.FC = () => {
         resetForm();
         fetchCirculars();
       }
-    } catch (error: any) {
+    } catch (error) {
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to process circular');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       const response = await adminAPI.deleteCircular(id);
       if (response.success) {
@@ -281,7 +271,7 @@ const AdminCircularsScreen: React.FC = () => {
     }
   };
 
-  const handleEdit = (item: Circular) => {
+  const handleEdit = (item) => {
     setTitle(item.title);
     if (item.imageUrl) {
       setMode('IMAGE');

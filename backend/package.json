@@ -8,6 +8,7 @@
     "dev": "nodemon src/server.js",
     "seed": "node src/utils/seed.js",
     "seed:superadmin": "node scripts/seed-superadmin.js",
+    "fix-admin-login": "node src/utils/fix-admin-login.js",
     "build": "echo 'No build step required for Node.js'",
     "test": "echo \"No tests yet\" && exit 0"
   },

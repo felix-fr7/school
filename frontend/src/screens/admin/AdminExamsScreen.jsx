@@ -40,7 +40,6 @@ import {
   listOutline
 } from 'ionicons/icons';
 import { adminAPI, api, openFileInNewTab } from '../../services/api';
-import { Class, ExamSchedule } from '../../types';
 import './AdminExamsScreen.css';
 
 // API Base URL for constructing file URLs
@@ -50,7 +49,7 @@ const API_BASE_URL =
   'http://localhost:3000/api';
 
 // Helper to get full file URL safely
-const getFullFileUrl = (fileUrl: string | undefined | null): string => {
+const getFullFileUrl = (fileUrl) => {
   // Handle undefined, null, empty string, or '/'
   if (!fileUrl || fileUrl === '' || fileUrl === '/') return '';
   
@@ -83,28 +82,20 @@ const getFullFileUrl = (fileUrl: string | undefined | null): string => {
   return `${rawBaseUrl}${relativePath}`;
 };
 
-interface ExamItemProps {
-  item: ExamSchedule;
-  classes: Class[];
-  onDelete: (id: string) => void;
-  onEdit: (id: string, title: string, classId: string | null) => void;
-  showAlertMessage?: (header: string, message: string) => void;
-}
-
-const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit, showAlertMessage: parentShowAlert }) => {
+const ExamItem = ({ item, classes, onDelete, onEdit, showAlertMessage: parentShowAlert }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTitle, setEditTitle] = useState(item.title);
-  const [editClassId, setEditClassId] = useState<string | undefined>(item.classId || undefined);
+  const [editClassId, setEditClassId] = useState(item.classId || undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isImageFile = (url: string | undefined) => {
+  const isImageFile = (url) => {
     if (!url) return false;
     const ext = url.split('.').pop()?.toLowerCase();
     return ['jpeg', 'jpg', 'png', 'webp'].includes(ext || '');
   };
 
-  const isPdfFile = (url: string | undefined) => {
+  const isPdfFile = (url) => {
     if (!url) return false;
     return url.toLowerCase().endsWith('.pdf');
   };
@@ -129,7 +120,7 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit, sh
     return 'School-wide';
   };
 
-  const formatDate = (dateStr: string | Date) => {
+  const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     try {
       const date = new Date(dateStr);
@@ -144,7 +135,7 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit, sh
     }
   };
 
-  const handleViewFile = async (examId: string, fileUrl: string | undefined) => {
+  const handleViewFile = async (examId, fileUrl) => {
     // Prefer the new DB file endpoint if examId is available
     if (examId) {
       try {
@@ -195,7 +186,7 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit, sh
                 alt={item.title} 
                 className="exam-thumbnail"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
+                  e.target.style.display = 'none';
                 }}
               />
               <div className="thumbnail-overlay">
@@ -374,16 +365,16 @@ const ExamItem: React.FC<ExamItemProps> = ({ item, classes, onDelete, onEdit, sh
   );
 };
 
-const AdminExamsScreen: React.FC = () => {
-  const [examList, setExamList] = useState<ExamSchedule[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
+const AdminExamsScreen = () => {
+  const [examList, setExamList] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<'upload' | 'list'>('upload');
+  const [selectedClassId, setSelectedClassId] = useState(undefined);
+  const [activeTab, setActiveTab] = useState('upload');
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const fileInputRef = useRef(null);
   const [title, setTitle] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
@@ -421,13 +412,13 @@ const AdminExamsScreen: React.FC = () => {
     }
   };
 
-  const showAlertMessage = (header: string, message: string) => {
+  const showAlertMessage = (header, message) => {
     setAlertHeader(header);
     setAlertMessage(message);
     setShowAlert(true);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
@@ -446,7 +437,7 @@ const AdminExamsScreen: React.FC = () => {
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          setFilePreview(reader.result as string);
+          setFilePreview(reader.result);
         };
         reader.readAsDataURL(file);
       } else {
@@ -463,7 +454,7 @@ const AdminExamsScreen: React.FC = () => {
     }
   };
 
-  const isValidUUID = (value: string | undefined | null): boolean => {
+  const isValidUUID = (value) => {
     if (!value || typeof value !== 'string') return false;
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidRegex.test(value);
@@ -515,7 +506,7 @@ const AdminExamsScreen: React.FC = () => {
         fetchExams(); // Refresh the list to show the newly created exam
         setActiveTab('list');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating exam:', error);
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to upload timetable');
     } finally {
@@ -523,7 +514,7 @@ const AdminExamsScreen: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       // Use the /admin/content/exams/:id endpoint (Exam table)
       const response = await api.delete(`/admin/content/exams/${id}`);
@@ -531,13 +522,13 @@ const AdminExamsScreen: React.FC = () => {
         setExamList(prev => prev.filter(item => item.id !== id));
         showAlertMessage('Success', 'Exam timetable deleted successfully');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting exam:', error);
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to delete exam timetable');
     }
   };
 
-  const handleEdit = async (id: string, newTitle: string, newClassId: string | null) => {
+  const handleEdit = async (id, newTitle, newClassId) => {
     try {
       // Use the /admin/content/exams/:id endpoint (Exam table)
       const response = await api.put(`/admin/content/exams/${id}`, {
@@ -548,7 +539,7 @@ const AdminExamsScreen: React.FC = () => {
         showAlertMessage('Success', 'Exam timetable updated successfully');
         fetchExams();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating exam:', error);
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update timetable');
     }
@@ -603,7 +594,7 @@ const AdminExamsScreen: React.FC = () => {
           <div className="view-segment-container">
             <IonSegment 
               value={activeTab} 
-              onIonChange={(e) => setActiveTab(e.detail.value as 'upload' | 'list')}
+              onIonChange={(e) => setActiveTab(e.detail.value)}
               className="custom-segment"
             >
               <IonSegmentButton value="upload">

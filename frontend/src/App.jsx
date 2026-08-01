@@ -8,7 +8,7 @@ import { IonApp, IonRouterOutlet, IonSplitPane, setupIonicReact } from '@ionic/r
 import { IonReactRouter } from '@ionic/react-router';
 import { Redirect, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import theme from './theme.css';
+import './theme.css';
 
 // Screens
 import LoginScreen from './screens/LoginScreen';
@@ -66,8 +66,11 @@ import StudentMenu from './components/StudentMenu';
 
 setupIonicReact();
 
-const AppRoutes: React.FC = () => {
+const AppRoutes = () => {
   const { user, isAuthenticated } = useAuth();
+
+  const userRole = user?.role ? user.role.toUpperCase().trim() : '';
+  const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
   if (!isAuthenticated) {
     return (
@@ -88,9 +91,9 @@ const AppRoutes: React.FC = () => {
       <IonReactRouter>
         <IonSplitPane contentId="main-content">
           {/* Side Menu based on role */}
-          {user?.role === 'ADMIN' && <AdminMenu />}
-          {user?.role === 'TEACHER' && <TeacherMenu />}
-          {user?.role === 'STUDENT' && <StudentMenu />}
+          {isAdmin && <AdminMenu />}
+          {userRole === 'TEACHER' && <TeacherMenu />}
+          {userRole === 'STUDENT' && <StudentMenu />}
 
           <IonRouterOutlet id="main-content">
             {/* Common Routes */}
@@ -104,9 +107,11 @@ const AppRoutes: React.FC = () => {
             <Route exact path="/settings" component={SettingsScreen} />
 
             {/* Admin Routes */}
-            {user?.role === 'ADMIN' && (
+            {isAdmin && (
               <>
                 <Route exact path="/admin" component={AdminDashboard} />
+                <Route exact path="/admin-dashboard" component={AdminDashboard} />
+                <Route exact path="/super-admin-dashboard" component={AdminDashboard} />
                 <Route exact path="/admin/students" component={AdminStudents} />
                 <Route exact path="/admin/students/create" component={CreateStudentScreen} />
                 <Route exact path="/admin/students/:id/edit" component={EditStudentScreen} />
@@ -122,24 +127,22 @@ const AppRoutes: React.FC = () => {
                 <Route exact path="/admin/circulars/create" component={CreateCircularScreen} />
                 <Route exact path="/admin/exams" component={AdminExams} />
                 <Route exact path="/admin/settings" component={AdminSettings} />
-                <Redirect from="/" to="/admin" />
               </>
             )}
 
             {/* Teacher Routes */}
-            {user?.role === 'TEACHER' && (
+            {userRole === 'TEACHER' && (
               <>
                 <Route exact path="/teacher" component={TeacherDashboard} />
                 <Route exact path="/teacher/classes" component={TeacherClasses} />
                 <Route exact path="/teacher/attendance" component={TeacherAttendance} />
                 <Route exact path="/teacher/homework" component={TeacherHomework} />
                 <Route exact path="/teacher/students" component={TeacherStudents} />
-                <Redirect from="/" to="/teacher" />
               </>
             )}
 
             {/* Student Routes */}
-            {user?.role === 'STUDENT' && (
+            {userRole === 'STUDENT' && (
               <>
                 <Route exact path="/student" component={StudentDashboard} />
                 <Route exact path="/student/homework" component={StudentHomework} />
@@ -149,11 +152,20 @@ const AppRoutes: React.FC = () => {
                 <Route exact path="/student/marks" component={StudentMarks} />
                 <Route exact path="/student/leave" component={StudentLeave} />
                 <Route exact path="/student/profile" component={StudentProfile} />
-                <Redirect from="/" to="/student" />
               </>
             )}
 
-            <Redirect from="/" to={user?.role === 'ADMIN' ? '/admin' : user?.role === 'TEACHER' ? '/teacher' : '/student'} />
+            {/* Fallback Redirection */}
+            <Redirect 
+              from="/" 
+              to={
+                isAdmin 
+                  ? '/admin' 
+                  : userRole === 'TEACHER' 
+                    ? '/teacher' 
+                    : '/student'
+              } 
+            />
           </IonRouterOutlet>
         </IonSplitPane>
       </IonReactRouter>
@@ -161,7 +173,7 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
+const App = () => {
   return (
     <AuthProvider>
       <AppRoutes />

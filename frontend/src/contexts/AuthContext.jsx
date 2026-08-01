@@ -332,13 +332,17 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Check if user is Super Admin
+   * Handles both 'SUPER_ADMIN' and 'Super Admin' formats
    */
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = user?.role && 
+    ['SUPER_ADMIN', 'Super Admin'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
 
   /**
    * Check if user is Admin (School Admin)
+   * Handles both 'ADMIN' and 'School Admin' formats
    */
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role && 
+    ['ADMIN', 'SCHOOL_ADMIN', 'School Admin'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
 
   /**
    * Check if user is Tenant Admin
@@ -347,13 +351,17 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Check if user is Student
+   * Handles both 'STUDENT' and 'Student' formats
    */
-  const isStudent = user?.role === 'STUDENT';
+  const isStudent = user?.role && 
+    ['STUDENT', 'Student'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
 
   /**
    * Check if user is Teacher
+   * Handles both 'TEACHER' and 'Teacher' formats
    */
-  const isTeacher = user?.role === 'TEACHER';
+  const isTeacher = user?.role && 
+    ['TEACHER', 'Teacher'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
 
   /**
    * Check if currently logged in as a class

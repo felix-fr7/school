@@ -1,6 +1,6 @@
 /**
- * Admin Teachers List Screen (Modern Admin Design)
- * Manage school teachers with search and filtering
+ * Admin Students List Screen (Modern Admin Design)
+ * Manage school students with search functionality
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,119 +19,105 @@ import {
   IonRefresherContent,
   IonAlert,
   IonInput,
-  IonSelect,
-  IonSelectOption,
+  IonBadge,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { 
   addCircleOutline, 
   refreshOutline, 
-  personOutline, 
-  searchOutline,
-  createOutline,
-  trashOutline
+  peopleOutline, 
+  searchOutline, 
+  createOutline, 
+  trashOutline,
+  personOutline
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { User, Class } from '../../types';
 import './AdminTheme.css';
 
-const TeachersListScreen: React.FC = () => {
+const StudentsListScreen = () => {
   const history = useHistory();
-  const [teachers, setTeachers] = useState<User[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClassId, setSelectedClassId] = useState<string | undefined>(undefined);
   const [pagination, setPagination] = useState({ page: 1, total: 0, pages: 0, limit: 10 });
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [teacherToDelete, setTeacherToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState(null);
 
   useEffect(() => {
-    fetchClasses();
-    fetchTeachers();
-  }, [pagination.page, searchQuery, selectedClassId]);
+    fetchStudents();
+  }, [pagination.page, searchQuery]);
 
-  const fetchClasses = async () => {
-    try {
-      const response = await adminAPI.getClasses();
-      if (response.success && response.data) {
-        setClasses(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    }
-  };
-
-  const fetchTeachers = async (refresh = false) => {
+  const fetchStudents = async (refresh = false) => {
     try {
       if (refresh) setRefreshing(true);
       else setLoading(true);
 
-      const response = await adminAPI.getTeachers(
-        pagination.page,
-        pagination.limit,
-        selectedClassId || '',
-        searchQuery
-      );
+      const response = await adminAPI.getStudents(pagination.page, pagination.limit, searchQuery);
       if (response.success && response.data) {
-        setTeachers(response.data.teachers);
+        setStudents(response.data.students);
         setPagination(response.data.pagination);
       }
     } catch (error) {
-      console.error('Error fetching teachers:', error);
+      console.error('Error fetching students:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const onRefresh = async (event: CustomEvent) => {
+  const onRefresh = async (event) => {
     setPagination(prev => ({ ...prev, page: 1 }));
-    await fetchTeachers(true);
+    await fetchStudents(true);
     event.detail.complete();
   };
 
-  const handleDeleteClick = (teacherId: string, teacherName: string) => {
-    setTeacherToDelete({ id: teacherId, name: teacherName });
+  const handleDeleteClick = (studentId, studentName) => {
+    setStudentToDelete({ id: studentId, name: studentName });
     setShowDeleteAlert(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!teacherToDelete) return;
+    if (!studentToDelete) return;
     try {
-      const response = await adminAPI.deleteTeacher(teacherToDelete.id);
+      const response = await adminAPI.deleteStudent(studentToDelete.id);
       if (response.success) {
-        fetchTeachers();
+        fetchStudents();
       } else {
-        console.error(response.error?.message || 'Failed to delete teacher');
+        console.error(response.error?.message || 'Failed to delete student');
       }
     } catch (error) {
-      console.error('Error deleting teacher:', error);
+      console.error('Error deleting student:', error);
     }
     setShowDeleteAlert(false);
-    setTeacherToDelete(null);
+    setStudentToDelete(null);
   };
 
-  if (loading && teachers.length === 0) {
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.pages) {
+      setPagination(prev => ({ ...prev, page: newPage }));
+    }
+  };
+
+  if (loading && students.length === 0) {
     return (
       <IonPage>
-        <IonHeader className="teachers-list-header">
+        <IonHeader className="students-list-header">
           <IonToolbar>
             <IonButtons slot="start">
               <IonBackButton defaultHref="/admin/dashboard" />
             </IonButtons>
-            <IonTitle className="admin-page-title">Teachers</IonTitle>
-            <IonButton slot="end" onClick={() => history.push('/admin/teachers/create')}>
+            <IonTitle className="admin-page-title">Students</IonTitle>
+            <IonButton slot="end" onClick={() => history.push('/admin/students/create')}>
               <IonIcon icon={addCircleOutline} slot="start" />
-              Add Teacher
+              Add Student
             </IonButton>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="teachers-list-content">
+        <IonContent className="students-list-content">
           <div className="loading-state-modern">
             <IonSpinner name="crescent" color="primary" />
-            <span className="loading-text">Loading teachers...</span>
+            <span className="loading-text">Loading students...</span>
           </div>
         </IonContent>
       </IonPage>
@@ -140,20 +126,20 @@ const TeachersListScreen: React.FC = () => {
 
   return (
     <IonPage>
-      <IonHeader className="teachers-list-header">
+      <IonHeader className="students-list-header">
         <IonToolbar>
           <IonButtons slot="start">
             <IonBackButton defaultHref="/admin/dashboard" />
           </IonButtons>
-          <IonTitle className="admin-page-title">Teachers</IonTitle>
-          <IonButton slot="end" onClick={() => history.push('/admin/teachers/create')}>
+          <IonTitle className="admin-page-title">Students</IonTitle>
+          <IonButton slot="end" onClick={() => history.push('/admin/students/create')}>
             <IonIcon icon={addCircleOutline} slot="start" />
-            Add Teacher
+            Add Student
           </IonButton>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent className="teachers-list-content">
+      <IonContent className="students-list-content">
         <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
           <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
         </IonRefresher>
@@ -163,7 +149,7 @@ const TeachersListScreen: React.FC = () => {
           <div className="search-container-modern">
             <IonIcon icon={searchOutline} className="search-icon-slot" />
             <IonInput
-              placeholder="Search teachers by name or email..."
+              placeholder="Search students by name, email, or ID..."
               value={searchQuery}
               onIonInput={(e) => {
                 setSearchQuery(e.detail.value || '');
@@ -174,75 +160,54 @@ const TeachersListScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Class Filter */}
-        <div className="filter-row-modern">
-          <IonSelect
-            value={selectedClassId}
-            placeholder="Filter by Class"
-            interface="popover"
-            onIonChange={(e) => {
-              setSelectedClassId(e.detail.value || undefined);
-              setPagination(prev => ({ ...prev, page: 1 }));
-            }}
-            className="class-filter-modern"
-          >
-            <IonSelectOption value="">All Classes</IonSelectOption>
-            {classes.map((cls) => (
-              <IonSelectOption key={cls.id} value={cls.id}>
-                {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
-              </IonSelectOption>
-            ))}
-          </IonSelect>
-        </div>
-
-        {/* Teachers List */}
-        {teachers.length === 0 ? (
+        {/* Students List */}
+        {students.length === 0 ? (
           <div className="empty-container-modern">
-            <IonIcon icon={personOutline} className="empty-icon-modern" />
-            <h3 className="empty-title-modern">No teachers found</h3>
+            <IonIcon icon={peopleOutline} className="empty-icon-modern" />
+            <h3 className="empty-title-modern">No students found</h3>
             <p className="empty-text-modern">
-              {searchQuery || selectedClassId ? 'Try adjusting your filters' : 'Add your first teacher to get started'}
+              {searchQuery ? 'Try a different search term' : 'Add your first student to get started'}
             </p>
           </div>
         ) : (
-          <div className="teacher-list-modern">
-            {teachers.map((item) => {
+          <div className="student-list-modern">
+            {students.map((item) => {
               const classFullName = item.class?.section
                 ? `${item.class.name} - ${item.class.section}`
                 : item.class?.name || null;
 
               return (
-                <div key={item.id} className="teacher-item-modern">
+                <div key={item.id} className="student-item-modern">
                   <div 
-                    className="teacher-card-modern"
-                    onClick={() => history.push(`/admin/teachers/${item.id}`)}
+                    className="student-card-modern"
+                    onClick={() => history.push(`/admin/students/${item.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <div className="teacher-card-content-modern">
+                    <div className="student-card-content-modern">
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div className="teacher-avatar-modern">
+                        <div className="student-avatar-modern">
                           {item.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="teacher-info-modern">
-                          <h3 className="teacher-name-modern">{item.name}</h3>
-                          <p className="teacher-email-modern">{item.email}</p>
-                          {item.phone && <p className="teacher-phone-modern">{item.phone}</p>}
+                        <div className="student-info-modern">
+                          <h3 className="student-name-modern">{item.name}</h3>
+                          <p className="student-email-modern">{item.email}</p>
+                          <p className="student-id-modern">ID: {item.studentId}</p>
                           {classFullName && (
-                            <span className="teacher-class-badge-modern">
-                              <IonIcon icon={personOutline} style={{ fontSize: '10px' }} />
+                            <span className="student-class-badge-modern">
+                              <IonIcon icon={peopleOutline} style={{ fontSize: '10px' }} />
                               {classFullName}
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="teacher-actions-modern">
+                      <div className="student-actions-modern">
                         <button 
                           className="action-btn-small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            history.push(`/admin/teachers/${item.id}`);
+                            history.push(`/admin/students/edit/${item.id}`);
                           }}
-                          title="Edit Teacher"
+                          title="Edit Student"
                         >
                           <IonIcon icon={createOutline} />
                         </button>
@@ -252,7 +217,7 @@ const TeachersListScreen: React.FC = () => {
                             e.stopPropagation();
                             handleDeleteClick(item.id, item.name);
                           }}
-                          title="Delete Teacher"
+                          title="Delete Student"
                         >
                           <IonIcon icon={trashOutline} />
                         </button>
@@ -269,16 +234,53 @@ const TeachersListScreen: React.FC = () => {
         {pagination.pages > 1 && (
           <div className="pagination-modern">
             <span className="pagination-text">
-              Page {pagination.page} of {pagination.pages} ({pagination.total} teachers)
+              Page {pagination.page} of {pagination.pages} ({pagination.total} students)
             </span>
+            <div className="pagination-controls">
+              <button 
+                className="page-btn"
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1}
+              >
+                Prev
+              </button>
+              {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                let pageNum;
+                if (pagination.pages <= 5) {
+                  pageNum = i + 1;
+                } else if (pagination.page <= 3) {
+                  pageNum = i + 1;
+                } else if (pagination.page >= pagination.pages - 2) {
+                  pageNum = pagination.pages - 4 + i;
+                } else {
+                  pageNum = pagination.page - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    className={`page-btn ${pagination.page === pageNum ? 'active' : ''}`}
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button 
+                className="page-btn"
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.pages}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
 
         <IonAlert
           isOpen={showDeleteAlert}
           onDidDismiss={() => setShowDeleteAlert(false)}
-          header="Delete Teacher"
-          message={`Are you sure you want to delete "${teacherToDelete?.name}"? This action cannot be undone.`}
+          header="Delete Student"
+          message={`Are you sure you want to delete "${studentToDelete?.name}"? This action cannot be undone.`}
           buttons={[
             { text: 'Cancel', role: 'cancel' },
             {
@@ -293,4 +295,4 @@ const TeachersListScreen: React.FC = () => {
   );
 };
 
-export default TeachersListScreen;
+export default StudentsListScreen;

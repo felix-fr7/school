@@ -6,6 +6,7 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -31,11 +32,19 @@ const authenticate = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Get user from MongoDB database
-    const user = await User.findOne({
+    // First, try to find admin in Admin collection (for Super Admin and School Admin)
+    let user = await Admin.findOne({
       _id: decoded.userId,
       isActive: true
     }).select('-password'); // Exclude password from response
+
+    // If not found in Admin collection, try User collection (for students, teachers, parents)
+    if (!user) {
+      user = await User.findOne({
+        _id: decoded.userId,
+        isActive: true
+      }).select('-password'); // Exclude password from response
+    }
 
     if (!user) {
       return res.status(401).json({
@@ -51,6 +60,7 @@ const authenticate = async (req, res, next) => {
       name: user.name,
       role: user.role,
       tenantId: user.tenantId ? user.tenantId.toString() : null,
+      schoolId: user.schoolId ? user.schoolId.toString() : null,
       avatarUrl: user.avatarUrl || null,
       // Student specific
       studentId: user.studentId || null,
@@ -81,6 +91,7 @@ const authenticate = async (req, res, next) => {
 /**
  * Authorize specific roles
  * Usage: authorize('ADMIN'), authorize('ADMIN', 'TEACHER')
+ * Handles both 'SUPER_ADMIN'/'Super Admin' style role formats
  */
 const authorize = (...roles) => {
   return (req, res, next) => {
@@ -91,7 +102,15 @@ const authorize = (...roles) => {
       });
     }
 
-    if (!roles.includes(req.user.role)) {
+    // Normalize user role and allowed roles to handle both formats
+    const userRole = req.user.role || '';
+    const normalizedUserRole = userRole.replace(/_/g, ' ').toUpperCase();
+    const normalizedAllowedRoles = roles.map(r => r.replace(/_/g, ' ').toUpperCase());
+
+    // Check if user role matches any allowed role (both exact and normalized)
+    const isAllowed = roles.includes(userRole) || normalizedAllowedRoles.includes(normalizedUserRole);
+
+    if (!isAllowed) {
       return res.status(403).json({
         success: false,
         message: 'Insufficient permissions for this action.'
@@ -104,6 +123,7 @@ const authorize = (...roles) => {
 
 /**
  * Check if user is SUPER_ADMIN
+ * Handles both 'SUPER_ADMIN' and 'Super Admin' role formats
  */
 const isSuperAdmin = (req, res, next) => {
   if (!req.user) {
@@ -113,7 +133,11 @@ const isSuperAdmin = (req, res, next) => {
     });
   }
   
-  if (req.user.role !== 'SUPER_ADMIN') {
+  // Normalize role to handle both 'SUPER_ADMIN' and 'Super Admin' formats
+  const userRole = req.user.role || '';
+  const normalizedRole = userRole.replace(/_/g, ' ').toUpperCase();
+  
+  if (normalizedRole !== 'SUPER ADMIN') {
     return res.status(403).json({
       success: false,
       message: 'Insufficient permissions. SUPER_ADMIN role required.'
@@ -125,33 +149,99 @@ const isSuperAdmin = (req, res, next) => {
 
 /**
  * Check if user is TENANT_ADMIN
+ * Handles both 'TENANT_ADMIN' and 'Tenant Admin' formats
  */
-const isTenantAdmin = authorize('TENANT_ADMIN');
+const isTenantAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  const userRole = req.user.role || '';
+  const normalizedRole = userRole.replace(/_/g, ' ').toUpperCase();
+  if (normalizedRole !== 'TENANT ADMIN') {
+    return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
+  }
+  next();
+};
 
 /**
- * Check if user is Admin
+ * Check if user is Admin (School Admin)
+ * Handles both 'ADMIN' and 'School Admin' formats
  */
-const isAdmin = authorize('ADMIN');
+const isAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  const userRole = req.user.role || '';
+  const normalizedRole = userRole.replace(/_/g, ' ').toUpperCase();
+  if (normalizedRole !== 'ADMIN' && normalizedRole !== 'SCHOOL ADMIN') {
+    return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
+  }
+  next();
+};
 
 /**
  * Check if user is Teacher
+ * Handles both 'TEACHER' and 'Teacher' formats
  */
-const isTeacher = authorize('TEACHER');
+const isTeacher = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  const userRole = req.user.role || '';
+  const normalizedRole = userRole.replace(/_/g, ' ').toUpperCase();
+  if (normalizedRole !== 'TEACHER') {
+    return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
+  }
+  next();
+};
 
 /**
  * Check if user is Student
+ * Handles both 'STUDENT' and 'Student' formats
  */
-const isStudent = authorize('STUDENT');
+const isStudent = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  const userRole = req.user.role || '';
+  const normalizedRole = userRole.replace(/_/g, ' ').toUpperCase();
+  if (normalizedRole !== 'STUDENT') {
+    return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
+  }
+  next();
+};
 
 /**
  * Check if user is Admin or Teacher
+ * Handles both formats
  */
-const isAdminOrTeacher = authorize('ADMIN', 'TEACHER');
+const isAdminOrTeacher = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  const userRole = req.user.role || '';
+  const normalizedRole = userRole.replace(/_/g, ' ').toUpperCase();
+  if (normalizedRole !== 'ADMIN' && normalizedRole !== 'SCHOOL ADMIN' && normalizedRole !== 'TEACHER') {
+    return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
+  }
+  next();
+};
 
 /**
- * Check if user is any type of admin (SUPER_ADMIN, TENANT_ADMIN, or ADMIN)
+ * Check if user is any type of admin (SUPER_ADMIN, TENANT_ADMIN, or ADMIN/School Admin)
+ * Handles both formats
  */
-const isAnyAdmin = authorize('SUPER_ADMIN', 'TENANT_ADMIN', 'ADMIN');
+const isAnyAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  const userRole = req.user.role || '';
+  const normalizedRole = userRole.replace(/_/g, ' ').toUpperCase();
+  if (normalizedRole !== 'SUPER ADMIN' && normalizedRole !== 'TENANT ADMIN' && normalizedRole !== 'ADMIN' && normalizedRole !== 'SCHOOL ADMIN') {
+    return res.status(403).json({ success: false, message: 'Insufficient permissions.' });
+  }
+  next();
+};
 
 /**
  * Generate JWT Token
@@ -175,11 +265,19 @@ const optionalAuth = async (req, res, next) => {
       const token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
       
-      // Get user from MongoDB
-      const user = await User.findOne({
+      // First, try to find admin in Admin collection
+      let user = await Admin.findOne({
         _id: decoded.userId,
         isActive: true
       }).select('-password');
+
+      // If not found in Admin collection, try User collection
+      if (!user) {
+        user = await User.findOne({
+          _id: decoded.userId,
+          isActive: true
+        }).select('-password');
+      }
 
       if (user) {
         req.user = {
@@ -188,6 +286,7 @@ const optionalAuth = async (req, res, next) => {
           name: user.name,
           role: user.role,
           tenantId: user.tenantId ? user.tenantId.toString() : null,
+          schoolId: user.schoolId ? user.schoolId.toString() : null,
           avatarUrl: null,
           studentId: null,
           classId: null,

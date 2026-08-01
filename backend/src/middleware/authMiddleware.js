@@ -6,6 +6,7 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 
 // JWT Secret from environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -51,11 +52,19 @@ const authenticate = async (req, res, next) => {
     // Verify token using JWT_SECRET
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Fetch user from database to ensure they still exist and are active
-    const user = await User.findOne({
+    // First, try to find admin in Admin collection (for Super Admin and School Admin)
+    let user = await Admin.findOne({
       _id: decoded.userId,
       isActive: true
     }).select('-password'); // Exclude password from response
+
+    // If not found in Admin collection, try User collection (for students, teachers, parents)
+    if (!user) {
+      user = await User.findOne({
+        _id: decoded.userId,
+        isActive: true
+      }).select('-password'); // Exclude password from response
+    }
 
     if (!user) {
       return res.status(401).json({
@@ -74,7 +83,7 @@ const authenticate = async (req, res, next) => {
       name: user.name,
       role: user.role,
       schoolId: user.schoolId ? user.schoolId.toString() : null,
-      // Additional fields for specific roles
+      // Additional fields for specific roles (User collection specific)
       studentId: user.studentId || null,
       classId: user.classId ? user.classId.toString() : null,
       rollNumber: user.rollNumber || null
@@ -135,10 +144,19 @@ const optionalAuth = async (req, res, next) => {
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
         
-        const user = await User.findOne({
+        // First, try to find admin in Admin collection
+        let user = await Admin.findOne({
           _id: decoded.userId,
           isActive: true
         }).select('-password');
+
+        // If not found in Admin collection, try User collection
+        if (!user) {
+          user = await User.findOne({
+            _id: decoded.userId,
+            isActive: true
+          }).select('-password');
+        }
 
         if (user) {
           req.user = {

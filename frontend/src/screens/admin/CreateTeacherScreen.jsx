@@ -1,9 +1,9 @@
 /**
- * Create Teacher Screen (Ionic React Version)
+ * Create Teacher Screen (React Version)
  * Admin Dashboard UI Layout
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   IonPage,
   IonContent,
@@ -14,56 +14,54 @@ import {
   IonBackButton,
   IonButton,
   IonInput,
-  IonText,
   IonSpinner,
   IonAlert,
-  IonSelect,
-  IonSelectOption,
   IonGrid,
   IonRow,
   IonCol,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
-import { Class } from '../../types';
 import './AdminTheme.css';
 
-const CreateTeacherScreen: React.FC = () => {
+const CreateTeacherScreen = () => {
   const history = useHistory();
   const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
+  const [qualification, setQualification] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [classId, setClassId] = useState<string | undefined>(undefined);
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [fetchingClasses, setFetchingClasses] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
-
-  useEffect(() => {
-    fetchClasses();
-  }, []);
-
-  const fetchClasses = async () => {
-    try {
-      setFetchingClasses(true);
-      const response = await adminAPI.getClasses();
-      if (response.success && response.data) {
-        setClasses(response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    } finally {
-      setFetchingClasses(false);
-    }
-  };
 
   const handleSubmit = async () => {
     // Validation
     if (!name.trim()) {
       setAlertMessage('Please enter teacher name');
+      setIsSuccess(false);
+      setShowAlert(true);
+      return;
+    }
+    if (!age.trim()) {
+      setAlertMessage('Please enter teacher age');
+      setIsSuccess(false);
+      setShowAlert(true);
+      return;
+    }
+    if (!gender) {
+      setAlertMessage('Please select teacher gender');
+      setIsSuccess(false);
+      setShowAlert(true);
+      return;
+    }
+    if (!qualification.trim()) {
+      setAlertMessage('Please enter teacher qualification');
       setIsSuccess(false);
       setShowAlert(true);
       return;
@@ -91,10 +89,12 @@ const CreateTeacherScreen: React.FC = () => {
       setLoading(true);
       const response = await adminAPI.createTeacher({
         name: name.trim(),
+        age: parseInt(age),
+        gender,
+        qualification: qualification.trim(),
         email: email.trim(),
-        password,
         phone: phone.trim() || undefined,
-        classId,
+        password,
       });
 
       if (response.success) {
@@ -103,16 +103,18 @@ const CreateTeacherScreen: React.FC = () => {
         setShowAlert(true);
         // Reset form
         setName('');
+        setAge('');
+        setGender('');
+        setQualification('');
         setEmail('');
-        setPassword('');
         setPhone('');
-        setClassId(undefined);
+        setPassword('');
       } else {
         setAlertMessage(response.error?.message || 'Failed to create teacher');
         setIsSuccess(false);
         setShowAlert(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.response?.data?.error?.message || 'Failed to create teacher';
       setAlertMessage(errorMessage);
       setIsSuccess(false);
@@ -146,7 +148,7 @@ const CreateTeacherScreen: React.FC = () => {
             <div className="admin-card-header">
               <h2>Teacher Account Registration</h2>
               <p className="description">
-                Create a new teacher account. The teacher will be able to log in and manage their assigned class.
+                Create a new teacher account. The teacher will be able to log in with the provided credentials.
               </p>
             </div>
 
@@ -170,6 +172,65 @@ const CreateTeacherScreen: React.FC = () => {
                     </div>
                   </IonCol>
 
+                  {/* Age */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">
+                        Age <span className="required">*</span>
+                      </label>
+                      <IonInput
+                        className="admin-input"
+                        placeholder="Enter teacher's age"
+                        value={age}
+                        onIonInput={(e) => setAge(e.detail.value || '')}
+                        type="number"
+                        disabled={loading}
+                      />
+                    </div>
+                  </IonCol>
+                </IonRow>
+
+                <IonRow>
+                  {/* Gender */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">
+                        Gender <span className="required">*</span>
+                      </label>
+                      <IonSelect
+                        className="admin-select"
+                        value={gender}
+                        onIonChange={(e) => setGender(e.detail.value)}
+                        placeholder="Select gender"
+                        disabled={loading}
+                        interface="popover"
+                      >
+                        <IonSelectOption value="">Select gender</IonSelectOption>
+                        <IonSelectOption value="Male">Male</IonSelectOption>
+                        <IonSelectOption value="Female">Female</IonSelectOption>
+                        <IonSelectOption value="Other">Other</IonSelectOption>
+                      </IonSelect>
+                    </div>
+                  </IonCol>
+
+                  {/* Qualification */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">
+                        Qualification <span className="required">*</span>
+                      </label>
+                      <IonInput
+                        className="admin-input"
+                        placeholder="e.g., B.Ed, M.Sc"
+                        value={qualification}
+                        onIonInput={(e) => setQualification(e.detail.value || '')}
+                        disabled={loading}
+                      />
+                    </div>
+                  </IonCol>
+                </IonRow>
+
+                <IonRow>
                   {/* Email */}
                   <IonCol size="12" sizeMd="6">
                     <div className="input-group">
@@ -183,6 +244,21 @@ const CreateTeacherScreen: React.FC = () => {
                         onIonInput={(e) => setEmail(e.detail.value || '')}
                         type="email"
                         autocapitalize="none"
+                        disabled={loading}
+                      />
+                    </div>
+                  </IonCol>
+
+                  {/* Phone */}
+                  <IonCol size="12" sizeMd="6">
+                    <div className="input-group">
+                      <label className="input-label">Mobile Number</label>
+                      <IonInput
+                        className="admin-input"
+                        placeholder="Enter phone number"
+                        value={phone}
+                        onIonInput={(e) => setPhone(e.detail.value || '')}
+                        type="tel"
                         disabled={loading}
                       />
                     </div>
@@ -205,52 +281,6 @@ const CreateTeacherScreen: React.FC = () => {
                         autocapitalize="off"
                         disabled={loading}
                       />
-                    </div>
-                  </IonCol>
-
-                  {/* Phone */}
-                  <IonCol size="12" sizeMd="6">
-                    <div className="input-group">
-                      <label className="input-label">Phone Number</label>
-                      <IonInput
-                        className="admin-input"
-                        placeholder="Enter phone number"
-                        value={phone}
-                        onIonInput={(e) => setPhone(e.detail.value || '')}
-                        type="tel"
-                        disabled={loading}
-                      />
-                    </div>
-                  </IonCol>
-                </IonRow>
-
-                <IonRow>
-                  {/* Assign Class */}
-                  <IonCol size="12">
-                    <div className="input-group">
-                      <label className="input-label">Assign to Class</label>
-                      {fetchingClasses ? (
-                        <div className="picker-loading">
-                          <IonSpinner name="crescent" color="primary" />
-                          <IonText color="medium">Loading classes...</IonText>
-                        </div>
-                      ) : (
-                        <IonSelect
-                          value={classId}
-                          placeholder="No class assigned (optional)"
-                          interface="popover"
-                          onIonChange={(e) => setClassId(e.detail.value || undefined)}
-                          disabled={loading}
-                          className="admin-select class-select"
-                        >
-                          <IonSelectOption value="">No class assigned (optional)</IonSelectOption>
-                          {classes.map((cls) => (
-                            <IonSelectOption key={cls.id} value={cls.id}>
-                              {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
-                            </IonSelectOption>
-                          ))}
-                        </IonSelect>
-                      )}
                     </div>
                   </IonCol>
                 </IonRow>

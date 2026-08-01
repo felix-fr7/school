@@ -27,12 +27,9 @@ import '@ionic/react/css/display.css';
 
 import App from '../App';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import './theme.css';
 
 // Create React 18 root
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const root = ReactDOM.createRoot(document.getElementById('root'));
 
 // Render the application with ErrorBoundary and StrictMode
 root.render(

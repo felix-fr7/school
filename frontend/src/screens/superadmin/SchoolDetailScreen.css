@@ -1,5 +1,6 @@
 /**
  * School Detail Screen - Ultra-Luxury Dark Gold Redesign
+ * Fully Optimized for Mobile, Tablet, and Desktop Views
  */
 
 /* ============================================
@@ -19,18 +20,19 @@
   --text-muted: #94A3B8;
 
   --background: var(--bg-app);
+  --padding-bottom: 90px; /* Viewport scroll fix for mobile & tab */
   background: var(--bg-app);
   color: var(--text-main);
   font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
 }
 
 .detail-container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 20px 16px 60px 16px;
+  padding: 20px 16px 80px 16px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 /* ============================================
@@ -89,6 +91,8 @@
   flex-direction: column;
   gap: 6px;
   align-items: flex-start;
+  min-width: 0;
+  flex: 1;
 }
 
 .school-name {
@@ -99,6 +103,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.2;
+  word-break: break-word;
 }
 
 .school-code-badge {
@@ -171,7 +176,7 @@ ion-card-content {
 }
 
 /* ============================================
-   6. STATS GRID
+   6. STATS GRID (Responsive for Mobile & Tablet)
    ============================================ */
 .stats-grid {
   display: grid;
@@ -179,7 +184,7 @@ ion-card-content {
   gap: 12px;
 }
 
-@media (min-width: 600px) {
+@media (min-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -325,4 +330,304 @@ ion-card-content {
 .empty-text {
   font-size: 15px;
   font-weight: 600;
+}
+
+/* ============================================
+   8.5 ADMIN ROW ACTIONS (Edit & Reset Password)
+   ============================================ */
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.action-btn.btn-edit-admin:hover {
+  border-color: rgba(56, 128, 255, 0.4);
+  color: #3880ff;
+  background: rgba(56, 128, 255, 0.1);
+}
+
+.action-btn.btn-reset-password:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: var(--gold-primary);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.action-btn ion-icon {
+  font-size: 16px;
+}
+
+.admin-phone {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+/* ============================================
+   9. RESPONSIVE ADAPTATIONS (Mobile & Tablet)
+   ============================================ */
+@media (max-width: 768px) {
+  .detail-container {
+    padding: 12px 10px 70px 10px;
+    gap: 14px;
+  }
+  .school-name {
+    font-size: 18px;
+  }
+  .header-content {
+    gap: 12px;
+  }
+  .header-icon-wrapper {
+    width: 48px;
+    height: 48px;
+  }
+  .admin-row {
+    padding: 8px 10px;
+  }
+}
+
+/* ============================================
+   10. ADMIN EDIT & PASSWORD RESET MODALS
+   ============================================ */
+.admin-edit-modal ion-modal,
+.password-reset-modal ion-modal {
+  --background: rgba(7, 10, 16, 0.95);
+  --backdrop-opacity: 0.8;
+}
+
+.admin-modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  margin: auto;
+  max-width: 420px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+}
+
+.admin-modal-content .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-modal-content .modal-header h2 {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.admin-modal-content .modal-header h2 ion-icon {
+  color: var(--gold-primary);
+}
+
+.admin-modal-content .modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-modal-content .modal-close:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-modal-content .modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-modal-content .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-modal-content .input-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-modal-content ion-input {
+  --background: rgba(0, 0, 0, 0.3);
+  --color: var(--text-main);
+  --placeholder-color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0 12px;
+  transition: border-color 0.2s ease;
+}
+
+.admin-modal-content ion-input:hover,
+.admin-modal-content ion-input:focus {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.admin-modal-content .modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-modal-content .modal-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.admin-modal-content .modal-btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-modal-content .modal-btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.admin-modal-content .modal-btn-save {
+  background: var(--gold-gradient);
+  color: #070A10;
+}
+
+.admin-modal-content .modal-btn-save:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.admin-modal-content .modal-btn-warning {
+  background: linear-gradient(135deg, #FFE082 0%, #D4AF37 50%, #B28D27 100%);
+}
+
+.admin-modal-content .modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Error & Success Banners */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: 8px;
+  color: #ef5350;
+  font-size: 13px;
+}
+
+.error-banner ion-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  color: #66bb6a;
+  font-size: 13px;
+}
+
+.success-banner ion-icon {
+  font-size: 16px;
+  color: #66bb6a;
+  flex-shrink: 0;
+}
+
+.admin-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.admin-info-banner ion-icon {
+  font-size: 18px;
+  color: var(--gold-primary);
+  flex-shrink: 0;
+}
+
+.admin-info-banner strong {
+  color: var(--gold-primary);
+}
+
+/* Scrollbar styling for modals */
+.admin-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.admin-modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }

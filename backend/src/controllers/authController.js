@@ -7,6 +7,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 const Class = require('../models/Class');
 const Post = require('../models/Post');
 
@@ -16,11 +17,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 /**
  * Generate JWT token for user
  * Includes classId for teachers if they are assigned to a class
- * @param {Object} user - User object containing id, email, role
+ * @param {Object} user - User object containing id, email, role, schoolId
  * @returns {string} JWT token
  */
 const generateToken = async (user) => {
-  // For teachers, check if they are assigned to a class
   let classId = null;
   if (user.role === 'TEACHER') {
     const classDoc = await Class.findOne({ teacherId: user.id }).select('_id');
@@ -32,8 +32,8 @@ const generateToken = async (user) => {
       userId: user.id,
       email: user.email,
       role: user.role,
-      tenantId: user.tenantId,
-      classId: classId, // Only set for teachers assigned to a class
+      schoolId: user.schoolId,
+      classId: classId,
     },
     JWT_SECRET,
     {
@@ -50,7 +50,6 @@ const register = async (req, res, next) => {
   try {
     const { email, password, name } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
 
     if (existingUser) {
@@ -62,24 +61,21 @@ const register = async (req, res, next) => {
       });
     }
 
-    // Create user (password will be hashed by pre-save hook in User model)
     const user = new User({
       email: email.toLowerCase(),
-      password: password, // Will be hashed by pre-save hook
+      password: password,
       name: name
     });
 
     await user.save();
 
-    // Generate token
     const token = await generateToken({
       id: user._id.toString(),
       email: user.email,
       role: user.role,
-      tenantId: user.tenantId ? user.tenantId.toString() : null
+      schoolId: user.schoolId ? user.schoolId.toString() : null
     });
 
-    // Remove password from response
     const userObject = user.toObject();
     delete userObject.password;
 
@@ -112,88 +108,93 @@ const register = async (req, res, next) => {
  */
 const login = async (req, res, next) => {
   try {
-    const { password, usernameOrEmailOrId } = req.body;
+    const { password, usernameOrEmailOrId, email } = req.body;
+    let loginIdentifier = usernameOrEmailOrId || email;
 
-    // The login identifier from the request body
-    let loginIdentifier = usernameOrEmailOrId;
-
-    // Clean up: Ensure it's trimmed
     if (loginIdentifier) {
       loginIdentifier = loginIdentifier.trim();
     }
 
-    if (!loginIdentifier) {
+    if (!loginIdentifier || !password) {
+      console.log('[DEBUG] Missing identifier or password');
       return res.status(400).json({
         success: false,
-        error: {
-          message: 'Email or Student ID is required',
-        },
+        error: { message: 'Email/Username and password are required' },
       });
     }
 
-    if (!password) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          message: 'Password is required',
-        },
-      });
-    }
-
-    // Universal lookup: search by email or studentId using OR condition
     const normalizedIdentifier = loginIdentifier.toLowerCase();
-    const user = await User.findOne({
-      $or: [
-        { email: normalizedIdentifier },
-        { studentId: normalizedIdentifier }
-      ],
-      isActive: true
-    });
+    console.log(`[DEBUG] Attempting login for normalized identifier: "${normalizedIdentifier}"`);
+    
+    let user = null;
+    let isAdminLogin = false;
+    
+    // Fallback/Direct check across both collections simultaneously or check User if Admin fails
+    // If you logged in with macvel@school.com but it's stored in User instead of Admin, this catches it!
+    user = await Admin.findOne({
+      email: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') }
+    }).select('+password');
+    
+    if (user) {
+      isAdminLogin = true;
+      console.log(`[LOGIN SUCCESS] Found admin in Admin collection: ${user.email}`);
+    } else {
+      console.log(`[DEBUG] Not found in Admin collection, checking User collection...`);
+      user = await User.findOne({
+        $or: [
+          { email: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
+          { studentId: normalizedIdentifier },
+          { username: normalizedIdentifier }
+        ]
+      }).select('+password');
+
+      if (user) {
+        console.log(`[LOGIN SUCCESS] Found user in User collection: ${user.email || user.username}`);
+      }
+    }
 
     if (!user) {
-      console.log(`Login failed: No user found with identifier "${loginIdentifier}" (normalized: "${normalizedIdentifier}")`);
+      console.log(`[LOGIN ERROR] Login query result: Not found for identifier "${loginIdentifier}"`);
       return res.status(401).json({
         success: false,
-        error: {
-          message: 'Invalid credentials',
-        },
+        error: { message: 'Login query result: Not found' },
       });
     }
 
-    // Verify password using bcrypt.compare (secure comparison)
+    // Verify password
     const isPasswordValid = await user.comparePassword(password);
+    console.log(`[DEBUG] Password validation result for ${normalizedIdentifier}: ${isPasswordValid}`);
 
     if (!isPasswordValid) {
+      console.log(`[LOGIN ERROR] Invalid password for identifier "${loginIdentifier}"`);
       return res.status(401).json({
         success: false,
-        error: {
-          message: 'Invalid credentials',
-        },
+        error: { message: 'Invalid credentials' },
       });
     }
 
-    // Generate token
+    if (isAdminLogin && user._id) {
+      await Admin.findByIdAndUpdate(user._id, { lastLogin: new Date() }).catch(() => {});
+    }
+
     const token = await generateToken({
       id: user._id.toString(),
       email: user.email,
       name: user.name,
       role: user.role,
-      tenantId: user.tenantId ? user.tenantId.toString() : null
+      schoolId: user.schoolId ? user.schoolId.toString() : null
     });
 
-    // Remove password from response
     const userObject = user.toObject();
     delete userObject.password;
 
     res.status(200).json({
       success: true,
-      data: {
-        user: userObject,
-        token,
-      },
+      data: { user: userObject, token },
       message: 'Login successful',
     });
   } catch (error) {
+    console.error('[CRITICAL LOGIN ERROR]:', error);
     next(error);
   }
 };
@@ -201,12 +202,14 @@ const login = async (req, res, next) => {
 /**
  * Get current user profile
  * GET /api/auth/me
- * Protected route - requires valid JWT
  */
 const getMe = async (req, res, next) => {
   try {
-    // User is attached to request by authenticate middleware
-    const user = await User.findById(req.user.id).select('-password');
+    let user = await Admin.findById(req.user.id).select('-password');
+
+    if (!user) {
+      user = await User.findById(req.user.id).select('-password');
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -217,10 +220,12 @@ const getMe = async (req, res, next) => {
       });
     }
 
-    // Get user's posts
-    const posts = await Post.find({ userId: req.user.id })
-      .sort({ createdAt: -1 })
-      .limit(10);
+    let posts = [];
+    if (user.constructor.modelName === 'User') {
+      posts = await Post.find({ userId: req.user.id })
+        .sort({ createdAt: -1 })
+        .limit(10);
+    }
 
     res.status(200).json({
       success: true,
@@ -237,17 +242,24 @@ const getMe = async (req, res, next) => {
 /**
  * Update user profile
  * PUT /api/auth/me
- * Protected route - requires valid JWT
  */
 const updateProfile = async (req, res, next) => {
   try {
     const { name } = req.body;
 
-    const user = await User.findByIdAndUpdate(
+    let user = await Admin.findByIdAndUpdate(
       req.user.id,
       { name: name },
       { new: true, runValidators: true }
     ).select('-password');
+
+    if (!user) {
+      user = await User.findByIdAndUpdate(
+        req.user.id,
+        { name: name },
+        { new: true, runValidators: true }
+      ).select('-password');
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -271,14 +283,16 @@ const updateProfile = async (req, res, next) => {
 /**
  * Update user password
  * PUT /api/auth/password
- * Protected route - requires valid JWT
  */
 const updatePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    // Get user with password
-    const user = await User.findById(req.user.id).select('+password');
+    let user = await Admin.findById(req.user.id).select('+password');
+
+    if (!user) {
+      user = await User.findById(req.user.id).select('+password');
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -289,7 +303,6 @@ const updatePassword = async (req, res, next) => {
       });
     }
 
-    // Verify current password
     const isPasswordValid = await user.comparePassword(currentPassword);
 
     if (!isPasswordValid) {
@@ -301,7 +314,6 @@ const updatePassword = async (req, res, next) => {
       });
     }
 
-    // Update password (will be hashed by pre-save hook)
     user.password = newPassword;
     await user.save();
 

@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 const Tenant = require('../models/Tenant');
 const Class = require('../models/Class');
 const { authenticate, generateToken } = require('../middleware/auth');
@@ -32,14 +33,34 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
-    // Find user by email or student ID using Mongoose
-    const user = await User.findOne({
-      $or: [{ email: identifier }, { studentId: identifier }]
-    }).select('+password').populate('schoolId').populate('classId');
+    const normalizedIdentifier = identifier.trim().toLowerCase();
+    console.log(`[LOGIN] Attempting login for: "${normalizedIdentifier}"`);
 
-    console.log('Login query result:', user ? { id: user._id, email: user.email, role: user.role } : 'Not found');
+    let user = null;
+    let isAdminLogin = false;
+
+    // First, try to find admin in Admin collection (for Super Admin and School Admin)
+    user = await Admin.findOne({
+      email: normalizedIdentifier
+    }).select('+password');
+
+    if (user) {
+      isAdminLogin = true;
+      console.log(`[LOGIN] Found admin in Admin collection: ${user.email}`);
+    } else {
+      // If not found in Admin collection, try User collection (for students, teachers, parents)
+      console.log(`[LOGIN] Not found in Admin collection, checking User collection...`);
+      user = await User.findOne({
+        $or: [{ email: normalizedIdentifier }, { studentId: normalizedIdentifier }]
+      }).select('+password').populate('schoolId').populate('classId');
+
+      if (user) {
+        console.log(`[LOGIN] Found user in User collection: ${user.email}`);
+      }
+    }
 
     if (!user) {
+      console.log(`[LOGIN] Login failed: No user found with identifier "${normalizedIdentifier}"`);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.'
@@ -50,10 +71,16 @@ router.post('/login', async (req, res, next) => {
     const isValidPassword = await user.comparePassword(password);
 
     if (!isValidPassword) {
+      console.log(`[LOGIN] Invalid password for: ${normalizedIdentifier}`);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.'
       });
+    }
+
+    // Update last login for admins
+    if (isAdminLogin && user._id) {
+      await Admin.findByIdAndUpdate(user._id, { lastLogin: new Date() }).catch(() => {});
     }
 
     // Generate JWT token
@@ -246,24 +273,40 @@ router.post('/register', authenticate, async (req, res, next) => {
 /**
  * GET /api/auth/me
  * Get current user profile
+ * Works for both regular users (User collection) and admins (Admin collection)
  */
 router.get('/me', authenticate, async (req, res, next) => {
   try {
     const userId = req.user.id;
+    console.log(`[GET ME] Fetching profile for userId: ${userId}`);
 
-    // Get user details using Mongoose
-    const user = await User.findById(userId)
-      .populate('schoolId')
-      .populate('classId')
-      .populate('parentOf');
+    // First, try to find admin in Admin collection
+    let user = await Admin.findById(userId);
+
+    if (user) {
+      console.log(`[GET ME] Found admin in Admin collection: ${user.email}`);
+    } else {
+      // If not found in Admin collection, try User collection
+      console.log(`[GET ME] Not found in Admin collection, checking User collection...`);
+      user = await User.findById(userId)
+        .populate('schoolId')
+        .populate('classId')
+        .populate('parentOf');
+
+      if (user) {
+        console.log(`[GET ME] Found user in User collection: ${user.email}`);
+      }
+    }
 
     if (!user) {
+      console.log(`[GET ME] User not found with id: ${userId}`);
       return res.status(404).json({
         success: false,
         message: 'User not found.'
       });
     }
 
+    // Return user data (excluding password)
     res.json({
       success: true,
       data: {
@@ -276,8 +319,8 @@ router.get('/me', authenticate, async (req, res, next) => {
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
         address: user.address,
-        studentId: user.studentId,
-        rollNumber: user.rollNumber,
+        studentId: user.studentId || null,
+        rollNumber: user.rollNumber || null,
         classId: user.classId ? user.classId._id : null,
         schoolId: user.schoolId ? user.schoolId._id : null,
         schoolName: user.schoolId ? user.schoolId.schoolName : null,

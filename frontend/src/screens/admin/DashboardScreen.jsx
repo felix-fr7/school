@@ -37,17 +37,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI } from '../../services/api';
 import './DashboardScreen.css';
 
-interface MenuItem {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: any;
-  route: string;
-  count?: number;
-  gradient: string;
-}
-
-const AdminDashboardScreen: React.FC = () => {
+const AdminDashboardScreen = () => {
   const history = useHistory();
   const { user, logout } = useAuth();
   const [stats, setStats] = useState({
@@ -84,7 +74,7 @@ const AdminDashboardScreen: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const onRefresh = async (event: CustomEvent) => {
+  const onRefresh = async (event) => {
     await fetchDashboardData();
     event.detail.complete();
   };
@@ -94,7 +84,7 @@ const AdminDashboardScreen: React.FC = () => {
     history.push('/login');
   };
 
-  const menuItems: MenuItem[] = [
+  const menuItems = [
     { 
       id: '1', 
       title: 'Classes', 

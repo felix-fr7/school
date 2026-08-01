@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const School = require('../models/School'); // Ungaloda School Mongoose Model
 const User = require('../models/User');     // Ungaloda User Mongoose Model
+const Admin = require('../models/Admin');   // Ungaloda Admin Mongoose Model
 const Class = require('../models/Class');   // Ungaloda Class Mongoose Model
 
 /**
@@ -179,7 +180,8 @@ const createTenant = async (req, res, next) => {
       });
     }
 
-    const existingAdmin = await User.findOne({ email: adminEmail }).session(session);
+    // Check if admin email already exists in Admin collection
+    const existingAdmin = await Admin.findOne({ email: adminEmail.toLowerCase() }).session(session);
     if (existingAdmin) {
       await session.endSession();
       return res.status(409).json({
@@ -187,9 +189,6 @@ const createTenant = async (req, res, next) => {
         error: { message: 'Admin with this email already exists.' },
       });
     }
-
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
 
     // Create School using exact schema keys
     const newSchool = new School({
@@ -201,13 +200,16 @@ const createTenant = async (req, res, next) => {
     });
     await newSchool.save({ session });
 
-    // Create Admin User mapped to School's ID (tenantId)
-    const newAdmin = new User({
-      email: adminEmail,
-      password: hashedPassword,
+    // Create Admin in the dedicated Admin collection
+    // Note: Do NOT pre-hash the password here - the Admin model's pre-save hook
+    // will hash it automatically. Pre-hashing causes double-hashing which breaks login.
+    const newAdmin = new Admin({
+      email: adminEmail.toLowerCase(),
+      password: adminPassword, // Will be hashed by Admin model's pre-save hook
       name: adminName,
-      role: 'School Admin', // <-- Fixed role enum value
-      tenantId: newSchool._id,
+      role: 'School Admin',
+      schoolId: newSchool._id, // Link to the school
+      isActive: true,
     });
     await newAdmin.save({ session });
 
@@ -225,7 +227,7 @@ const createTenant = async (req, res, next) => {
           email: newAdmin.email,
           name: newAdmin.name,
           role: newAdmin.role,
-          tenantId: newAdmin.tenantId,
+          schoolId: newAdmin.schoolId,
           createdAt: newAdmin.createdAt,
           token,
         },

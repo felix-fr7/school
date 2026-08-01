@@ -406,6 +406,23 @@ export const tenantsAPI = {
     const response = await api.get(`/tenants/${id}/stats`);
     return response.data;
   },
+
+  // School Admin Management Methods (Super Admin only)
+  // These routes are under /api/super-admin/schools/:schoolId/admins
+  async getSchoolAdmins(schoolId) {
+    const response = await api.get(`/super-admin/schools/${schoolId}/admins`);
+    return response.data;
+  },
+
+  async updateSchoolAdmin(schoolId, adminId, data) {
+    const response = await api.put(`/super-admin/schools/${schoolId}/admins/${adminId}`, data);
+    return response.data;
+  },
+
+  async resetSchoolAdminPassword(schoolId, adminId, password) {
+    const response = await api.post(`/super-admin/schools/${schoolId}/admins/${adminId}/reset-password`, { password });
+    return response.data;
+  },
 };
 
 // ============================================

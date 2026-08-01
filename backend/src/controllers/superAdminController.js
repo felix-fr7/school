@@ -6,6 +6,7 @@
 
 const School = require('../models/School');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
 
 /**
@@ -52,18 +53,14 @@ const registerSchool = async (req, res, next) => {
       });
     }
 
-    // Check if admin email already exists
-    const existingAdmin = await User.findOne({ email: adminEmail.toLowerCase() });
+    // Check if admin email already exists in Admin collection
+    const existingAdmin = await Admin.findOne({ email: adminEmail.toLowerCase() });
     if (existingAdmin) {
       return res.status(409).json({
         success: false,
         error: { message: 'Admin email already exists' }
       });
     }
-
-    // Hash admin password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
 
     // Create school and admin in transaction
     const session = await School.startSession();
@@ -82,11 +79,13 @@ const registerSchool = async (req, res, next) => {
 
       await school.save({ session });
 
-      // Create admin user
-      const admin = new User({
+      // Create admin in the dedicated Admin collection
+      // Note: Do NOT pre-hash the password here - the Admin model's pre-save hook
+      // will hash it automatically. Pre-hashing causes double-hashing which breaks login.
+      const admin = new Admin({
         name: adminName,
         email: adminEmail.toLowerCase(),
-        password: hashedPassword,
+        password: adminPassword, // Will be hashed by Admin model's pre-save hook
         phone: adminPhone,
         role: 'School Admin',
         schoolId: school._id,
@@ -402,6 +401,177 @@ const getSystemStats = async (req, res, next) => {
   }
 };
 
+/**
+ * Get all admins for a specific school
+ * GET /api/super-admin/schools/:schoolId/admins
+ */
+const getSchoolAdmins = async (req, res, next) => {
+  try {
+    const { schoolId } = req.params;
+
+    // Verify school exists
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School not found' }
+      });
+    }
+
+    // Get all admins for this school from Admin collection (excluding password)
+    const admins = await Admin.find({
+      schoolId: schoolId,
+      role: 'School Admin',
+      isActive: true
+    }).select('-password');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        school: {
+          id: school._id,
+          schoolName: school.schoolName,
+          schoolCode: school.schoolCode
+        },
+        admins
+      },
+      message: 'School admins retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Get School Admins Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Update a school admin's details
+ * PUT /api/super-admin/schools/:schoolId/admins/:adminId
+ */
+const updateSchoolAdmin = async (req, res, next) => {
+  try {
+    const { schoolId, adminId } = req.params;
+    const { name, email, phone } = req.body;
+
+    // Verify school exists
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School not found' }
+      });
+    }
+
+    // Find the admin in Admin collection
+    const admin = await Admin.findOne({
+      _id: adminId,
+      schoolId: schoolId,
+      role: 'School Admin'
+    });
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School admin not found' }
+      });
+    }
+
+    // Update fields
+    if (name !== undefined) {
+      admin.name = name.trim();
+    }
+
+    if (email !== undefined) {
+      const newEmail = email.toLowerCase().trim();
+      // Check if email is already taken by another admin
+      if (newEmail !== admin.email) {
+        const existingAdmin = await Admin.findOne({ email: newEmail, _id: { $ne: adminId } });
+        if (existingAdmin) {
+          return res.status(409).json({
+            success: false,
+            error: { message: 'Email already exists' }
+          });
+        }
+      }
+      admin.email = newEmail;
+    }
+
+    if (phone !== undefined) {
+      admin.phone = phone.trim();
+    }
+
+    await admin.save();
+
+    // Return updated admin (excluding password)
+    const adminResponse = admin.toObject();
+    delete adminResponse.password;
+
+    res.status(200).json({
+      success: true,
+      data: adminResponse,
+      message: 'School admin updated successfully'
+    });
+  } catch (error) {
+    console.error('Update School Admin Error:', error);
+    next(error);
+  }
+};
+
+/**
+ * Reset a school admin's password
+ * POST /api/super-admin/schools/:schoolId/admins/:adminId/reset-password
+ */
+const resetSchoolAdminPassword = async (req, res, next) => {
+  try {
+    const { schoolId, adminId } = req.params;
+    const { password } = req.body;
+
+    // Validate password
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Password must be at least 6 characters long' }
+      });
+    }
+
+    // Verify school exists
+    const school = await School.findById(schoolId);
+    if (!school) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School not found' }
+      });
+    }
+
+    // Find the admin in Admin collection (need to include password field for update)
+    const admin = await Admin.findOne({
+      _id: adminId,
+      schoolId: schoolId,
+      role: 'School Admin'
+    }).select('+password');
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School admin not found' }
+      });
+    }
+
+    // Set the new password - the Admin model's pre-save hook will hash it
+    // Do NOT pre-hash here as it would cause double-hashing
+    admin.password = password;
+
+    await admin.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'School admin password reset successfully'
+    });
+  } catch (error) {
+    console.error('Reset School Admin Password Error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   registerSchool,
   getAllSchools,
@@ -409,5 +579,8 @@ module.exports = {
   updateSchool,
   updateSchoolStatus,
   deleteSchool,
-  getSystemStats
+  getSystemStats,
+  getSchoolAdmins,
+  updateSchoolAdmin,
+  resetSchoolAdminPassword
 };

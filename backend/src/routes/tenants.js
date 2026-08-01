@@ -8,9 +8,23 @@
  */
 
 const express = require('express');
-const { body, param } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const tenantController = require('../controllers/tenantController');
 const { authenticate, isSuperAdmin } = require('../middleware/auth');
+
+// Validation error handler middleware
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        message: errors.array()[0].msg
+      }
+    });
+  }
+  next();
+};
 
 const router = express.Router();
 
@@ -38,24 +52,24 @@ router.get('/', tenantController.getAllTenants);
 router.post(
   '/',
   [
-    body('name')
+    body('schoolName')
       .trim()
       .notEmpty()
       .withMessage('School name is required')
       .isLength({ max: 200 })
       .withMessage('School name must be less than 200 characters'),
-    body('code')
+    body('schoolCode')
       .trim()
       .notEmpty()
       .withMessage('School code is required')
       .isLength({ max: 50 })
       .withMessage('School code must be less than 50 characters'),
-    body('email')
+    body('contactEmail')
       .optional()
       .isEmail()
       .withMessage('Please provide a valid email address')
       .normalizeEmail(),
-    body('phone')
+    body('contactPhone')
       .optional()
       .isMobilePhone('any')
       .withMessage('Please provide a valid phone number'),
@@ -75,6 +89,7 @@ router.post(
       .isLength({ max: 100 })
       .withMessage('Admin name must be less than 100 characters'),
   ],
+  handleValidationErrors,
   tenantController.createTenant
 );
 
@@ -91,6 +106,7 @@ router.get(
   [
     param('id').isMongoId().withMessage('Invalid tenant ID format'),
   ],
+  handleValidationErrors,
   tenantController.getTenantById
 );
 
@@ -99,29 +115,42 @@ router.get(
  * @desc    Update tenant information
  * @access  Super Admin
  * @params  id (MongoDB ObjectId)
- * @body    { name, address, phone, email }
+ * @body    { schoolName, schoolCode, address, contactPhone, contactEmail }
  */
 router.put(
   '/:id',
   [
     param('id').isMongoId().withMessage('Invalid tenant ID format'),
-    body('name')
+    body('schoolName')
       .optional()
       .trim()
       .notEmpty()
       .withMessage('School name cannot be empty')
       .isLength({ max: 200 })
       .withMessage('School name must be less than 200 characters'),
-    body('email')
+    body('schoolCode')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('School code cannot be empty')
+      .isLength({ max: 50 })
+      .withMessage('School code must be less than 50 characters'),
+    body('contactEmail')
       .optional()
       .isEmail()
       .withMessage('Please provide a valid email address')
       .normalizeEmail(),
-    body('phone')
+    body('contactPhone')
       .optional()
       .isMobilePhone('any')
       .withMessage('Please provide a valid phone number'),
+    body('address')
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage('Address cannot be empty'),
   ],
+  handleValidationErrors,
   tenantController.updateTenant
 );
 
@@ -136,6 +165,7 @@ router.delete(
   [
     param('id').isMongoId().withMessage('Invalid tenant ID format'),
   ],
+  handleValidationErrors,
   tenantController.deleteTenant
 );
 
@@ -150,6 +180,7 @@ router.get(
   [
     param('id').isMongoId().withMessage('Invalid tenant ID format'),
   ],
+  handleValidationErrors,
   tenantController.getTenantStats
 );
 

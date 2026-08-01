@@ -2586,50 +2586,56 @@ const getTeacherById = async (req, res, next) => {
  */
 const createTeacher = async (req, res, next) => {
   try {
-    const { name, email, password, phone, classId } = req.body;
-    const tenantId = req.user.tenantId;
-
-    // Check if email already exists
-    const emailCheckQuery = 'SELECT id FROM "User" WHERE email = $1';
-    const emailCheckResult = await db.query(emailCheckQuery, [email]);
-
-    if (emailCheckResult.rows.length > 0) {
-      return res.status(409).json({
+    const { name, email, password, phone, age, gender, qualification } = req.body;
+    const User = require('../models/User');
+    const School = require('../models/School');
+    
+    // Get tenantId from user's schoolId (MongoDB)
+    const schoolId = req.user.schoolId;
+    
+    if (!schoolId) {
+      return res.status(400).json({
         success: false,
-        error: {
-          message: 'A user with this email already exists',
-        },
+        error: { message: 'Admin must be associated with a school' }
       });
     }
 
-    // Hash password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create teacher
-    const createQuery = `
-      INSERT INTO "User" (email, password, name, role, "tenantId", phone, "classId", "created_at", "updated_at")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-      RETURNING id, email, name, phone, role, "classId", "created_at"
-    `;
-
-    const createResult = await db.query(createQuery, [email, hashedPassword, name, 'TEACHER', tenantId, phone || null, classId || null]);
-    const teacher = createResult.rows[0];
-
-    // If assigned to a class, update class teacher reference
-    if (classId) {
-      const updateClassQuery = `
-        UPDATE "Class" SET "teacherId" = $1, "updated_at" = NOW() WHERE id = $2
-      `;
-      await db.query(updateClassQuery, [teacher.id, classId]);
+    // Check if email already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        error: { message: 'A user with this email already exists' }
+      });
     }
+
+    // Create teacher using Mongoose
+    const teacher = new User({
+      name: name.trim(),
+      email: email.toLowerCase(),
+      password, // Will be hashed by pre-save hook
+      phone: phone?.trim() || undefined,
+      age: age ? parseInt(age) : undefined,
+      gender: gender || undefined,
+      qualification: qualification?.trim() || undefined,
+      role: 'Teacher', // MongoDB uses 'Teacher' not 'TEACHER'
+      schoolId: schoolId,
+      isActive: true
+    });
+
+    await teacher.save();
+
+    // Remove password from response
+    const teacherResponse = teacher.toObject();
+    delete teacherResponse.password;
 
     res.status(201).json({
       success: true,
-      data: teacher,
-      message: 'Teacher created successfully',
+      data: teacherResponse,
+      message: 'Teacher created successfully'
     });
   } catch (error) {
+    console.error('CreateTeacher Error:', error);
     next(error);
   }
 };

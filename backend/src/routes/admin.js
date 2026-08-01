@@ -1,13 +1,21 @@
 /**
  * Admin Routes
  * School administration endpoints
+ * Converted from PostgreSQL to MongoDB/Mongoose
  */
 
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
-const { query } = require('../config/db');
+const User = require('../models/User');
+const Teacher = require('../models/Teacher');
+const Class = require('../models/Class');
+const Subject = require('../models/Subject');
+const SchoolContact = require('../models/SchoolContact');
+const News = require('../models/News');
+const LeaveRequest = require('../models/LeaveRequest');
+const StudentProfile = require('../models/StudentProfile');
 const { authenticate, isAdmin } = require('../middleware/auth');
 
 // All routes require authentication and admin role
@@ -18,62 +26,81 @@ router.use(authenticate, isAdmin);
 // ============================================
 router.get('/dashboard', async (req, res, next) => {
   try {
-    const tenantId = req.user.tenantId;
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    // Get counts
-    const [totalStudents] = await query(
-      `SELECT COUNT(*) as count FROM users u 
-       JOIN student_profiles sp ON u.id = sp.user_id 
-       WHERE u.tenant_id = $1 AND u.role = 'STUDENT' AND u.is_active = TRUE`,
-      [tenantId]
-    );
+    // Get counts using MongoDB aggregation
+    const totalStudents = await User.countDocuments({
+      tenantId,
+      role: 'Student',
+      isActive: true
+    });
 
-    const [totalTeachers] = await query(
-      `SELECT COUNT(*) as count FROM users u 
-       JOIN teacher_profiles tp ON u.id = tp.user_id 
-       WHERE u.tenant_id = $1 AND u.role = 'TEACHER' AND u.is_active = TRUE`,
-      [tenantId]
-    );
+    const totalTeachers = await Teacher.countDocuments({
+      tenantId,
+      isActive: true
+    });
 
-    const [totalClasses] = await query(
-      `SELECT COUNT(*) as count FROM classes WHERE tenant_id = $1 AND is_active = TRUE`,
-      [tenantId]
-    );
+    const totalClasses = await Class.countDocuments({
+      tenantId,
+      isActive: true
+    });
 
-    const [todayAttendance] = await query(
-      `SELECT 
-        COUNT(CASE WHEN status = 'present' THEN 1 END) as present,
-        COUNT(CASE WHEN status = 'absent' THEN 1 END) as absent,
-        COUNT(CASE WHEN status = 'late' THEN 1 END) as late
-       FROM attendance 
-       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = $1) 
-       AND attendance_date = CURRENT_DATE`,
-      [tenantId]
-    );
+    // Get today's attendance
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const [recentNews] = await query(
-      `SELECT id, title, type, is_published, created_at as createdAt 
-       FROM news WHERE tenant_id = $1 
-       ORDER BY created_at DESC LIMIT 5`,
-      [tenantId]
-    );
+    const attendanceStats = await Class.aggregate([
+      { $match: { tenantId, isActive: true } },
+      { $lookup: {
+          from: 'attendances',
+          let: { classId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$classId', '$$classId'] },
+                attendanceDate: { $gte: today, $lt: tomorrow }
+              }
+            }
+          ],
+          as: 'attendance'
+        }
+      },
+      { $unwind: { path: '$attendance', preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: null,
+          present: { $sum: { $cond: [{ $eq: ['$attendance.status', 'present'] }, 1, 0] } },
+          absent: { $sum: { $cond: [{ $eq: ['$attendance.status', 'absent'] }, 1, 0] } },
+          late: { $sum: { $cond: [{ $eq: ['$attendance.status', 'late'] }, 1, 0] } }
+        }
+      }
+    ]);
 
-    const [pendingLeaves] = await query(
-      `SELECT COUNT(*) as count FROM leave_requests 
-       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = $1) 
-       AND status = 'pending'`,
-      [tenantId]
-    );
+    const todayAttendance = attendanceStats.length > 0 ? attendanceStats[0] : { present: 0, absent: 0, late: 0 };
+
+    // Get recent news
+    const recentNews = await News.find({ tenantId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('title type isPublished createdAt');
+
+    // Get pending leaves
+    const pendingLeaves = await LeaveRequest.countDocuments({
+      tenantId,
+      status: 'pending'
+    });
 
     res.json({
       success: true,
       data: {
-        totalStudents: totalStudents.count,
-        totalTeachers: totalTeachers.count,
-        totalClasses: totalClasses.count,
-        todayAttendance: todayAttendance,
+        totalStudents,
+        totalTeachers,
+        totalClasses,
+        todayAttendance,
         recentNews,
-        pendingLeaves: pendingLeaves.count
+        pendingLeaves
       }
     });
   } catch (error) {
@@ -86,19 +113,32 @@ router.get('/dashboard', async (req, res, next) => {
 // ============================================
 router.get('/classes', async (req, res, next) => {
   try {
-    const classes = await query(
-      `SELECT c.*, ct.name as class_teacher_name,
-              COUNT(sp.user_id) as student_count
-       FROM classes c
-       LEFT JOIN users ct ON c.class_teacher_id = ct.id
-       LEFT JOIN student_profiles sp ON c.id = sp.class_id AND sp.is_active = TRUE
-       WHERE c.tenant_id = $1 AND c.is_active = TRUE
-       GROUP BY c.id, ct.name
-       ORDER BY c.grade_level, c.section`,
-      [req.user.tenantId]
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const classes = await Class.find({
+      tenantId,
+      isActive: true
+    })
+    .populate('teacherId', 'name')
+    .select('-password');
+
+    // Get student count for each class
+    const classesWithCount = await Promise.all(
+      classes.map(async (classItem) => {
+        const studentCount = await User.countDocuments({
+          classId: classItem._id,
+          role: 'Student',
+          isActive: true
+        });
+        
+        return {
+          ...classItem.toObject(),
+          studentCount,
+          classTeacherName: classItem.teacherId?.name || null
+        };
+      })
     );
 
-    res.json({ success: true, data: classes });
+    res.json({ success: true, data: classesWithCount });
   } catch (error) {
     next(error);
   }
@@ -107,15 +147,23 @@ router.get('/classes', async (req, res, next) => {
 router.post('/classes', async (req, res, next) => {
   try {
     const { name, section, gradeLevel, classTeacherId, roomNumber, capacity } = req.body;
-    const classId = uuidv4();
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    await query(
-      `INSERT INTO classes (id, tenant_id, name, section, grade_level, class_teacher_id, room_number, capacity, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)`,
-      [classId, req.user.tenantId, name, section, gradeLevel, classTeacherId, roomNumber, capacity]
-    );
+    const classData = {
+      tenantId,
+      name,
+      section,
+      gradeLevel,
+      teacherId: classTeacherId,
+      roomNumber,
+      capacity,
+      isActive: true
+    };
 
-    res.status(201).json({ success: true, data: { id: classId } });
+    const newClass = new Class(classData);
+    await newClass.save();
+
+    res.status(201).json({ success: true, data: { id: newClass._id } });
   } catch (error) {
     next(error);
   }
@@ -124,13 +172,27 @@ router.post('/classes', async (req, res, next) => {
 router.put('/classes/:id', async (req, res, next) => {
   try {
     const { name, section, gradeLevel, classTeacherId, roomNumber, capacity } = req.body;
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    await query(
-      `UPDATE classes SET name = $1, section = $2, grade_level = $3, class_teacher_id = $4, 
-              room_number = $5, capacity = $6, updated_at = NOW()
-       WHERE id = $7 AND tenant_id = $8`,
-      [name, section, gradeLevel, classTeacherId, roomNumber, capacity, req.params.id, req.user.tenantId]
+    const updatedClass = await Class.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      {
+        name,
+        section,
+        gradeLevel,
+        teacherId: classTeacherId,
+        roomNumber,
+        capacity
+      },
+      { new: true }
     );
+
+    if (!updatedClass) {
+      return res.status(404).json({ success: false, message: 'Class not found' });
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -140,8 +202,20 @@ router.put('/classes/:id', async (req, res, next) => {
 
 router.delete('/classes/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE classes SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
-      [req.params.id, req.user.tenantId]);
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const deletedClass = await Class.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!deletedClass) {
+      return res.status(404).json({ success: false, message: 'Class not found' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -155,44 +229,56 @@ router.get('/students', async (req, res, next) => {
   try {
     const { classId, search, page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    let whereClause = 'u.tenant_id = $1 AND u.role = $2 AND u.is_active = TRUE';
-    let params = [req.user.tenantId, 'STUDENT'];
+    let query = {
+      tenantId,
+      role: 'STUDENT',
+      isActive: true
+    };
 
     if (classId) {
-      whereClause += ' AND sp.class_id = $' + (params.length + 1);
-      params.push(classId);
+      query.classId = classId;
     }
 
     if (search) {
-      whereClause += ' AND (u.name ILIKE $' + (params.length + 1) + ' OR u.email ILIKE $' + (params.length + 2) + ' OR sp.student_id ILIKE $' + (params.length + 3) + ')';
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { studentId: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    const students = await query(
-      `SELECT u.id, u.name, u.email, u.phone, u.avatar_url,
-              sp.student_id, sp.roll_number, sp.class_id,
-              c.name as class_name, c.section
-       FROM users u
-       JOIN student_profiles sp ON u.id = sp.user_id
-       JOIN classes c ON sp.class_id = c.id
-       WHERE ${whereClause}
-       ORDER BY c.grade_level, c.section, sp.roll_number
-       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
-      [...params, parseInt(limit), parseInt(offset)]
-    );
+    const students = await User.find(query)
+      .populate('classId', 'name section gradeLevel')
+      .skip(offset)
+      .limit(parseInt(limit))
+      .select('-password');
 
-    const [{ total }] = await query(
-      `SELECT COUNT(*) as total FROM users u 
-       JOIN student_profiles sp ON u.id = sp.user_id 
-       WHERE ${whereClause}`,
-      params
-    );
+    const total = await User.countDocuments(query);
+
+    const studentData = students.map(student => ({
+      id: student._id,
+      name: student.name,
+      email: student.email,
+      phone: student.phone,
+      avatarUrl: student.profileImage,
+      studentId: student.studentId,
+      rollNumber: student.rollNumber,
+      classId: student.classId?._id,
+      className: student.classId?.name,
+      section: student.classId?.section,
+      gradeLevel: student.classId?.gradeLevel
+    }));
 
     res.json({
       success: true,
-      data: students,
-      pagination: { page: parseInt(page), limit: parseInt(limit), total: total }
+      data: studentData,
+      pagination: { 
+        page: parseInt(page), 
+        limit: parseInt(limit), 
+        total 
+      }
     });
   } catch (error) {
     next(error);
@@ -201,20 +287,39 @@ router.get('/students', async (req, res, next) => {
 
 router.get('/students/:id', async (req, res, next) => {
   try {
-    const student = await query(
-      `SELECT u.*, sp.*, c.name as class_name, c.section, c.grade_level
-       FROM users u
-       JOIN student_profiles sp ON u.id = sp.user_id
-       JOIN classes c ON sp.class_id = c.id
-       WHERE u.id = $1 AND u.tenant_id = $2`,
-      [req.params.id, req.user.tenantId]
-    );
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const student = await User.findOne({
+      _id: req.params.id,
+      tenantId,
+      role: 'STUDENT',
+      isActive: true
+    })
+    .populate('classId', 'name section gradeLevel')
+    .select('-password');
 
-    if (!student || student.length === 0) {
+    if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    res.json({ success: true, data: student[0] });
+    res.json({ 
+      success: true, 
+      data: {
+        id: student._id,
+        name: student.name,
+        email: student.email,
+        phone: student.phone,
+        profileImage: student.profileImage,
+        studentId: student.studentId,
+        rollNumber: student.rollNumber,
+        classId: student.classId?._id,
+        className: student.classId?.name,
+        section: student.classId?.section,
+        gradeLevel: student.classId?.gradeLevel,
+        dateOfBirth: student.dateOfBirth,
+        gender: student.gender,
+        address: student.address
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -224,23 +329,49 @@ router.put('/students/:id', async (req, res, next) => {
   try {
     const { name, email, phone, classId, rollNumber, dateOfBirth, gender, 
             bloodGroup, address, city, state, fatherName, fatherPhone, motherName, motherPhone } = req.body;
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    // Update user
-    await query(
-      `UPDATE users SET name = $1, email = $2, phone = $3, updated_at = NOW()
-       WHERE id = $4 AND tenant_id = $5`,
-      [name, email, phone, req.params.id, req.user.tenantId]
+    const updateData = {
+      name,
+      email,
+      phone,
+      classId,
+      rollNumber,
+      dateOfBirth,
+      gender,
+      ...(bloodGroup && { bloodGroup }),
+      ...(address && { 'address.street': address }),
+      ...(city && { 'address.city': city }),
+      ...(state && { 'address.state': state })
+    };
+
+    const updatedStudent = await User.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId,
+        role: 'STUDENT'
+      },
+      updateData,
+      { new: true }
     );
 
-    // Update student profile
-    await query(
-      `UPDATE student_profiles SET class_id = $1, roll_number = $2, date_of_birth = $3, gender = $4,
-              blood_group = $5, address = $6, city = $7, state = $8, father_name = $9, father_phone = $10,
-              mother_name = $11, mother_phone = $12, updated_at = NOW()
-       WHERE user_id = $13`,
-      [classId, rollNumber, dateOfBirth, gender, bloodGroup, address, city, state,
-       fatherName, fatherPhone, motherName, motherPhone, req.params.id]
-    );
+    if (!updatedStudent) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    // Handle parent contact information if provided
+    if (fatherName || motherName) {
+      const emergencyContact = {};
+      if (fatherName) emergencyContact.fatherName = fatherName;
+      if (fatherPhone) emergencyContact.fatherPhone = fatherPhone;
+      if (motherName) emergencyContact.motherName = motherName;
+      if (motherPhone) emergencyContact.motherPhone = motherPhone;
+      
+      await User.findByIdAndUpdate(
+        req.params.id,
+        { emergencyContact }
+      );
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -250,8 +381,21 @@ router.put('/students/:id', async (req, res, next) => {
 
 router.delete('/students/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE users SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
-      [req.params.id, req.user.tenantId]);
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const deletedStudent = await User.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId,
+        role: 'STUDENT'
+      },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!deletedStudent) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -263,18 +407,26 @@ router.delete('/students/:id', async (req, res, next) => {
 // ============================================
 router.get('/teachers', async (req, res, next) => {
   try {
-    const teachers = await query(
-      `SELECT u.id, u.name, u.email, u.phone, u.avatar_url,
-              tp.teacher_id, tp.qualification, tp.specialization, tp.experience_years,
-              tp.subjects
-       FROM users u
-       JOIN teacher_profiles tp ON u.id = tp.user_id
-       WHERE u.tenant_id = $1 AND u.role = 'TEACHER' AND u.is_active = TRUE
-       ORDER BY u.name`,
-      [req.user.tenantId]
-    );
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const teachers = await Teacher.find({
+      tenantId,
+      isActive: true
+    }).select('-password');
 
-    res.json({ success: true, data: teachers });
+    const teacherData = teachers.map(teacher => ({
+      id: teacher._id,
+      name: teacher.name,
+      email: teacher.email,
+      phone: teacher.phone,
+      avatarUrl: teacher.profileImage,
+      teacherId: teacher.teacherId,
+      qualification: teacher.qualification,
+      experienceYears: teacher.experienceYears,
+      specialization: teacher.specialization,
+      subjects: teacher.subjects
+    }));
+
+    res.json({ success: true, data: teacherData });
   } catch (error) {
     next(error);
   }
@@ -282,19 +434,31 @@ router.get('/teachers', async (req, res, next) => {
 
 router.get('/teachers/:id', async (req, res, next) => {
   try {
-    const teacher = await query(
-      `SELECT u.*, tp.*
-       FROM users u
-       JOIN teacher_profiles tp ON u.id = tp.user_id
-       WHERE u.id = $1 AND u.tenant_id = $2`,
-      [req.params.id, req.user.tenantId]
-    );
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const teacher = await Teacher.findOne({
+      _id: req.params.id,
+      tenantId,
+      isActive: true
+    }).select('-password');
 
-    if (!teacher || teacher.length === 0) {
+    if (!teacher) {
       return res.status(404).json({ success: false, message: 'Teacher not found' });
     }
 
-    res.json({ success: true, data: teacher[0] });
+    res.json({ 
+      success: true, 
+      data: {
+        id: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+        phone: teacher.phone,
+        profileImage: teacher.profileImage,
+        qualification: teacher.qualification,
+        experienceYears: teacher.experienceYears,
+        specialization: teacher.specialization,
+        subjects: teacher.subjects
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -302,34 +466,46 @@ router.get('/teachers/:id', async (req, res, next) => {
 
 router.post('/teachers', async (req, res, next) => {
   try {
-    const { email, password, name, phone, qualification, experienceYears, specialization, subjects } = req.body;
-    const userId = uuidv4();
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { email, password, name, phone, qualification, experienceYears, age, gender, specialization, subjects } = req.body;
 
-    // Create user
-    await query(
-      `INSERT INTO users (id, tenant_id, email, phone, password, name, role, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, 'TEACHER', TRUE)`,
-      [userId, req.user.tenantId, email, phone, hashedPassword, name]
-    );
+    // Use schoolId as tenantId for school admins
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    
+    if (!tenantId) {
+      return res.status(400).json({ success: false, message: 'Tenant or school ID is required' });
+    }
+
+    // Check if email already exists
+    const existingTeacher = await Teacher.findOne({ email: email.toLowerCase() });
+    if (existingTeacher) {
+      return res.status(400).json({ success: false, message: 'Email already exists' });
+    }
 
     // Generate teacher ID
-    const [{ count }] = await query(
-      `SELECT COUNT(*) as count FROM teacher_profiles WHERE tenant_id = $1`,
-      [req.user.tenantId]
-    );
-    const teacherId = `TCH-${String(count + 1).padStart(4, '0')}`;
+    const teacherCount = await Teacher.countDocuments({
+      tenantId
+    });
+    const teacherId = `TCH-${String(teacherCount + 1).padStart(4, '0')}`;
 
-    // Create teacher profile
-    await query(
-      `INSERT INTO teacher_profiles (id, user_id, tenant_id, teacher_id, qualification, 
-              experience_years, specialization, subjects, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)`,
-      [uuidv4(), userId, req.user.tenantId, teacherId, qualification, experienceYears, specialization, 
-       subjects ? JSON.stringify(subjects) : null]
-    );
+    const teacherData = {
+      tenantId,
+      email: email.toLowerCase(),
+      phone,
+      password,
+      name,
+      qualification,
+      experienceYears: experienceYears || (age ? parseInt(age) : undefined),
+      gender,
+      specialization,
+      subjects,
+      teacherId,
+      isActive: true
+    };
 
-    res.status(201).json({ success: true, data: { userId, teacherId } });
+    const newTeacher = new Teacher(teacherData);
+    await newTeacher.save();
+
+    res.status(201).json({ success: true, data: { userId: newTeacher._id, teacherId } });
   } catch (error) {
     next(error);
   }
@@ -338,19 +514,28 @@ router.post('/teachers', async (req, res, next) => {
 router.put('/teachers/:id', async (req, res, next) => {
   try {
     const { name, email, phone, qualification, experienceYears, specialization, subjects } = req.body;
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    await query(
-      `UPDATE users SET name = $1, email = $2, phone = $3, updated_at = NOW()
-       WHERE id = $4 AND tenant_id = $5`,
-      [name, email, phone, req.params.id, req.user.tenantId]
+    const updatedTeacher = await Teacher.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      {
+        name,
+        email: email.toLowerCase(),
+        phone,
+        qualification,
+        experienceYears,
+        specialization,
+        subjects
+      },
+      { new: true }
     );
 
-    await query(
-      `UPDATE teacher_profiles SET qualification = $1, experience_years = $2, specialization = $3, 
-              subjects = $4, updated_at = NOW()
-       WHERE user_id = $5`,
-      [qualification, experienceYears, specialization, subjects ? JSON.stringify(subjects) : null, req.params.id]
-    );
+    if (!updatedTeacher) {
+      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -360,8 +545,20 @@ router.put('/teachers/:id', async (req, res, next) => {
 
 router.delete('/teachers/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE users SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
-      [req.params.id, req.user.tenantId]);
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const deletedTeacher = await Teacher.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!deletedTeacher) {
+      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -373,10 +570,12 @@ router.delete('/teachers/:id', async (req, res, next) => {
 // ============================================
 router.get('/subjects', async (req, res, next) => {
   try {
-    const subjects = await query(
-      `SELECT * FROM subjects WHERE tenant_id = $1 AND is_active = TRUE ORDER BY name`,
-      [req.user.tenantId]
-    );
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const subjects = await Subject.find({
+      tenantId,
+      isActive: true
+    }).sort({ name: 1 });
+
     res.json({ success: true, data: subjects });
   } catch (error) {
     next(error);
@@ -386,15 +585,20 @@ router.get('/subjects', async (req, res, next) => {
 router.post('/subjects', async (req, res, next) => {
   try {
     const { name, code, description } = req.body;
-    const subjectId = uuidv4();
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    await query(
-      `INSERT INTO subjects (id, tenant_id, name, code, description, is_active)
-       VALUES ($1, $2, $3, $4, $5, TRUE)`,
-      [subjectId, req.user.tenantId, name, code, description]
-    );
+    const subjectData = {
+      tenantId,
+      name,
+      code,
+      description,
+      isActive: true
+    };
 
-    res.status(201).json({ success: true, data: { id: subjectId } });
+    const newSubject = new Subject(subjectData);
+    await newSubject.save();
+
+    res.status(201).json({ success: true, data: { id: newSubject._id } });
   } catch (error) {
     next(error);
   }
@@ -403,11 +607,21 @@ router.post('/subjects', async (req, res, next) => {
 router.put('/subjects/:id', async (req, res, next) => {
   try {
     const { name, code, description } = req.body;
-    await query(
-      `UPDATE subjects SET name = $1, code = $2, description = $3, updated_at = NOW()
-       WHERE id = $4 AND tenant_id = $5`,
-      [name, code, description, req.params.id, req.user.tenantId]
+    const tenantId = req.user.tenantId || req.user.schoolId;
+
+    const updatedSubject = await Subject.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      { name, code, description },
+      { new: true }
     );
+
+    if (!updatedSubject) {
+      return res.status(404).json({ success: false, message: 'Subject not found' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -416,8 +630,20 @@ router.put('/subjects/:id', async (req, res, next) => {
 
 router.delete('/subjects/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE subjects SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
-      [req.params.id, req.user.tenantId]);
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const deletedSubject = await Subject.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!deletedSubject) {
+      return res.status(404).json({ success: false, message: 'Subject not found' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -429,10 +655,12 @@ router.delete('/subjects/:id', async (req, res, next) => {
 // ============================================
 router.get('/contacts', async (req, res, next) => {
   try {
-    const contacts = await query(
-      `SELECT * FROM school_contacts WHERE tenant_id = $1 AND is_active = TRUE ORDER BY department`,
-      [req.user.tenantId]
-    );
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const contacts = await SchoolContact.find({
+      tenantId,
+      isActive: true
+    }).sort({ department: 1 });
+
     res.json({ success: true, data: contacts });
   } catch (error) {
     next(error);
@@ -442,15 +670,22 @@ router.get('/contacts', async (req, res, next) => {
 router.post('/contacts', async (req, res, next) => {
   try {
     const { department, name, designation, phone, email } = req.body;
-    const contactId = uuidv4();
+    const tenantId = req.user.tenantId || req.user.schoolId;
 
-    await query(
-      `INSERT INTO school_contacts (id, tenant_id, department, name, designation, phone, email, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)`,
-      [contactId, req.user.tenantId, department, name, designation, phone, email]
-    );
+    const contactData = {
+      tenantId,
+      department,
+      name,
+      designation,
+      phone,
+      email,
+      isActive: true
+    };
 
-    res.status(201).json({ success: true, data: { id: contactId } });
+    const newContact = new SchoolContact(contactData);
+    await newContact.save();
+
+    res.status(201).json({ success: true, data: { id: newContact._id } });
   } catch (error) {
     next(error);
   }
@@ -459,11 +694,21 @@ router.post('/contacts', async (req, res, next) => {
 router.put('/contacts/:id', async (req, res, next) => {
   try {
     const { department, name, designation, phone, email } = req.body;
-    await query(
-      `UPDATE school_contacts SET department = $1, name = $2, designation = $3, phone = $4, email = $5, updated_at = NOW()
-       WHERE id = $6 AND tenant_id = $7`,
-      [department, name, designation, phone, email, req.params.id, req.user.tenantId]
+    const tenantId = req.user.tenantId || req.user.schoolId;
+
+    const updatedContact = await SchoolContact.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      { department, name, designation, phone, email },
+      { new: true }
     );
+
+    if (!updatedContact) {
+      return res.status(404).json({ success: false, message: 'Contact not found' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);
@@ -472,8 +717,20 @@ router.put('/contacts/:id', async (req, res, next) => {
 
 router.delete('/contacts/:id', async (req, res, next) => {
   try {
-    await query(`UPDATE school_contacts SET is_active = FALSE WHERE id = $1 AND tenant_id = $2`, 
-      [req.params.id, req.user.tenantId]);
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const deletedContact = await SchoolContact.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        tenantId
+      },
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!deletedContact) {
+      return res.status(404).json({ success: false, message: 'Contact not found' });
+    }
+
     res.json({ success: true });
   } catch (error) {
     next(error);

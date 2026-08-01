@@ -7,46 +7,46 @@
 import React, { Suspense, useEffect } from 'react';
 import { IonApp, IonSpinner, IonPage, IonRouterOutlet } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { Route, Redirect, Switch, RouteProps, useHistory } from 'react-router-dom';
+import { Route, Redirect, Switch, useHistory } from 'react-router-dom';
 
-import { AuthProvider, useAuth } from './src/contexts/AuthContext';
-import ErrorBoundary from './src/components/ErrorBoundary';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext.jsx';
+import ErrorBoundary from './src/components/ErrorBoundary.tsx';
 
 // Auth Screens
-import LoginScreen from './src/screens/LoginScreen';
-import RegisterScreen from './src/screens/RegisterScreen';
+import LoginScreen from './src/screens/LoginScreen.jsx';
+import RegisterScreen from './src/screens/RegisterScreen.tsx';
 
 // Super Admin Screens (Lazy loaded)
-const SuperAdminDashboardScreen = React.lazy(() => import('./src/screens/superadmin/DashboardScreen'));
-const SchoolsListScreen = React.lazy(() => import('./src/screens/superadmin/SchoolsListScreen'));
-const CreateSchoolScreen = React.lazy(() => import('./src/screens/superadmin/CreateSchoolScreen'));
-const SchoolDetailScreen = React.lazy(() => import('./src/screens/superadmin/SchoolDetailScreen'));
+const SuperAdminDashboardScreen = React.lazy(() => import('./src/screens/superadmin/DashboardScreen.jsx'));
+const SchoolsListScreen = React.lazy(() => import('./src/screens/superadmin/SchoolsListScreen.jsx'));
+const CreateSchoolScreen = React.lazy(() => import('./src/screens/superadmin/CreateSchoolScreen.jsx'));
+const SchoolDetailScreen = React.lazy(() => import('./src/screens/superadmin/SchoolDetailScreen.jsx'));
 
 // Admin Screens (Lazy loaded)
-const AdminDashboardScreen = React.lazy(() => import('./src/screens/admin/DashboardScreen'));
-const ClassesListScreen = React.lazy(() => import('./src/screens/admin/ClassesListScreen'));
-const CreateClassScreen = React.lazy(() => import('./src/screens/admin/CreateClassScreen'));
-const ClassDashboardScreen = React.lazy(() => import('./src/screens/admin/ClassDashboardScreen'));
-const EditClassScreen = React.lazy(() => import('./src/screens/admin/EditClassScreen'));
-const TeachersListScreen = React.lazy(() => import('./src/screens/admin/TeachersListScreen'));
-const TeacherDetailScreen = React.lazy(() => import('./src/screens/admin/TeacherDetailScreen'));
-const EditTeacherScreen = React.lazy(() => import('./src/screens/admin/EditTeacherScreen'));
-const CreateTeacherScreen = React.lazy(() => import('./src/screens/admin/CreateTeacherScreen'));
-const StudentsListScreen = React.lazy(() => import('./src/screens/admin/StudentsListScreen'));
-const CreateStudentScreen = React.lazy(() => import('./src/screens/admin/CreateStudentScreen'));
-const EditStudentScreen = React.lazy(() => import('./src/screens/admin/EditStudentScreen'));
-const HomeworkListScreen = React.lazy(() => import('./src/screens/admin/HomeworkListScreen'));
-const CreateHomeworkScreen = React.lazy(() => import('./src/screens/admin/CreateHomeworkScreen'));
-const NewsListScreen = React.lazy(() => import('./src/screens/admin/NewsListScreen'));
-const CreateNewsScreen = React.lazy(() => import('./src/screens/admin/CreateNewsScreen'));
-const CircularsListScreen = React.lazy(() => import('./src/screens/admin/CircularsListScreen'));
-const CreateCircularScreen = React.lazy(() => import('./src/screens/admin/CreateCircularScreen'));
-const ExamSchedulesListScreen = React.lazy(() => import('./src/screens/admin/ExamSchedulesListScreen'));
-const CreateExamScheduleScreen = React.lazy(() => import('./src/screens/admin/CreateExamScheduleScreen'));
-const AdminNewsScreen = React.lazy(() => import('./src/screens/admin/AdminNewsScreen'));
-const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminCircularsScreen'));
-const AdminExamsScreen = React.lazy(() => import('./src/screens/admin/AdminExamsScreen'));
-const PlaceholderScreen = React.lazy(() => import('./src/screens/admin/PlaceholderScreen'));
+const AdminDashboardScreen = React.lazy(() => import('./src/screens/admin/DashboardScreen.jsx'));
+const ClassesListScreen = React.lazy(() => import('./src/screens/admin/ClassesListScreen.tsx'));
+const CreateClassScreen = React.lazy(() => import('./src/screens/admin/CreateClassScreen.tsx'));
+const ClassDashboardScreen = React.lazy(() => import('./src/screens/admin/ClassDashboardScreen.tsx'));
+const EditClassScreen = React.lazy(() => import('./src/screens/admin/EditClassScreen.tsx'));
+const TeachersListScreen = React.lazy(() => import('./src/screens/admin/TeachersListScreen.jsx'));
+const TeacherDetailScreen = React.lazy(() => import('./src/screens/admin/TeacherDetailScreen.tsx'));
+const EditTeacherScreen = React.lazy(() => import('./src/screens/admin/EditTeacherScreen.tsx'));
+const CreateTeacherScreen = React.lazy(() => import('./src/screens/admin/CreateTeacherScreen.jsx'));
+const StudentsListScreen = React.lazy(() => import('./src/screens/admin/StudentsListScreen.jsx'));
+const CreateStudentScreen = React.lazy(() => import('./src/screens/admin/CreateStudentScreen.tsx'));
+const EditStudentScreen = React.lazy(() => import('./src/screens/admin/EditStudentScreen.tsx'));
+const HomeworkListScreen = React.lazy(() => import('./src/screens/admin/HomeworkListScreen.tsx'));
+const CreateHomeworkScreen = React.lazy(() => import('./src/screens/admin/CreateHomeworkScreen.tsx'));
+const NewsListScreen = React.lazy(() => import('./src/screens/admin/NewsListScreen.tsx'));
+const CreateNewsScreen = React.lazy(() => import('./src/screens/admin/CreateNewsScreen.tsx'));
+const CircularsListScreen = React.lazy(() => import('./src/screens/admin/CircularsListScreen.tsx'));
+const CreateCircularScreen = React.lazy(() => import('./src/screens/admin/CreateCircularScreen.tsx'));
+const ExamSchedulesListScreen = React.lazy(() => import('./src/screens/admin/ExamSchedulesListScreen.tsx'));
+const CreateExamScheduleScreen = React.lazy(() => import('./src/screens/admin/CreateExamScheduleScreen.tsx'));
+const AdminNewsScreen = React.lazy(() => import('./src/screens/admin/AdminNewsScreen.tsx'));
+const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminCircularsScreen.jsx'));
+const AdminExamsScreen = React.lazy(() => import('./src/screens/admin/AdminExamsScreen.jsx'));
+const PlaceholderScreen = React.lazy(() => import('./src/screens/admin/PlaceholderScreen.tsx'));
 
 // Student Screens (Lazy loaded)
 const StudentDashboardScreen = React.lazy(() => import('./src/screens/student/DashboardScreen'));
@@ -78,16 +78,7 @@ const ClassCreateExamScheduleScreen = React.lazy(() => import('./src/screens/cla
 const ClassProfileScreen = React.lazy(() => import('./src/screens/classcontroller/ClassProfileScreen'));
 const ClassExamDetailScreen = React.lazy(() => import('./src/screens/classcontroller/ClassExamDetailScreen'));
 
-// Protected Route component
-interface ProtectedRouteProps extends RouteProps {
-  component: React.ComponentType<any>;
-  isAuthenticated: boolean;
-  isClass: boolean;
-  isLoading: boolean;
-  redirectPath?: string;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+const ProtectedRoute = ({ 
   component: Component, 
   isAuthenticated, 
   isClass,
@@ -117,7 +108,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 };
 
 // Loading component for lazy-loaded routes
-// Wrapped in IonPage to ensure visibility inside IonApp
 const RouteLoadingFallback = () => (
   <IonPage>
     <div style={{
@@ -149,14 +139,12 @@ const RouteLoadingFallback = () => (
   </IonPage>
 );
 
-// Auth Redirect component - redirects authenticated users away from login/register pages
-// and redirects unauthenticated users to login
-const AuthRedirect: React.FC = () => {
+// Auth Redirect component
+const AuthRedirect = () => {
   const { isAuthenticated, isSuperAdmin, isAdmin, isStudent, isTeacher, isClass, isLoading } = useAuth();
   const history = useHistory();
 
   useEffect(() => {
-    // Skip redirect logic while auth state is still loading
     if (isLoading) {
       return;
     }
@@ -164,7 +152,6 @@ const AuthRedirect: React.FC = () => {
     const currentPath = window.location.pathname;
     
     if (isAuthenticated || isClass) {
-      // If authenticated and on login/register, redirect to appropriate dashboard
       if (currentPath === '/login' || currentPath === '/register') {
         if (isSuperAdmin) {
           history.push('/superadmin/dashboard');
@@ -179,7 +166,6 @@ const AuthRedirect: React.FC = () => {
         }
       }
     } else {
-      // If NOT authenticated and NOT on login/register, redirect to login
       if (currentPath !== '/login' && currentPath !== '/register') {
         history.push('/login');
       }
@@ -190,7 +176,7 @@ const AuthRedirect: React.FC = () => {
 };
 
 // Internal component to access auth context and render routes
-const AppContent: React.FC = () => {
+const AppContent = () => {
   const { isAuthenticated, isLoading, isSuperAdmin, isAdmin, isStudent, isTeacher, isClass } = useAuth();
 
   if (isLoading) {
@@ -199,15 +185,14 @@ const AppContent: React.FC = () => {
 
   return (
     <Suspense fallback={<RouteLoadingFallback />}>
-      {/* AuthRedirect is always mounted to watch auth state changes */}
       <AuthRedirect />
       
       <Switch>
-        {/* Auth Routes - placed first for priority */}
+        {/* Auth Routes */}
         <Route exact path="/login" component={LoginScreen} />
         <Route exact path="/register" component={RegisterScreen} />
 
-        {/* Root path redirect - redirect to login */}
+        {/* Root path redirect */}
         <Route exact path="/">
           <Redirect to="/login" />
         </Route>
@@ -226,16 +211,12 @@ const AppContent: React.FC = () => {
         {isAdmin && (
           <>
             <ProtectedRoute exact path="/admin/dashboard" component={AdminDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            {/* Static/specific routes MUST come before parameterized routes */}
             <ProtectedRoute exact path="/admin/classes" component={ClassesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes/create" component={CreateClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            {/* Dynamic ID routes come after specific routes */}
             <ProtectedRoute exact path="/admin/classes/:classId" component={ClassDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes/:classId/edit" component={EditClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            {/* Static/specific routes MUST come before parameterized routes */}
             <ProtectedRoute exact path="/admin/teachers" component={TeachersListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/teachers/create" component={CreateTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            {/* Dynamic ID routes come after specific routes */}
             <ProtectedRoute exact path="/admin/teachers/:teacherId" component={TeacherDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/teachers/:teacherId/edit" component={EditTeacherScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/students" component={StudentsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
@@ -294,15 +275,15 @@ const AppContent: React.FC = () => {
           </>
         )}
 
-        {/* Fallback redirect - catches all unmatched routes */}
+        {/* Fallback redirect */}
         <Redirect to="/login" />
       </Switch>
     </Suspense>
   );
 };
 
-// Main App Component - handles loading state outside IonRouterOutlet
-const App: React.FC = () => {
+// Main App Component
+const App = () => {
   return (
     <ErrorBoundary>
       <IonApp>
@@ -315,7 +296,7 @@ const App: React.FC = () => {
 };
 
 // Component that checks auth loading state before rendering router
-const AppWithAuth: React.FC = () => {
+const AppWithAuth = () => {
   const { isLoading } = useAuth();
 
   if (isLoading) {

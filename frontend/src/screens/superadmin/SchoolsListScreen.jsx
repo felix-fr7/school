@@ -34,17 +34,16 @@ import {
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
-import { Tenant } from '../../types';
 import './SchoolsListScreen.css';
 
-const SchoolsListScreen: React.FC = () => {
+const SchoolsListScreen = () => {
   const history = useHistory();
-  const [schools, setSchools] = useState<Tenant[]>([]);
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Edit modal state
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedSchool, setSelectedSchool] = useState<Tenant | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState(null);
   const [editForm, setEditForm] = useState({
     name: '',
     code: '',
@@ -53,13 +52,13 @@ const SchoolsListScreen: React.FC = () => {
     email: '',
   });
   const [editLoading, setEditLoading] = useState(false);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formErrors, setFormErrors] = useState({});
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertButtons, setAlertButtons] = useState<any[]>(['OK']);
+  const [alertButtons, setAlertButtons] = useState(['OK']);
 
-  const showAlertMessage = (header: string, message: string, buttons = ['OK']) => {
+  const showAlertMessage = (header, message, buttons = ['OK']) => {
     setAlertHeader(header);
     setAlertMessage(message);
     setAlertButtons(buttons);
@@ -70,8 +69,8 @@ const SchoolsListScreen: React.FC = () => {
     try {
       const response = await tenantsAPI.getAllTenants(1, 50);
       if (response.success && response.data) {
-        // Map backend fields securely to Tenant interface format
-        const mappedSchools = response.data.tenants.map((s: any) => ({
+        // Map backend fields securely to standard format
+        const mappedSchools = response.data.tenants.map((s) => ({
           ...s,
           id: s._id || s.id,
           name: s.schoolName || s.name,
@@ -92,7 +91,7 @@ const SchoolsListScreen: React.FC = () => {
     fetchSchools();
   }, []);
 
-  const openEditModal = (school: Tenant) => {
+  const openEditModal = (school) => {
     setSelectedSchool(school);
     setEditForm({
       name: school.name || '',
@@ -118,8 +117,8 @@ const SchoolsListScreen: React.FC = () => {
     setFormErrors({});
   };
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
+  const validateForm = () => {
+    const errors = {};
 
     if (!editForm.name.trim()) {
       errors.name = 'School name is required';
@@ -176,7 +175,7 @@ const SchoolsListScreen: React.FC = () => {
         closeEditModal();
         showAlertMessage('Success', 'School updated successfully');
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage =
         error?.response?.data?.error?.message || 'Failed to update school';
       showAlertMessage('Error', errorMessage);
@@ -185,7 +184,7 @@ const SchoolsListScreen: React.FC = () => {
     }
   };
 
-  const handleDelete = (school: Tenant) => {
+  const handleDelete = (school) => {
     setAlertHeader('Delete School');
     setAlertMessage(
       `Are you sure you want to delete "${school.name}" and all its data? This action cannot be undone.`
@@ -201,7 +200,7 @@ const SchoolsListScreen: React.FC = () => {
     setShowAlert(true);
   };
 
-  const performDelete = async (school: Tenant) => {
+  const performDelete = async (school) => {
     try {
       const response = await tenantsAPI.deleteTenant(school.id);
 
@@ -214,7 +213,7 @@ const SchoolsListScreen: React.FC = () => {
           `School "${school.name}" and all associated data have been deleted.`
         );
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage =
         error?.response?.data?.error?.message || 'Failed to delete school';
       showAlertMessage('Error', errorMessage);

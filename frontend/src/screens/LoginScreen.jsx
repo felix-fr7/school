@@ -14,16 +14,14 @@ import {
   IonSegmentButton,
   IonLabel,
 } from '@ionic/react';
+import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginScreen.css';
 
-// 🔹 Login modes: Student, CLS (Teacher), and Admin (covers Admin & Super Admin)
-type LoginMode = 'student' | 'cls' | 'admin';
-
-const LoginScreen: React.FC = () => {
-  const { login, classLogin } = useAuth();
-  
-  const [loginMode, setLoginMode] = useState<LoginMode>('student');
+const LoginScreen = () => {
+  const history = useHistory();
+  const { login: authLogin } = useAuth();
+  const [loginMode, setLoginMode] = useState('student'); // 'student' | 'cls' | 'admin'
   
   // Form state
   const [email, setEmail] = useState('');
@@ -31,59 +29,85 @@ const LoginScreen: React.FC = () => {
   const [studentId, setStudentId] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const handleLogin = async () => {
-    let identifier = '';
-    let pass = '';
-
-    if (loginMode === 'student') {
-      if (!studentId.trim() || !password.trim()) {
-        setError('Please enter Student ID and Password');
-        return;
-      }
-      identifier = studentId.trim();
-      pass = password;
-    } else {
-      // Handles both CLS and Admin/Super Admin via Email & Password
-      if (!email.trim() || !password.trim()) {
-        setError('Please enter Email and Password');
-        return;
-      }
-      identifier = email.trim();
-      pass = password;
-    }
-
     setError(null);
     setIsLoading(true);
+
     try {
-      if (loginMode === 'cls') {
-        await classLogin(identifier.toUpperCase(), pass);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      const endpoint = `${apiUrl}/auth/login`;
+      let payload = {};
+
+      if (loginMode === 'student') {
+        if (!studentId.trim() || !password.trim()) {
+          setError('Please enter Student ID and Password');
+          setIsLoading(false);
+          return;
+        }
+        payload = { usernameOrEmailOrId: studentId.trim(), password };
+      } else if (loginMode === 'cls') {
+        if (!email.trim() || !password.trim()) {
+          setError('Please enter Class ID / Code and Password');
+          setIsLoading(false);
+          return;
+        }
+        payload = { usernameOrEmailOrId: email.trim().toUpperCase(), password };
       } else {
-        await login(identifier, pass);
+        // Admin / Super Admin login using Email
+        if (!email.trim() || !password.trim()) {
+          setError('Please enter Email Address and Password');
+          setIsLoading(false);
+          return;
+        }
+        payload = { usernameOrEmailOrId: email.trim(), password };
       }
-    } catch (err: any) {
-      handleError(err);
+
+      // Use AuthContext login method to properly update auth state
+      await authLogin(payload.usernameOrEmailOrId, payload.password);
+
+      // AuthContext will update state and AuthRedirect will handle navigation
+      // But we can also redirect explicitly to the correct dashboard route
+      // The user state is now updated in AuthContext, so we can check the role
+      console.log("Login Success! Auth state updated via AuthContext.");
+      
+      // Redirect to appropriate dashboard - these routes exist in App.tsx
+      // The AuthRedirect component will also handle this, but we do it explicitly
+      // to ensure immediate navigation after successful login
+      setTimeout(() => {
+        // Small delay to ensure AuthContext state has propagated
+        if (loginMode === 'admin') {
+          // Check user role from localStorage since AuthContext state update may not be immediate
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const role = user.role ? user.role.toUpperCase().trim().replace(/\s+/g, '_') : '';
+          // Handle both 'SUPER_ADMIN' and 'Super Admin' formats
+          if (role === 'SUPER_ADMIN' || role === 'SUPER_ADMIN') {
+            window.location.href = '/superadmin/dashboard';
+          } else {
+            // School Admin or any other admin role
+            window.location.href = '/admin/dashboard';
+          }
+        } else if (loginMode === 'student') {
+          window.location.href = '/student/dashboard';
+        }
+      }, 100);
+    } catch (err) {
+      let message = 'Login failed. Please verify your credentials.';
+      if (err?.response?.data?.error?.message) {
+        message = err.response.data.error.message;
+      } else if (err?.response?.data?.message) {
+        message = err.response.data.message;
+      } else if (err?.message) {
+        message = err.message;
+      }
+      setError(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleError = (err: any) => {
-    let message = 'Login failed. Please verify your credentials.';
-    
-    if (err?.response?.data?.error?.message) {
-      message = err.response.data.error.message;
-    } else if (err?.response?.data?.message) {
-      message = err.response.data.message;
-    } else if (err?.message) {
-      message = err.message;
-    }
-    
-    setError(message);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     handleLogin();
   };
@@ -123,7 +147,7 @@ const LoginScreen: React.FC = () => {
               value={loginMode}
               onIonChange={(e) => {
                 setError(null);
-                setLoginMode(e.detail.value as LoginMode);
+                setLoginMode(e.detail.value);
               }}
               className="luxury-segment"
             >
@@ -169,7 +193,7 @@ const LoginScreen: React.FC = () => {
                   <div className="input-box-wrapper">
                     <IonInput
                       type={loginMode === 'cls' ? 'text' : 'email'}
-                      placeholder={loginMode === 'cls' ? 'e.g. CLS-9' : 'name@school.com'}
+                      placeholder={loginMode === 'cls' ? 'e.g. CLS-9' : 'macvel@school.com'}
                       value={email}
                       onIonInput={(e) => setEmail(e.detail.value || '')}
                       disabled={isLoading}

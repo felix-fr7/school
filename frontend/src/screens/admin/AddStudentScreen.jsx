@@ -1,5 +1,5 @@
 /**
- * Add Student Screen (Ionic React Version)
+ * Add Student Screen (Ionic React Version) - JSX Version
  * Dual-mode screen: Manual Student Form & Excel Bulk Upload
  */
 
@@ -29,28 +29,14 @@ import {
   downloadOutline, 
   warningOutline, 
   checkmarkCircleOutline,
-  personAddOutline,
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
 
-type TabMode = 'manual' | 'excel';
-
-interface StudentFormData {
-  rollNumber: string;
-  studentName: string;
-  classAndSection: string;
-  parentMobile: string;
-  bloodGroup: string;
-  studentAddress: string;
-  userId: string;
-  password: string;
-}
-
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-const AddStudentScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabMode>('manual');
+const AddStudentScreen = () => {
+  const [activeTab, setActiveTab] = useState('manual');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -58,7 +44,7 @@ const AddStudentScreen: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
 
   // Manual form state
-  const [formData, setFormData] = useState<StudentFormData>({
+  const [formData, setFormData] = useState({
     rollNumber: '',
     studentName: '',
     classAndSection: '',
@@ -69,17 +55,17 @@ const AddStudentScreen: React.FC = () => {
     password: '',
   });
 
-  const updateForm = (field: keyof StudentFormData, value: string) => {
+  const updateForm = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const showAlertMessage = (header: string, message: string) => {
+  const showAlertMessage = (header, message) => {
     setAlertHeader(header);
     setAlertMessage(message);
     setShowAlert(true);
   };
 
-  const validateManualForm = (): boolean => {
+  const validateManualForm = () => {
     if (!formData.rollNumber.trim()) {
       showAlertMessage('Error', 'Roll Number is required');
       return false;
@@ -128,7 +114,7 @@ const AddStudentScreen: React.FC = () => {
           password: '',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       const errMsg = error?.response?.data?.error?.message || error?.message || 'Failed to create student';
       showAlertMessage('Error', errMsg);
     } finally {
@@ -146,13 +132,12 @@ const AddStudentScreen: React.FC = () => {
           `Required columns: ${columns}\n\nPlease create an Excel file with these exact column headers.`
         );
       }
-    } catch (error: any) {
+    } catch (error) {
       showAlertMessage('Error', 'Failed to fetch template');
     }
   };
 
   const handleUploadExcel = async () => {
-    // For web version, we'll show a message about file upload
     showAlertMessage(
       'File Upload',
       'Excel upload requires a file input element. Please use the manual form for now, or implement a file input component for bulk upload functionality.'
@@ -170,7 +155,7 @@ const AddStudentScreen: React.FC = () => {
       <IonContent className="add-student-content" fullscreen>
         {/* Tab Switcher */}
         <div className="tab-container">
-          <IonSegment value={activeTab} onIonChange={(e) => setActiveTab(e.detail.value as TabMode)}>
+          <IonSegment value={activeTab} onIonChange={(e) => setActiveTab(e.detail.value)}>
             <IonSegmentButton value="manual">
               <IonLabel>Manual Form</IonLabel>
             </IonSegmentButton>
@@ -193,9 +178,9 @@ const AddStudentScreen: React.FC = () => {
                     value={formData.rollNumber}
                     onIonInput={(e) => updateForm('rollNumber', e.detail.value || '')}
                     placeholder="e.g., STU001"
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="characters"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="characters"
                   />
                 </IonItem>
               </div>
@@ -206,9 +191,9 @@ const AddStudentScreen: React.FC = () => {
                     value={formData.studentName}
                     onIonInput={(e) => updateForm('studentName', e.detail.value || '')}
                     placeholder="Full name"
-                    autocomplete="name"
-                    autocorrect="off"
-                    autocapitalize="words"
+                    autoComplete="name"
+                    autoCorrect="off"
+                    autoCapitalize="words"
                   />
                 </IonItem>
               </div>
@@ -222,7 +207,7 @@ const AddStudentScreen: React.FC = () => {
                     value={formData.classAndSection}
                     onIonInput={(e) => updateForm('classAndSection', e.detail.value || '')}
                     placeholder="e.g., 10-A"
-                    autocomplete="off"
+                    autoComplete="off"
                   />
                 </IonItem>
               </div>
@@ -234,7 +219,7 @@ const AddStudentScreen: React.FC = () => {
                     onIonInput={(e) => updateForm('parentMobile', e.detail.value || '')}
                     placeholder="Phone number"
                     type="tel"
-                    autocomplete="tel"
+                    autoComplete="tel"
                   />
                 </IonItem>
               </div>
@@ -274,8 +259,8 @@ const AddStudentScreen: React.FC = () => {
                 onIonInput={(e) => updateForm('userId', e.detail.value || '')}
                 placeholder="student@school.com"
                 type="email"
-                autocomplete="email"
-                autocapitalize="none"
+                autoComplete="email"
+                autoCapitalize="none"
               />
             </IonItem>
 
@@ -286,7 +271,7 @@ const AddStudentScreen: React.FC = () => {
                 onIonInput={(e) => updateForm('password', e.detail.value || '')}
                 placeholder="Minimum 6 characters"
                 type="password"
-                autocomplete="new-password"
+                autoComplete="new-password"
               />
             </IonItem>
 

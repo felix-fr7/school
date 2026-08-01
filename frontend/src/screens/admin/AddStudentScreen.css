@@ -1,175 +1,77 @@
-/* ============================================================================
-   ADD STUDENT SCREEN - Royal Light Theme
-   Page-specific CSS for Student Creation (Manual & Excel Upload)
-   ============================================================================ */
+/* Add Student Screen & Admin Theme Styles */
+/* Responsive for Mobile and Tablet Views with Smooth Animations */
 
-/* ============================================================================
-   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
-   ============================================================================ */
-:root {
-  --royal-bg-main: #f8fafc;
-  --royal-bg-card: #ffffff;
-  --royal-navy: #1e293b;
-  --royal-blue-primary: #2563eb;
-  --royal-blue-dark: #1d4ed8;
-  --royal-blue-light: #3b82f6;
-  --royal-border-light: #e2e8f0;
-  --royal-border-input: #cbd5e1;
-  --royal-text-primary: #0f172a;
-  --royal-text-secondary: #475569;
-  --royal-text-muted: #64748b;
-  --royal-text-placeholder: #94a3b8;
-  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
-  --royal-radius-sm: 6px;
-  --royal-radius-md: 8px;
-  --royal-radius-lg: 12px;
-  --royal-radius-xl: 16px;
-  --royal-transition: all 0.2s ease-in-out;
-}
-
-/* ============================================================================
-   1. PAGE BACKGROUND & HEADER
-   ============================================================================ */
 .add-student-content {
-  --background: var(--royal-bg-main);
-  background: var(--royal-bg-main);
+  --background: #f4f6f9;
 }
 
-.add-student-content ion-header,
-.add-student-content ion-toolbar {
-  --background: var(--royal-navy) !important;
-  --border-color: transparent !important;
-}
-
-.add-student-content ion-title {
-  --color: #ffffff !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-  text-align: center;
-}
-
-/* ============================================================================
-   2. TAB CONTAINER (SEGMENT)
-   ============================================================================ */
-.tab-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px 16px 0;
-}
-
-.tab-container ion-segment {
-  background: var(--royal-bg-card);
-  border-radius: var(--royal-radius-lg);
-  padding: 4px;
-  box-shadow: var(--royal-shadow-card);
-  border: 1px solid var(--royal-border-light);
-}
-
-.tab-container ion-segment-button {
-  --color: var(--royal-text-muted);
-  --color-checked: var(--royal-blue-primary);
-  --background-checked: var(--royal-bg-card);
-  --indicator-color: transparent;
-  font-weight: 600;
-  border-radius: var(--royal-radius-md);
-  min-height: 44px;
-}
-
-.tab-container ion-segment-button.ion-activated {
-  background: var(--royal-bg-card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-/* ============================================================================
-   3. FORM CONTAINER
-   ============================================================================ */
 .form-container {
-  max-width: 800px;
+  max-width: 650px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 20px;
+  animation: fadeIn 0.4s ease-in-out;
 }
 
+/* Tab Container */
+.tab-container {
+  max-width: 650px;
+  margin: 16px auto 0 auto;
+  padding: 0 20px;
+}
+
+/* Section Titles */
 .section-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
-  color: var(--royal-text-primary);
-  margin: 0 0 20px 0;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--royal-border-light);
+  color: #1e293b;
+  margin: 24px 0 12px 0;
 }
 
-/* ============================================================================
-   4. INPUT ROWS (2-column layout)
-   ============================================================================ */
+.section-title:first-of-type {
+  margin-top: 10px;
+}
+
+/* Input Rows & Grid Layout for responsiveness */
 .input-row {
   display: flex;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
 }
 
 .input-half {
   flex: 1;
 }
 
-/* ============================================================================
-   5. INPUT ITEMS
-   ============================================================================ */
 .input-item {
-  --background: var(--royal-bg-card);
-  --border-radius: var(--royal-radius-md);
-  --inner-border-width: 0;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  border: 1px solid var(--royal-border-input);
-  border-radius: var(--royal-radius-md);
-  margin-bottom: 0;
-  min-height: 68px;
+  --background: #ffffff;
+  --border-radius: 8px;
+  --highlight-color-focused: #2563eb;
+  margin-bottom: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.input-item ion-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--royal-blue-primary) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-.input-item ion-input {
-  --color: var(--royal-text-primary);
-  --placeholder-color: var(--royal-text-placeholder);
-  font-size: 14px;
+.input-item:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .textarea-item {
-  min-height: auto;
-}
-
-.textarea-item ion-textarea {
-  --color: var(--royal-text-primary);
-  --placeholder-color: var(--royal-text-placeholder);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-/* ============================================================================
-   6. BLOOD GROUP SELECTOR
-   ============================================================================ */
-.blood-group-section {
   margin-bottom: 20px;
 }
 
+/* Blood Group Section */
+.blood-group-section {
+  margin-bottom: 16px;
+}
+
 .blood-group-section .label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--royal-blue-primary) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
 }
 
 .blood-group-container {
@@ -179,177 +81,141 @@
 }
 
 .blood-group-chip {
-  --background: var(--royal-bg-card);
-  --color: var(--royal-text-secondary);
-  border: 1px solid var(--royal-border-input);
-  font-size: 13px;
+  --background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
   font-weight: 600;
-  height: 36px;
-  transition: var(--royal-transition);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: scaleUp 0.3s ease;
+}
+
+.blood-group-chip:hover {
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 .blood-group-chip.active {
-  --background: #eff6ff;
-  --color: var(--royal-blue-primary);
-  border-color: var(--royal-blue-primary);
+  --background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: scale(1.05);
 }
 
-/* ============================================================================
-   7. INFO CARD (Excel Instructions)
-   ============================================================================ */
-.info-card {
-  background: var(--royal-bg-card);
-  border-radius: var(--royal-radius-lg);
-  border: 1px solid var(--royal-border-light);
-  box-shadow: var(--royal-shadow-card);
-  margin-bottom: 20px;
-  --background: var(--royal-bg-card);
+/* Buttons */
+.submit-button, .upload-button {
+  --background: #2563eb;
+  --border-radius: 8px;
+  font-weight: 600;
+  margin-top: 24px;
+  height: 48px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.info-card ion-card-content {
-  padding: 20px;
+.submit-button:hover, .upload-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
-.info-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--royal-text-primary);
-  margin: 0 0 12px 0;
-}
-
-.info-text {
-  font-size: 13px;
-  color: var(--royal-text-secondary);
-  line-height: 1.7;
-  margin: 0;
-}
-
-.code-text {
-  background: var(--royal-bg-main);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 12px;
-  color: var(--royal-blue-primary);
-}
-
-/* ============================================================================
-   8. BUTTONS
-   ============================================================================ */
 .template-button {
-  --color: var(--royal-blue-primary) !important;
-  --border-color: var(--royal-blue-primary) !important;
-  --border-radius: var(--royal-radius-md) !important;
-  font-weight: 600 !important;
-  height: 48px !important;
+  --border-color: #2563eb;
+  --color: #2563eb;
+  --border-radius: 8px;
+  font-weight: 600;
+  margin-top: 16px;
+  height: 46px;
+}
+
+/* Cards for Excel Upload View */
+.info-card, .warning-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
   margin-bottom: 16px;
 }
 
-.upload-button {
-  --background: var(--royal-blue-primary) !important;
-  --background-activated: var(--royal-blue-dark) !important;
-  --border-radius: var(--royal-radius-md) !important;
-  --box-shadow: none !important;
-  font-weight: 600 !important;
-  height: 48px !important;
-  margin-bottom: 20px;
+.info-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
 }
 
-.submit-button {
-  --background: var(--royal-blue-primary) !important;
-  --background-activated: var(--royal-blue-dark) !important;
-  --border-radius: var(--royal-radius-md) !important;
-  --box-shadow: none !important;
-  font-weight: 600 !important;
-  height: 48px !important;
-  margin-top: 8px;
-}
-
-/* ============================================================================
-   9. WARNING CARD
-   ============================================================================ */
-.warning-card {
-  background: #fef2f2;
-  border-radius: var(--royal-radius-lg);
-  border: 1px solid #fecaca;
-  --background: #fef2f2;
-}
-
-.warning-card ion-card-content {
-  padding: 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.warning-icon {
-  font-size: 24px;
-  color: #dc2626;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.warning-text {
-  font-size: 13px;
-  color: #991b1b;
+.info-text {
+  font-size: 14px;
+  color: #475569;
   line-height: 1.6;
   margin: 0;
 }
 
-/* ============================================================================
-   10. MOBILE RESPONSIVE
-   ============================================================================ */
-@media (max-width: 768px) {
-  .tab-container {
-    padding: 16px 12px 0;
-  }
+.code-text {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #d97706;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+  margin: 6px 0;
+  word-break: break-all;
+}
 
-  .form-container {
-    padding: 20px 12px;
-  }
+.warning-card {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  margin-top: 20px;
+}
 
-  .input-row {
-    flex-direction: column;
-    gap: 0;
-  }
+.warning-icon {
+  font-size: 24px;
+  color: #d97706;
+  margin-bottom: 8px;
+}
 
-  .input-half {
-    width: 100%;
-  }
+.warning-text {
+  font-size: 13px;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.4;
+}
 
-  .input-item {
-    margin-bottom: 16px;
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-
-  .blood-group-container {
-    gap: 6px;
-  }
-
-  .blood-group-chip {
-    min-height: 36px;
-  }
-
-  /* Ensure touch targets are 48px minimum */
-  .input-item {
-    min-height: 68px;
-  }
-
-  /* Prevent horizontal scroll */
-  ion-content {
-    --overflow-x: hidden;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 480px) {
-  .tab-container {
-    padding: 12px 8px 0;
+@keyframes scaleUp {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
   }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
+/* Responsive Tablet & Desktop Layout Adjustments */
+@media (min-width: 768px) {
   .form-container {
-    padding: 16px 8px;
+    max-width: 700px;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+    margin-bottom: 30px;
   }
 
-  .section-title {
-    font-size: 14px;
+  .tab-container {
+    max-width: 700px;
   }
 }

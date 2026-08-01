@@ -1,10 +1,10 @@
 /**
  * Create School Screen - Super Admin (Ionic React Version)
  * Form to create a new school and assign admin
- * Enhanced with robust validation, state management, and back navigation
+ * Enhanced with Ionic Storage support, validation, and state management
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -37,25 +37,11 @@ const VALIDATIONS = {
   password: /^(?=.*\d).{6,}$/,
 };
 
-interface FormData {
-  name: string;
-  code: string;
-  address: string;
-  phone: string;
-  email: string;
-  adminName: string;
-  adminEmail: string;
-  adminPassword: string;
-}
-
-interface FormErrors {
-  [key: string]: string;
-}
-
-const CreateSchoolScreen: React.FC = () => {
+const CreateSchoolScreen = () => {
   const history = useHistory();
+  const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState({
     name: '',
     code: '',
     address: '',
@@ -65,17 +51,46 @@ const CreateSchoolScreen: React.FC = () => {
     adminEmail: '',
     adminPassword: '',
   });
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [formErrors, setFormErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSuccess, setAlertSuccess] = useState(false);
 
+  // Initialize storage using standard localStorage
+  useEffect(() => {
+    const initStorage = async () => {
+      // Use standard localStorage instead of Ionic Storage to avoid "Illegal constructor" error
+      const newStore = {
+        get: async (key) => {
+          try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+          } catch (e) {
+            return null;
+          }
+        },
+        set: async (key, value) => {
+          try {
+            localStorage.setItem(key, JSON.stringify(value));
+          } catch (e) {
+            // Silent fail for storage errors
+          }
+        },
+        remove: async (key) => {
+          localStorage.removeItem(key);
+        }
+      };
+      setStore(newStore);
+    };
+    initStorage();
+  }, []);
+
   /**
    * Generate a URL-safe, lowercase tenant ID from the school name
    */
-  const generateTenantId = (name: string): string => {
+  const generateTenantId = (name) => {
     return name
       .toLowerCase()
       .trim()
@@ -87,7 +102,7 @@ const CreateSchoolScreen: React.FC = () => {
   /**
    * Validate a single field
    */
-  const validateField = (name: string, value: string): string => {
+  const validateField = (name, value) => {
     switch (name) {
       case 'name':
         if (!value.trim()) return 'School name is required';
@@ -117,6 +132,8 @@ const CreateSchoolScreen: React.FC = () => {
         if (!value) return 'Admin password is required';
         if (!VALIDATIONS.password.test(value)) return 'Password must be at least 6 characters with 1 number';
         break;
+      default:
+        break;
     }
     return '';
   };
@@ -124,12 +141,12 @@ const CreateSchoolScreen: React.FC = () => {
   /**
    * Validate entire form
    */
-  const validateForm = (): boolean => {
-    const errors: FormErrors = {};
+  const validateForm = () => {
+    const errors = {};
     const fieldsToValidate = ['name', 'code', 'email', 'phone', 'adminName', 'adminEmail', 'adminPassword'];
     
     for (const field of fieldsToValidate) {
-      const error = validateField(field, formData[field as keyof FormData]);
+      const error = validateField(field, formData[field]);
       if (error) {
         errors[field] = error;
       }
@@ -142,18 +159,18 @@ const CreateSchoolScreen: React.FC = () => {
   /**
    * Handle input change safely across IonInput events
    */
-  const handleInputChange = (value: string | undefined | null, name: string) => {
+  const handleInputChange = (value, name) => {
     const val = value ?? '';
     const cleanedValue = name === 'code' ? val.toUpperCase() : val;
     
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: cleanedValue,
     }));
     
     if (touched[name]) {
       const error = validateField(name, cleanedValue);
-      setFormErrors(prev => ({
+      setFormErrors((prev) => ({
         ...prev,
         [name]: error,
       }));
@@ -163,26 +180,26 @@ const CreateSchoolScreen: React.FC = () => {
   /**
    * Mark field as touched
    */
-  const handleBlur = (name: string) => {
-    setTouched(prev => ({
+  const handleBlur = (name) => {
+    setTouched((prev) => ({
       ...prev,
       [name]: true,
     }));
     
-    const error = validateField(name, formData[name as keyof FormData]);
-    setFormErrors(prev => ({
+    const error = validateField(name, formData[name]);
+    setFormErrors((prev) => ({
       ...prev,
       [name]: error,
     }));
   };
 
   /**
-   * Handle form submission
+   * Handle form submission & Tenant creation
    */
   const handleCreate = async () => {
     const allFields = ['name', 'code', 'email', 'phone', 'adminName', 'adminEmail', 'adminPassword'];
-    const newTouched: Record<string, boolean> = {};
-    allFields.forEach(field => newTouched[field] = true);
+    const newTouched = {};
+    allFields.forEach((field) => (newTouched[field] = true));
     setTouched(newTouched);
 
     if (!validateForm()) {
@@ -195,10 +212,10 @@ const CreateSchoolScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      // Payload matching standard backend schema fields
       const submissionData = {
         schoolName: formData.name.trim(),
         schoolCode: formData.code.trim().toUpperCase(),
+        tenantId: generateTenantId(formData.name),
         address: formData.address.trim() || undefined,
         contactPhone: formData.phone.trim() || undefined,
         contactEmail: formData.email.trim() || undefined,
@@ -207,11 +224,14 @@ const CreateSchoolScreen: React.FC = () => {
         adminPassword: formData.adminPassword,
       };
 
-      const response = await tenantsAPI.createTenant(submissionData);
+      // Optional: Get token from Ionic Storage to pass in header if needed
+      const token = store ? await store.get('token') : null;
+
+      const response = await tenantsAPI.createTenant(submissionData, token);
       
       if (response && (response.success || response.status === 201 || response.status === 200)) {
         setAlertHeader('Success');
-        setAlertMessage('School created successfully!');
+        setAlertMessage('School and School Admin created successfully!');
         setAlertSuccess(true);
         setShowAlert(true);
         
@@ -224,7 +244,7 @@ const CreateSchoolScreen: React.FC = () => {
         setAlertSuccess(false);
         setShowAlert(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Create school error:', error);
       const errorMessage = error.response?.data?.error?.message || error.response?.data?.message || error.message || 'Failed to create school';
       setAlertHeader('Error');
@@ -236,7 +256,7 @@ const CreateSchoolScreen: React.FC = () => {
     }
   };
 
-  const hasError = (name: string): boolean => {
+  const hasError = (name) => {
     return !!(touched[name] && formErrors[name]);
   };
 
@@ -256,21 +276,21 @@ const CreateSchoolScreen: React.FC = () => {
       </IonHeader>
 
       <IonContent className="create-school-content" fullscreen scrollY={true}>
-        <div className="container">
-          <div className="header-section">
-            <IonIcon icon={schoolOutline} className="header-icon" />
+        <div className="container" style={{ padding: '16px', maxWidth: '600px', margin: '0 auto' }}>
+          <div className="header-section" style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <IonIcon icon={schoolOutline} style={{ fontSize: '48px', color: '#3880ff' }} />
             <h1 className="header-title">Create New School</h1>
-            <p className="header-subtitle">Set up a new school and assign an administrator</p>
+            <p className="header-subtitle" style={{ color: '#666' }}>Set up a new school and assign an administrator</p>
           </div>
 
           {/* School Information */}
-          <IonCard className="form-card">
+          <IonCard className="form-card" style={{ marginBottom: '20px' }}>
             <IonCardHeader>
               <IonCardTitle>School Information</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <div className="input-group">
-                <label className="input-label">School Name *</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>School Name *</label>
                 <IonInput
                   value={formData.name}
                   onIonInput={(e) => handleInputChange(e.detail.value, 'name')}
@@ -279,15 +299,14 @@ const CreateSchoolScreen: React.FC = () => {
                   className={hasError('name') ? 'input-error' : ''}
                 />
                 {hasError('name') && (
-                  <div className="error-message">
-                    <IonIcon icon={alertCircleOutline} className="error-icon" />
-                    <span>{formErrors.name}</span>
+                  <div className="error-message" style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> <span>{formErrors.name}</span>
                   </div>
                 )}
               </div>
 
-              <div className="input-group">
-                <label className="input-label">School Code * (e.g., SCH001)</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>School Code * (e.g., SCH001)</label>
                 <IonInput
                   value={formData.code}
                   onIonInput={(e) => handleInputChange(e.detail.value, 'code')}
@@ -296,20 +315,19 @@ const CreateSchoolScreen: React.FC = () => {
                   className={hasError('code') ? 'input-error' : ''}
                 />
                 {hasError('code') && (
-                  <div className="error-message">
-                    <IonIcon icon={alertCircleOutline} className="error-icon" />
-                    <span>{formErrors.code}</span>
+                  <div className="error-message" style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> <span>{formErrors.code}</span>
                   </div>
                 )}
                 {!hasError('code') && formData.code && (
-                  <div className="helper-text">
-                    Generated ID: {generateTenantId(formData.code)}
+                  <div className="helper-text" style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>
+                    Generated Tenant ID: {generateTenantId(formData.code)}
                   </div>
                 )}
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Address</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Address</label>
                 <IonInput
                   value={formData.address}
                   onIonInput={(e) => handleInputChange(e.detail.value, 'address')}
@@ -317,8 +335,8 @@ const CreateSchoolScreen: React.FC = () => {
                 />
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Phone</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Phone</label>
                 <IonInput
                   type="tel"
                   value={formData.phone}
@@ -328,15 +346,14 @@ const CreateSchoolScreen: React.FC = () => {
                   className={hasError('phone') ? 'input-error' : ''}
                 />
                 {hasError('phone') && (
-                  <div className="error-message">
-                    <IonIcon icon={alertCircleOutline} className="error-icon" />
-                    <span>{formErrors.phone}</span>
+                  <div className="error-message" style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> <span>{formErrors.phone}</span>
                   </div>
                 )}
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Email</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Email</label>
                 <IonInput
                   type="email"
                   value={formData.email}
@@ -346,9 +363,8 @@ const CreateSchoolScreen: React.FC = () => {
                   className={hasError('email') ? 'input-error' : ''}
                 />
                 {hasError('email') && (
-                  <div className="error-message">
-                    <IonIcon icon={alertCircleOutline} className="error-icon" />
-                    <span>{formErrors.email}</span>
+                  <div className="error-message" style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> <span>{formErrors.email}</span>
                   </div>
                 )}
               </div>
@@ -356,13 +372,13 @@ const CreateSchoolScreen: React.FC = () => {
           </IonCard>
 
           {/* Admin Credentials */}
-          <IonCard className="form-card">
+          <IonCard className="form-card" style={{ marginBottom: '20px' }}>
             <IonCardHeader>
               <IonCardTitle>Admin Credentials</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-              <div className="input-group">
-                <label className="input-label">Admin Name *</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Admin Name *</label>
                 <IonInput
                   value={formData.adminName}
                   onIonInput={(e) => handleInputChange(e.detail.value, 'adminName')}
@@ -371,15 +387,14 @@ const CreateSchoolScreen: React.FC = () => {
                   className={hasError('adminName') ? 'input-error' : ''}
                 />
                 {hasError('adminName') && (
-                  <div className="error-message">
-                    <IonIcon icon={alertCircleOutline} className="error-icon" />
-                    <span>{formErrors.adminName}</span>
+                  <div className="error-message" style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> <span>{formErrors.adminName}</span>
                   </div>
                 )}
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Admin Email *</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Admin Email *</label>
                 <IonInput
                   type="email"
                   value={formData.adminEmail}
@@ -389,15 +404,14 @@ const CreateSchoolScreen: React.FC = () => {
                   className={hasError('adminEmail') ? 'input-error' : ''}
                 />
                 {hasError('adminEmail') && (
-                  <div className="error-message">
-                    <IonIcon icon={alertCircleOutline} className="error-icon" />
-                    <span>{formErrors.adminEmail}</span>
+                  <div className="error-message" style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> <span>{formErrors.adminEmail}</span>
                   </div>
                 )}
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Admin Password * (min 6 chars, 1 number)</label>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Admin Password * (min 6 chars, 1 number)</label>
                 <IonInput
                   type="password"
                   value={formData.adminPassword}
@@ -407,22 +421,20 @@ const CreateSchoolScreen: React.FC = () => {
                   className={hasError('adminPassword') ? 'input-error' : ''}
                 />
                 {hasError('adminPassword') && (
-                  <div className="error-message">
-                    <IonIcon icon={alertCircleOutline} className="error-icon" />
-                    <span>{formErrors.adminPassword}</span>
+                  <div className="error-message" style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={alertCircleOutline} /> <span>{formErrors.adminPassword}</span>
                   </div>
                 )}
                 {!hasError('adminPassword') && formData.adminPassword && VALIDATIONS.password.test(formData.adminPassword) && (
-                  <div className="success-message">
-                    <IonIcon icon={checkmarkCircleOutline} className="success-icon" />
-                    <span>Password meets requirements</span>
+                  <div className="success-message" style={{ color: 'green', fontSize: '12px', marginTop: '4px' }}>
+                    <IonIcon icon={checkmarkCircleOutline} /> <span>Password meets requirements</span>
                   </div>
                 )}
               </div>
             </IonCardContent>
           </IonCard>
 
-          <div className="button-container">
+          <div className="button-container" style={{ marginBottom: '30px' }}>
             <IonButton
               expand="block"
               className="submit-button"
@@ -440,7 +452,6 @@ const CreateSchoolScreen: React.FC = () => {
           header={alertHeader}
           message={alertMessage}
           buttons={['OK']}
-          cssClass={alertSuccess ? 'alert-success' : 'alert-error'}
         />
       </IonContent>
     </IonPage>
