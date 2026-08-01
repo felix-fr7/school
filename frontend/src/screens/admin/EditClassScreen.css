@@ -37,12 +37,14 @@
 }
 
 .edit-class-content ion-header,
-.edit-class-content ion-toolbar {
+.edit-class-content ion-toolbar,
+.admin-toolbar {
   --background: var(--royal-navy) !important;
   --border-color: transparent !important;
 }
 
-.edit-class-content ion-title {
+.edit-class-content ion-title,
+.admin-title {
   --color: #ffffff !important;
   color: #ffffff !important;
   font-weight: 700 !important;
@@ -50,66 +52,129 @@
   text-align: center;
 }
 
-.edit-class-content ion-back-button {
+.edit-class-content ion-back-button,
+.admin-back-btn {
   --color: #ffffff !important;
   --icon-color: #ffffff !important;
 }
 
-/* ============================================================================
-   2. FORM CONTAINER
-   ============================================================================ */
-.edit-class-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px 16px;
+.admin-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  --background: var(--royal-bg-main);
+}
+
+.loading-text {
+  color: var(--royal-text-muted);
+  font-size: 0.95rem;
 }
 
 /* ============================================================================
-   3. ADMIN CARD
+   2. FORM CONTAINER & CARDS
    ============================================================================ */
-.edit-class-card {
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-card {
   background: var(--royal-bg-card);
   border-radius: var(--royal-radius-xl);
   box-shadow: var(--royal-shadow-card);
   border: 1px solid var(--royal-border-light);
+  margin: 0;
   overflow: hidden;
 }
 
-.edit-class-card-header {
+.admin-card ion-card-content {
   padding: 24px;
-  border-bottom: 1px solid var(--royal-border-light);
 }
 
-.edit-class-card-header h2 {
-  font-size: 18px;
+/* Card Header Badge */
+.card-header-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--royal-text-primary);
-  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--royal-blue-primary);
 }
 
-.edit-class-card-header .description {
+.card-header-icon {
+  font-size: 1.1rem;
+}
+
+/* ID Card Specifics */
+.class-id-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--royal-text-primary);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  background: #f0f4ff;
+  padding: 10px 14px;
+  border-radius: var(--royal-radius-md);
+  display: inline-block;
+  border: 1px dashed var(--royal-blue-primary);
+}
+
+.card-subtext {
   font-size: 13px;
   color: var(--royal-text-muted);
   margin: 0;
   line-height: 1.6;
 }
 
-.edit-class-card-body {
-  padding: 24px;
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+  margin: 0 0 4px 0;
+}
+
+/* Password Group */
+.password-input-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.password-field {
+  flex: 1;
+}
+
+.admin-btn-action {
+  --background: var(--royal-blue-primary) !important;
+  --background-activated: var(--royal-blue-dark) !important;
+  --border-radius: var(--royal-radius-md) !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+  margin: 0 !important;
 }
 
 /* ============================================================================
-   4. INPUT GROUPS
+   3. INPUT GROUPS & ADMIN INPUTS
    ============================================================================ */
-.edit-class-input-group {
+.input-field-group {
   margin-bottom: 20px;
 }
 
-.edit-class-input-group:last-child {
+.input-field-group:last-child {
   margin-bottom: 0;
 }
 
-.edit-class-label {
+.admin-label {
   display: block;
   font-size: 12px;
   font-weight: 700;
@@ -119,14 +184,7 @@
   letter-spacing: 0.5px;
 }
 
-.edit-class-label .required {
-  color: #ef4444;
-}
-
-/* ============================================================================
-   5. ADMIN INPUTS
-   ============================================================================ */
-.edit-class-input {
+.admin-input {
   --background: var(--royal-bg-card) !important;
   --color: var(--royal-text-primary) !important;
   --placeholder-color: var(--royal-text-placeholder) !important;
@@ -141,24 +199,94 @@
   transition: var(--royal-transition);
 }
 
-.edit-class-input:focus-within {
+.admin-input:focus-within {
   border-color: var(--royal-blue-primary);
   box-shadow: var(--royal-shadow-focus);
 }
 
 /* ============================================================================
-   6. BUTTON ROW
+   4. TEACHER SELECTION BOXES
    ============================================================================ */
-.edit-class-button-row {
+.teacher-loading-box,
+.teacher-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--royal-bg-card);
+  border: 1px solid var(--royal-border-input);
+  border-radius: var(--royal-radius-md);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: var(--royal-transition);
+}
+
+.teacher-loading-box:hover,
+.teacher-select-btn:hover {
+  border-color: var(--royal-blue-primary);
+}
+
+.teacher-loading-box {
+  gap: 10px;
+  color: var(--royal-text-muted);
+  font-size: 0.9rem;
+}
+
+.select-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--royal-text-placeholder);
+  font-size: 14px;
+}
+
+.teacher-selected-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0f4ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--royal-radius-md);
+  padding: 12px 16px;
+}
+
+.teacher-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teacher-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--royal-text-primary);
+}
+
+.teacher-email {
+  font-size: 12px;
+  color: var(--royal-text-muted);
+}
+
+.teacher-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.arrow-icon {
+  color: var(--royal-text-muted);
+}
+
+/* ============================================================================
+   5. ACTION BUTTONS CONTAINER
+   ============================================================================ */
+.button-actions-container {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid var(--royal-border-light);
-  background: var(--royal-bg-main);
+  margin-top: 10px;
+  margin-bottom: 24px;
 }
 
-.edit-class-submit-btn {
+.btn-save {
   --background: var(--royal-blue-primary) !important;
   --background-activated: var(--royal-blue-dark) !important;
   --border-radius: var(--royal-radius-md) !important;
@@ -166,63 +294,142 @@
   font-weight: 600 !important;
   height: 44px !important;
   min-width: 140px;
+  margin: 0;
+  flex: 1;
 }
 
-.edit-class-cancel-btn {
+.btn-cancel {
   --color: var(--royal-text-secondary) !important;
   --border-color: var(--royal-border-input) !important;
   --border-radius: var(--royal-radius-md) !important;
   font-weight: 600 !important;
   height: 44px !important;
   min-width: 100px;
+  margin: 0;
+  flex: 1;
+}
+
+/* ============================================================================
+   6. TEACHER MODAL STYLING
+   ============================================================================ */
+.admin-modal {
+  --height: 85%;
+  --border-radius: 20px 20px 0 0;
+  align-items: flex-end;
+}
+
+.modal-wrapper {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--royal-bg-card);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--royal-text-primary);
+}
+
+.modal-subtext {
+  font-size: 13px;
+  color: var(--royal-text-muted);
+  margin: 6px 0 16px 0;
+}
+
+.modal-search-box {
+  margin-bottom: 12px;
+}
+
+.modal-empty-state {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.teacher-modal-list {
+  overflow-y: auto;
+  flex: 1;
+  background: transparent;
+}
+
+.teacher-list-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  --background: transparent;
+}
+
+.modal-teacher-info {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  gap: 2px;
+}
+
+.modal-teacher-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--royal-text-primary);
+}
+
+.modal-teacher-email {
+  font-size: 12px;
+  color: var(--royal-text-muted);
+}
+
+.modal-teacher-assigned {
+  font-size: 11px;
+  color: #ef4444;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.select-check-icon {
+  color: var(--royal-blue-primary);
+  font-size: 1.2rem;
 }
 
 /* ============================================================================
    7. MOBILE RESPONSIVE
    ============================================================================ */
 @media (max-width: 768px) {
-  .edit-class-container {
+  .form-container {
     padding: 16px 12px;
   }
 
-  .edit-class-card-header h2 {
-    font-size: 16px;
-  }
-
-  .edit-class-card-body {
+  .admin-card ion-card-content {
     padding: 16px;
   }
 
-  .edit-class-button-row {
+  .button-actions-container {
     flex-direction: column-reverse;
-    padding: 16px;
+    padding: 0;
     gap: 8px;
   }
 
-  .edit-class-submit-btn,
-  .edit-class-cancel-btn {
+  .btn-save,
+  .btn-cancel {
     width: 100%;
   }
 
-  .edit-class-input {
-    min-height: 48px;
+  .password-input-group {
+    flex-direction: column;
   }
 
-  ion-content {
-    --overflow-x: hidden;
+  .admin-input {
+    min-height: 48px;
   }
 }
 
 @media (max-width: 480px) {
-  .edit-class-container {
+  .form-container {
     padding: 12px 8px;
-  }
-
-  .edit-class-card-header {
-    padding: 16px;
-  }
-
-  .edit-class-card-body {
-    padding: 12px;
   }
 }

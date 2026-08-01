@@ -36,23 +36,18 @@ import {
   trashOutline
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { User, Class } from '../../types';
-import './AdminTheme.css';
+import './EditClassScreen.css';
 
-interface EditClassParams {
-  classId: string;
-}
-
-const EditClassScreen: React.FC = () => {
-  const { classId } = useParams<EditClassParams>();
+const EditClassScreen = () => {
+  const { classId } = useParams();
   const history = useHistory();
 
-  const [classData, setClassData] = useState<Class | null>(null);
+  const [classData, setClassData] = useState(null);
   const [className, setClassName] = useState('');
   const [section, setSection] = useState('');
-  const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
-  const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
-  const [teachers, setTeachers] = useState<User[]>([]);
+  const [teacherId, setTeacherId] = useState(undefined);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [teachers, setTeachers] = useState([]);
   const [classPassword, setClassPassword] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -132,7 +127,7 @@ const EditClassScreen: React.FC = () => {
       teacher.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectTeacher = (teacher: User) => {
+  const handleSelectTeacher = (teacher) => {
     setSelectedTeacher(teacher);
     setTeacherId(teacher.id);
     setShowTeacherPicker(false);
@@ -166,7 +161,7 @@ const EditClassScreen: React.FC = () => {
         setIsSuccess(false);
         setShowAlert(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.response?.data?.error?.message || 'Failed to update password';
       setAlertMessage(errorMessage);
       setIsSuccess(false);
@@ -186,7 +181,7 @@ const EditClassScreen: React.FC = () => {
 
     try {
       setSaving(true);
-      const payload: any = {
+      const payload = {
         name: className.trim(),
         section: section.trim() || undefined,
       };
@@ -206,7 +201,7 @@ const EditClassScreen: React.FC = () => {
         setIsSuccess(false);
         setShowAlert(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.response?.data?.error?.message || 'Failed to update class';
       setAlertMessage(errorMessage);
       setIsSuccess(false);

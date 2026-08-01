@@ -1,267 +1,177 @@
 /* ============================================================================
-   CREATE TEACHER SCREEN - Royal Light Theme
-   Page-specific CSS for Teacher Registration Form
+   CREATE TEACHER SCREEN - Royal Light Theme Styles
    ============================================================================ */
 
-/* ============================================================================
-   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
-   ============================================================================ */
-:root {
-  --royal-bg-main: #f8fafc;
-  --royal-bg-card: #ffffff;
-  --royal-navy: #1e293b;
-  --royal-blue-primary: #2563eb;
-  --royal-blue-dark: #1d4ed8;
-  --royal-blue-light: #3b82f6;
-  --royal-border-light: #e2e8f0;
-  --royal-border-input: #cbd5e1;
-  --royal-text-primary: #0f172a;
-  --royal-text-secondary: #475569;
-  --royal-text-muted: #64748b;
-  --royal-text-placeholder: #94a3b8;
-  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
-  --royal-radius-sm: 6px;
-  --royal-radius-md: 8px;
-  --royal-radius-lg: 12px;
-  --royal-radius-xl: 16px;
-  --royal-transition: all 0.2s ease-in-out;
-}
-
-/* ============================================================================
-   1. PAGE BACKGROUND & HEADER
-   ============================================================================ */
+/* Page Background */
 .admin-teacher-content {
-  --background: var(--royal-bg-main);
-  background: var(--royal-bg-main);
+  --background: #f8fafc;
+  background: #f8fafc;
 }
 
-.admin-header,
-.admin-toolbar {
-  --background: var(--royal-navy) !important;
+/* Header Styling (Consistent with Admin Layout) */
+.admin-header .admin-toolbar {
+  --background: #1e293b !important;
+  --color: #ffffff !important;
   --border-color: transparent !important;
 }
 
-.admin-header ion-title,
-.admin-toolbar ion-title {
-  --color: #ffffff !important;
+.admin-header ion-title {
   color: #ffffff !important;
   font-weight: 700 !important;
   font-size: 18px !important;
   text-align: center;
 }
 
-.admin-header ion-back-button {
-  --color: #ffffff !important;
-  --icon-color: #ffffff !important;
-}
-
-/* ============================================================================
-   2. FORM CONTAINER
-   ============================================================================ */
+/* Form Container Layout */
 .admin-form-container {
-  max-width: 800px;
+  max-width: 850px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 24px 16px;
 }
 
-/* ============================================================================
-   3. ADMIN CARD
-   ============================================================================ */
+/* Card Styling */
 .admin-card {
-  background: var(--royal-bg-card);
-  border-radius: var(--royal-radius-xl);
-  box-shadow: var(--royal-shadow-card);
-  border: 1px solid var(--royal-border-light);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
   overflow: hidden;
+  padding: 28px;
 }
 
+/* Card Header */
 .admin-card-header {
-  padding: 24px;
-  border-bottom: 1px solid var(--royal-border-light);
+  margin-bottom: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 16px;
 }
 
 .admin-card-header h2 {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  color: var(--royal-text-primary);
-  margin: 0 0 8px 0;
+  color: #0f172a;
+  margin: 0 0 6px 0;
 }
 
 .admin-card-header .description {
   font-size: 13px;
-  color: var(--royal-text-muted);
+  color: #64748b;
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
-.admin-card-body {
-  padding: 24px;
-}
-
-/* ============================================================================
-   4. INPUT GROUPS
-   ============================================================================ */
+/* Input Groups */
 .input-group {
-  margin-bottom: 20px;
-}
-
-.input-group:last-child {
-  margin-bottom: 0;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .input-label {
-  display: block;
   font-size: 12px;
   font-weight: 700;
-  color: var(--royal-blue-primary) !important;
-  margin-bottom: 8px;
+  color: #2563eb;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.input-label .required {
+.required {
   color: #ef4444;
 }
 
-/* ============================================================================
-   5. ADMIN INPUTS
-   ============================================================================ */
+/* Ionic Input & Select Customization */
 .admin-input {
-  --background: var(--royal-bg-card) !important;
-  --color: var(--royal-text-primary) !important;
-  --placeholder-color: var(--royal-text-placeholder) !important;
-  --padding-start: 16px !important;
-  --padding-end: 16px !important;
+  --background: #ffffff !important;
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  --padding-start: 14px !important;
+  --padding-end: 14px !important;
   --padding-top: 12px !important;
   --padding-bottom: 12px !important;
-  border: 1px solid var(--royal-border-input);
-  border-radius: var(--royal-radius-md);
-  min-height: 48px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
   font-size: 14px;
-  transition: var(--royal-transition);
+  min-height: 48px;
+  transition: all 0.2s ease-in-out;
 }
 
 .admin-input:focus-within {
-  border-color: var(--royal-blue-primary);
-  box-shadow: var(--royal-shadow-focus);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-/* ============================================================================
-   6. ADMIN SELECT
-   ============================================================================ */
 .admin-select {
-  --background: var(--royal-bg-card);
-  --placeholder-color: var(--royal-text-placeholder);
-  border: 1px solid var(--royal-border-input);
-  border-radius: var(--royal-radius-md);
-  min-height: 48px;
+  --background: #ffffff !important;
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  --padding-start: 14px !important;
+  --padding-end: 14px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
   font-size: 14px;
+  min-height: 48px;
 }
 
 .admin-select:focus-within {
-  border-color: var(--royal-blue-primary);
-  box-shadow: var(--royal-shadow-focus);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-.class-select {
-  width: 100%;
-}
-
-/* Picker loading state */
-.picker-loading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background-color: var(--royal-bg-main);
-  border-radius: var(--royal-radius-md);
-  border: 1px solid var(--royal-border-light);
-  font-size: 13px;
-  color: var(--royal-text-muted);
-  min-height: 48px;
-}
-
-/* ============================================================================
-   7. BUTTON ROW
-   ============================================================================ */
+/* Action Buttons Row */
 .button-row {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid var(--royal-border-light);
-  background: var(--royal-bg-main);
-}
-
-.submit-btn {
-  --background: var(--royal-blue-primary) !important;
-  --background-activated: var(--royal-blue-dark) !important;
-  --border-radius: var(--royal-radius-md) !important;
-  --box-shadow: none !important;
-  font-weight: 600 !important;
-  height: 44px !important;
-  min-width: 140px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .cancel-btn {
-  --color: var(--royal-text-secondary) !important;
-  --border-color: var(--royal-border-input) !important;
-  --border-radius: var(--royal-radius-md) !important;
+  --color: #475569 !important;
+  --border-color: #cbd5e1 !important;
+  --border-radius: 8px !important;
   font-weight: 600 !important;
   height: 44px !important;
-  min-width: 100px;
+  min-width: 110px;
+  margin: 0;
+}
+
+.submit-btn {
+  --background: #2563eb !important;
+  --background-activated: #1d4ed8 !important;
+  --border-radius: 8px !important;
+  font-weight: 600 !important;
+  height: 44px !important;
+  min-width: 150px;
+  margin: 0;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 /* ============================================================================
-   8. MOBILE RESPONSIVE
+   RESPONSIVE DESIGN (Mobile adjustments)
    ============================================================================ */
 @media (max-width: 768px) {
-  .admin-form-container {
-    padding: 16px 12px;
-  }
-
-  .admin-card-header h2 {
-    font-size: 16px;
-  }
-
-  .admin-card-body {
-    padding: 16px;
-  }
-
-  .button-row {
-    flex-direction: column-reverse;
-    padding: 16px;
-    gap: 8px;
-  }
-
-  .submit-btn,
-  .cancel-btn {
-    width: 100%;
-  }
-
-  /* Ensure touch targets are 48px minimum */
-  .admin-input,
-  .admin-select {
-    min-height: 48px;
-  }
-
-  /* Prevent horizontal scroll */
-  ion-content {
-    --overflow-x: hidden;
-  }
-}
-
-@media (max-width: 480px) {
   .admin-form-container {
     padding: 12px 8px;
   }
 
-  .admin-card-header {
+  .admin-card {
     padding: 16px;
+    border-radius: 12px;
   }
 
-  .admin-card-body {
-    padding: 12px;
+  .button-row {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    width: 100%;
+    height: 48px !important;
   }
 }

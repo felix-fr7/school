@@ -460,6 +460,11 @@ export const adminAPI = {
     return response.data;
   },
 
+  async resetClassCodeCounter(password) {
+    const response = await api.post('/admin/reset-class-code-counter', { password });
+    return response.data;
+  },
+
   async resetClassPassword(id, password) {
     const response = await api.post(`/admin/classes/${id}/reset-password`, { password });
     return response.data;

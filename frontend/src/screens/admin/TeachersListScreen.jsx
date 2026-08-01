@@ -32,7 +32,7 @@ import {
   trashOutline
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import './AdminTheme.css';
+import './TeachersListScreen.css';
 
 const TeachersListScreen = () => {
   const history = useHistory();

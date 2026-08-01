@@ -144,9 +144,30 @@ router.get('/classes', async (req, res, next) => {
   }
 });
 
+router.get('/classes/:id', async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const classId = req.params.id;
+
+    const classData = await Class.findOne({
+      _id: classId,
+      tenantId,
+      isActive: true
+    }).populate('teacherId', 'name email phone');
+
+    if (!classData) {
+      return res.status(404).json({ success: false, message: 'Class not found' });
+    }
+
+    res.json({ success: true, data: classData });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post('/classes', async (req, res, next) => {
   try {
-    const { name, section, gradeLevel, classTeacherId, roomNumber, capacity } = req.body;
+    const { name, section, gradeLevel, classTeacherId, assignedTeacherId, roomNumber, capacity, password } = req.body;
     const tenantId = req.user.tenantId || req.user.schoolId;
 
     const classData = {
@@ -154,16 +175,21 @@ router.post('/classes', async (req, res, next) => {
       name,
       section,
       gradeLevel,
-      teacherId: classTeacherId,
+      teacherId: assignedTeacherId || classTeacherId,
       roomNumber,
       capacity,
       isActive: true
     };
 
+    // Include password if provided
+    if (password) {
+      classData.password = password;
+    }
+
     const newClass = new Class(classData);
     await newClass.save();
 
-    res.status(201).json({ success: true, data: { id: newClass._id } });
+    res.status(201).json({ success: true, data: { id: newClass._id, classCode: newClass.classCode } });
   } catch (error) {
     next(error);
   }
@@ -219,6 +245,99 @@ router.delete('/classes/:id', async (req, res, next) => {
     res.json({ success: true });
   } catch (error) {
     next(error);
+  }
+});
+
+// ============================================
+// Class Dashboard
+// ============================================
+router.get('/classes/:id/dashboard', async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const classId = req.params.id;
+
+    // Get class details with teacher info
+    const classData = await Class.findOne({
+      _id: classId,
+      tenantId,
+      isActive: true
+    }).populate('teacherId', 'name email phone');
+
+    if (!classData) {
+      return res.status(404).json({ success: false, message: 'Class not found' });
+    }
+
+    // Get total students count
+    const totalStudents = await User.countDocuments({
+      tenantId,
+      classId: classId,
+      role: 'STUDENT',
+      isActive: true
+    });
+
+    // Simple attendance rate calculation (default to 0)
+    const attendanceRate = 0;
+
+    // Get recent homework (limit 3) - handle if model doesn't exist
+    let recentHomework = [];
+    try {
+      const Homework = require('../models/Homework');
+      recentHomework = await Homework.find({
+        tenantId,
+        classId: classId,
+        isPublished: true
+      }).sort({ createdAt: -1 }).limit(3);
+    } catch (e) {
+      // Homework model may not exist
+    }
+
+    // Get upcoming exams (limit 3) - handle if model doesn't exist
+    let upcomingExams = [];
+    try {
+      const ExamSchedule = require('../models/ExamSchedule');
+      upcomingExams = await ExamSchedule.find({
+        tenantId,
+        classId: classId,
+        isPublished: true,
+        date: { $gte: new Date() }
+      }).sort({ date: 1, time: 1 }).limit(3);
+    } catch (e) {
+      // ExamSchedule model may not exist
+    }
+
+    // Get recent announcements/news (limit 3)
+    const recentAnnouncements = await News.find({
+      tenantId,
+      isPublished: true
+    }).sort({ createdAt: -1 }).limit(3);
+
+    res.json({
+      success: true,
+      data: {
+        class: {
+          id: classData._id,
+          name: classData.name,
+          section: classData.section,
+          classCode: classData.classCode,
+          teacher: classData.teacherId ? {
+            id: classData.teacherId._id,
+            name: classData.teacherId.name,
+            email: classData.teacherId.email,
+            phone: classData.teacherId.phone
+          } : null
+        },
+        metrics: {
+          totalStudents,
+          attendanceRate
+        },
+        recentHomework,
+        upcomingExams,
+        recentAnnouncements
+      }
+    });
+  } catch (error) {
+    console.error('Error in class dashboard:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -732,6 +851,99 @@ router.delete('/contacts/:id', async (req, res, next) => {
     }
 
     res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================
+// Reset Class Code Counter
+// ============================================
+router.post('/reset-class-code-counter', async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({ success: false, message: 'Password is required' });
+    }
+    
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    
+    console.log('[ResetClassCodeCounter] Looking for admin with:', {
+      adminId: req.user.id,
+      tenantId: tenantId,
+      role: 'School Admin',
+      email: req.user.email
+    });
+    
+    // Get the admin user to verify password - Admins are stored in Admin collection
+    const Admin = require('../models/Admin');
+    const admin = await Admin.findOne({ 
+      _id: req.user.id, 
+      tenantId,
+      role: 'School Admin',
+      isActive: true
+    }).select('+password');
+    
+    console.log('[ResetClassCodeCounter] Admin found:', admin ? 'Yes' : 'No');
+    
+    if (!admin) {
+      // Try without tenantId as fallback
+      const adminFallback = await Admin.findOne({ 
+        _id: req.user.id, 
+        role: 'School Admin',
+        isActive: true
+      }).select('+password');
+      
+      console.log('[ResetClassCodeCounter] Admin found without tenantId:', adminFallback ? 'Yes' : 'No');
+      
+      if (!adminFallback) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Admin not found',
+          debug: {
+            adminId: req.user.id,
+            tenantId: tenantId,
+            email: req.user.email
+          }
+        });
+      }
+      
+      // Use the fallback admin
+      const isPasswordValid = await adminFallback.comparePassword(password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ success: false, message: 'Invalid password' });
+      }
+      
+      // Delete all classes for this tenant
+      const deleteResult = await Class.deleteMany({ tenantId: adminFallback.tenantId });
+      
+      console.log('[ResetClassCodeCounter] Deleted classes:', deleteResult.deletedCount);
+      
+      res.json({ 
+        success: true, 
+        message: `Deleted ${deleteResult.deletedCount} classes. Note: Class codes (CLS-001, etc.) are globally unique, so new classes will use the next available code. To truly reset to CLS-001, all classes across all tenants must be deleted.`,
+        deletedCount: deleteResult.deletedCount
+      });
+      return;
+    }
+    
+    // Verify password
+    const isPasswordValid = await admin.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ success: false, message: 'Invalid password' });
+    }
+    
+    // Delete all classes for this tenant
+    const deleteResult = await Class.deleteMany({ tenantId });
+    
+    console.log('[ResetClassCodeCounter] Deleted classes:', deleteResult.deletedCount);
+    
+    res.json({ 
+      success: true, 
+      message: `Deleted ${deleteResult.deletedCount} classes. Note: Class codes (CLS-001, etc.) are globally unique, so new classes will use the next available code. To truly reset to CLS-001, all classes across all tenants must be deleted.`,
+      deletedCount: deleteResult.deletedCount
+    });
   } catch (error) {
     next(error);
   }

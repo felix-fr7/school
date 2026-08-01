@@ -24,7 +24,7 @@ import {
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
-import './AdminTheme.css';
+import './CreateTeacherScreen.css';
 
 const CreateTeacherScreen = () => {
   const history = useHistory();

@@ -1,114 +1,106 @@
-/* Admin Teachers & General Dashboard Styles */
-.teachers-list-content {
-  --background: #f4f6f9;
-  padding: 16px;
+/* ==========================================================================
+   Modern Admin Theme & Layout Styles
+   ========================================================================== */
+
+:root {
+  --admin-bg-color: #f4f6f9;
+  --admin-card-bg: #ffffff;
+  --admin-primary: #3b82f6;
+  --admin-primary-hover: #2563eb;
+  --admin-text-main: #1f2937;
+  --admin-text-muted: #6b7280;
+  --admin-border-color: #e5e7eb;
+  --admin-danger: #ef4444;
+  --admin-danger-hover: #dc2626;
+  --admin-radius: 12px;
+  --admin-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
+/* Page Background & Layout */
 .teachers-list-header ion-toolbar {
   --background: #ffffff;
-  --color: #1e293b;
-  border-bottom: 1px solid #e2e8f0;
+  --border-color: var(--admin-border-color);
+  padding: 4px 8px;
 }
 
 .admin-page-title {
   font-weight: 700;
-  font-size: 18px;
-  color: #1e293b;
+  font-size: 1.25rem;
+  color: var(--admin-text-main);
 }
 
-.loading-state-modern {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-  gap: 12px;
-  color: #64748b;
+.teachers-list-content {
+  --background: var(--admin-bg-color);
 }
 
-.loading-text {
-  font-size: 14px;
-  font-weight: 500;
-}
-
+/* Filter & Search Bar Section */
 .filter-bar-modern {
-  margin-bottom: 12px;
+  padding: 16px 16px 8px 16px;
 }
 
 .search-container-modern {
   display: flex;
   align-items: center;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-border-color);
+  border-radius: var(--admin-radius);
   padding: 0 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--admin-shadow);
 }
 
 .search-icon-slot {
-  color: #64748b;
-  font-size: 18px;
+  font-size: 20px;
+  color: var(--admin-text-muted);
   margin-right: 8px;
 }
 
 .search-input-modern {
   --padding-start: 4px;
-  font-size: 14px;
+  --padding-end: 4px;
+  font-size: 0.95rem;
+  color: var(--admin-text-main);
 }
 
+/* Class Filter Dropdown Row */
 .filter-row-modern {
-  margin-bottom: 16px;
+  padding: 0 16px 12px 16px;
 }
 
 .class-filter-modern {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 4px 12px;
-  font-size: 14px;
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-border-color);
+  border-radius: var(--admin-radius);
+  padding: 6px 14px;
+  box-shadow: var(--admin-shadow);
+  max-width: 100%;
+  font-size: 0.95rem;
+  color: var(--admin-text-main);
 }
 
-.empty-container-modern {
-  text-align: center;
-  padding: 60px 20px;
-  color: #94a3b8;
-}
-
-.empty-icon-modern {
-  font-size: 48px;
-  margin-bottom: 8px;
-}
-
-.empty-title-modern {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 4px 0;
-}
-
-.empty-text-modern {
-  font-size: 13px;
-  margin: 0;
-}
-
+/* Teacher List & Cards */
 .teacher-list-modern {
+  padding: 0 16px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+.teacher-item-modern {
+  width: 100%;
+}
+
 .teacher-card-modern {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-border-color);
+  border-radius: var(--admin-radius);
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
+  box-shadow: var(--admin-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .teacher-card-modern:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
 .teacher-card-content-modern {
@@ -117,100 +109,149 @@
   justify-content: space-between;
 }
 
+/* Avatar Styling */
 .teacher-avatar-modern {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: 700;
-  font-size: 18px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
   margin-right: 14px;
   flex-shrink: 0;
 }
 
+/* Teacher Info */
 .teacher-info-modern {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .teacher-name-modern {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--admin-text-main);
   margin: 0;
 }
 
 .teacher-email-modern {
-  font-size: 13px;
-  color: #64748b;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
   margin: 0;
 }
 
 .teacher-phone-modern {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
   margin: 0;
 }
 
+/* Class Badge */
 .teacher-class-badge-modern {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 11px;
+  background: #eff6ff;
+  color: var(--admin-primary);
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 6px;
+  padding: 3px 8px;
+  border-radius: 20px;
   margin-top: 4px;
   width: fit-content;
 }
 
+/* Action Buttons (Edit & Delete) */
 .teacher-actions-modern {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .action-btn-small {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #f3f4f6;
+  border: none;
   border-radius: 8px;
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--admin-text-muted);
   cursor: pointer;
-  color: #2563eb;
-  transition: all 0.2s ease;
+  transition: background 0.2s, color 0.2s;
 }
 
 .action-btn-small:hover {
-  background: #eff6ff;
-  border-color: #2563eb;
-}
-
-.action-btn-small.delete-btn {
-  color: #dc2626;
+  background: #e5e7eb;
+  color: var(--admin-primary);
 }
 
 .action-btn-small.delete-btn:hover {
-  background: #fef2f2;
-  border-color: #dc2626;
+  background: #fee2e2;
+  color: var(--admin-danger);
 }
 
-.pagination-modern {
+.action-btn-small ion-icon {
+  font-size: 18px;
+}
+
+/* Loading & Empty States */
+.loading-state-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 12px;
+}
+
+.loading-text {
+  font-size: 0.95rem;
+  color: var(--admin-text-muted);
+}
+
+.empty-container-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
   text-align: center;
-  padding: 16px 0;
+}
+
+.empty-icon-modern {
+  font-size: 48px;
+  color: var(--admin-text-muted);
+  margin-bottom: 12px;
+}
+
+.empty-title-modern {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--admin-text-main);
+  margin: 0 0 4px 0;
+}
+
+.empty-text-modern {
+  font-size: 0.9rem;
+  color: var(--admin-text-muted);
+  margin: 0;
+}
+
+/* Pagination Footer */
+.pagination-modern {
+  padding: 12px 16px 24px 16px;
+  text-align: center;
 }
 
 .pagination-text {
-  font-size: 13px;
-  color: #64748b;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
   font-weight: 500;
 }

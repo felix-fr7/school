@@ -1,355 +1,210 @@
-/* ============================================================================
-   CLASSES LIST SCREEN - Royal Light Theme
-   Page-specific CSS for Classes Management List
-   ============================================================================ */
-
-/* ============================================================================
-   CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
-   ============================================================================ */
-:root {
-  --royal-bg-main: #f8fafc;
-  --royal-bg-card: #ffffff;
-  --royal-navy: #1e293b;
-  --royal-blue-primary: #2563eb;
-  --royal-blue-dark: #1d4ed8;
-  --royal-blue-light: #3b82f6;
-  --royal-border-light: #e2e8f0;
-  --royal-border-input: #cbd5e1;
-  --royal-text-primary: #0f172a;
-  --royal-text-secondary: #475569;
-  --royal-text-muted: #64748b;
-  --royal-text-placeholder: #94a3b8;
-  --royal-shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-  --royal-shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.15);
-  --royal-radius-sm: 6px;
-  --royal-radius-md: 8px;
-  --royal-radius-lg: 12px;
-  --royal-radius-xl: 16px;
-  --royal-transition: all 0.2s ease-in-out;
-}
-
-/* ============================================================================
-   1. PAGE BACKGROUND & HEADER
-   ============================================================================ */
-.classes-list-content {
-  --background: var(--royal-bg-main);
-  background: var(--royal-bg-main);
-}
-
-.classes-list-header,
-.custom-nav-toolbar {
-  --background: var(--royal-navy) !important;
-  --border-color: transparent !important;
+/* Classes List Modern Styling */
+.classes-list-header .custom-nav-toolbar {
+  --background: #ffffff;
+  --color: #1f2937;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .custom-nav-title {
-  --color: #ffffff !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  font-size: 18px !important;
-  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
-.custom-nav-back-btn {
-  --color: #ffffff !important;
-  --icon-color: #ffffff !important;
+.header-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .add-header-btn {
-  --color: #ffffff !important;
-  font-weight: 600 !important;
-  font-size: 13px !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: none;
+  --color: #4f46e5;
 }
 
-.add-header-btn ion-icon {
-  font-size: 18px;
+.reset-btn-custom {
+  --color: #dc2626 !important;
 }
 
-/* ============================================================================
-   2. CONTAINER WRAPPER
-   ============================================================================ */
+.classes-list-content {
+  --background: #f8fafc;
+}
+
 .classes-container-wrapper {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 16px;
 }
 
-/* ============================================================================
-   3. SUMMARY CARD
-   ============================================================================ */
 .classes-summary-card {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  background: var(--royal-bg-card);
-  border-radius: var(--royal-radius-lg);
-  padding: 20px 24px;
-  box-shadow: var(--royal-shadow-card);
-  border: 1px solid var(--royal-border-light);
-  margin-bottom: 24px;
+  align-items: center;
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+  margin-bottom: 20px;
 }
 
 .classes-summary-card h2 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--royal-text-primary);
   margin: 0 0 4px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 .classes-summary-card p {
-  font-size: 13px;
-  color: var(--royal-text-muted);
   margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
 }
 
 .summary-badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--royal-blue-primary);
-  background: #eff6ff;
-  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6px 12px;
   border-radius: 20px;
-  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
 }
 
-/* ============================================================================
-   4. LOADING STATE
-   ============================================================================ */
-.loading-state-modern {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 24px;
-  gap: 16px;
-  min-height: 300px;
-}
-
-.loading-text {
-  font-size: 14px;
-  color: var(--royal-text-muted);
-}
-
-/* ============================================================================
-   5. EMPTY STATE
-   ============================================================================ */
-.empty-container-modern {
-  text-align: center;
-  padding: 64px 24px;
-  background: var(--royal-bg-card);
-  border-radius: var(--royal-radius-lg);
-  border: 1px solid var(--royal-border-light);
-}
-
-.empty-icon-modern {
-  font-size: 48px;
-  color: var(--royal-border-input);
-  margin-bottom: 16px;
-}
-
-.empty-title-modern {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--royal-text-secondary);
-  margin: 0 0 8px 0;
-}
-
-.empty-text-modern {
-  font-size: 14px;
-  color: var(--royal-text-muted);
-  margin: 0;
-}
-
-/* ============================================================================
-   6. CLASS LIST
-   ============================================================================ */
 .class-list-modern {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0;
-  background: transparent;
+  background: transparent !important;
+  padding: 0 !important;
 }
 
 .class-item-modern {
   --background: transparent;
   --padding-start: 0;
-  --inner-border-width: 0;
-  padding: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 12px;
 }
 
 .class-card-modern {
-  background: var(--royal-bg-card);
-  border-radius: var(--royal-radius-lg);
-  box-shadow: var(--royal-shadow-card);
-  border: 1px solid var(--royal-border-light);
-  transition: var(--royal-transition);
-  --background: var(--royal-bg-card);
   width: 100%;
+  margin: 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .class-card-modern:hover {
-  box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.08);
-  border-color: var(--royal-blue-light);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
 .class-card-content-modern {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  gap: 16px;
+  align-items: center;
+  padding: 14px 16px !important;
 }
 
 .class-card-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex: 1;
+  gap: 14px;
 }
 
 .class-icon-modern {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--royal-radius-md);
-  background: #eff6ff;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4f46e5;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  font-size: 1.25rem;
 }
 
-.class-icon-modern ion-icon {
-  font-size: 22px;
-  color: var(--royal-blue-primary);
-}
-
-.class-info-modern {
-  flex: 1;
-}
-
-.class-name-modern {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--royal-text-primary);
+.class-info-modern h3 {
   margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .class-date-modern {
-  font-size: 12px;
-  color: var(--royal-text-muted);
-  margin: 0 0 8px 0;
-}
-
-.class-stats-modern {
-  display: flex;
-  gap: 8px;
+  margin: 0 0 6px 0;
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 .class-stat-badge {
-  font-size: 11px;
+  background: #dcfce7;
+  color: #166534;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #059669;
-  background: #ecfdf5;
-  padding: 3px 10px;
-  border-radius: 10px;
 }
 
-/* ============================================================================
-   7. ACTION BUTTONS
-   ============================================================================ */
 .class-actions-modern {
   display: flex;
+  align-items: center;
   gap: 8px;
-  flex-shrink: 0;
 }
 
 .action-btn-small {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: var(--royal-radius-sm);
-  background: var(--royal-bg-main);
-  color: var(--royal-text-muted);
-  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--royal-transition);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
 }
 
 .action-btn-small:hover {
-  background: var(--royal-border-light);
-}
-
-.action-btn-small ion-icon {
-  font-size: 16px;
-}
-
-.action-btn-small.delete-btn {
-  color: #dc2626;
-  background: #fef2f2;
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 .action-btn-small.delete-btn:hover {
   background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
 }
 
-/* ============================================================================
-   8. MOBILE RESPONSIVE
-   ============================================================================ */
-@media (max-width: 768px) {
-  .classes-container-wrapper {
-    padding: 16px 12px;
-  }
-
-  .classes-summary-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-  }
-
-  .classes-summary-card h2 {
-    font-size: 16px;
-  }
-
-  .class-card-content-modern {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 14px 16px;
-  }
-
-  .class-card-left {
-    width: 100%;
-  }
-
-  .class-actions-modern {
-    align-self: flex-end;
-    margin-top: 8px;
-  }
-
-  .action-btn-small {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  /* Prevent horizontal scroll */
-  ion-content {
-    --overflow-x: hidden;
-  }
+.loading-state-modern, .empty-container-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
 }
 
-@media (max-width: 480px) {
-  .classes-container-wrapper {
-    padding: 12px 8px;
-  }
+.loading-text {
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
 
-  .classes-summary-card {
-    padding: 14px;
-  }
+.empty-icon-modern {
+  font-size: 3.5rem;
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
 
-  .class-card-content-modern {
-    padding: 12px;
-  }
+.empty-title-modern {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.empty-text-modern {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
 }

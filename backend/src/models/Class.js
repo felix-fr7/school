@@ -21,7 +21,6 @@ const ClassSchema = new mongoose.Schema({
     unique: true,
     uppercase: true,
     trim: true
-    // Note: unique: true automatically creates an index
   },
   tenantId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -31,7 +30,7 @@ const ClassSchema = new mongoose.Schema({
   },
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Teacher',
     index: true
   },
   password: {
@@ -71,9 +70,29 @@ ClassSchema.index({ tenantId: 1, section: 1 });
 // Generate class code before saving if not provided
 ClassSchema.pre('save', async function() {
   if (!this.classCode) {
-    // Generate class code like CLS-001, CLS-002, etc.
-    const count = await mongoose.model('Class').countDocuments({ tenantId: this.tenantId });
-    this.classCode = `CLS-${String(count + 1).padStart(3, '0')}`;
+    let proposedCode = '';
+    let attempt = 1;
+    let isUnique = false;
+    const Class = mongoose.model('Class');
+    
+    while (!isUnique && attempt < 1000) {
+      proposedCode = `CLS-${String(attempt).padStart(3, '0')}`;
+      
+      // Check if this code already exists (globally unique, not per-tenant)
+      const existing = await Class.findOne({ classCode: proposedCode }).lean();
+      
+      if (!existing) {
+        this.classCode = proposedCode;
+        isUnique = true;
+      } else {
+        attempt++;
+      }
+    }
+    
+    // If we couldn't find a unique code after 1000 attempts, throw an error
+    if (!isUnique) {
+      throw new Error('Could not generate unique class code');
+    }
   }
   
   // Hash password if provided
@@ -83,21 +102,18 @@ ClassSchema.pre('save', async function() {
   }
 });
 
-// Method to compare class password
 ClassSchema.methods.comparePassword = async function(candidatePassword) {
   if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Virtual for teacher
 ClassSchema.virtual('teacher', {
-  ref: 'User',
+  ref: 'Teacher',
   localField: 'teacherId',
   foreignField: '_id',
   justOne: true
 });
 
-// Virtual for students count
 ClassSchema.virtual('studentCount', {
   ref: 'User',
   localField: '_id',
@@ -105,7 +121,6 @@ ClassSchema.virtual('studentCount', {
   count: true
 });
 
-// Virtual for homework count
 ClassSchema.virtual('homeworkCount', {
   ref: 'Homework',
   localField: '_id',
@@ -113,7 +128,6 @@ ClassSchema.virtual('homeworkCount', {
   count: true
 });
 
-// Virtual for exams count
 ClassSchema.virtual('examCount', {
   ref: 'Exam',
   localField: '_id',

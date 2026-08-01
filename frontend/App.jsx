@@ -24,10 +24,11 @@ const SchoolDetailScreen = React.lazy(() => import('./src/screens/superadmin/Sch
 
 // Admin Screens (Lazy loaded)
 const AdminDashboardScreen = React.lazy(() => import('./src/screens/admin/DashboardScreen.jsx'));
-const ClassesListScreen = React.lazy(() => import('./src/screens/admin/ClassesListScreen.tsx'));
-const CreateClassScreen = React.lazy(() => import('./src/screens/admin/CreateClassScreen.tsx'));
-const ClassDashboardScreen = React.lazy(() => import('./src/screens/admin/ClassDashboardScreen.tsx'));
-const EditClassScreen = React.lazy(() => import('./src/screens/admin/EditClassScreen.tsx'));
+const ClassesListScreen = React.lazy(() => import('./src/screens/admin/ClassesListScreen.jsx'));
+const CreateClassScreen = React.lazy(() => import('./src/screens/admin/CreateClassScreen.jsx'));
+const ResetClassCodeCounterScreen = React.lazy(() => import('./src/screens/admin/ResetClassCodeCounterScreen.jsx'));
+const ClassDashboardScreen = React.lazy(() => import('./src/screens/admin/ClassDashboardScreen.jsx'));
+const EditClassScreen = React.lazy(() => import('./src/screens/admin/EditClassScreen.jsx'));
 const TeachersListScreen = React.lazy(() => import('./src/screens/admin/TeachersListScreen.jsx'));
 const TeacherDetailScreen = React.lazy(() => import('./src/screens/admin/TeacherDetailScreen.tsx'));
 const EditTeacherScreen = React.lazy(() => import('./src/screens/admin/EditTeacherScreen.tsx'));
@@ -213,6 +214,7 @@ const AppContent = () => {
             <ProtectedRoute exact path="/admin/dashboard" component={AdminDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes" component={ClassesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes/create" component={CreateClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/classes/reset-counter" component={ResetClassCodeCounterScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes/:classId" component={ClassDashboardScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/classes/:classId/edit" component={EditClassScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/teachers" component={TeachersListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />

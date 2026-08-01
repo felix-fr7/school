@@ -37,22 +37,21 @@ import {
   checkmarkCircleOutline,
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { User } from '../../types';
-import './AdminTheme.css';
+import './CreateClassScreen.css';
 
-const CreateClassScreen: React.FC = () => {
+const CreateClassScreen = () => {
   const history = useHistory();
   const [className, setClassName] = useState('');
   const [section, setSection] = useState('');
   const [password, setPassword] = useState('');
-  const [teacherId, setTeacherId] = useState<string | undefined>(undefined);
-  const [selectedTeacher, setSelectedTeacher] = useState<User | null>(null);
-  const [teachers, setTeachers] = useState<User[]>([]);
+  const [teacherId, setTeacherId] = useState(undefined);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingTeachers, setFetchingTeachers] = useState(false);
   const [showTeacherPicker, setShowTeacherPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [generatedClassCode, setGeneratedClassCode] = useState<string | null>(null);
+  const [generatedClassCode, setGeneratedClassCode] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -66,7 +65,7 @@ const CreateClassScreen: React.FC = () => {
       setFetchingTeachers(true);
       const response = await adminAPI.getTeachers(1, 100);
       if (response.success && response.data) {
-        setTeachers(response.data.teachers);
+        setTeachers(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
       console.error('Error fetching teachers:', error);
@@ -81,7 +80,7 @@ const CreateClassScreen: React.FC = () => {
       teacher.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelectTeacher = (teacher: User) => {
+  const handleSelectTeacher = (teacher) => {
     setSelectedTeacher(teacher);
     setTeacherId(teacher.id);
     setShowTeacherPicker(false);
@@ -109,7 +108,7 @@ const CreateClassScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      const payload: any = {
+      const payload = {
         name: className.trim(),
         section: section.trim() || undefined,
         password: password,
@@ -136,7 +135,7 @@ const CreateClassScreen: React.FC = () => {
         setAlertMessage(response.error?.message || 'Failed to create class');
         setShowErrorAlert(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMsg =
         error.response?.data?.error?.message ||
         error.response?.data?.message ||

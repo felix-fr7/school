@@ -26,16 +26,15 @@ import {
 import { useHistory } from 'react-router-dom';
 import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { Class } from '../../types';
-import './AdminTheme.css';
+import './ClassesListScreen.css';
 
-const ClassesListScreen: React.FC = () => {
+const ClassesListScreen = () => {
   const history = useHistory();
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [classToDelete, setClassToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [classToDelete, setClassToDelete] = useState(null);
 
   const fetchClasses = async (refresh = false) => {
     try {
@@ -58,12 +57,12 @@ const ClassesListScreen: React.FC = () => {
     fetchClasses();
   }, []);
 
-  const onRefresh = async (event: CustomEvent) => {
+  const onRefresh = async (event) => {
     await fetchClasses(true);
     event.detail.complete();
   };
 
-  const handleDeleteClick = (classId: string, className: string) => {
+  const handleDeleteClick = (classId, className) => {
     setClassToDelete({ id: classId, name: className });
     setShowDeleteAlert(true);
   };
@@ -82,7 +81,7 @@ const ClassesListScreen: React.FC = () => {
     setClassToDelete(null);
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString();
   };
 
@@ -108,6 +107,13 @@ const ClassesListScreen: React.FC = () => {
             <IonBackButton defaultHref="/admin/dashboard" className="custom-nav-back-btn" />
           </IonButtons>
           <IonTitle className="custom-nav-title">Classes & Sections</IonTitle>
+          <IonButton
+            fill="clear"
+            className="add-header-btn"
+            onClick={() => history.push('/admin/classes/reset-counter')}
+          >
+            <IonIcon icon={refreshOutline} slot="start" /> Reset Counter
+          </IonButton>
           <IonButton
             slot="end"
             fill="clear"

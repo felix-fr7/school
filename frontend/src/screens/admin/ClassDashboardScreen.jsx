@@ -40,28 +40,15 @@ import {
   arrowForwardOutline,
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { Class, Homework, ExamSchedule, News } from '../../types';
-import './AdminTheme.css';
+import './ClassDashboardScreen.css';
 
-interface ClassDashboardParams {
-  classId: string;
-}
-
-interface ClassDashboardData {
-  class: Class & { teacher?: { id: string; name: string; email: string; phone?: string } };
-  metrics: { totalStudents: number; attendanceRate: number };
-  recentHomework: Homework[];
-  upcomingExams: ExamSchedule[];
-  recentAnnouncements: News[];
-}
-
-const ClassDashboardScreen: React.FC = () => {
-  const { classId } = useParams<ClassDashboardParams>();
+const ClassDashboardScreen = () => {
+  const { classId } = useParams();
   const history = useHistory();
   const redirectAttemptedRef = useRef(false);
 
   // 1️⃣ HOOKS
-  const [dashboardData, setDashboardData] = useState<ClassDashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [classPassword, setClassPassword] = useState('');
@@ -70,23 +57,28 @@ const ClassDashboardScreen: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Redirect if classId is 'create'
+  // Redirect if classId is a special route name (not a valid UUID)
   useEffect(() => {
-    if (classId === 'create' && !redirectAttemptedRef.current) {
+    if ((classId === 'create' || classId === 'reset-counter') && !redirectAttemptedRef.current) {
       redirectAttemptedRef.current = true;
-      history.replace('/admin/classes/create');
+      if (classId === 'create') {
+        history.replace('/admin/classes/create');
+      } else if (classId === 'reset-counter') {
+        history.replace('/admin/classes/reset-counter');
+      }
     }
   }, [classId, history]);
 
   // Fetch Dashboard Data
   useEffect(() => {
-    if (classId === 'create') return;
+    if (classId === 'create' || classId === 'reset-counter') return;
     fetchDashboardData();
   }, [classId]);
 
   // 2️⃣ HELPER FUNCTIONS
   const fetchDashboardData = async () => {
-    if (!classId || classId.length < 36) {
+    // Accept both UUID (36 chars) and MongoDB ObjectId (24 chars)
+    if (!classId || (classId.length < 24 || classId.length > 36)) {
       console.error('Invalid classId:', classId);
       setLoading(false);
       return;
@@ -105,7 +97,7 @@ const ClassDashboardScreen: React.FC = () => {
     }
   };
 
-  const onRefresh = async (event: CustomEvent) => {
+  const onRefresh = async (event) => {
     setRefreshing(true);
     await fetchDashboardData();
     event.detail.complete();
@@ -133,7 +125,7 @@ const ClassDashboardScreen: React.FC = () => {
         setIsSuccess(false);
         setShowPasswordAlert(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.response?.data?.error?.message || 'Failed to update password';
       setAlertMessage(errorMessage);
       setIsSuccess(false);
@@ -144,7 +136,7 @@ const ClassDashboardScreen: React.FC = () => {
   };
 
   // 3️⃣ CONDITIONAL RENDERS
-  if (classId === 'create') return null;
+  if (classId === 'create' || classId === 'reset-counter') return null;
 
   if (loading) {
     return (
@@ -191,7 +183,7 @@ const ClassDashboardScreen: React.FC = () => {
   const { class: classData, metrics, recentHomework, upcomingExams, recentAnnouncements } = dashboardData;
   const classFullName = classData.section ? `${classData.name} - ${classData.section}` : classData.name;
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString();
   };
 
