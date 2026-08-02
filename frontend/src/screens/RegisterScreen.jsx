@@ -23,7 +23,7 @@ import { arrowBack } from 'ionicons/icons';
 import { useAuth } from '../contexts/AuthContext';
 import './RegisterScreen.css';
 
-const RegisterScreen: React.FC = () => {
+const RegisterScreen = () => {
   const history = useHistory();
   const { register } = useAuth();
   const [name, setName] = useState('');
@@ -31,7 +31,7 @@ const RegisterScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const handleRegister = async () => {
     setError(null);
@@ -66,7 +66,7 @@ const RegisterScreen: React.FC = () => {
 
     try {
       await register(name.trim(), email.trim(), password);
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
       setError(errorMessage);
     } finally {

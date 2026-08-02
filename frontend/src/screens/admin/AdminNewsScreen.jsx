@@ -30,43 +30,45 @@ import {
   searchOutline,
   checkmarkCircleOutline,
 } from 'ionicons/icons';
-import { News, CreateNewsInput, Class } from '../../types';
 import { adminAPI, openFileInNewTab } from '../../services/api';
 import './AdminNewsScreen.css';
 
-type VisibilityType = 'ALL' | 'SPECIFIC_CLASSES';
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+// Get base server URL (without /api suffix) for file serving
+const SERVER_BASE_URL = API_BASE_URL.replace('/api', '');
 
-const AdminNewsScreen: React.FC = () => {
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
+const AdminNewsScreen = () => {
+  const imageInputRef = useRef(null);
+  const pdfInputRef = useRef(null);
 
   // Core Data States
-  const [newsList, setNewsList] = useState<News[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [submitting, setSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [newsList, setNewsList] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form Field States
-  const [title, setTitle] = useState<string>('');
-  const [content, setContent] = useState<string>('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageName, setImageName] = useState<string>('');
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfName, setPdfName] = useState<string>('');
-  const [visibility, setVisibility] = useState<VisibilityType>('ALL');
-  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imageName, setImageName] = useState('');
+  const [imagePreview, setImagePreview] = useState('');
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfName, setPdfName] = useState('');
+  const [visibility, setVisibility] = useState('ALL');
+  const [selectedClassIds, setSelectedClassIds] = useState([]);
 
   // Editing & Modals
-  const [editingNewsId, setEditingNewsId] = useState<string | null>(null);
-  const [showClassSelector, setShowClassSelector] = useState<boolean>(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editingNewsId, setEditingNewsId] = useState(null);
+  const [showClassSelector, setShowClassSelector] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   // Alerts
-  const [showAlert, setShowAlert] = useState<boolean>(false);
-  const [alertHeader, setAlertHeader] = useState<string>('');
-  const [alertMessage, setAlertMessage] = useState<string>('');
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertHeader, setAlertHeader] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -80,37 +82,47 @@ const AdminNewsScreen: React.FC = () => {
         adminAPI.getClasses(),
       ]);
 
+      console.log('[AdminNews] News API Response:', newsRes);
+      console.log('[AdminNews] Response success:', newsRes.success);
+      console.log('[AdminNews] Response data:', newsRes.data);
+      console.log('[AdminNews] Response data.news:', newsRes.data?.news);
+      
       if (newsRes.success && newsRes.data) {
-        setNewsList(newsRes.data.news || []);
+        const newsItems = newsRes.data.news || [];
+        console.log('[AdminNews] Set news list with', newsItems.length, 'items');
+        console.log('[AdminNews] First item (if any):', newsItems[0]);
+        setNewsList(newsItems);
+      } else {
+        console.warn('[AdminNews] News response not successful or no data:', newsRes);
       }
       if (classRes.success && classRes.data) {
         setClasses(classRes.data);
       }
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      console.error('[AdminNews] Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const showAlertMessage = (header: string, message: string) => {
+  const showAlertMessage = (header, message) => {
     setAlertHeader(header);
     setAlertMessage(message);
     setShowAlert(true);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       setImageFile(file);
       setImageName(file.name);
       const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePdfChange = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type === 'application/pdf') {
       setPdfFile(file);
@@ -131,7 +143,7 @@ const AdminNewsScreen: React.FC = () => {
     if (pdfInputRef.current) pdfInputRef.current.value = '';
   };
 
-  const toggleClassSelection = (classId: string) => {
+  const toggleClassSelection = (classId) => {
     setSelectedClassIds((prev) =>
       prev.includes(classId) ? prev.filter((id) => id !== classId) : [...prev, classId]
     );
@@ -160,18 +172,28 @@ const AdminNewsScreen: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const payload: CreateNewsInput = {
-        title: title.trim(),
-        content: content.trim(),
-        imageUrl: imageFile ? `/uploads/news/${imageFile.name}` : imagePreview || undefined,
-        pdfUrl: pdfFile ? `/uploads/news/${pdfFile.name}` : pdfName || undefined,
-        visibility,
-        classId: visibility === 'SPECIFIC_CLASSES' ? selectedClassIds[0] : undefined,
-      };
+      // Use FormData for file uploads
+      const formData = new FormData();
+      formData.append('title', title.trim());
+      formData.append('content', content.trim());
+      formData.append('visibility', visibility);
+
+      // Append files if selected
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+      if (pdfFile) {
+        formData.append('pdf', pdfFile);
+      }
+
+      // Only include classId when visibility is SPECIFIC_CLASSES
+      if (visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length > 0) {
+        formData.append('classId', selectedClassIds[0]);
+      }
 
       const response = editingNewsId
-        ? await adminAPI.updateNews(editingNewsId, payload)
-        : await adminAPI.createNews(payload);
+        ? await adminAPI.updateNews(editingNewsId, { title: title.trim(), content: content.trim(), visibility })
+        : await adminAPI.createNewsWithFiles(formData);
 
       if (response.success) {
         showAlertMessage(
@@ -181,14 +203,14 @@ const AdminNewsScreen: React.FC = () => {
         resetForm();
         fetchData();
       }
-    } catch (error: any) {
+    } catch (error) {
       showAlertMessage('Error', error.response?.data?.error?.message || 'Operation failed.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleEdit = (item: News) => {
+  const handleEdit = (item) => {
     setTitle(item.title);
     setContent(item.content);
     setImagePreview(item.imageUrl || '');
@@ -199,7 +221,7 @@ const AdminNewsScreen: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id) => {
     try {
       const response = await adminAPI.deleteNews(id);
       if (response.success) {
@@ -236,7 +258,7 @@ const AdminNewsScreen: React.FC = () => {
           <div className="header-summary-card">
             <div>
               <h2>📢 Announcement Publisher</h2>
-              <p>Create, target, and broadcast circulars to students</p>
+              <p>Create, target, and broadcast News to students</p>
             </div>
             <div className="summary-badge">{newsList.length} Total News</div>
           </div>
@@ -429,7 +451,7 @@ const AdminNewsScreen: React.FC = () => {
           <div className="feed-stream-section">
             <div className="feed-header-row">
               <h3>
-                <IonIcon icon={newspaperOutline} /> Published Circulars
+                <IonIcon icon={newspaperOutline} /> Published News
               </h3>
               <div className="search-input-box">
                 <IonIcon icon={searchOutline} />
@@ -472,34 +494,24 @@ const AdminNewsScreen: React.FC = () => {
                     {(item.imageUrl || item.pdfUrl) && (
                       <div className="news-attachments">
                         {item.imageUrl && (
-                          <button
-                            type="button"
+                          <a
+                            href={`${SERVER_BASE_URL}${item.imageUrl}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="chip img-chip"
-                            onClick={async () => {
-                              try {
-                                await openFileInNewTab(`/files/news/${item.id}/image`);
-                              } catch (error) {
-                                console.error('Error opening image:', error);
-                              }
-                            }}
                           >
                             <IonIcon icon={imageOutline} /> Image Attached
-                          </button>
+                          </a>
                         )}
                         {item.pdfUrl && (
-                          <button
-                            type="button"
+                          <a
+                            href={`${SERVER_BASE_URL}${item.pdfUrl}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="chip pdf-chip"
-                            onClick={async () => {
-                              try {
-                                await openFileInNewTab(`/files/news/${item.id}/pdf`);
-                              } catch (error) {
-                                console.error('Error opening PDF:', error);
-                              }
-                            }}
                           >
                             <IonIcon icon={documentOutline} /> PDF Document
-                          </button>
+                          </a>
                         )}
                       </div>
                     )}
@@ -586,15 +598,20 @@ const AdminNewsScreen: React.FC = () => {
               handler: () => deleteId && handleDelete(deleteId),
             },
           ]}
+          cssClass="admin-alert"
         />
 
         {/* Global Alert */}
         <IonAlert
           isOpen={showAlert}
-          onDidDismiss={() => setShowAlert(false)}
+          onDidDismiss={() => {
+            setShowAlert(false);
+          }}
           header={alertHeader}
           message={alertMessage}
           buttons={['OK']}
+          cssClass="admin-alert"
+          backdropDismiss={false}
         />
       </IonContent>
     </IonPage>

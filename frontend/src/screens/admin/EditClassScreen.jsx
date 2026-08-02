@@ -101,7 +101,8 @@ const EditClassScreen = () => {
   const fetchAvailableTeachers = async () => {
     try {
       setFetchingTeachers(true);
-      const response = await adminAPI.getAvailableTeachers(classId, '', 1, 100);
+      // Fetch all available teachers (use a very high limit to ensure all are returned)
+      const response = await adminAPI.getAvailableTeachers(classId, '', 1, 10000);
       if (response.success && response.data) {
         setTeachers(response.data.teachers);
       }

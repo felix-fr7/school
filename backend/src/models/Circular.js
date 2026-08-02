@@ -34,8 +34,20 @@ const CircularSchema = new mongoose.Schema({
   publishedAt: {
     type: Date
   },
+  imageUrl: {
+    type: String
+  },
   attachmentUrl: {
     type: String
+  },
+  visibility: {
+    type: String,
+    enum: ['ALL', 'SPECIFIC_CLASSES'],
+    default: 'ALL'
+  },
+  classId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Class'
   },
   expiryDate: {
     type: Date

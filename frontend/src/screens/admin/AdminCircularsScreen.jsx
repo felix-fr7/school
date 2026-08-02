@@ -1,6 +1,7 @@
 /**
  * Admin Circulars Screen (Ionic React Version) - JSX Version
  * Modern Enterprise Admin Console Dashboard Style
+ * Updated to support both text and image circulars with file uploads
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -36,7 +37,12 @@ import {
   cloudUploadOutline,
 } from 'ionicons/icons';
 import { adminAPI, fetchFileAsBlobUrl } from '../../services/api';
-import './ClassDashboardScreen.css';
+import './AdminCircularsScreen.css';
+
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+// Get base server URL (without /api suffix) for file serving
+const SERVER_BASE_URL = API_BASE_URL.replace('/api', '');
 
 const getVisibilityLabel = (visibility) => {
   if (visibility === 'ALL') return 'All Classes';
@@ -46,16 +52,6 @@ const getVisibilityLabel = (visibility) => {
 
 const CircularItem = ({ item, onDelete, onEdit }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [imageBlobUrl, setImageBlobUrl] = useState('');
-
-  // Fetch image with auth on mount
-  useEffect(() => {
-    if (item.imageUrl) {
-      fetchFileAsBlobUrl(`/files/circular/${item.id}/image`)
-        .then(setImageBlobUrl)
-        .catch(err => console.error('Error loading circular image:', err));
-    }
-  }, [item.id, item.imageUrl]);
 
   return (
     <>
@@ -68,16 +64,45 @@ const CircularItem = ({ item, onDelete, onEdit }) => {
             </IonBadge>
           </div>
 
-          {item.imageUrl && imageBlobUrl ? (
+          {item.imageUrl ? (
             <div className="image-wrapper">
               <img 
-                src={imageBlobUrl} 
+                src={`${SERVER_BASE_URL}${item.imageUrl}`} 
                 alt="Circular" 
                 className="circular-image" 
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
               />
             </div>
           ) : (
             <p className="circular-content">{item.content || 'No content description provided.'}</p>
+          )}
+
+          {/* Attachments */}
+          {(item.imageUrl || item.attachmentUrl) && (
+            <div className="circular-attachments">
+              {item.imageUrl && (
+                <a
+                  href={`${SERVER_BASE_URL}${item.imageUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="chip img-chip"
+                >
+                  <IonIcon icon={imageOutline} /> Image Attached
+                </a>
+              )}
+              {item.attachmentUrl && (
+                <a
+                  href={`${SERVER_BASE_URL}${item.attachmentUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="chip pdf-chip"
+                >
+                  <IonIcon icon={documentTextOutline} /> PDF Document
+                </a>
+              )}
+            </div>
           )}
 
           <div className="circular-meta-row">
@@ -113,6 +138,7 @@ const CircularItem = ({ item, onDelete, onEdit }) => {
             },
           },
         ]}
+        backdropDismiss={false}
       />
     </>
   );
@@ -143,13 +169,20 @@ const AdminCircularsScreen = () => {
 
   const fetchCirculars = async () => {
     try {
+      console.log('[Circulars] Fetching circulars, page:', page);
       const response = await adminAPI.getCirculars(page, 10);
+      console.log('[Circulars] API Response:', response);
       if (response.success && response.data) {
-        setCircularList(response.data.circulars || []);
+        // Backend returns data as array directly, not nested
+        const circulars = Array.isArray(response.data) ? response.data : (response.data.circulars || []);
+        console.log('[Circulars] Circulars list:', circulars);
+        setCircularList(circulars);
         setTotalPages(response.data.pagination?.pages || 1);
+      } else {
+        console.warn('[Circulars] No data in response');
       }
     } catch (error) {
-      console.error('Error fetching circulars:', error);
+      console.error('[Circulars] Error fetching circulars:', error);
     } finally {
       setLoading(false);
     }
@@ -233,24 +266,50 @@ const AdminCircularsScreen = () => {
 
     setSubmitting(true);
     try {
-      const data = {
-        title: title.trim(),
-        content: mode === 'TEXT' ? message.trim() : undefined,
-        imageUrl: imageFile ? `/uploads/circulars/${imageFile.name}` : undefined,
-        visibility,
-      };
-
-      let response;
       if (editingCircularId) {
-        response = await adminAPI.updateNews(editingCircularId, data);
-      } else {
-        response = await adminAPI.createCircular(data);
-      }
+        // For updates, use regular JSON
+        const data = {
+          title: title.trim(),
+          content: mode === 'TEXT' ? message.trim() : undefined,
+          visibility,
+        };
+        const response = await adminAPI.updateCircular(editingCircularId, data);
+        if (response.success) {
+          showAlertMessage('Success', 'Circular updated successfully');
+          resetForm();
+          fetchCirculars();
+        }
+      } else if (mode === 'IMAGE' && imageFile) {
+        // For image uploads, use FormData
+        const formData = new FormData();
+        formData.append('title', title.trim());
+        formData.append('content', title.trim()); // Use title as content for image circulars
+        formData.append('visibility', visibility);
+        formData.append('image', imageFile);
 
-      if (response.success) {
-        showAlertMessage('Success', editingCircularId ? 'Circular updated successfully' : 'Circular published successfully');
-        resetForm();
-        fetchCirculars();
+        if (visibility === 'SPECIFIC_CLASSES' && selectedClassIds.length > 0) {
+          formData.append('classId', selectedClassIds[0]);
+        }
+
+        const response = await adminAPI.createCircularWithFiles(formData);
+        if (response.success) {
+          showAlertMessage('Success', 'Circular published successfully');
+          resetForm();
+          fetchCirculars();
+        }
+      } else {
+        // For text-only circulars, use JSON
+        const data = {
+          title: title.trim(),
+          content: message.trim(),
+          visibility,
+        };
+        const response = await adminAPI.createCircular(data);
+        if (response.success) {
+          showAlertMessage('Success', 'Circular published successfully');
+          resetForm();
+          fetchCirculars();
+        }
       }
     } catch (error) {
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to process circular');
@@ -558,6 +617,7 @@ const AdminCircularsScreen = () => {
           header={alertHeader}
           message={alertMessage}
           buttons={['OK']}
+          backdropDismiss={false}
         />
       </IonContent>
     </IonPage>

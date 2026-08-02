@@ -524,6 +524,133 @@ router.delete('/students/:id', async (req, res, next) => {
 // ============================================
 // Teachers Management
 // ============================================
+
+// Get available teachers for class assignment (must come before /teachers/:id)
+router.get('/teachers/available', async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const { classId, search, page = 1, limit = 100 } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    // Build filter
+    let filter = {
+      tenantId,
+      isActive: true
+    };
+
+    if (classId) {
+      // Include teachers who have no class OR are assigned to this specific class
+      // We'll filter this in memory since MongoDB doesn't support OR with null checks easily
+      const teachers = await Teacher.find(filter).select('-password');
+      
+      let filteredTeachers = teachers.filter(teacher => {
+        if (!teacher.classId || teacher.classId === null) {
+          return true; // Unassigned teachers
+        }
+        if (teacher.classId.toString() === classId) {
+          return true; // Teachers assigned to this class
+        }
+        return false;
+      });
+
+      // Apply search filter
+      if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        filteredTeachers = filteredTeachers.filter(teacher => 
+          searchRegex.test(teacher.name) || searchRegex.test(teacher.email)
+        );
+      }
+
+      // Get total count after filtering
+      const total = filteredTeachers.length;
+
+      // Apply pagination
+      const paginatedTeachers = filteredTeachers.slice(skip, skip + take);
+
+      // Get class info for each teacher
+      const teachersWithClass = await Promise.all(paginatedTeachers.map(async (teacher) => {
+        let classInfo = null;
+        if (teacher.classId) {
+          const classDoc = await Class.findOne({ _id: teacher.classId, tenantId, isActive: true });
+          if (classDoc) {
+            classInfo = {
+              id: classDoc._id,
+              name: classDoc.name,
+              section: classDoc.section
+            };
+          }
+        }
+        return {
+          id: teacher._id,
+          name: teacher.name,
+          email: teacher.email,
+          phone: teacher.phone,
+          class: classInfo,
+          created_at: teacher.createdAt
+        };
+      }));
+
+      res.json({
+        success: true,
+        data: {
+          teachers: teachersWithClass,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / parseInt(limit))
+          }
+        }
+      });
+    } else {
+      // If no classId provided, only show unassigned teachers
+      const teachers = await Teacher.find(filter).select('-password');
+      
+      let filteredTeachers = teachers.filter(teacher => !teacher.classId || teacher.classId === null);
+
+      // Apply search filter
+      if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        filteredTeachers = filteredTeachers.filter(teacher => 
+          searchRegex.test(teacher.name) || searchRegex.test(teacher.email)
+        );
+      }
+
+      // Get total count after filtering
+      const total = filteredTeachers.length;
+
+      // Apply pagination
+      const paginatedTeachers = filteredTeachers.slice(skip, skip + take);
+
+      const teachersData = paginatedTeachers.map(teacher => ({
+        id: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+        phone: teacher.phone,
+        class: null,
+        created_at: teacher.createdAt
+      }));
+
+      res.json({
+        success: true,
+        data: {
+          teachers: teachersData,
+          pagination: {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            total,
+            pages: Math.ceil(total / parseInt(limit))
+          }
+        }
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/teachers', async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId || req.user.schoolId;

@@ -53,6 +53,15 @@ const NewsSchema = new mongoose.Schema({
     type: String,
     enum: ['LOW', 'NORMAL', 'HIGH', 'URGENT'],
     default: 'NORMAL'
+  },
+  visibility: {
+    type: String,
+    enum: ['ALL', 'TEACHERS_ONLY', 'SPECIFIC_CLASSES'],
+    default: 'ALL'
+  },
+  classId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Class'
   }
 }, {
   timestamps: true,

@@ -29,7 +29,6 @@ import CreateTeacherScreen from './screens/admin/CreateTeacherScreen';
 import EditTeacherScreen from './screens/admin/EditTeacherScreen';
 import CreateClassScreen from './screens/admin/CreateClassScreen';
 import EditClassScreen from './screens/admin/EditClassScreen';
-import CreateNewsScreen from './screens/admin/CreateNewsScreen';
 import CreateCircularScreen from './screens/admin/CreateCircularScreen';
 
 // Teacher Screens
@@ -122,7 +121,6 @@ const AppRoutes = () => {
                 <Route exact path="/admin/classes/create" component={CreateClassScreen} />
                 <Route exact path="/admin/classes/:id/edit" component={EditClassScreen} />
                 <Route exact path="/admin/news" component={AdminNews} />
-                <Route exact path="/admin/news/create" component={CreateNewsScreen} />
                 <Route exact path="/admin/circulars" component={AdminCirculars} />
                 <Route exact path="/admin/circulars/create" component={CreateCircularScreen} />
                 <Route exact path="/admin/exams" component={AdminExams} />

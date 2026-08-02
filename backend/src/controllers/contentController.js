@@ -4,11 +4,13 @@
  * Implements role-based visibility filtering
  */
 
+const News = require('../models/News');
+const Class = require('../models/Class');
 const db = require('../config/db');
 
 /**
  * Get all news with visibility filtering based on user role AND class isolation
- * - Students: See school-wide news (class_id IS NULL) + their class's specific news with visibility='ALL'
+ * - Students: See school-wide news (classId IS NULL) + their class's specific news with visibility='ALL'
  * - Teachers: See school-wide news + their class's specific news (including TEACHERS_ONLY)
  * - Admins: See all news (no class filtering)
  */
@@ -22,63 +24,71 @@ const getNews = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build where clause with proper tenant and class isolation
-    let whereClause = `n."tenantId" = $1 AND n."isPublished" = true`;
-    let params = [tenantId];
-    let paramIndex = 2;
+    // Build MongoDB query
+    let query = {
+      tenantId,
+      isPublished: true
+    };
 
     // Apply visibility filtering for students - they only see 'ALL' visibility content
     if (userRole === 'STUDENT') {
-      whereClause += ` AND (n."visibility" IS NULL OR n."visibility" = 'ALL')`;
+      query.$or = [
+        { visibility: { $exists: false } },
+        { visibility: null },
+        { visibility: 'ALL' }
+      ];
     }
-    // Teachers and Class Controllers see all visibility levels
 
     // Apply class-based isolation for students, teachers, and class controllers
-    // Class controllers (CLS-X login) always have a classId and should see class-specific content
     if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
       // Students, Teachers, and Class Controllers see school-wide news + their class's specific news only
-      params.push(userClassId);
-      whereClause += ` AND (n."class_id" IS NULL OR n."class_id" = $${paramIndex})`;
-      paramIndex++;
+      query.$or = [
+        ...(query.$or || []),
+        { classId: null },
+        { classId: { $exists: false } },
+        { classId: userClassId }
+      ];
     }
-    // Admins see all news (no class filtering)
 
     if (category) {
-      params.push(category);
-      whereClause += ` AND n.category = $${paramIndex}`;
-      paramIndex++;
+      query.type = category;
     }
 
     // Get total count
-    const countQuery = `SELECT COUNT(*) as total FROM "News" n WHERE ${whereClause}`;
-    const countResult = await db.query(countQuery, params);
-    const total = parseInt(countResult.rows[0].total);
+    const total = await News.countDocuments(query);
 
-    // Get news
-    const newsQuery = `
-      SELECT n.*, u.id as "postedById", u.name as "postedByName"
-      FROM "News" n
-      LEFT JOIN "User" u ON n."postedBy" = u.id
-      WHERE ${whereClause}
-      ORDER BY n."created_at" DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
+    // Get news with pagination
+    const news = await News.find(query)
+      .populate('authorId', 'name email')
+      .populate('classId', 'name section')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(take);
 
-    const newsParams = [...params, take, skip];
-    const newsResult = await db.query(newsQuery, newsParams);
-
-    const news = newsResult.rows.map(item => ({
-      ...item,
-      postedByUser: item.postedById ? {
-        id: item.postedById,
-        name: item.postedByName,
+    const newsData = news.map(item => ({
+      id: item._id,
+      title: item.title,
+      content: item.content,
+      type: item.type,
+      imageUrl: item.imageUrl,
+      pdfUrl: item.attachmentUrl,
+      visibility: item.visibility,
+      classId: item.classId ? item.classId._id : null,
+      className: item.classId ? item.classId.name : null,
+      isPublished: item.isPublished,
+      postedByUser: item.authorId ? {
+        id: item.authorId._id,
+        name: item.authorId.name,
+        email: item.authorId.email
       } : null,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt
     }));
 
     res.status(200).json({
       success: true,
       data: {
-        news,
+        news: newsData,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -102,29 +112,27 @@ const getNewsById = async (req, res, next) => {
     const userRole = req.user.role;
     const userClassId = req.user.classId;
 
-    // Build where clause with tenant, publication, and class isolation
-    let whereClause = `n.id = $1 AND n."tenantId" = $2 AND n."isPublished" = true`;
-    let params = [id, tenantId];
-    let paramIndex = 3;
+    // Build MongoDB query
+    let query = {
+      _id: id,
+      tenantId,
+      isPublished: true
+    };
 
     // Apply class-based isolation for students, teachers, and class controllers
     if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
-      params.push(userClassId);
-      whereClause += ` AND (n."class_id" IS NULL OR n."class_id" = $${paramIndex})`;
-      paramIndex++;
+      query.$or = [
+        { classId: null },
+        { classId: { $exists: false } },
+        { classId: userClassId }
+      ];
     }
-    // Admins can access any news (no class filtering)
 
-    const newsQuery = `
-      SELECT n.*, u.id as "postedById", u.name as "postedByName"
-      FROM "News" n
-      LEFT JOIN "User" u ON n."postedBy" = u.id
-      WHERE ${whereClause}
-    `;
+    const news = await News.findOne(query)
+      .populate('authorId', 'name email')
+      .populate('classId', 'name section');
 
-    const newsResult = await db.query(newsQuery, params);
-
-    if (newsResult.rows.length === 0) {
+    if (!news) {
       return res.status(404).json({
         success: false,
         error: {
@@ -133,16 +141,26 @@ const getNewsById = async (req, res, next) => {
       });
     }
 
-    const news = newsResult.rows[0];
-
     res.status(200).json({
       success: true,
       data: {
-        ...news,
-        postedByUser: news.postedById ? {
-          id: news.postedById,
-          name: news.postedByName,
+        id: news._id,
+        title: news.title,
+        content: news.content,
+        type: news.type,
+        imageUrl: news.imageUrl,
+        pdfUrl: news.attachmentUrl,
+        visibility: news.visibility,
+        classId: news.classId ? news.classId._id : null,
+        className: news.classId ? news.classId.name : null,
+        isPublished: news.isPublished,
+        postedByUser: news.authorId ? {
+          id: news.authorId._id,
+          name: news.authorId.name,
+          email: news.authorId.email
         } : null,
+        createdAt: news.createdAt,
+        updatedAt: news.updatedAt
       },
     });
   } catch (error) {

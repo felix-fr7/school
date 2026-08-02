@@ -10,11 +10,11 @@ import { IonReactRouter } from '@ionic/react-router';
 import { Route, Redirect, Switch, useHistory } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext.jsx';
-import ErrorBoundary from './src/components/ErrorBoundary.tsx';
+import ErrorBoundary from './src/components/ErrorBoundary.jsx';
 
 // Auth Screens
 import LoginScreen from './src/screens/LoginScreen.jsx';
-import RegisterScreen from './src/screens/RegisterScreen.tsx';
+import RegisterScreen from './src/screens/RegisterScreen.jsx';
 
 // Super Admin Screens (Lazy loaded)
 const SuperAdminDashboardScreen = React.lazy(() => import('./src/screens/superadmin/DashboardScreen.jsx'));
@@ -30,24 +30,23 @@ const ResetClassCodeCounterScreen = React.lazy(() => import('./src/screens/admin
 const ClassDashboardScreen = React.lazy(() => import('./src/screens/admin/ClassDashboardScreen.jsx'));
 const EditClassScreen = React.lazy(() => import('./src/screens/admin/EditClassScreen.jsx'));
 const TeachersListScreen = React.lazy(() => import('./src/screens/admin/TeachersListScreen.jsx'));
-const TeacherDetailScreen = React.lazy(() => import('./src/screens/admin/TeacherDetailScreen.tsx'));
-const EditTeacherScreen = React.lazy(() => import('./src/screens/admin/EditTeacherScreen.tsx'));
+const TeacherDetailScreen = React.lazy(() => import('./src/screens/admin/TeacherDetailScreen.jsx'));
+const EditTeacherScreen = React.lazy(() => import('./src/screens/admin/EditTeacherScreen.jsx'));
 const CreateTeacherScreen = React.lazy(() => import('./src/screens/admin/CreateTeacherScreen.jsx'));
 const StudentsListScreen = React.lazy(() => import('./src/screens/admin/StudentsListScreen.jsx'));
-const CreateStudentScreen = React.lazy(() => import('./src/screens/admin/CreateStudentScreen.tsx'));
-const EditStudentScreen = React.lazy(() => import('./src/screens/admin/EditStudentScreen.tsx'));
-const HomeworkListScreen = React.lazy(() => import('./src/screens/admin/HomeworkListScreen.tsx'));
-const CreateHomeworkScreen = React.lazy(() => import('./src/screens/admin/CreateHomeworkScreen.tsx'));
-const NewsListScreen = React.lazy(() => import('./src/screens/admin/NewsListScreen.tsx'));
-const CreateNewsScreen = React.lazy(() => import('./src/screens/admin/CreateNewsScreen.tsx'));
-const CircularsListScreen = React.lazy(() => import('./src/screens/admin/CircularsListScreen.tsx'));
-const CreateCircularScreen = React.lazy(() => import('./src/screens/admin/CreateCircularScreen.tsx'));
-const ExamSchedulesListScreen = React.lazy(() => import('./src/screens/admin/ExamSchedulesListScreen.tsx'));
-const CreateExamScheduleScreen = React.lazy(() => import('./src/screens/admin/CreateExamScheduleScreen.tsx'));
-const AdminNewsScreen = React.lazy(() => import('./src/screens/admin/AdminNewsScreen.tsx'));
+const CreateStudentScreen = React.lazy(() => import('./src/screens/admin/CreateStudentScreen.jsx'));
+const EditStudentScreen = React.lazy(() => import('./src/screens/admin/EditStudentScreen.jsx'));
+const HomeworkListScreen = React.lazy(() => import('./src/screens/admin/HomeworkListScreen.jsx'));
+const CreateHomeworkScreen = React.lazy(() => import('./src/screens/admin/CreateHomeworkScreen.jsx'));
+const NewsListScreen = React.lazy(() => import('./src/screens/admin/NewsListScreen.jsx'));
+const CircularsListScreen = React.lazy(() => import('./src/screens/admin/CircularsListScreen.jsx'));
+const CreateCircularScreen = React.lazy(() => import('./src/screens/admin/CreateCircularScreen.jsx'));
+const ExamSchedulesListScreen = React.lazy(() => import('./src/screens/admin/ExamSchedulesListScreen.jsx'));
+const CreateExamScheduleScreen = React.lazy(() => import('./src/screens/admin/CreateExamScheduleScreen.jsx'));
+const AdminNewsScreen = React.lazy(() => import('./src/screens/admin/AdminNewsScreen.jsx'));
 const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminCircularsScreen.jsx'));
 const AdminExamsScreen = React.lazy(() => import('./src/screens/admin/AdminExamsScreen.jsx'));
-const PlaceholderScreen = React.lazy(() => import('./src/screens/admin/PlaceholderScreen.tsx'));
+const PlaceholderScreen = React.lazy(() => import('./src/screens/admin/PlaceholderScreen.jsx'));
 
 // Student Screens (Lazy loaded)
 const StudentDashboardScreen = React.lazy(() => import('./src/screens/student/DashboardScreen'));
@@ -228,7 +227,6 @@ const AppContent = () => {
             <ProtectedRoute exact path="/admin/homework" component={HomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/homework/create" component={CreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/news" component={NewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/admin/news/create" component={CreateNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/circulars" component={CircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/circulars/create" component={CreateCircularScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/exams" component={ExamSchedulesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />

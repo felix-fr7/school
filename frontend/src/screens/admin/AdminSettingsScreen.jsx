@@ -3,7 +3,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem,
 import { settingsOutline, notificationsOutline, lockClosedOutline, colorPaletteOutline, languageOutline, helpCircleOutline, logOutOutline } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 
-const AdminSettingsScreen: React.FC = () => {
+const AdminSettingsScreen = () => {
   const { logout } = useAuth();
 
   return (

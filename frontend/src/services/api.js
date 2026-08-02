@@ -549,42 +549,85 @@ export const adminAPI = {
     return response.data;
   },
 
-  async getNews(page = 1, limit = 10, category = '', isPublished = '') {
-    const response = await api.get('/admin/news', {
-      params: { page, limit, category, isPublished },
+  async getNews(page = 1, limit = 10, visibility = '', isPublished = '') {
+    const response = await api.get('/admin-content/news', {
+      params: { page, limit, visibility, isPublished },
     });
     return response.data;
   },
 
   async createNews(data) {
-    const response = await api.post('/admin/news', data);
+    const response = await api.post('/admin-content/news', data);
     return response.data;
   },
 
+  async createNewsWithFiles(formData) {
+    const token = await storage.getToken();
+    const response = await fetch(`${API_BASE_URL}/admin-content/news`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'x-tenant-id': getTenantId(),
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw { response: { status: response.status, data: errorData } };
+    }
+    
+    return await response.json();
+  },
+
   async updateNews(id, data) {
-    const response = await api.put(`/admin/news/${id}`, data);
+    const response = await api.put(`/admin-content/news/${id}`, data);
     return response.data;
   },
 
   async deleteNews(id) {
-    const response = await api.delete(`/admin/news/${id}`);
+    const response = await api.delete(`/admin-content/news/${id}`);
     return response.data;
   },
 
   async getCirculars(page = 1, limit = 10, isPublished = '') {
-    const response = await api.get('/admin/circulars', {
+    const response = await api.get('/circulars', {
       params: { page, limit, isPublished },
     });
     return response.data;
   },
 
   async createCircular(data) {
-    const response = await api.post('/admin/circulars', data);
+    const response = await api.post('/circulars', data);
     return response.data;
   },
 
+  async updateCircular(id, data) {
+    const response = await api.put(`/circulars/${id}`, data);
+    return response.data;
+  },
+
+  async createCircularWithFiles(formData) {
+    const token = await storage.getToken();
+    const response = await fetch(`${API_BASE_URL}/circulars`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'x-tenant-id': getTenantId(),
+      },
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw { response: { status: response.status, data: errorData } };
+    }
+    
+    return await response.json();
+  },
+
   async deleteCircular(id) {
-    const response = await api.delete(`/admin/circulars/${id}`);
+    const response = await api.delete(`/circulars/${id}`);
     return response.data;
   },
 
@@ -689,14 +732,14 @@ export const studentAPI = {
   },
 
   async getNews(page = 1, limit = 10, category = '') {
-    const response = await api.get('/student/news', {
+    const response = await api.get('/content/news', {
       params: { page, limit, category },
     });
     return response.data;
   },
 
   async getNewsById(id) {
-    const response = await api.get(`/student/news/${id}`);
+    const response = await api.get(`/content/news/${id}`);
     return response.data;
   },
 

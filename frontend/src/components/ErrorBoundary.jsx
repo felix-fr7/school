@@ -4,7 +4,7 @@
  * Prevents entire app from crashing due to unexpected errors
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component } from 'react';
 import {
   IonApp,
   IonPage,
@@ -15,30 +15,22 @@ import {
 } from '@ionic/react';
 import { refreshOutline, homeOutline } from 'ionicons/icons';
 
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
+export class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null,
+    };
+  }
 
-interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-}
-
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    errorInfo: null,
-  };
-
-  public static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(error) {
     // Update state indicating an error occurred
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  componentDidCatch(error, errorInfo) {
     // ALWAYS log errors to console - never swallow silently
     console.error('═══════════════════════════════════════════');
     console.error('ErrorBoundary caught an error:');
@@ -56,18 +48,18 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ errorInfo });
   }
 
-  private handleRetry = () => {
+  handleRetry = () => {
     // Clear error state and reload the page
     this.setState({ hasError: false, error: null, errorInfo: null });
     window.location.reload();
   };
 
-  private handleGoHome = () => {
+  handleGoHome = () => {
     // Navigate to home page
     window.location.href = '/';
   };
 
-  public render() {
+  render() {
     // If there's an error, show the error UI
     if (this.state.hasError) {
       // Use custom fallback if provided

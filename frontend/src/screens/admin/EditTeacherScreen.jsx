@@ -1,6 +1,6 @@
 /**
  * Edit Teacher Screen (Ionic React - Modern Admin UI)
- * Allows admin to edit teacher details and assign classes
+ * Allows admin to edit teacher details (name, email, phone)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -15,8 +15,6 @@ import {
   IonButton,
   IonSpinner,
   IonAlert,
-  IonSelect,
-  IonSelectOption,
   IonCard,
   IonCardContent,
   IonIcon,
@@ -28,33 +26,25 @@ import {
   personOutline, 
   mailOutline, 
   callOutline, 
-  schoolOutline,
   saveOutline,
   closeOutline
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { Class } from '../../types';
-import './AdminTheme.css';
+import './EditTeacherScreen.css';
 
-interface RouteParams {
-  teacherId: string;
-}
-
-const EditTeacherScreen: React.FC = () => {
+const EditTeacherScreen = () => {
   const history = useHistory();
-  const { teacherId } = useParams<RouteParams>();
+  const { teacherId } = useParams();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [classId, setClassId] = useState<string | undefined>(undefined);
-  const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertCallback, setAlertCallback] = useState<(() => void) | null>(null);
+  const [alertCallback, setAlertCallback] = useState(null);
 
   useEffect(() => {
     // If teacherId is 'create', redirect to the create teacher page
@@ -71,21 +61,13 @@ const EditTeacherScreen: React.FC = () => {
     
     try {
       setLoading(true);
-      const [teacherRes, classesRes] = await Promise.all([
-        adminAPI.getTeacher(teacherId),
-        adminAPI.getClasses(),
-      ]);
+      const teacherRes = await adminAPI.getTeacher(teacherId);
 
       if (teacherRes.success && teacherRes.data) {
         const teacher = teacherRes.data;
         setName(teacher.name);
         setEmail(teacher.email);
         setPhone(teacher.phone || '');
-        setClassId(teacher.classId);
-      }
-
-      if (classesRes.success && classesRes.data) {
-        setClasses(classesRes.data);
       }
     } catch (error) {
       console.error('Error fetching teacher data:', error);
@@ -95,7 +77,7 @@ const EditTeacherScreen: React.FC = () => {
     }
   };
 
-  const showAlertMessage = (header: string, message: string, callback?: () => void) => {
+  const showAlertMessage = (header, message, callback) => {
     setAlertHeader(header);
     setAlertMessage(message);
     setAlertCallback(() => callback || null);
@@ -118,7 +100,6 @@ const EditTeacherScreen: React.FC = () => {
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
-        classId: classId,
       });
 
       if (response.success) {
@@ -128,7 +109,7 @@ const EditTeacherScreen: React.FC = () => {
       } else {
         showAlertMessage('Error', response.error?.message || 'Failed to update teacher');
       }
-    } catch (error: any) {
+    } catch (error) {
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update teacher');
     } finally {
       setSaving(false);
@@ -185,8 +166,8 @@ const EditTeacherScreen: React.FC = () => {
                     value={name}
                     onIonInput={(e) => setName(e.detail.value || '')}
                     placeholder="Enter teacher name"
-                    autocomplete="name"
-                    autocapitalize="words"
+                    autoComplete="name"
+                    autoCapitalize="words"
                     disabled={saving}
                   />
                 </div>
@@ -202,8 +183,8 @@ const EditTeacherScreen: React.FC = () => {
                     onIonInput={(e) => setEmail(e.detail.value || '')}
                     placeholder="Enter teacher email"
                     type="email"
-                    autocomplete="email"
-                    autocapitalize="none"
+                    autoComplete="email"
+                    autoCapitalize="none"
                     disabled={saving}
                   />
                 </div>
@@ -219,39 +200,10 @@ const EditTeacherScreen: React.FC = () => {
                     onIonInput={(e) => setPhone(e.detail.value || '')}
                     placeholder="Enter phone number"
                     type="tel"
-                    autocomplete="tel"
+                    autoComplete="tel"
                     disabled={saving}
                   />
                 </div>
-              </div>
-            </IonCardContent>
-          </IonCard>
-
-          {/* Academic Allocation Card */}
-          <IonCard className="admin-card allocation-card">
-            <IonCardContent>
-              <div className="card-header-badge">
-                <IonIcon icon={schoolOutline} className="card-header-icon" />
-                <span>Class Allocation</span>
-              </div>
-
-              <div className="input-field-group">
-                <label className="admin-label">Assigned Class</label>
-                <IonSelect
-                  className="admin-select"
-                  value={classId}
-                  onIonChange={(e) => setClassId(e.detail.value || undefined)}
-                  placeholder="Select a class to assign"
-                  interface="action-sheet"
-                  disabled={saving}
-                >
-                  <IonSelectOption value="">No class assigned</IonSelectOption>
-                  {classes.map((cls) => (
-                    <IonSelectOption key={cls.id} value={cls.id}>
-                      {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
-                    </IonSelectOption>
-                  ))}
-                </IonSelect>
               </div>
             </IonCardContent>
           </IonCard>
