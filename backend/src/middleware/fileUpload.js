@@ -14,8 +14,9 @@ const imageDir = path.join(uploadDir, 'images');
 const documentDir = path.join(uploadDir, 'documents');
 const audioDir = path.join(uploadDir, 'audio');
 const videoDir = path.join(uploadDir, 'videos');
+const examDir = path.join(uploadDir, 'exam');
 
-[uploadDir, imageDir, documentDir, audioDir, videoDir].forEach(dir => {
+[uploadDir, imageDir, documentDir, audioDir, videoDir, examDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -37,6 +38,18 @@ const storage = multer.diskStorage({
     }
     
     cb(null, targetDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const filename = `${uuidv4()}${ext}`;
+    cb(null, filename);
+  }
+});
+
+// Exam-specific storage configuration (saves to uploads/exam/)
+const examStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, examDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -118,11 +131,27 @@ const getFileUrl = (filename, subfolder = '') => {
     : `${baseUrl}/${filename}`;
 };
 
+// Exam-specific upload configuration
+const uploadExam = multer({
+  storage: examStorage,
+  fileFilter,
+  limits: {
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024,
+    files: 1
+  }
+});
+
+const uploadExamSingle = (fieldName) => {
+  return uploadExam.single(fieldName);
+};
+
 module.exports = {
   uploadSingle,
   uploadArray,
   uploadFields,
+  uploadExamSingle,
   deleteFile,
   getFileUrl,
-  uploadDir
+  uploadDir,
+  examDir
 };

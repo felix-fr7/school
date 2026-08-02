@@ -369,6 +369,23 @@
   background: #fef2f2;
 }
 
+.action-btn-modern.view-btn {
+  color: #059669;
+  background: #ecfdf5;
+}
+
+.action-btn-modern.view-btn:hover {
+  background: #d1fae5;
+}
+
+.action-btn-modern.publish-btn {
+  color: #ffffff;
+}
+
+.action-btn-modern.publish-btn:hover {
+  opacity: 0.9;
+}
+
 /* Empty State */
 .empty-state-modern {
   text-align: center;

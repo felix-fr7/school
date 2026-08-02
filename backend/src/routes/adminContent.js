@@ -8,7 +8,7 @@ const express = require('express');
 const { body, param, query } = require('express-validator');
 const adminContentController = require('../controllers/adminContentController');
 const { authenticate, isAdmin } = require('../middleware/auth');
-const { uploadSingle, uploadFields } = require('../middleware/fileUpload');
+const { uploadSingle, uploadFields, uploadExamSingle } = require('../middleware/fileUpload');
 const storageService = require('../services/storageService');
 const path = require('path');
 const fs = require('fs');
@@ -129,15 +129,19 @@ router.post(
         });
       }
 
-      // Upload to Supabase Storage using buffer from memory storage
+      // Read file from disk (since multer uses diskStorage) and upload to storage
+      const fileBuffer = fs.readFileSync(req.file.path);
       const uploadResult = await storageService.uploadFile(
-        req.file.buffer,
+        fileBuffer,
         req.file.originalname,
         tenantId,
         null,
         null,
         req.file.mimetype
       );
+      
+      // Delete the temporary file created by multer
+      fs.unlinkSync(req.file.path);
 
       res.status(200).json({
         success: true,
@@ -147,6 +151,42 @@ router.post(
           type: uploadResult.type,
           size: uploadResult.size,
         },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * @route   POST /api/admin-content/upload-exam
+ * @desc    Upload exam timetable file (PDF/Image) to uploads/exam/ folder
+ * @access  Admin
+ */
+router.post(
+  '/upload-exam',
+  uploadExamSingle('file'),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'No file provided. Please upload a file.' },
+        });
+      }
+
+      // Save to uploads/exam/ folder and return local URL
+      const fileUrl = `/uploads/exam/${req.file.filename}`;
+
+      res.status(200).json({
+        success: true,
+        data: {
+          url: fileUrl,
+          name: req.file.originalname,
+          type: req.file.mimetype,
+          size: req.file.size,
+        },
+        message: 'Exam timetable file uploaded successfully',
       });
     } catch (error) {
       next(error);

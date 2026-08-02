@@ -523,7 +523,7 @@ export const adminAPI = {
   },
 
   async getHomework(page = 1, limit = 10, classId = '', isPublished = '') {
-    const response = await api.get('/admin/homework', {
+    const response = await api.get('/homework', {
       params: { page, limit, classId, isPublished },
     });
     return response.data;

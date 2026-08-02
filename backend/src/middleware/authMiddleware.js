@@ -82,6 +82,7 @@ const authenticate = async (req, res, next) => {
       email: user.email,
       name: user.name,
       role: user.role,
+      tenantId: user.tenantId ? user.tenantId.toString() : null,
       schoolId: user.schoolId ? user.schoolId.toString() : null,
       // Additional fields for specific roles (User collection specific)
       studentId: user.studentId || null,

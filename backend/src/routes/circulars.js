@@ -272,23 +272,32 @@ router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
  */
 router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
+    // Get tenantId from various sources, consistent with GET route
+    const queryTenantId = req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId;
+    
+    console.log('[Circulars DELETE] Deleting circular:', req.params.id, 'with tenantId:', queryTenantId);
+    
     const circular = await Circular.findOneAndDelete({
       _id: req.params.id,
-      tenantId: req.user.tenantId
+      tenantId: queryTenantId
     });
     
     if (!circular) {
+      console.log('[Circulars DELETE] Circular not found:', req.params.id);
       return res.status(404).json({
         success: false,
         error: { message: 'Circular not found' }
       });
     }
     
+    console.log('[Circulars DELETE] Circular deleted successfully:', req.params.id);
     res.status(200).json({
       success: true,
-      message: 'Circular deleted successfully'
+      message: 'Circular deleted successfully',
+      data: { id: circular._id, title: circular.title }
     });
   } catch (error) {
+    console.error('[Circulars DELETE] Error:', error);
     next(error);
   }
 });

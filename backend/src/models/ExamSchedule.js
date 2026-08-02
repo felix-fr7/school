@@ -24,7 +24,7 @@ const ExamScheduleSchema = new mongoose.Schema({
   classId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Class',
-    required: true,
+    required: false,
     index: true
   },
   tenantId: {

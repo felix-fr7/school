@@ -188,12 +188,11 @@ HomeworkSchema.virtual('checkedCount').get(function() {
 });
 
 // Pre-find to only return published homework by default
-HomeworkSchema.pre(/^find/, function(next) {
+HomeworkSchema.pre(/^find/, function() {
   // Only filter if not explicitly requested
   if (!this.getFilter()['isPublished']) {
     this.where({ isPublished: true });
   }
-  next();
 });
 
 // Method to add a submission

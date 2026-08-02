@@ -82,9 +82,12 @@ const getFullFileUrl = (fileUrl) => {
   return `${rawBaseUrl}${relativePath}`;
 };
 
-const ExamItem = ({ item, classes, onDelete, onEdit, showAlertMessage: parentShowAlert }) => {
+const ExamItem = ({ item, classes, onDelete, onEdit, onTogglePublish, showAlertMessage: parentShowAlert }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showSchedulesModal, setShowSchedulesModal] = useState(false);
+  const [schedules, setSchedules] = useState([]);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [editTitle, setEditTitle] = useState(item.title);
   const [editClassId, setEditClassId] = useState(item.classId || undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,24 +138,27 @@ const ExamItem = ({ item, classes, onDelete, onEdit, showAlertMessage: parentSho
     }
   };
 
-  const handleViewFile = async (examId, fileUrl) => {
-    // Prefer the new DB file endpoint if examId is available
-    if (examId) {
-      try {
-        const fileEndpoint = `/files/exam/${examId}`;
-        console.log('Opening file from database:', fileEndpoint);
-        await openFileInNewTab(fileEndpoint);
-        return;
-      } catch (error) {
-        console.error('Error opening file:', error);
-        if (parentShowAlert) {
-          parentShowAlert('Error', 'Failed to open file. Please try again.');
-        }
-        return;
+  const fetchSchedules = async () => {
+    setLoadingSchedules(true);
+    try {
+      const response = await api.get(`/exams/schedule/${item.id}`);
+      if (response.data.success) {
+        setSchedules(response.data.data);
       }
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+    } finally {
+      setLoadingSchedules(false);
     }
-    
-    // Fallback to legacy fileUrl if examId is not available
+  };
+
+  const handleViewSchedules = () => {
+    fetchSchedules();
+    setShowSchedulesModal(true);
+  };
+
+  const handleViewFile = async (examId, fileUrl) => {
+    // Directly use the fileUrl since files are served statically from uploads/
     const fullUrl = getFullFileUrl(fileUrl);
     
     // Validate URL before opening
@@ -230,11 +236,26 @@ const ExamItem = ({ item, classes, onDelete, onEdit, showAlertMessage: parentSho
 
         <div className="exam-card-actions-modern">
           <button 
+            className="action-btn-modern view-btn" 
+            onClick={handleViewSchedules}
+            title="View Schedules"
+          >
+            <IonIcon icon={listOutline} />
+          </button>
+          <button 
             className="action-btn-modern edit-btn" 
             onClick={() => setShowEditModal(true)}
             title="Edit"
           >
             <IonIcon icon={createOutline} />
+          </button>
+          <button 
+            className="action-btn-modern publish-btn" 
+            onClick={() => onTogglePublish(item.id, !item.isPublished)}
+            title={item.isPublished ? "Unpublish" : "Publish"}
+            style={{ background: item.isPublished ? '#10b981' : '#f59e0b' }}
+          >
+            <IonIcon icon={item.isPublished ? eyeOutline : cloudUploadOutline} />
           </button>
           <button 
             className="action-btn-modern delete-btn" 
@@ -265,10 +286,85 @@ const ExamItem = ({ item, classes, onDelete, onEdit, showAlertMessage: parentSho
         ]}
       />
 
+      {/* Schedules Modal */}
+      <IonModal 
+        isOpen={showSchedulesModal} 
+        onDidDismiss={() => setShowSchedulesModal(false)}
+        initialFocus="button.close-schedules-modal"
+        backdropBreakpoint={0}
+        canDismiss={true}
+        style={{
+          '--width': '90%',
+          '--max-width': '700px',
+          '--height': 'auto',
+          '--border-radius': '16px',
+          '--box-shadow': '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+        }}
+      >
+        <div style={{ padding: '24px', background: '#ffffff', borderRadius: '16px', color: '#1f2937', maxHeight: '80vh', overflow: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: '#111827' }}>
+              Exam Schedule - {item.title}
+            </h2>
+            <button 
+              className="close-schedules-modal"
+              onClick={() => setShowSchedulesModal(false)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#6b7280' }}
+            >
+              <IonIcon icon={closeCircleOutline} />
+            </button>
+          </div>
+
+          {loadingSchedules ? (
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <IonSpinner name="crescent" />
+              <p>Loading schedules...</p>
+            </div>
+          ) : schedules.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+              <IonIcon icon={calendarOutline} style={{ fontSize: '48px', marginBottom: '16px' }} />
+              <p>No exam schedules found for this exam.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {schedules.map((schedule) => (
+                <div key={schedule._id || schedule.id} style={{
+                  padding: '16px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  background: '#f9fafb'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{schedule.subject}</h4>
+                    <IonBadge color="primary">{schedule.title}</IonBadge>
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: '#6b7280' }}>
+                    <span><IonIcon icon={calendarOutline} /> {new Date(schedule.date).toLocaleDateString()}</span>
+                    <span><IonIcon icon={calendarOutline} /> {schedule.startTime} - {schedule.endTime}</span>
+                    {schedule.roomNo && <span><IonIcon icon={schoolOutline} /> Room: {schedule.roomNo}</span>}
+                  </div>
+                  {schedule.fileUrl && (
+                    <button 
+                      style={{ marginTop: '8px', background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.875rem' }}
+                      onClick={() => handleViewFile(schedule.examId?._id || item.id, schedule.fileUrl)}
+                    >
+                      <IonIcon icon={documentTextOutline} /> View Schedule File
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </IonModal>
+
       {/* Inline Styled Edit Modal to prevent Shadow DOM override issues */}
       <IonModal 
         isOpen={showEditModal} 
         onDidDismiss={() => setShowEditModal(false)}
+        initialFocus="button.close-edit-modal"
+        backdropBreakpoint={0}
+        canDismiss={true}
         style={{
           '--width': '90%',
           '--max-width': '460px',
@@ -282,6 +378,7 @@ const ExamItem = ({ item, classes, onDelete, onEdit, showAlertMessage: parentSho
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '12px' }}>
             <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600, color: '#111827' }}>Edit Timetable</h2>
             <button 
+              className="close-edit-modal"
               onClick={() => setShowEditModal(false)}
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem', color: '#6b7280', display: 'flex', alignItems: 'center' }}
             >
@@ -474,12 +571,12 @@ const AdminExamsScreen = () => {
     setSubmitting(true);
 
     try {
-      // First, upload the file to get a URL
+      // First, upload the file to get a URL (saves to uploads/exam/)
       const uploadFormData = new FormData();
       uploadFormData.append('file', selectedFile);
       
-      // Upload file using the admin content upload endpoint
-      const uploadResponse = await api.post('/admin/content/upload', uploadFormData, {
+      // Upload file using the exam-specific upload endpoint
+      const uploadResponse = await api.post('/admin-content/upload-exam', uploadFormData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
@@ -542,6 +639,24 @@ const AdminExamsScreen = () => {
     } catch (error) {
       console.error('Error updating exam:', error);
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update timetable');
+    }
+  };
+
+  const handleTogglePublish = async (id, newPublishState) => {
+    try {
+      const response = await api.put(`/admin/content/exams/${id}`, {
+        isPublished: newPublishState
+      });
+      if (response.data.success) {
+        // Update local state
+        setExamList(prev => prev.map(item => 
+          item.id === id ? { ...item, isPublished: newPublishState } : item
+        ));
+        showAlertMessage('Success', newPublishState ? 'Exam published successfully!' : 'Exam unpublished');
+      }
+    } catch (error) {
+      console.error('Error toggling publish state:', error);
+      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update publish state');
     }
   };
 
@@ -749,6 +864,7 @@ const AdminExamsScreen = () => {
                         classes={classes}
                         onDelete={handleDelete}
                         onEdit={handleEdit}
+                        onTogglePublish={handleTogglePublish}
                         showAlertMessage={showAlertMessage}
                       />
                     ))}

@@ -311,34 +311,12 @@ const getCircularById = async (req, res, next) => {
 
 /**
  * Get all exams with visibility filtering based on user role AND class isolation
+ * Uses MongoDB/Mongoose
  * - Students: See school-wide exams + their class's specific exams with visibility='ALL'
  * - Teachers: See school-wide exams + their class's specific exams (including TEACHERS_ONLY)
  * - Admins: See all exams (no class filtering)
  */
-// Helper to map DB row to API response model
-const mapExamRow = (row) => {
-  if (!row) return null;
-  const examName = row.title || row.examName || row.name || 'Exam Timetable';
-  const fileUrl = row.file_url || row.pdfUrl || row.imageUrl;
-  return {
-    id: row.id,
-    title: examName,
-    examName: examName, // backward compatibility
-    classId: row.class_id,
-    tenantId: row.tenant_id,
-    fileUrl: fileUrl,
-    pdfUrl: fileUrl, // fallback
-    imageUrl: fileUrl, // fallback
-    dueDate: row.due_date,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    class: row.classId ? {
-      id: row.classId,
-      name: row.className,
-      section: row.classSection,
-    } : null,
-  };
-};
+const Exam = require('../models/Exam');
 
 const getExams = async (req, res, next) => {
   try {
@@ -350,45 +328,57 @@ const getExams = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build where clause with proper isolation
-    // Students, teachers, and class controllers only see: school-wide (class_id IS NULL) OR their class's content
-    let whereClause = 'e."tenant_id" = $1';
-    let params = [tenantId];
-    let paramIndex = 2;
+    // Build MongoDB query with proper isolation
+    let query = { tenantId };
 
     // Apply class-based isolation for students, teachers, and class controllers
     if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
       // Students, Teachers, and Class Controllers see school-wide exams + their class's specific exams
-      params.push(userClassId);
-      whereClause += ` AND (e."class_id" IS NULL OR e."class_id" = $${paramIndex})`;
-      paramIndex++;
+      query.$or = [
+        { classId: null },
+        { classId: { $exists: false } },
+        { classId: userClassId }
+      ];
     }
     // Admins see all exams (no class filtering)
 
     // Get total count
-    const countQuery = `SELECT COUNT(*) as total FROM "Exam" e WHERE ${whereClause}`;
-    const countResult = await db.query(countQuery, params);
-    const total = parseInt(countResult.rows[0].total);
+    const total = await Exam.countDocuments(query);
 
-    // Get exams
-    const examsQuery = `
-      SELECT e.*, c.id as "classId", c.name as "className", c.section as "classSection"
-      FROM "Exam" e
-      LEFT JOIN "Class" c ON e."class_id" = c.id
-      WHERE ${whereClause}
-      ORDER BY e."created_at" DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
+    // Get exams with pagination
+    const exams = await Exam.find(query)
+      .populate('classId', 'name section')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(take);
 
-    const examsParams = [...params, take, skip];
-    const examsResult = await db.query(examsQuery, examsParams);
-
-    const exams = examsResult.rows.map(mapExamRow);
+    const examData = exams.map(exam => ({
+      id: exam._id,
+      title: exam.name,
+      examName: exam.name,
+      classId: exam.classId?._id,
+      tenantId: exam.tenantId,
+      fileUrl: null,
+      pdfUrl: null,
+      imageUrl: null,
+      startDate: exam.startDate,
+      endDate: exam.endDate,
+      isPublished: exam.isPublished,
+      description: exam.description,
+      academicYear: exam.academicYear,
+      createdAt: exam.createdAt,
+      updatedAt: exam.updatedAt,
+      class: exam.classId ? {
+        id: exam.classId._id,
+        name: exam.classId.name,
+        section: exam.classId.section
+      } : null
+    }));
 
     res.status(200).json({
       success: true,
       data: {
-        exams,
+        exams: examData,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -410,16 +400,12 @@ const getExamById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const examQuery = `
-      SELECT e.*, c.id as "classId", c.name as "className", c.section as "classSection"
-      FROM "Exam" e
-      LEFT JOIN "Class" c ON e."class_id" = c.id
-      WHERE e.id = $1 AND e."tenant_id" = $2
-    `;
+    const exam = await Exam.findOne({
+      _id: id,
+      tenantId
+    }).populate('classId', 'name section');
 
-    const examResult = await db.query(examQuery, [id, tenantId]);
-
-    if (examResult.rows.length === 0) {
+    if (!exam) {
       return res.status(404).json({
         success: false,
         error: {
@@ -428,11 +414,29 @@ const getExamById = async (req, res, next) => {
       });
     }
 
-    const exam = mapExamRow(examResult.rows[0]);
+    const examData = {
+      id: exam._id,
+      title: exam.name,
+      examName: exam.name,
+      classId: exam.classId?._id,
+      tenantId: exam.tenantId,
+      startDate: exam.startDate,
+      endDate: exam.endDate,
+      isPublished: exam.isPublished,
+      description: exam.description,
+      academicYear: exam.academicYear,
+      createdAt: exam.createdAt,
+      updatedAt: exam.updatedAt,
+      class: exam.classId ? {
+        id: exam.classId._id,
+        name: exam.classId.name,
+        section: exam.classId.section
+      } : null
+    };
 
     res.status(200).json({
       success: true,
-      data: exam,
+      data: examData,
     });
   } catch (error) {
     next(error);

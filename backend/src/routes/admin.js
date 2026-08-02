@@ -229,21 +229,120 @@ router.put('/classes/:id', async (req, res, next) => {
 router.delete('/classes/:id', async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId || req.user.schoolId;
-    const deletedClass = await Class.findOneAndUpdate(
-      { 
-        _id: req.params.id, 
-        tenantId
-      },
-      { isActive: false },
-      { new: true }
-    );
+    const classId = req.params.id;
 
-    if (!deletedClass) {
+    console.log('[Class DELETE] Attempting to delete class:', classId, 'with tenantId:', tenantId);
+    console.log('[Class DELETE] req.user:', { id: req.user.id, tenantId: req.user.tenantId, schoolId: req.user.schoolId, role: req.user.role });
+
+    // First, verify the class exists and belongs to this tenant
+    const classData = await Class.findOne({
+      _id: classId,
+      tenantId
+    });
+
+    if (!classData) {
+      console.log('[Class DELETE] Class not found or tenant mismatch');
       return res.status(404).json({ success: false, message: 'Class not found' });
     }
 
-    res.json({ success: true });
+    // Get counts of related documents for the response
+    const studentCount = await User.countDocuments({ classId, role: 'STUDENT' });
+    
+    // Import models for cleanup
+    const Homework = require('../models/Homework');
+    const Exam = require('../models/Exam');
+    const ExamSchedule = require('../models/ExamSchedule');
+    const ClassSubject = require('../models/ClassSubject');
+    const WeeklyLesson = require('../models/WeeklyLesson');
+    const WeeklyLessonLog = require('../models/WeeklyLessonLog');
+    const ClassCircular = require('../models/ClassCircular');
+    const Timetable = require('../models/Timetable');
+
+    const homeworkCount = await Homework.countDocuments({ classId });
+    const examCount = await Exam.countDocuments({ classId });
+    const examScheduleCount = await ExamSchedule.countDocuments({ classId });
+    const classSubjectCount = await ClassSubject.countDocuments({ classId });
+    const weeklyLessonCount = await WeeklyLesson.countDocuments({ classId });
+    const weeklyLessonLogCount = await WeeklyLessonLog.countDocuments({ classId });
+    const classCircularCount = await ClassCircular.countDocuments({ classId });
+    const timetableCount = await Timetable.countDocuments({ classId });
+
+    // Perform deletion in a controlled manner
+    // Step 1: Detach students from this class (set classId to null)
+    if (studentCount > 0) {
+      await User.updateMany(
+        { classId, role: 'STUDENT' },
+        { $unset: { classId: 1 } }
+      );
+    }
+
+    // Step 2: Delete associated homework
+    if (homeworkCount > 0) {
+      await Homework.deleteMany({ classId });
+    }
+
+    // Step 3: Delete associated exams
+    if (examCount > 0) {
+      await Exam.deleteMany({ classId });
+    }
+
+    // Step 4: Delete associated exam schedules
+    if (examScheduleCount > 0) {
+      await ExamSchedule.deleteMany({ classId });
+    }
+
+    // Step 5: Delete associated class subjects
+    if (classSubjectCount > 0) {
+      await ClassSubject.deleteMany({ classId });
+    }
+
+    // Step 6: Delete associated weekly lessons
+    if (weeklyLessonCount > 0) {
+      await WeeklyLesson.deleteMany({ classId });
+    }
+
+    // Step 7: Delete associated weekly lesson logs
+    if (weeklyLessonLogCount > 0) {
+      await WeeklyLessonLog.deleteMany({ classId });
+    }
+
+    // Step 8: Delete associated class circulars
+    if (classCircularCount > 0) {
+      await ClassCircular.deleteMany({ classId });
+    }
+
+    // Step 9: Delete associated timetables
+    if (timetableCount > 0) {
+      await Timetable.deleteMany({ classId });
+    }
+
+    // Step 10: Finally, delete the class itself
+    console.log('[Class DELETE] Deleting class:', classId);
+    const deleteResult = await Class.findByIdAndDelete(classId);
+    console.log('[Class DELETE] Delete result:', deleteResult);
+
+    res.json({
+      success: true,
+      message: 'Class deleted successfully from database',
+      data: {
+        deletedClassId: classId,
+        className: classData.name,
+        section: classData.section,
+        dependenciesHandled: {
+          studentsDetached: studentCount,
+          homeworksDeleted: homeworkCount,
+          examsDeleted: examCount,
+          examSchedulesDeleted: examScheduleCount,
+          classSubjectsDeleted: classSubjectCount,
+          weeklyLessonsDeleted: weeklyLessonCount,
+          weeklyLessonLogsDeleted: weeklyLessonLogCount,
+          classCircularsDeleted: classCircularCount,
+          timetablesDeleted: timetableCount
+        }
+      }
+    });
   } catch (error) {
+    console.error('Error deleting class:', error);
     next(error);
   }
 });
@@ -792,20 +891,30 @@ router.put('/teachers/:id', async (req, res, next) => {
 router.delete('/teachers/:id', async (req, res, next) => {
   try {
     const tenantId = req.user.tenantId || req.user.schoolId;
-    const deletedTeacher = await Teacher.findOneAndUpdate(
-      { 
-        _id: req.params.id, 
-        tenantId
-      },
-      { isActive: false },
-      { new: true }
-    );
 
-    if (!deletedTeacher) {
+    const teacher = await Teacher.findOne({
+      _id: req.params.id,
+      tenantId
+    });
+
+    if (!teacher) {
       return res.status(404).json({ success: false, message: 'Teacher not found' });
     }
 
-    res.json({ success: true });
+    // Unassign teacher from any class they might be assigned to
+    await Class.updateMany(
+      { teacherId: req.params.id },
+      { $unset: { teacherId: 1 } }
+    );
+
+    // Delete the teacher from the database
+    await Teacher.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'Teacher deleted successfully from database',
+      data: { deletedTeacherId: req.params.id, name: teacher.name }
+    });
   } catch (error) {
     next(error);
   }
@@ -978,6 +1087,225 @@ router.delete('/contacts/:id', async (req, res, next) => {
     }
 
     res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================
+// Exam Timetable Management
+// ============================================
+
+/**
+ * @route   GET /api/admin/exams
+ * @desc    Get all exam timetables for admin's school
+ * @access  Admin only
+ */
+router.get('/exams', async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const { page = 1, limit = 50 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const Exam = require('../models/Exam');
+
+    const exams = await Exam.find({ tenantId })
+      .populate('classId', 'name section')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Exam.countDocuments({ tenantId });
+
+    const examData = exams.map(exam => {
+      // Extract fileUrl from description if it exists
+      // Description format: "Exam timetable file: /uploads/exam/xxx.pdf"
+      let fileUrl = null;
+      if (exam.description && exam.description.includes('Exam timetable file:')) {
+        fileUrl = exam.description.replace('Exam timetable file: ', '').trim();
+      }
+
+      return {
+        id: exam._id,
+        title: exam.name,
+        classId: exam.classId?._id,
+        class: exam.classId ? {
+          id: exam.classId._id,
+          name: exam.classId.name,
+          section: exam.classId.section
+        } : null,
+        // Use startDate as the date field for frontend compatibility
+        date: exam.startDate,
+        startDate: exam.startDate,
+        endDate: exam.endDate,
+        isPublished: exam.isPublished,
+        description: exam.description,
+        fileUrl: fileUrl,
+        academicYear: exam.academicYear,
+        createdAt: exam.createdAt,
+        updatedAt: exam.updatedAt
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        exams: examData,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   POST /api/admin/content/exams
+ * @desc    Create new exam timetable
+ * @body    { title, classId, fileUrl }
+ * @access  Admin only
+ */
+router.post('/content/exams', async (req, res, next) => {
+  try {
+    const { title, classId, fileUrl } = req.body;
+    const tenantId = req.user.tenantId || req.user.schoolId;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Exam title is required' }
+      });
+    }
+
+    const Exam = require('../models/Exam');
+
+    const exam = new Exam({
+      name: title.trim(),
+      classId: classId || null,
+      tenantId,
+      startDate: new Date(),
+      endDate: new Date(),
+      description: fileUrl ? `Exam timetable file: ${fileUrl}` : null,
+      isPublished: true,
+      academicYear: new Date().getFullYear().toString()
+    });
+
+    await exam.save();
+
+    // If there's a file URL, create an exam schedule entry for it
+    if (fileUrl) {
+      const ExamSchedule = require('../models/ExamSchedule');
+      await ExamSchedule.create({
+        title: title.trim(),
+        subject: 'Timetable',
+        examId: exam._id,
+        classId: classId || null,
+        tenantId,
+        date: new Date(),
+        startTime: '09:00',
+        endTime: '12:00',
+        duration: 180,
+        isPublished: true,
+        fileUrl
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      data: {
+        id: exam._id,
+        title: exam.name,
+        classId: exam.classId,
+        isPublished: exam.isPublished,
+        createdAt: exam.createdAt
+      },
+      message: 'Exam timetable created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   PUT /api/admin/content/exams/:id
+ * @desc    Update exam timetable
+ * @access  Admin only
+ */
+router.put('/content/exams/:id', async (req, res, next) => {
+  try {
+    const { title, classId, isPublished } = req.body;
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const Exam = require('../models/Exam');
+
+    const updates = {};
+    if (title !== undefined) updates.name = title;
+    if (classId !== undefined) updates.classId = classId || null;
+    if (isPublished !== undefined) updates.isPublished = isPublished;
+
+    const exam = await Exam.findOneAndUpdate(
+      { _id: req.params.id, tenantId },
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Exam not found' }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: exam._id,
+        title: exam.name,
+        classId: exam.classId,
+        isPublished: exam.isPublished,
+        updatedAt: exam.updatedAt
+      },
+      message: 'Exam timetable updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @route   DELETE /api/admin/content/exams/:id
+ * @desc    Delete exam timetable
+ * @access  Admin only
+ */
+router.delete('/content/exams/:id', async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const Exam = require('../models/Exam');
+    const ExamSchedule = require('../models/ExamSchedule');
+
+    const exam = await Exam.findOneAndDelete({
+      _id: req.params.id,
+      tenantId
+    });
+
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Exam not found' }
+      });
+    }
+
+    // Delete associated exam schedules
+    await ExamSchedule.deleteMany({ examId: req.params.id });
+
+    res.json({
+      success: true,
+      message: 'Exam timetable deleted successfully'
+    });
   } catch (error) {
     next(error);
   }
