@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Class Exam Schedules List Screen (Ionic React Version - READ-ONLY)
  * View Admin-published exam timetables (PDF/Image based)
  */
@@ -34,55 +34,34 @@ import {
 import { classControllerAPI } from '../../services/api';
 import './ClassExamSchedulesListScreen.css';
 
-interface Exam {
-  id: string;
-  title?: string;
-  examName?: string;
-  name?: string;
-  fileUrl?: string;
-  pdfUrl?: string;
-  imageUrl?: string;
-  attachmentUrl?: string;
-  dueDate?: string;
-  examDate?: string;
-  isPublished?: boolean;
-  createdAt?: string;
-  class?: {
-    id: string;
-    name: string;
-    section?: string;
-  } | null;
-}
-
-const ClassExamSchedulesListScreen: React.FC = () => {
+const ClassExamSchedulesListScreen = () => {
   const history = useHistory();
   
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [exams, setExams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchExams = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Use classControllerAPI.getExams to fetch published exams
-      const response = await classControllerAPI.getExams(1, 50);
-      console.log('Exam API Response:', response);
+      // Use classControllerAPI.getExamSchedules to fetch published exam schedules
+      const response = await classControllerAPI.getExamSchedules(1, 50);
+      console.log('Exam Schedules API Response:', response);
 
       // Safely parse response data
-      let rawData: Exam[] = [];
-      if (response && response.success && response.data && response.data.exams) {
-        rawData = response.data.exams;
-      } else if (response && response.data && Array.isArray(response.data.exams)) {
-        rawData = response.data.exams;
+      let rawData = [];
+      if (response && response.success && response.data && response.data.examSchedules) {
+        rawData = response.data.examSchedules;
+      } else if (response && response.data && Array.isArray(response.data.examSchedules)) {
+        rawData = response.data.examSchedules;
       }
 
-      // Filter published exams (isPublished !== false)
-      const publishedExams = rawData.filter((exam: Exam) => exam.isPublished !== false);
-      setExams(publishedExams);
-    } catch (err: any) {
-      console.error('Error fetching exams API:', err);
+      // The backend already filters by published and class, so we just use the data as-is
+      setExams(rawData);
+    } catch (err) {
+      console.error('Error fetching exam schedules API:', err);
       // Detailed error fallback
       const errorMsg = 
         err?.response?.data?.message || 
@@ -99,12 +78,12 @@ const ClassExamSchedulesListScreen: React.FC = () => {
     fetchExams();
   }, []);
 
-  const onRefresh = async (event: CustomEvent) => {
+  const onRefresh = async (event) => {
     await fetchExams();
     event.detail.complete();
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
       const date = new Date(dateString);
@@ -118,7 +97,7 @@ const ClassExamSchedulesListScreen: React.FC = () => {
     }
   };
 
-  const navigateToExam = (examId: string) => {
+  const navigateToExam = (examId) => {
     history.push(`/class-controller/exams/${examId}`);
   };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -35,43 +35,27 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import './ClassProfileScreen.css';
 
-interface ClassProfile {
-  id: string;
-  classCode: string;
-  name: string;
-  section: string;
-  academicYear?: string;
-  teacher?: {
-    name: string;
-    email: string;
-  } | null;
-}
-
-const ClassProfileScreen: React.FC = () => {
+const ClassProfileScreen = () => {
   const history = useHistory();
   const { currentClass, logout } = useAuth();
   
-  const [profile, setProfile] = useState<ClassProfile | null>(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   
   // Dynamic Alert Control
-  const [alertConfig, setAlertConfig] = useState<{
-    isOpen: boolean;
-    header: string;
-    message: string;
-    onConfirm?: () => void;
-  }>({
+  const [alertConfig, setAlertConfig] = useState({
     isOpen: false,
     header: '',
     message: '',
+    onConfirm: null,
   });
 
   const fetchProfile = async () => {
     try {
       console.log('Fetching class profile...');
       
-      // Auth context அல்லது Backend API தரவு
+      // Auth context à®…à®²à¯à®²à®¤à¯ Backend API à®¤à®°à®µà¯
       if (currentClass) {
         setProfile({
           id: currentClass.id || 'cls-101',
@@ -110,7 +94,7 @@ const ClassProfileScreen: React.FC = () => {
     fetchProfile();
   }, [currentClass]);
 
-  const onRefresh = async (event: CustomEvent) => {
+  const onRefresh = async (event) => {
     setRefreshing(true);
     await fetchProfile();
     event.detail.complete();
@@ -301,8 +285,8 @@ const ClassProfileScreen: React.FC = () => {
           <IonCard className="about-card">
             <IonCardContent>
               <h3 className="about-title">School Class Controller Portal</h3>
-              <p className="about-version">Version 1.2.0 • Build 2026</p>
-              <p className="about-copyright">© 2026 School Management System</p>
+              <p className="about-version">Version 1.2.0 â€¢ Build 2026</p>
+              <p className="about-copyright">Â© 2026 School Management System</p>
             </IonCardContent>
           </IonCard>
 

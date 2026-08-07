@@ -143,7 +143,7 @@ const login = async (req, res, next) => {
       user = await User.findOne({
         $or: [
           { email: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
-          { studentId: normalizedIdentifier },
+          { studentId: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
           { username: normalizedIdentifier }
         ]
       }).select('+password');

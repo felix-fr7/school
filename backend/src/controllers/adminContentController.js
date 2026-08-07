@@ -6,6 +6,31 @@
 
 const News = require('../models/News');
 const Class = require('../models/Class');
+const fs = require('fs');
+const path = require('path');
+
+/**
+ * Helper function to delete a file from the filesystem
+ * @param {string} filePath - The URL path of the file (e.g., '/uploads/news/file.pdf')
+ */
+const deleteFile = (filePath) => {
+  if (!filePath) return;
+  
+  try {
+    // Convert URL path to filesystem path
+    // Remove leading slash if present
+    const relativePath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    const fullPath = path.join(__dirname, '../../', relativePath);
+    
+    // Check if file exists before deleting
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+      console.log('[deleteFile] Deleted file:', fullPath);
+    }
+  } catch (error) {
+    console.error('[deleteFile] Error deleting file:', filePath, error.message);
+  }
+};
 
 // ============================================
 // News Management with Visibility (MongoDB)
@@ -313,6 +338,25 @@ const deleteNews = async (req, res, next) => {
       });
     }
 
+    // First, find the news to get file URLs before deleting
+    const news = await News.findOne({ _id: id, tenantId });
+
+    if (!news) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'News not found' },
+      });
+    }
+
+    // Delete associated files (image and PDF)
+    if (news.imageUrl) {
+      deleteFile(news.imageUrl);
+    }
+    if (news.attachmentUrl) {
+      deleteFile(news.attachmentUrl);
+    }
+
+    // Now delete the document from database
     const result = await News.deleteOne({ _id: id, tenantId });
 
     if (result.deletedCount === 0) {

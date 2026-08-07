@@ -14,6 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 /**
  * Verify JWT Token
  * Attaches user data to req.user
+ * Supports both regular user tokens (userId) and class tokens (classId)
  */
 const authenticate = async (req, res, next) => {
   try {
@@ -32,6 +33,45 @@ const authenticate = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
 
+    // Check if this is a class token (has classId instead of userId)
+    if (decoded.type === 'CLASS' && decoded.classId) {
+      // This is a class login token - handle class authentication
+      const Class = require('../models/Class');
+      
+      const classData = await Class.findOne({
+        _id: decoded.classId,
+        isActive: true
+      });
+
+      if (!classData) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token or class not found.'
+        });
+      }
+
+      // Attach class data to request
+      req.user = {
+        id: classData._id.toString(),
+        classId: classData._id.toString(),
+        classCode: classData.classCode,
+        name: classData.name,
+        section: classData.section,
+        role: 'CLASS',
+        tenantId: classData.tenantId ? classData.tenantId.toString() : null,
+        email: null,
+        avatarUrl: null,
+        studentId: null,
+        rollNumber: null,
+        teacherId: null,
+        schoolId: null,
+        isClass: true
+      };
+
+      return next();
+    }
+
+    // Regular user token - find user in Admin or User collection
     // First, try to find admin in Admin collection (for Super Admin and School Admin)
     let user = await Admin.findOne({
       _id: decoded.userId,
@@ -256,6 +296,7 @@ const generateToken = (userId) => {
 
 /**
  * Optional authentication - attaches user if token present, continues if not
+ * Supports both regular user tokens (userId) and class tokens (classId)
  */
 const optionalAuth = async (req, res, next) => {
   try {
@@ -265,33 +306,63 @@ const optionalAuth = async (req, res, next) => {
       const token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
       
-      // First, try to find admin in Admin collection
-      let user = await Admin.findOne({
-        _id: decoded.userId,
-        isActive: true
-      }).select('-password');
+      // Check if this is a class token
+      if (decoded.type === 'CLASS' && decoded.classId) {
+        const Class = require('../models/Class');
+        
+        const classData = await Class.findOne({
+          _id: decoded.classId,
+          isActive: true
+        });
 
-      // If not found in Admin collection, try User collection
-      if (!user) {
-        user = await User.findOne({
+        if (classData) {
+          req.user = {
+            id: classData._id.toString(),
+            classId: classData._id.toString(),
+            classCode: classData.classCode,
+            name: classData.name,
+            section: classData.section,
+            role: 'CLASS',
+            tenantId: classData.tenantId ? classData.tenantId.toString() : null,
+            email: null,
+            avatarUrl: null,
+            studentId: null,
+            rollNumber: null,
+            teacherId: null,
+            schoolId: null,
+            isClass: true
+          };
+        }
+      } else {
+        // Regular user token
+        // First, try to find admin in Admin collection
+        let user = await Admin.findOne({
           _id: decoded.userId,
           isActive: true
         }).select('-password');
-      }
 
-      if (user) {
-        req.user = {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          tenantId: user.tenantId ? user.tenantId.toString() : null,
-          schoolId: user.schoolId ? user.schoolId.toString() : null,
-          avatarUrl: null,
-          studentId: null,
-          classId: null,
-          teacherId: null
-        };
+        // If not found in Admin collection, try User collection
+        if (!user) {
+          user = await User.findOne({
+            _id: decoded.userId,
+            isActive: true
+          }).select('-password');
+        }
+
+        if (user) {
+          req.user = {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            tenantId: user.tenantId ? user.tenantId.toString() : null,
+            schoolId: user.schoolId ? user.schoolId.toString() : null,
+            avatarUrl: null,
+            studentId: null,
+            classId: null,
+            teacherId: null
+          };
+        }
       }
     }
     

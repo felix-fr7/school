@@ -24,7 +24,7 @@ import {
 import { personOutline, mailOutline, schoolOutline, bookOutline, businessOutline } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { studentAPI } from '../../services/api';
-import { User } from '../../types';
+import type { User } from '../../types';
 import './ProfileScreen.css';
 
 const StudentProfileScreen: React.FC = () => {

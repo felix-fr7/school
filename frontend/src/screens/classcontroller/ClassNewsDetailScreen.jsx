@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -20,21 +20,21 @@ import {
   calendarOutline, 
   personOutline, 
   documentTextOutline, 
+  imageOutline,
   openOutline,
   shareSocialOutline,
 } from 'ionicons/icons';
-import { News } from '../../types';
+import { classControllerAPI } from '../../services/api';
 import './ClassNewsDetailScreen.css';
 
-interface RouteParams {
-  id: string;
-}
+// API Base URL for file links
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
-const ClassNewsDetailScreen: React.FC = () => {
+const ClassNewsDetailScreen = () => {
   const history = useHistory();
-  const { id: newsId } = useParams<RouteParams>();
+  const { newsId } = useParams();
   
-  const [news, setNews] = useState<News | null>(null);
+  const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,29 +44,14 @@ const ClassNewsDetailScreen: React.FC = () => {
   const fetchNewsDetail = async () => {
     try {
       setLoading(true);
-      console.log('Fetching news detail for ID:', newsId);
+      const response = await classControllerAPI.getNewsById(newsId);
+      console.log('News detail response:', response);
       
-      // Backend API இணைக்கப்படும் வரை போலி தரவு
-      setNews({
-        id: newsId || '1',
-        title: 'Annual Sports Meet & Cultural Fest Schedule Announced',
-        content: `We are excited to announce our upcoming Annual Sports Meet and Cultural Fest for this academic year. 
-
-All students are requested to participate in the upcoming practice sessions starting next Monday. Parents are invited to attend the grand finale function on the weekend. 
-
-Please refer to the attached PDF document for the detailed event schedule, time slots, and guidelines for track events.`,
-        summary: 'Important updates regarding the upcoming Annual Sports Meet and practice schedules.',
-        category: 'School Event',
-        imageUrl: 'https://picsum.photos/800/400',
-        pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        visibility: 'ALL',
-        tenantId: '1',
-        postedBy: '1',
-        isPublished: true,
-        postedByUser: { id: '1', name: 'School Administration' },
-      });
+      if (response.success && response.data) {
+        console.log('News data:', response.data);
+        console.log('PDF URL:', response.data.pdfUrl);
+        setNews(response.data);
+      }
     } catch (error) {
       console.error('Error fetching news detail:', error);
     } finally {
@@ -74,7 +59,7 @@ Please refer to the attached PDF document for the detailed event schedule, time 
     }
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -83,17 +68,55 @@ Please refer to the attached PDF document for the detailed event schedule, time 
     });
   };
 
+  const getFileName = (url) => {
+    return url.substring(url.lastIndexOf('/') + 1) || 'Document.pdf';
+  };
+
   const handleOpenPdf = () => {
-    if (news?.pdfUrl) {
-      window.open(news.pdfUrl, '_blank');
+    if (!news?.pdfUrl) {
+      console.warn('No PDF URL available');
+      return;
     }
+
+    console.log('Opening PDF:', news.pdfUrl);
+
+    // Construct the full URL for the file
+    // Note: We use direct URL instead of blob URL because blob URLs
+    // cannot be opened in a new tab (they're scoped to the originating document)
+    const fullUrl = news.pdfUrl.startsWith('http') 
+      ? news.pdfUrl 
+      : `${API_BASE_URL.replace('/api', '')}${news.pdfUrl}`;
+    
+    console.log('Full PDF URL:', fullUrl);
+    
+    // Open in new tab - the browser will handle authentication via cookies
+    window.open(fullUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleOpenImage = () => {
+    if (!news?.imageUrl) {
+      console.warn('No image URL available');
+      return;
+    }
+
+    console.log('Opening image:', news.imageUrl);
+
+    // Construct the full URL for the image
+    const fullUrl = news.imageUrl.startsWith('http') 
+      ? news.imageUrl 
+      : `${API_BASE_URL.replace('/api', '')}${news.imageUrl}`;
+    
+    console.log('Full image URL:', fullUrl);
+    
+    // Open in new tab
+    window.open(fullUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleShare = () => {
     if (navigator.share && news) {
       navigator.share({
         title: news.title,
-        text: news.summary || news.title,
+        text: news.content?.substring(0, 200) || news.title,
         url: window.location.href,
       }).catch(console.error);
     }
@@ -166,19 +189,20 @@ Please refer to the attached PDF document for the detailed event schedule, time 
       <IonContent className="news-detail-content" fullscreen>
         <div className="news-container">
           
-          {/* Header Image / Banner */}
+          {/* Header Image / Banner - Clickable to view full image */}
           {news.imageUrl && (
-            <div className="banner-wrapper">
+            <div className="banner-wrapper" onClick={handleOpenImage} style={{ cursor: 'pointer' }}>
               <img src={news.imageUrl} alt={news.title} className="news-banner" />
+              <div className="image-zoom-hint">Click to view full image</div>
             </div>
           )}
 
           <div className="news-body">
             {/* Category & Date Meta */}
             <div className="meta-header">
-              {news.category && (
+              {news.type && (
                 <IonBadge color="primary" className="category-badge">
-                  {news.category}
+                  {news.type}
                 </IonBadge>
               )}
               <div className="meta-item">
@@ -203,39 +227,45 @@ Please refer to the attached PDF document for the detailed event schedule, time 
               </div>
             )}
 
-            {/* Summary Box */}
-            {news.summary && (
-              <div className="summary-callout">
-                <span className="summary-title">Quick Summary</span>
-                <p className="summary-text">{news.summary}</p>
-              </div>
-            )}
-
             {/* Main Content */}
             <IonCard className="content-card">
               <IonCardContent>
                 <div className="news-content-text">
-                  {news.content.split('\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
+                  {news.content?.split('\n').map((paragraph, index) => (
+                    paragraph.trim() && <p key={index}>{paragraph}</p>
                   ))}
                 </div>
               </IonCardContent>
             </IonCard>
 
-            {/* PDF Attachment Card */}
-            {news.pdfUrl && (
+            {/* Attachments Section */}
+            {(news.pdfUrl || news.imageUrl) && (
               <div className="attachment-section">
                 <h3 className="section-title">Attachments</h3>
-                <div className="attachment-card" onClick={handleOpenPdf}>
-                  <div className="pdf-icon-wrapper">
-                    <IonIcon icon={documentTextOutline} />
+                {news.pdfUrl && (
+                  <div className="attachment-card" onClick={handleOpenPdf}>
+                    <div className="pdf-icon-wrapper">
+                      <IonIcon icon={documentTextOutline} />
+                    </div>
+                    <div className="attachment-info">
+                      <span className="attachment-name">{getFileName(news.pdfUrl)}</span>
+                      <span className="attachment-subtext">Click to view or download</span>
+                    </div>
+                    <IonIcon icon={openOutline} className="open-icon" />
                   </div>
-                  <div className="attachment-info">
-                    <span className="attachment-name">Attachment Document.pdf</span>
-                    <span className="attachment-subtext">Click to view or download PDF</span>
+                )}
+                {news.imageUrl && (
+                  <div className="attachment-card" onClick={handleOpenImage}>
+                    <div className="pdf-icon-wrapper">
+                      <IonIcon icon={imageOutline} />
+                    </div>
+                    <div className="attachment-info">
+                      <span className="attachment-name">{getFileName(news.imageUrl)}</span>
+                      <span className="attachment-subtext">Click to view full image</span>
+                    </div>
+                    <IonIcon icon={openOutline} className="open-icon" />
                   </div>
-                  <IonIcon icon={openOutline} className="open-icon" />
-                </div>
+                )}
               </div>
             )}
 

@@ -80,30 +80,46 @@ export const AuthProvider = ({ children }) => {
 
       // If we have a stored token, verify it with the backend
       if (storedToken) {
-        try {
-          // Verify token by fetching current user
-          const response = await authAPI.getMe();
-          
-          if (response.success && response.data) {
-            // Token is valid, update with fresh user data
-            setUser(response.data);
-            setToken(storedToken);
-            if (storedClass) {
-              setCurrentClass(storedClass);
+        // Check if this is a class login token (stored class data exists)
+        if (storedClass) {
+          // Class login - restore class state without calling /auth/me
+          // Class tokens don't work with /auth/me endpoint
+          setToken(storedToken);
+          setCurrentClass(storedClass);
+          if (storedTenantId) {
+            setTenantIdState(storedTenantId);
+            setTenantId(storedTenantId);
+          }
+          console.log('[AuthContext] Restored class session from storage');
+        } else if (storedUser) {
+          try {
+            // User login - verify token by fetching current user
+            const response = await authAPI.getMe();
+            
+            if (response.success && response.data) {
+              // Token is valid, update with fresh user data
+              setUser(response.data);
+              setToken(storedToken);
+              // Set tenant ID from user data or stored value
+              const userTenantId = response.data.tenantId || storedTenantId;
+              if (userTenantId) {
+                setTenantIdState(userTenantId);
+                setTenantId(userTenantId);
+              }
+              console.log('[AuthContext] Restored user session from storage');
+            } else {
+              // Token invalid or response failed - clear storage
+              console.log('[AuthContext] Token invalid, clearing storage');
+              await clearAllData();
             }
-            // Set tenant ID from user data or stored value
-            const userTenantId = response.data.tenantId || storedTenantId;
-            if (userTenantId) {
-              setTenantIdState(userTenantId);
-              setTenantId(userTenantId);
-            }
-          } else {
-            // Token invalid or response failed - clear storage
+          } catch (verifyError) {
+            // Token verification failed - clear storage
+            console.log('Token verification failed, clearing stored auth');
             await clearAllData();
           }
-        } catch (verifyError) {
-          // Token verification failed - clear storage
-          console.log('Token verification failed, clearing stored auth');
+        } else {
+          // Token exists but no user or class data - clear storage
+          console.log('[AuthContext] Token exists but no user/class data, clearing');
           await clearAllData();
         }
       } else {

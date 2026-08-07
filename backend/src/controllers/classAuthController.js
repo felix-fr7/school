@@ -1,11 +1,15 @@
 /**
  * Class Authentication Controller
- * Handles class-based login system where classes login with class_code and password
+ * Handles class-based login system where classes login with classCode and password
+ * Uses MongoDB/Mongoose
  */
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../config/db');
+const Class = require('../models/Class');
+const User = require('../models/User');
+const Homework = require('../models/Homework');
+const Exam = require('../models/Exam');
 
 /**
  * Class Login
@@ -26,21 +30,12 @@ const classLogin = async (req, res, next) => {
       });
     }
 
-    // Find class by class_code
-    const classQuery = `
-      SELECT 
-        c.*,
-        t.name as "teacherName",
-        t.email as "teacherEmail"
-      FROM "Class" c
-      LEFT JOIN "TeacherDirectory" t ON c.id = t."assignedClassId"
-      WHERE c."class_code" = $1
-      LIMIT 1
-    `;
-    
-    const classResult = await db.query(classQuery, [classCode.toUpperCase()]);
+    // Find class by classCode (MongoDB)
+    const classData = await Class.findOne({ 
+      classCode: classCode.toUpperCase() 
+    }).select('+password');
 
-    if (classResult.rows.length === 0) {
+    if (!classData) {
       return res.status(401).json({
         success: false,
         error: {
@@ -48,8 +43,6 @@ const classLogin = async (req, res, next) => {
         },
       });
     }
-
-    const classData = classResult.rows[0];
 
     // Check if password is set
     if (!classData.password) {
@@ -61,8 +54,8 @@ const classLogin = async (req, res, next) => {
       });
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, classData.password);
+    // Verify password using the model's comparePassword method
+    const isPasswordValid = await classData.comparePassword(password);
 
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -74,20 +67,39 @@ const classLogin = async (req, res, next) => {
     }
 
     // Get class statistics
-    const statsQuery = `
-      SELECT 
-        (SELECT COUNT(*) FROM "User" WHERE "classId" = $1 AND role = 'STUDENT') as "studentCount",
-        (SELECT COUNT(*) FROM "Homework" WHERE "class_id" = $1) as "homeworkCount",
-        (SELECT COUNT(*) FROM "ExamSchedule" WHERE "classId" = $1 AND "isPublished" = true) as "examCount"
-    `;
-    const statsResult = await db.query(statsQuery, [classData.id]);
-    const stats = statsResult.rows[0];
+    const studentCount = await User.countDocuments({ 
+      classId: classData._id, 
+      role: 'STUDENT' 
+    });
+    const homeworkCount = await Homework.countDocuments({ 
+      classId: classData._id 
+    });
+    const examCount = await Exam.countDocuments({ 
+      classId: classData._id, 
+      isPublished: true 
+    });
+
+    // Get teacher info if assigned
+    let teacher = null;
+    if (classData.teacherId) {
+      const teacherDoc = await User.findOne({ 
+        _id: classData.teacherId, 
+        role: 'TEACHER' 
+      }).select('name email');
+      
+      if (teacherDoc) {
+        teacher = {
+          name: teacherDoc.name,
+          email: teacherDoc.email,
+        };
+      }
+    }
 
     // Create JWT token with class context
     const token = jwt.sign(
       {
-        classId: classData.id,
-        classCode: classData.class_code,
+        classId: classData._id,
+        classCode: classData.classCode,
         tenantId: classData.tenantId,
         type: 'CLASS', // Distinguish from user tokens
       },
@@ -100,17 +112,14 @@ const classLogin = async (req, res, next) => {
       success: true,
       data: {
         class: {
-          id: classData.id,
-          classCode: classData.class_code,
+          id: classData._id,
+          classCode: classData.classCode,
           name: classData.name,
           section: classData.section,
-          teacher: classData.teacherName ? {
-            name: classData.teacherName,
-            email: classData.teacherEmail,
-          } : null,
-          studentCount: parseInt(stats.studentCount),
-          homeworkCount: parseInt(stats.homeworkCount),
-          examCount: parseInt(stats.examCount),
+          teacher,
+          studentCount,
+          homeworkCount,
+          examCount,
         },
         token,
       },
@@ -141,23 +150,13 @@ const getClassDashboard = async (req, res, next) => {
       });
     }
 
-    // Get class details
-    const classQuery = `
-      SELECT 
-        c.*,
-        t.name as "teacherName",
-        t.email as "teacherEmail",
-        t.phone as "teacherPhone",
-        t.qualification,
-        t.subject_specialization as "subjectSpecialization"
-      FROM "Class" c
-      LEFT JOIN "TeacherDirectory" t ON c.id = t."assignedClassId"
-      WHERE c.id = $1 AND c."tenantId" = $2
-      LIMIT 1
-    `;
-    const classResult = await db.query(classQuery, [classId, tenantId]);
+    // Get class details (MongoDB)
+    const classData = await Class.findOne({ 
+      _id: classId, 
+      tenantId: tenantId 
+    }).populate('teacherId', 'name email phone');
 
-    if (classResult.rows.length === 0) {
+    if (!classData) {
       return res.status(404).json({
         success: false,
         error: {
@@ -166,108 +165,45 @@ const getClassDashboard = async (req, res, next) => {
       });
     }
 
-    const classData = classResult.rows[0];
-
     // Get students in this class
-    const studentsQuery = `
-      SELECT id, name, email, "studentId", "created_at"
-      FROM "User"
-      WHERE "classId" = $1 AND role = 'STUDENT'
-      ORDER BY name ASC
-    `;
-    const studentsResult = await db.query(studentsQuery, [classId]);
+    const students = await User.find({ 
+      classId: classId, 
+      role: 'STUDENT' 
+    }).select('id name email studentId createdAt');
 
     // Get recent homework
-    const homeworkQuery = `
-      SELECT 
-        h.*,
-        u.name as "assignedByName"
-      FROM "Homework" h
-      LEFT JOIN "User" u ON h."assigned_by" = u.id
-      WHERE h."class_id" = $1 AND h."is_published" = true
-      ORDER BY h."created_at" DESC
-      LIMIT 10
-    `;
-    const homeworkResult = await db.query(homeworkQuery, [classId]);
+    const homework = await Homework.find({ 
+      classId: classId,
+      isPublished: true 
+    })
+    .populate('assignedBy', 'name')
+    .sort({ createdAt: -1 })
+    .limit(10);
 
     // Get upcoming exams
-    const examsQuery = `
-      SELECT * FROM "ExamSchedule"
-      WHERE "classId" = $1 AND "isPublished" = true AND date >= NOW()
-      ORDER BY date ASC, time ASC
-      LIMIT 10
-    `;
-    const examsResult = await db.query(examsQuery, [classId]);
-
-    // Get recent news/announcements
-    const newsQuery = `
-      SELECT 
-        n.*,
-        u.name as "postedByName"
-      FROM "News" n
-      LEFT JOIN "User" u ON n."postedBy" = u.id
-      WHERE n."tenantId" = $1 AND n."isPublished" = true
-      ORDER BY n."created_at" DESC
-      LIMIT 5
-    `;
-    const newsResult = await db.query(newsQuery, [tenantId]);
-
-    // Get recent circulars
-    const circularsQuery = `
-      SELECT * FROM "Circular"
-      WHERE "tenantId" = $1 AND "isPublished" = true
-      ORDER BY "created_at" DESC
-      LIMIT 5
-    `;
-    const circularsResult = await db.query(circularsQuery, [tenantId]);
-
-    // Get weekly lessons
-    const weeklyLessonsQuery = `
-      SELECT 
-        w.*,
-        (SELECT json_agg(json_build_object('day', d.day, 'lessons', d.lessons))
-         FROM (
-           SELECT 
-             wl."weekday" as day,
-             json_agg(json_build_object(
-               'subject', wl.subject,
-               'classwork', wl."classworkText",
-               'homework', wl."homeworkText"
-             )) as lessons
-           FROM "WeeklyLessonLog" wl
-           WHERE wl."classId" = $1
-           GROUP BY wl."weekday"
-           ORDER BY wl."weekday"
-         ) d
-        ) as weeklySchedule
-      FROM "WeeklyLessonLog" w
-      WHERE w."classId" = $1
-      LIMIT 1
-    `;
-    const weeklyLessonsResult = await db.query(weeklyLessonsQuery, [classId]);
+    const exams = await Exam.find({ 
+      classId: classId,
+      isPublished: true,
+      startDate: { $gte: new Date() }
+    }).sort({ startDate: 1 }).limit(10);
 
     res.status(200).json({
       success: true,
       data: {
         class: {
-          id: classData.id,
-          classCode: classData.class_code,
+          id: classData._id,
+          classCode: classData.classCode,
           name: classData.name,
           section: classData.section,
-          teacher: classData.teacherName ? {
-            name: classData.teacherName,
-            email: classData.teacherEmail,
-            phone: classData.teacherPhone,
-            qualification: classData.qualification,
-            subjectSpecialization: classData.subjectSpecialization,
+          teacher: classData.teacherId ? {
+            name: classData.teacherId.name,
+            email: classData.teacherId.email,
+            phone: classData.teacherId.phone,
           } : null,
         },
-        students: studentsResult.rows,
-        homework: homeworkResult.rows,
-        exams: examsResult.rows,
-        news: newsResult.rows,
-        circulars: circularsResult.rows,
-        weeklyLessons: weeklyLessonsResult.rows.length > 0 ? weeklyLessonsResult.rows[0].weeklySchedule : null,
+        students,
+        homework,
+        exams,
       },
     });
   } catch (error) {

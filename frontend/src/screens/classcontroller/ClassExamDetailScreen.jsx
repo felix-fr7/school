@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Class Controller Exam Detail Screen (Ionic React Version)
  * Styled with Class Royal Blue Theme
  */
@@ -40,31 +40,13 @@ import {
 import { classControllerAPI } from '../../services/api';
 import './ClassExamDetailScreen.css';
 
-interface ExamDetail {
-  id: string;
-  title: string;
-  examName: string;
-  fileUrl: string;
-  pdfUrl: string;
-  imageUrl: string;
-  dueDate: string;
-  isPublished: boolean;
-  createdAt: string;
-  updatedAt: string;
-  class: {
-    id: string;
-    name: string;
-    section: string;
-  } | null;
-}
-
-const ClassExamDetailScreen: React.FC = () => {
+const ClassExamDetailScreen = () => {
   const history = useHistory();
   const examId = (window.location.pathname.match(/exams\/([^/]+)$/) || [])[1];
   
-  const [exam, setExam] = useState<ExamDetail | null>(null);
+  const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
@@ -78,21 +60,14 @@ const ClassExamDetailScreen: React.FC = () => {
       setLoading(true);
       console.log('Fetching exam details for:', examId);
       
-      // Simulated exam data matching class theme
-      setExam({
-        id: examId || 'ex-101',
-        title: 'Midterm Assessment Schedule & Guidelines',
-        examName: 'Midterm Examination 2026',
-        fileUrl: 'https://example.com/exam-schedule.pdf',
-        pdfUrl: '',
-        imageUrl: 'https://via.placeholder.com/600x300/1E3A8A/FFFFFF?text=Class+10-A+Exam+Schedule',
-        dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-        isPublished: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        class: { id: '1', name: 'Class 10', section: 'A' },
-      });
-    } catch (err: any) {
+      // Use the exam schedule specific endpoint
+      const response = await classControllerAPI.getExamScheduleById(examId);
+      if (response && response.success && response.data) {
+        setExam(response.data);
+      } else {
+        setError('Exam schedule not found');
+      }
+    } catch (err) {
       console.error('Error fetching exam details:', err);
       setError(err.response?.data?.error?.message || 'Failed to load exam details');
     } finally {
@@ -112,24 +87,31 @@ const ClassExamDetailScreen: React.FC = () => {
       return;
     }
 
-    const Browser = (window as any).Capacitor?.Plugins?.Browser;
-    
-    if (Browser) {
+    try {
+      // Use the API service's file opening utility which handles authentication
+      // and both relative paths and full URLs
+      const { openFileInNewTab } = await import('../../services/api');
+      await openFileInNewTab(displayFileUrl);
+    } catch (error) {
+      console.error('Error opening attachment:', error);
+      // Fallback: try direct window.open
       try {
-        await Browser.open({ 
-          url: displayFileUrl, 
-          toolbarColor: '#1E3A8A' 
-        });
-      } catch (err) {
-        console.error('Error opening URL with Capacitor:', err);
-        window.open(displayFileUrl, '_blank');
+        window.open(displayFileUrl, '_blank', 'noopener,noreferrer');
+      } catch (e) {
+        console.error('Fallback open failed:', e);
+        setAlertHeader('Error');
+        setAlertMessage('Unable to open the document. Please try again.');
+        setShowAlert(true);
       }
-    } else {
-      window.open(displayFileUrl, '_blank');
     }
   };
 
-  const formatDate = (dateString: string) => {
+  // Normalize date field (exam schedules use 'date', exams use 'dueDate')
+  const getExamDate = () => {
+    return exam.dueDate || exam.date || exam.createdAt;
+  };
+
+  const formatDate = (dateString) => {
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -235,12 +217,12 @@ const ClassExamDetailScreen: React.FC = () => {
                   </div>
                 </div>
 
-                {exam.dueDate && (
+                {getExamDate() && (
                   <div className="info-row">
                     <IonIcon icon={calendarOutline} className="info-icon" />
                     <div className="info-text">
                       <span className="info-label">Exam Date / Deadline</span>
-                      <p className="info-val highlight">{formatDate(exam.dueDate)}</p>
+                      <p className="info-val highlight">{formatDate(getExamDate())}</p>
                     </div>
                   </div>
                 )}

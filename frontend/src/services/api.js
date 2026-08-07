@@ -109,7 +109,19 @@ export const storage = {
 export const fetchFileAsBlobUrl = async (endpoint) => {
   const token = await storage.getToken();
   
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  // Determine the full URL - handle both relative paths and full URLs
+  let fullUrl;
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    fullUrl = endpoint;
+  } else if (endpoint.startsWith('/uploads')) {
+    // Files in /uploads are served directly without /api prefix
+    const baseUrl = API_BASE_URL.replace('/api', '');
+    fullUrl = `${baseUrl}${endpoint}`;
+  } else {
+    fullUrl = `${API_BASE_URL}${endpoint}`;
+  }
+  
+  const response = await fetch(fullUrl, {
     method: 'GET',
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',
@@ -695,6 +707,26 @@ export const adminAPI = {
     const response = await api.delete(`/admin/teachers/${id}`);
     return response.data;
   },
+
+  async getSubjects() {
+    const response = await api.get('/admin/subjects');
+    return response.data;
+  },
+
+  async createSubject(data) {
+    const response = await api.post('/admin/subjects', data);
+    return response.data;
+  },
+
+  async updateSubject(id, data) {
+    const response = await api.put(`/admin/subjects/${id}`, data);
+    return response.data;
+  },
+
+  async deleteSubject(id) {
+    const response = await api.delete(`/admin/subjects/${id}`);
+    return response.data;
+  },
 };
 
 // ============================================
@@ -832,6 +864,65 @@ export const classControllerAPI = {
     return response.data;
   },
 
+  async getNextStudentId() {
+    const response = await api.get('/class-controller/students/next-id');
+    return response.data;
+  },
+
+  async createStudent(data) {
+    const response = await api.post('/class-controller/students', data);
+    return response.data;
+  },
+
+  async updateStudent(id, data) {
+    const response = await api.put(`/class-controller/students/${id}`, data);
+    return response.data;
+  },
+
+  async deleteStudent(id) {
+    const response = await api.delete(`/class-controller/students/${id}`);
+    return response.data;
+  },
+
+  async resetPassword(id, password) {
+    const response = await api.put(`/class-controller/students/${id}/reset-password`, { password });
+    return response.data;
+  },
+
+  async getCirculars(page = 1, limit = 20) {
+    const response = await api.get('/circulars', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async getCircularById(id) {
+    const response = await api.get(`/circulars/${id}`);
+    return response.data;
+  },
+
+  async getHomework(page = 1, limit = 20) {
+    const response = await api.get('/class-controller/homework', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async createHomework(data) {
+    const response = await api.post('/class-controller/homework', data);
+    return response.data;
+  },
+
+  async updateHomework(id, data) {
+    const response = await api.put(`/class-controller/homework/${id}`, data);
+    return response.data;
+  },
+
+  async deleteHomework(id) {
+    const response = await api.delete(`/class-controller/homework/${id}`);
+    return response.data;
+  },
+
   async getExams(page = 1, limit = 20) {
     const response = await api.get('/class-controller/exams', {
       params: { page, limit },
@@ -841,6 +932,50 @@ export const classControllerAPI = {
 
   async getExamById(id) {
     const response = await api.get(`/class-controller/exams/${id}`);
+    return response.data;
+  },
+
+  async getExamSchedules(page = 1, limit = 20) {
+    const response = await api.get('/class-controller/exam-schedules', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async getExamScheduleById(id) {
+    const response = await api.get(`/class-controller/exam-schedules/${id}`);
+    return response.data;
+  },
+
+  async getSubjects() {
+    const response = await api.get('/class-controller/subjects');
+    return response.data;
+  },
+
+  async createSubject(data) {
+    const response = await api.post('/class-controller/subjects', data);
+    return response.data;
+  },
+
+  async updateSubject(id, data) {
+    const response = await api.put(`/class-controller/subjects/${id}`, data);
+    return response.data;
+  },
+
+  async deleteSubject(id) {
+    const response = await api.delete(`/class-controller/subjects/${id}`);
+    return response.data;
+  },
+
+  async getNews(page = 1, limit = 10) {
+    const response = await api.get('/content/news', {
+      params: { page, limit },
+    });
+    return response.data;
+  },
+
+  async getNewsById(id) {
+    const response = await api.get(`/content/news/${id}`);
     return response.data;
   },
 };

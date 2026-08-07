@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Class Add Student Screen (Ionic React Version)
  * Add a new student to the class with auto-generated sequential ID
  * Email-free flow: Only name and password required
@@ -40,24 +40,16 @@ import { useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassAddStudentScreen.css';
 
-interface StudentCreationResult {
-  id: string;
-  name: string;
-  studentId: string;
-  createdAt: string;
-  password: string;
-}
-
-const ClassAddStudentScreen: React.FC = () => {
+const ClassAddStudentScreen = () => {
   const history = useHistory();
 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [nextStudentId, setNextStudentId] = useState<string | null>(null);
+  const [nextStudentId, setNextStudentId] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [createdStudent, setCreatedStudent] = useState<StudentCreationResult | null>(null);
+  const [createdStudent, setCreatedStudent] = useState(null);
   const [showValidationError, setShowValidationError] = useState(false);
   const [validationErrorMessage, setValidationErrorMessage] = useState('');
 
@@ -67,13 +59,16 @@ const ClassAddStudentScreen: React.FC = () => {
 
   const fetchNextStudentId = async () => {
     try {
-      console.log('Fetching next student ID...');
+      const response = await classControllerAPI.getNextStudentId();
+      if (response.success && response.data) {
+        setNextStudentId(response.data.nextStudentId);
+      }
     } catch (error) {
       console.error('Error fetching next student ID:', error);
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     if (!name.trim()) {
       setValidationErrorMessage('Student name is required');
       setShowValidationError(true);
@@ -103,22 +98,19 @@ const ClassAddStudentScreen: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log('Creating student:', { name: name.trim(), password: password.trim() });
-
-      const mockResponse: StudentCreationResult = {
-        id: Date.now().toString(),
+      const response = await classControllerAPI.createStudent({
         name: name.trim(),
-        studentId: nextStudentId || 'STU-001',
-        createdAt: new Date().toISOString(),
         password: password.trim(),
-      };
+      });
 
-      setCreatedStudent(mockResponse);
-      setShowSuccessModal(true);
-      setName('');
-      setPassword('');
-      fetchNextStudentId();
-    } catch (error: any) {
+      if (response.success && response.data) {
+        setCreatedStudent(response.data);
+        setShowSuccessModal(true);
+        setName('');
+        setPassword('');
+        fetchNextStudentId();
+      }
+    } catch (error) {
       console.error('Error creating student:', error);
       const errorMessage = error?.response?.data?.error?.message || 'Failed to create student';
       setValidationErrorMessage(errorMessage);
@@ -195,8 +187,8 @@ const ClassAddStudentScreen: React.FC = () => {
                   value={name}
                   onIonInput={(e) => setName(e.detail.value || '')}
                   placeholder="Enter student's full name"
-                  autocomplete="name"
-                  autocorrect="off"
+                  autoComplete="name"
+                  autoCorrect="off"
                 />
               </div>
             </div>
@@ -213,8 +205,8 @@ const ClassAddStudentScreen: React.FC = () => {
                   onIonInput={(e) => setPassword(e.detail.value || '')}
                   placeholder="Minimum 6 characters"
                   type={showPassword ? 'text' : 'password'}
-                  autocomplete="new-password"
-                  autocorrect="off"
+                  autoComplete="new-password"
+                  autoCorrect="off"
                 />
                 <IonButton
                   fill="clear"

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Class Create Circular Screen (Ionic React Version)
  * Create new circular for the class
  */
@@ -37,16 +37,16 @@ import {
 } from 'ionicons/icons';
 import './ClassCreateCircularScreen.css';
 
-const ClassCreateCircularScreen: React.FC = () => {
+const ClassCreateCircularScreen = () => {
   const history = useHistory();
   
   const [circularNo, setCircularNo] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [issueDate, setIssueDate] = useState<string>(new Date().toISOString());
-  const [visibility, setVisibility] = useState<'ALL' | 'SPECIFIC_CLASSES'>('ALL');
+  const [issueDate, setIssueDate] = useState(new Date().toISOString());
+  const [visibility, setVisibility] = useState('ALL');
   const [notifyParents, setNotifyParents] = useState(true);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -54,7 +54,7 @@ const ClassCreateCircularScreen: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     if (!title.trim()) {
       setAlertHeader('Validation Error');
       setAlertMessage('Circular title is required');
@@ -104,7 +104,7 @@ const ClassCreateCircularScreen: React.FC = () => {
         history.goBack();
       }, 1200);
     } catch (error: any) {
-      console.error('Error creating circular:', error);
+      console.error('Error creating circular, error);
       setAlertHeader('Error');
       setAlertMessage(error?.message || 'Failed to create circular');
       setShowAlert(true);

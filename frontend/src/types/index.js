@@ -100,3 +100,70 @@ export const INITIAL_LESSON_INPUT = {
   classworkText: '',
   homeworkText: '',
 };
+
+// ============================================
+// Type Definitions (JSDoc for TypeScript support)
+// ============================================
+
+/**
+ * @typedef {Object} User
+ * @property {string} id - Unique user identifier
+ * @property {string} name - User's full name
+ * @property {string} email - User's email address
+ * @property {string} role - User role (SUPER_ADMIN, TENANT_ADMIN, ADMIN, TEACHER, STUDENT)
+ * @property {string} [tenantId] - Tenant identifier (for multi-tenant support)
+ * @property {string} [phone] - User's phone number
+ * @property {string} [studentId] - Student ID (for students)
+ * @property {Object} [class] - Class information (for students/teachers)
+ * @property {string} [class.name] - Class name
+ * @property {string} [class.section] - Class section
+ * @property {string} [createdAt] - Account creation timestamp
+ * @property {string} [updatedAt] - Last update timestamp
+ */
+
+/**
+ * @typedef {Object} ClassInfo
+ * @property {string} id - Class identifier
+ * @property {string} name - Class name
+ * @property {string} [section] - Class section
+ * @property {string} [classCode] - Class login code
+ */
+
+/**
+ * @typedef {Object} ClassLoginResponse
+ * @property {boolean} success - Whether the login was successful
+ * @property {ClassInfo} class - Class information
+ * @property {string} token - Authentication token
+ */
+
+/**
+ * @typedef {Object} AuthContextType
+ * @property {User | null} user - Current user object
+ * @property {string | null} token - Current auth token
+ * @property {ClassInfo | null} currentClass - Current class if logged in as class
+ * @property {boolean} isLoading - Whether auth is currently loading
+ * @property {string | null} tenantId - Current tenant ID
+ * @property {boolean} isTenantAdmin - Whether current user is tenant admin
+ * @property {boolean} isTenantSuspended - Whether current tenant is suspended
+ * @property {function(string, string): Promise<void>} login - Login function
+ * @property {function(string, string): Promise<void>} classLogin - Class login function
+ * @property {function(string, string, string): Promise<void>} register - Register function
+ * @property {function(): Promise<void>} logout - Logout function
+ * @property {function(): boolean} isAuthenticated - Check if authenticated
+ * @property {function(): boolean} isSuperAdmin - Check if super admin
+ * @property {function(): boolean} isAdmin - Check if admin
+ * @property {function(): boolean} isStudent - Check if student
+ * @property {function(): boolean} isTeacher - Check if teacher
+ * @property {function(): boolean} isClass - Check if logged in as class
+ * @property {function(string): Promise<void>} switchTenant - Switch tenant context
+ * @property {function(): void} clearCache - Clear cached data
+ */
+
+/** @type {User} */
+export const User = {};
+
+/** @type {ClassLoginResponse} */
+export const ClassLoginResponse = {};
+
+/** @type {AuthContextType} */
+export const AuthContextType = {};

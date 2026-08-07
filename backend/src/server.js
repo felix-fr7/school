@@ -93,9 +93,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ============================================
-// Static Files for Uploads
+// Static Files for Uploads (BEFORE auth middleware)
 // ============================================
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve uploaded files publicly (images, PDFs, etc.)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'public, max-age=31536000');
+  }
+}));
 
 // ============================================
 // Database Connection

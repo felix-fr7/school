@@ -5,6 +5,10 @@
  */
 
 const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const Class = require('../models/Class');
+const Homework = require('../models/Homework');
+const Exam = require('../models/Exam');
 const db = require('../config/db');
 
 /**
@@ -133,41 +137,35 @@ const getClassDashboard = async (req, res, next) => {
 const getClassStudents = async (req, res, next) => {
   try {
     const classId = req.user.classId;
-    const tenantId = req.user.tenantId;
     const { page = 1, limit = 50, search = '' } = req.query;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build where clause (CORE TABLE uses CamelCase with double quotes)
-    let whereClause = 'u."classId" = $1 AND u.role = $2';
-    let params = [classId, 'STUDENT'];
-    let paramIndex = 3;
+    // Build MongoDB query
+    let query = {
+      classId: classId,
+      role: 'Student'
+    };
 
+    // Add search filter
     if (search) {
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
-      whereClause += ` AND (u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex} OR u."studentId" ILIKE $${paramIndex})`;
-      paramIndex++;
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { studentId: { $regex: search, $options: 'i' } }
+      ];
     }
 
     // Get total count
-    const countQuery = `SELECT COUNT(*) as total FROM "User" u WHERE ${whereClause}`;
-    const countResult = await db.query(countQuery, params);
-    const total = parseInt(countResult.rows[0].total);
+    const total = await User.countDocuments(query);
 
-    // Get students (CORE TABLE uses CamelCase with double quotes)
-    const studentsQuery = `
-      SELECT u.id, u.name, u.email, u."studentId", u."created_at"
-      FROM "User" u
-      WHERE ${whereClause}
-      ORDER BY u.name ASC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-
-    const studentsParams = [...params, take, skip];
-    const studentsResult = await db.query(studentsQuery, studentsParams);
-
-    const students = studentsResult.rows;
+    // Get students
+    const students = await User.find(query)
+      .select('name email studentId createdAt')
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(take);
 
     res.status(200).json({
       success: true,
@@ -193,9 +191,7 @@ const getClassStudents = async (req, res, next) => {
 const getNextStudentId = async (req, res, next) => {
   try {
     // Get total count of students in the database
-    const countQuery = `SELECT COUNT(*) as count FROM "User" WHERE role = 'STUDENT'`;
-    const countResult = await db.query(countQuery);
-    const totalCount = parseInt(countResult.rows[0].count);
+    const totalCount = await User.countDocuments({ role: 'Student' });
     
     // Generate next sequential ID (STU-0001, STU-0002, etc.)
     const nextNumber = totalCount + 1;
@@ -234,9 +230,7 @@ const addClassStudent = async (req, res, next) => {
     }
 
     // Auto-generate student ID sequentially
-    const countQuery = `SELECT COUNT(*) as count FROM "User" WHERE role = 'STUDENT'`;
-    const countResult = await db.query(countQuery);
-    const totalCount = parseInt(countResult.rows[0].count);
+    const totalCount = await User.countDocuments({ role: 'Student' });
     const nextNumber = totalCount + 1;
     const finalStudentId = `STU-${String(nextNumber).padStart(4, '0')}`;
 
@@ -246,37 +240,27 @@ const addClassStudent = async (req, res, next) => {
 
     // Use provided password or default temporary password
     const finalPassword = password || 'Student@123';
-    
-    // Hash password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(finalPassword, saltRounds);
 
-    // Create student (CORE TABLE uses CamelCase with double quotes)
-    const createQuery = `
-      INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", "classId", "created_at", "updated_at")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-      RETURNING id, email, name, "studentId", "classId", "created_at"
-    `;
+    // Create student using MongoDB
+    const student = new User({
+      email: dummyEmail,
+      password: finalPassword,
+      name: name.trim(),
+      role: 'Student',
+      schoolId: tenantId,
+      studentId: finalStudentId,
+      classId: classId,
+    });
 
-    const createResult = await db.query(createQuery, [
-      dummyEmail, 
-      hashedPassword, 
-      name.trim(), 
-      'STUDENT', 
-      tenantId, 
-      finalStudentId, 
-      classId
-    ]);
-    
-    const student = createResult.rows[0];
+    await student.save();
 
     res.status(201).json({
       success: true,
       data: {
-        id: student.id,
+        id: student._id.toString(),
         name: student.name,
         studentId: student.studentId,
-        created_at: student.created_at,
+        created_at: student.createdAt,
         password: finalPassword, // Return the password used (either provided or default)
       },
       message: 'Student created successfully. Please save the student ID and password.',
@@ -296,14 +280,14 @@ const updateStudent = async (req, res, next) => {
     const { id } = req.params;
     const { name, email, studentId } = req.body;
 
-    // Verify student exists and belongs to this class (CORE TABLE uses CamelCase)
-    const checkQuery = `
-      SELECT * FROM "User" 
-      WHERE id = $1 AND "classId" = $2 AND role = 'STUDENT'
-    `;
-    const checkResult = await db.query(checkQuery, [id, classId]);
+    // Verify student exists and belongs to this class
+    const student = await User.findOne({
+      _id: id,
+      classId: classId,
+      role: 'Student'
+    });
 
-    if (checkResult.rows.length === 0) {
+    if (!student) {
       return res.status(404).json({
         success: false,
         error: {
@@ -312,70 +296,40 @@ const updateStudent = async (req, res, next) => {
       });
     }
 
-    // Build update fields
-    const updateFields = [];
-    const updateParams = [];
-    let paramIndex = 1;
-
+    // Update fields
     if (name !== undefined) {
-      updateFields.push(`name = $${paramIndex}`);
-      updateParams.push(name.trim());
-      paramIndex++;
+      student.name = name.trim();
     }
 
     if (email !== undefined) {
       // Check email uniqueness
-      const emailExistsQuery = 'SELECT id FROM "User" WHERE email = $1 AND id != $2';
-      const emailExistsResult = await db.query(emailExistsQuery, [email.trim(), id]);
-      if (emailExistsResult.rows.length > 0) {
+      const existingEmail = await User.findOne({ email: email.trim(), _id: { $ne: id } });
+      if (existingEmail) {
         return res.status(409).json({
           success: false,
           error: { message: 'Email already exists' },
         });
       }
-      updateFields.push(`email = $${paramIndex}`);
-      updateParams.push(email.trim());
-      paramIndex++;
+      student.email = email.trim();
     }
 
     if (studentId !== undefined) {
       // Check studentId uniqueness
-      const studentIdExistsQuery = 'SELECT id FROM "User" WHERE "studentId" = $1 AND id != $2';
-      const studentIdExistsResult = await db.query(studentIdExistsQuery, [studentId, id]);
-      if (studentIdExistsResult.rows.length > 0) {
+      const existingStudentId = await User.findOne({ studentId: studentId, _id: { $ne: id } });
+      if (existingStudentId) {
         return res.status(409).json({
           success: false,
           error: { message: 'Student ID already exists' },
         });
       }
-      updateFields.push(`"studentId" = $${paramIndex}`);
-      updateParams.push(studentId);
-      paramIndex++;
+      student.studentId = studentId;
     }
 
-    if (updateFields.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: 'No changes to update',
-      });
-    }
-
-    updateFields.push(`"updated_at" = NOW()`);
-    updateParams.push(id);
-
-    const updateQuery = `
-      UPDATE "User"
-      SET ${updateFields.join(', ')}
-      WHERE id = $${paramIndex}
-      RETURNING id, name, email, "studentId", "updated_at"
-    `;
-
-    const updateResult = await db.query(updateQuery, updateParams);
-    const updatedStudent = updateResult.rows[0];
+    await student.save();
 
     res.status(200).json({
       success: true,
-      data: updatedStudent,
+      data: student,
       message: 'Student updated successfully',
     });
   } catch (error) {
@@ -394,14 +348,14 @@ const resetStudentPassword = async (req, res, next) => {
     const { id } = req.params;
     const { password } = req.body;
 
-    // Verify student exists and belongs to this class (CORE TABLE uses CamelCase)
-    const checkQuery = `
-      SELECT * FROM "User" 
-      WHERE id = $1 AND "classId" = $2 AND role = 'STUDENT'
-    `;
-    const checkResult = await db.query(checkQuery, [id, classId]);
+    // Verify student exists and belongs to this class
+    const student = await User.findOne({
+      _id: id,
+      classId: classId,
+      role: 'Student'
+    });
 
-    if (checkResult.rows.length === 0) {
+    if (!student) {
       return res.status(404).json({
         success: false,
         error: {
@@ -423,19 +377,9 @@ const resetStudentPassword = async (req, res, next) => {
       });
     }
 
-    // Hash password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password (CORE TABLE uses CamelCase)
-    const updateQuery = `
-      UPDATE "User"
-      SET password = $1, "updated_at" = NOW()
-      WHERE id = $2
-      RETURNING id, name, "studentId"
-    `;
-
-    await db.query(updateQuery, [hashedPassword, id]);
+    // Update password (Mongoose pre-save hook will hash it)
+    student.password = newPassword;
+    await student.save();
 
     res.status(200).json({
       success: true,
@@ -458,14 +402,14 @@ const deleteStudent = async (req, res, next) => {
     const classId = req.user.classId;
     const { id } = req.params;
 
-    // Verify student exists and belongs to this class (CORE TABLE uses CamelCase)
-    const checkQuery = `
-      SELECT * FROM "User" 
-      WHERE id = $1 AND "classId" = $2 AND role = 'STUDENT'
-    `;
-    const checkResult = await db.query(checkQuery, [id, classId]);
+    // Verify student exists and belongs to this class
+    const student = await User.findOne({
+      _id: id,
+      classId: classId,
+      role: 'Student'
+    });
 
-    if (checkResult.rows.length === 0) {
+    if (!student) {
       return res.status(404).json({
         success: false,
         error: {
@@ -475,8 +419,7 @@ const deleteStudent = async (req, res, next) => {
     }
 
     // Delete student
-    const deleteQuery = `DELETE FROM "User" WHERE id = $1`;
-    await db.query(deleteQuery, [id]);
+    await User.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,

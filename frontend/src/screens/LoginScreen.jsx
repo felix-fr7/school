@@ -20,7 +20,7 @@ import './LoginScreen.css';
 
 const LoginScreen = () => {
   const history = useHistory();
-  const { login: authLogin } = useAuth();
+  const { login: authLogin, classLogin: authClassLogin } = useAuth();
   const [loginMode, setLoginMode] = useState('student'); // 'student' | 'cls' | 'admin'
   
   // Form state
@@ -65,7 +65,12 @@ const LoginScreen = () => {
       }
 
       // Use AuthContext login method to properly update auth state
-      await authLogin(payload.usernameOrEmailOrId, payload.password);
+      if (loginMode === 'cls') {
+        // Class login uses a different endpoint
+        await authClassLogin(payload.usernameOrEmailOrId, payload.password);
+      } else {
+        await authLogin(payload.usernameOrEmailOrId, payload.password);
+      }
 
       // AuthContext will update state and AuthRedirect will handle navigation
       // But we can also redirect explicitly to the correct dashboard route
@@ -88,9 +93,11 @@ const LoginScreen = () => {
             // School Admin or any other admin role
             window.location.href = '/admin/dashboard';
           }
-        } else if (loginMode === 'student') {
-          window.location.href = '/student/dashboard';
-        }
+      } else if (loginMode === 'student') {
+        window.location.href = '/student/dashboard';
+      } else if (loginMode === 'cls') {
+        window.location.href = '/class-controller/dashboard';
+      }
       }, 100);
     } catch (err) {
       let message = 'Login failed. Please verify your credentials.';
@@ -177,7 +184,7 @@ const LoginScreen = () => {
                   <label className="field-label">Student ID</label>
                   <div className="input-box-wrapper">
                     <IonInput
-                      placeholder="e.g. STU-2026-001"
+                      placeholder="e.g. STU-0001"
                       value={studentId}
                       onIonInput={(e) => setStudentId(e.detail.value || '')}
                       disabled={isLoading}
@@ -193,7 +200,7 @@ const LoginScreen = () => {
                   <div className="input-box-wrapper">
                     <IonInput
                       type={loginMode === 'cls' ? 'text' : 'email'}
-                      placeholder={loginMode === 'cls' ? 'e.g. CLS-9' : 'macvel@school.com'}
+                      placeholder={loginMode === 'cls' ? 'e.g. CLS-001' : 'macvel@school.com'}
                       value={email}
                       onIonInput={(e) => setEmail(e.detail.value || '')}
                       disabled={isLoading}

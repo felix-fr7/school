@@ -1,0 +1,266 @@
+/* ============================================
+   Homework Creation Modal Styles
+   ============================================ */
+
+.homework-creation-modal {
+  --max-height: 95vh;
+}
+
+.homework-creation-modal ion-toolbar {
+  --background: var(--ion-color-primary);
+  --border-color: transparent;
+}
+
+.homework-creation-modal ion-title {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.create-btn {
+  font-weight: 600;
+}
+
+.homework-form-content {
+  --background: #F8FAFC;
+}
+
+.form-container {
+  padding: 20px 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   Form Input Items
+   ============================================ */
+.input-item {
+  --background: #FFFFFF;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --inner-padding-bottom: 0;
+  margin-bottom: 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.input-item:last-child {
+  margin-bottom: 0;
+}
+
+.field-icon {
+  color: var(--ion-color-primary);
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.input-item ion-label[position="stacked"] {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748B;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-item ion-input,
+.input-item ion-textarea {
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.input-item ion-input::part(native),
+.input-item ion-textarea::part(native) {
+  font-size: 15px;
+  color: #1E293B;
+}
+
+.input-item ion-input::placeholder,
+.input-item ion-textarea::placeholder {
+  color: #94A3B8;
+}
+
+.textarea-item {
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+}
+
+/* ============================================
+   Date Item
+   ============================================ */
+.date-item {
+  cursor: pointer;
+}
+
+.date-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.date-icon {
+  color: var(--ion-color-primary);
+  font-size: 18px;
+}
+
+.date-text {
+  font-size: 14px;
+  color: #1E293B;
+}
+
+.date-text.placeholder {
+  color: #94A3B8;
+}
+
+/* ============================================
+   Toggle Item
+   ============================================ */
+.toggle-item {
+  --background: #EFF6FF;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --inner-padding-bottom: 0;
+  margin-bottom: 12px;
+  border: 1px solid #BFDBFE;
+  border-radius: 12px;
+}
+
+.toggle-item ion-label h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E40AF;
+  margin-bottom: 2px;
+}
+
+.toggle-item ion-label p {
+  font-size: 12px;
+  color: #3B82F6;
+  margin: 0;
+}
+
+/* ============================================
+   Date Picker Modal
+   ============================================ */
+.date-picker-modal ion-modal {
+  --height: auto;
+  --max-height: 80vh;
+}
+
+.date-picker-modal .modal-container {
+  padding: 24px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  max-width: 400px;
+  margin: auto;
+}
+
+.date-picker-modal .modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.date-picker-modal .date-picker-wrapper {
+  margin-bottom: 20px;
+}
+
+.date-picker-modal ion-datetime {
+  --background: #F8FAFC;
+  border-radius: 12px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.date-picker-modal .modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+/* ============================================
+   Subject Select Wrapper
+   ============================================ */
+.subject-select-wrapper {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.subject-select-wrapper ion-select {
+  flex: 1;
+}
+
+.manage-subjects-btn {
+  margin-left: 8px;
+  --color: var(--ion-color-primary);
+  font-size: 18px;
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .homework-form-content {
+    --background: #0F172A;
+  }
+
+  .input-item {
+    --background: #1E293B;
+    border-color: #334155;
+  }
+
+  .input-item ion-label[position="stacked"] {
+    color: #94A3B8;
+  }
+
+  .input-item ion-input::part(native),
+  .input-item ion-textarea::part(native) {
+    color: #F8FAFC;
+  }
+
+  .input-item ion-input::placeholder,
+  .input-item ion-textarea::placeholder {
+    color: #64748B;
+  }
+
+  .date-text {
+    color: #F8FAFC;
+  }
+
+  .date-text.placeholder {
+    color: #64748B;
+  }
+
+  .toggle-item {
+    --background: #1E293B;
+    border-color: #334155;
+  }
+
+  .toggle-item ion-label h4 {
+    color: #93C5FD;
+  }
+
+  .toggle-item ion-label p {
+    color: #60A5FA;
+  }
+
+  .date-picker-modal .modal-container {
+    background: #1E293B;
+  }
+
+  .date-picker-modal .modal-title {
+    color: #F8FAFC;
+  }
+
+  .date-picker-modal ion-datetime {
+    --background: #0F172A;
+  }
+}

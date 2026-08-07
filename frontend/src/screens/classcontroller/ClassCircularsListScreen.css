@@ -199,6 +199,22 @@
   margin-right: 4px;
 }
 
+.attachment-btn {
+  --color: var(--ion-color-primary, #3880ff);
+  --color-hover: var(--ion-color-primary-shade, #2664d8);
+  font-size: 11px;
+  font-weight: 600;
+  height: 28px;
+  min-width: auto;
+  padding: 0 8px;
+  border-radius: 6px;
+  margin: 0 2px;
+}
+
+.attachment-btn ion-icon {
+  font-size: 14px;
+}
+
 .delete-btn {
   --padding-start: 6px;
   --padding-end: 6px;

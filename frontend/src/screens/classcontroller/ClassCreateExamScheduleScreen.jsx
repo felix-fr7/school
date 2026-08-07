@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Class Create Exam Schedule Screen (Ionic React Version)
  * Create new exam schedules for the class
  */
@@ -48,13 +48,13 @@ const SUBJECTS = [
   'Other',
 ];
 
-const ClassCreateExamScheduleScreen: React.FC = () => {
+const ClassCreateExamScheduleScreen = () => {
   const history = useHistory();
 
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
-  const [examDate, setExamDate] = useState<string>(new Date().toISOString());
-  const [examTime, setExamTime] = useState<string>('09:00');
+  const [examDate, setExamDate] = useState(new Date().toISOString());
+  const [examTime, setExamTime] = useState('09:00');
   const [duration, setDuration] = useState('');
   const [roomNo, setRoomNo] = useState('');
   
@@ -64,7 +64,7 @@ const ClassCreateExamScheduleScreen: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [toastMessage, setToastMessage] = useState('');
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     if (!title.trim()) {
       setAlertHeader('Validation Error');
       setAlertMessage('Exam title is required');

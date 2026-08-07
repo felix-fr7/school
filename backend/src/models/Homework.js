@@ -89,6 +89,11 @@ const HomeworkSchema = new mongoose.Schema({
     trim: true,
     maxlength: [2000, 'Description cannot exceed 2000 characters']
   },
+  givenDate: {
+    type: Date,
+    required: [true, 'Given date is required'],
+    default: Date.now
+  },
   dueDate: {
     type: Date,
     required: [true, 'Due date is required']
@@ -98,9 +103,10 @@ const HomeworkSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: function(value) {
-        return /^https?:\/\/.+/i.test(value);
+        // Accept both full URLs (http/https) and relative paths (/uploads/...)
+        return /^https?:\/\/.+/i.test(value) || /^\/uploads\/.+/i.test(value);
       },
-      message: 'Attachment must be a valid URL'
+      message: 'Attachment must be a valid URL or file path'
     }
   }],
   teacher: {

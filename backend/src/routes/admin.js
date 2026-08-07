@@ -942,19 +942,50 @@ router.post('/subjects', async (req, res, next) => {
     const { name, code, description } = req.body;
     const tenantId = req.user.tenantId || req.user.schoolId;
 
+    // Validate required fields
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Subject name is required' });
+    }
+
+    // Generate code from name if not provided
+    let subjectCode = code ? code.toUpperCase().trim() : null;
+    if (!subjectCode) {
+      // Generate code from name (first 3 letters + random number)
+      const namePart = name.trim().substring(0, 3).toUpperCase();
+      const count = await Subject.countDocuments({ tenantId });
+      subjectCode = `${namePart}-${String(count + 1).padStart(3, '0')}`;
+    }
+
+    // Check if code already exists
+    const existingSubject = await Subject.findOne({ code: subjectCode, tenantId });
+    if (existingSubject) {
+      return res.status(400).json({ success: false, message: 'Subject code already exists' });
+    }
+
     const subjectData = {
       tenantId,
-      name,
-      code,
-      description,
+      name: name.trim(),
+      code: subjectCode,
+      description: description ? description.trim() : '',
       isActive: true
     };
 
     const newSubject = new Subject(subjectData);
     await newSubject.save();
 
-    res.status(201).json({ success: true, data: { id: newSubject._id } });
+    res.status(201).json({ 
+      success: true, 
+      data: {
+        id: newSubject._id,
+        name: newSubject.name,
+        code: newSubject.code,
+        description: newSubject.description,
+        isActive: newSubject.isActive,
+        createdAt: newSubject.createdAt
+      }
+    });
   } catch (error) {
+    console.error('Error creating subject:', error);
     next(error);
   }
 });
@@ -964,21 +995,42 @@ router.put('/subjects/:id', async (req, res, next) => {
     const { name, code, description } = req.body;
     const tenantId = req.user.tenantId || req.user.schoolId;
 
+    // Validate required fields
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Subject name is required' });
+    }
+
+    const updateData = {
+      name: name.trim(),
+      code: code ? code.toUpperCase().trim() : undefined,
+      description: description ? description.trim() : ''
+    };
+
     const updatedSubject = await Subject.findOneAndUpdate(
       { 
         _id: req.params.id, 
         tenantId
       },
-      { name, code, description },
-      { new: true }
+      updateData,
+      { new: true, runValidators: true }
     );
 
     if (!updatedSubject) {
       return res.status(404).json({ success: false, message: 'Subject not found' });
     }
 
-    res.json({ success: true });
+    res.json({ 
+      success: true,
+      data: {
+        id: updatedSubject._id,
+        name: updatedSubject.name,
+        code: updatedSubject.code,
+        description: updatedSubject.description,
+        isActive: updatedSubject.isActive
+      }
+    });
   } catch (error) {
+    console.error('Error updating subject:', error);
     next(error);
   }
 });
@@ -1398,6 +1450,52 @@ router.post('/reset-class-code-counter', async (req, res, next) => {
       success: true, 
       message: `Deleted ${deleteResult.deletedCount} classes. Note: Class codes (CLS-001, etc.) are globally unique, so new classes will use the next available code. To truly reset to CLS-001, all classes across all tenants must be deleted.`,
       deletedCount: deleteResult.deletedCount
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================
+// Class Password Reset
+// ============================================
+router.post('/classes/:id/reset-password', async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const classId = req.params.id;
+
+    // Validation
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long'
+      });
+    }
+
+    // Find the class and verify it belongs to this tenant
+    const classData = await Class.findOne({
+      _id: classId,
+      tenantId
+    });
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: 'Class not found'
+      });
+    }
+
+    // Update the password (will be hashed by the model's pre-save hook)
+    classData.password = password;
+    await classData.save();
+
+    res.json({
+      success: true,
+      message: 'Class password updated successfully',
+      data: {
+        classCode: classData.classCode
+      }
     });
   } catch (error) {
     next(error);

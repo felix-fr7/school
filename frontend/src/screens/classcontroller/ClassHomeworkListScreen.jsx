@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState, useCallback } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -24,6 +24,7 @@ import {
   IonCardContent,
   IonItem,
   IonLabel,
+  IonToast,
 } from '@ionic/react';
 import {
   addOutline,
@@ -37,56 +38,70 @@ import {
   peopleOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { Homework } from '../../types';
+import { classControllerAPI } from '../../services/api';
 import './ClassHomeworkListScreen.css';
 
-const ClassHomeworkListScreen: React.FC = () => {
+const ClassHomeworkListScreen = () => {
   const history = useHistory();
 
-  const [homework, setHomework] = useState<Homework[]>([]);
+  const [homework, setHomework] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalHomework, setTotalHomework] = useState(0);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
+  const [selectedHomework, setSelectedHomework] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
-  const fetchHomework = async (refresh = false) => {
+  const fetchHomework = useCallback(async (refresh = false, pageNum = 1) => {
     try {
-      if (refresh) {
-        setPage(1);
+      setLoading(true);
+      const response = await classControllerAPI.getHomework(pageNum, 20);
+      
+      if (response.success && response.data) {
+        const homeworkData = response.data.homework || [];
+        const pagination = response.data.pagination || {};
+        
+        if (refresh) {
+          setHomework(homeworkData);
+        } else {
+          setHomework(prev => [...prev, ...homeworkData]);
+        }
+        
+        setTotalPages(pagination.pages || 1);
+        setTotalHomework(pagination.total || 0);
+        setPage(pageNum);
       }
-      console.log('Fetching homework for page:', refresh ? 1 : page);
-      setHomework([]);
-      setTotalPages(1);
     } catch (error) {
       console.error('Error fetching homework:', error);
+      setToastMessage('Failed to load homework');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchHomework();
   }, []);
 
-  const onRefresh = async (event: CustomEvent) => {
+  useEffect(() => {
+    fetchHomework(true, 1);
+  }, [fetchHomework]);
+
+  const onRefresh = async (event) => {
     setRefreshing(true);
-    await fetchHomework(true);
+    await fetchHomework(true, 1);
     event.detail.complete();
   };
 
-  const handleHomeworkPress = (item: Homework) => {
+  const handleHomeworkPress = (item) => {
     history.push(`/class-controller/homework/${item.id}`);
   };
 
-  const handleEditHomework = (e: React.MouseEvent, item: Homework) => {
+  const handleEditHomework = (e, item) => {
     e.stopPropagation(); // Prevents card click
     history.push(`/class-controller/homework/edit/${item.id}`);
   };
 
-  const handleDeleteHomework = (e: React.MouseEvent, item: Homework) => {
+  const handleDeleteHomework = (e, item) => {
     e.stopPropagation(); // Prevents card click
     setSelectedHomework(item);
     setShowDeleteAlert(true);
@@ -95,15 +110,23 @@ const ClassHomeworkListScreen: React.FC = () => {
   const confirmDelete = async () => {
     if (!selectedHomework) return;
     try {
-      setHomework((prev) => prev.filter((h) => h.id !== selectedHomework.id));
+      const response = await classControllerAPI.deleteHomework(selectedHomework.id);
+      if (response.success) {
+        setHomework((prev) => prev.filter((h) => h.id !== selectedHomework.id));
+        setToastMessage('Homework deleted successfully');
+      } else {
+        setToastMessage('Failed to delete homework');
+      }
     } catch (error) {
       console.error('Error deleting homework:', error);
+      setToastMessage(error.response?.data?.error?.message || 'Failed to delete homework');
     }
     setShowDeleteAlert(false);
     setSelectedHomework(null);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString) => {
+    if (!dateString) return 'No due date';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -112,33 +135,31 @@ const ClassHomeworkListScreen: React.FC = () => {
     });
   };
 
-  const isOverdue = (dueDate?: string) => {
+  const isOverdue = (dueDate) => {
     if (!dueDate) return false;
     return new Date(dueDate) < new Date();
   };
 
-  const getSubjectColor = (subject: string) => {
-    const colors: { [key: string]: string } = {
-      Mathematics: '#2E7D32',
-      Science: '#1565C0',
-      English: '#E65100',
-      History: '#6A1B9A',
-      Geography: '#00838F',
-      'Computer Science': '#C2185B',
-      Physics: '#283593',
-      Chemistry: '#00695C',
-    };
-    return colors[subject] || '#455A64';
+  const getSubjectColor = (subject) => {
+    // Generate consistent colors based on subject name hash
+    if (!subject) return '#455A64';
+    
+    let hash = 0;
+    for (let i = 0; i < subject.length; i++) {
+      hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const hue = Math.abs(hash % 360);
+    return `hsl(${hue}, 70%, 40%)`;
   };
 
-  const handleLoadMore = async (event: CustomEvent) => {
+  const handleLoadMore = async (event) => {
     if (page >= totalPages) {
       event.detail.complete();
       return;
     }
     const nextPage = page + 1;
-    setPage(nextPage);
-    await fetchHomework(false);
+    await fetchHomework(false, nextPage);
     event.detail.complete();
   };
 
@@ -185,7 +206,7 @@ const ClassHomeworkListScreen: React.FC = () => {
 
         {homework.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📚</div>
+            <div className="empty-icon">ðŸ“š</div>
             <IonText>
               <h3>No homework assigned yet</h3>
               <p className="empty-subtext">
@@ -286,6 +307,15 @@ const ClassHomeworkListScreen: React.FC = () => {
             <IonIcon icon={addOutline} />
           </IonFabButton>
         </IonFab>
+
+        <IonToast
+          isOpen={!!toastMessage}
+          message={toastMessage || ''}
+          duration={3000}
+          onDidDismiss={() => setToastMessage(null)}
+          icon={checkmarkCircleOutline}
+          color="dark"
+        />
 
         <IonAlert
           isOpen={showDeleteAlert}

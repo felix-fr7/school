@@ -17,6 +17,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
  * 
  * Expected header format: Authorization: Bearer <token>
  * 
+ * Supports both regular user tokens (userId) and class tokens (classId)
+ * 
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
@@ -52,6 +54,48 @@ const authenticate = async (req, res, next) => {
     // Verify token using JWT_SECRET
     const decoded = jwt.verify(token, JWT_SECRET);
 
+    // Check if this is a class token (has classId instead of userId)
+    if (decoded.type === 'CLASS' && decoded.classId) {
+      // This is a class login token - handle class authentication
+      const Class = require('../models/Class');
+      
+      const classData = await Class.findOne({
+        _id: decoded.classId,
+        isActive: true
+      });
+
+      if (!classData) {
+        return res.status(401).json({
+          success: false,
+          error: {
+            message: 'Invalid token or class not found.',
+            code: 'INVALID_TOKEN'
+          }
+        });
+      }
+
+      // Attach class data to request
+      req.user = {
+        id: classData._id.toString(),
+        classId: classData._id.toString(),
+        classCode: classData.classCode,
+        name: classData.name,
+        section: classData.section,
+        role: 'CLASS',
+        tenantId: classData.tenantId ? classData.tenantId.toString() : null,
+        email: null,
+        avatarUrl: null,
+        studentId: null,
+        rollNumber: null,
+        teacherId: null,
+        schoolId: null,
+        isClass: true
+      };
+
+      return next();
+    }
+
+    // Regular user token - find user in Admin or User collection
     // First, try to find admin in Admin collection (for Super Admin and School Admin)
     let user = await Admin.findOne({
       _id: decoded.userId,
@@ -87,7 +131,11 @@ const authenticate = async (req, res, next) => {
       // Additional fields for specific roles (User collection specific)
       studentId: user.studentId || null,
       classId: user.classId ? user.classId.toString() : null,
-      rollNumber: user.rollNumber || null
+      rollNumber: user.rollNumber || null,
+      // Teacher specific
+      teacherId: user.teacherId ? user.teacherId.toString() : null,
+      avatarUrl: user.avatarUrl || null,
+      isClass: false
     };
 
     // Move to next middleware
@@ -131,6 +179,8 @@ const authenticate = async (req, res, next) => {
  * Attaches user to request if token is present, but doesn't fail if invalid
  * Useful for endpoints that have different content for authenticated vs unauthenticated users
  * 
+ * Supports both regular user tokens (userId) and class tokens (classId)
+ * 
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
@@ -145,31 +195,65 @@ const optionalAuth = async (req, res, next) => {
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
         
-        // First, try to find admin in Admin collection
-        let user = await Admin.findOne({
-          _id: decoded.userId,
-          isActive: true
-        }).select('-password');
+        // Check if this is a class token (has classId instead of userId)
+        if (decoded.type === 'CLASS' && decoded.classId) {
+          const Class = require('../models/Class');
+          
+          const classData = await Class.findOne({
+            _id: decoded.classId,
+            isActive: true
+          });
 
-        // If not found in Admin collection, try User collection
-        if (!user) {
-          user = await User.findOne({
+          if (classData) {
+            req.user = {
+              id: classData._id.toString(),
+              classId: classData._id.toString(),
+              classCode: classData.classCode,
+              name: classData.name,
+              section: classData.section,
+              role: 'CLASS',
+              tenantId: classData.tenantId ? classData.tenantId.toString() : null,
+              email: null,
+              avatarUrl: null,
+              studentId: null,
+              rollNumber: null,
+              teacherId: null,
+              schoolId: null,
+              isClass: true
+            };
+          }
+        } else {
+          // Regular user token - find user in Admin or User collection
+          // First, try to find admin in Admin collection
+          let user = await Admin.findOne({
             _id: decoded.userId,
             isActive: true
           }).select('-password');
-        }
 
-        if (user) {
-          req.user = {
-            id: user._id.toString(),
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            schoolId: user.schoolId ? user.schoolId.toString() : null,
-            studentId: user.studentId || null,
-            classId: user.classId ? user.classId.toString() : null,
-            rollNumber: user.rollNumber || null
-          };
+          // If not found in Admin collection, try User collection
+          if (!user) {
+            user = await User.findOne({
+              _id: decoded.userId,
+              isActive: true
+            }).select('-password');
+          }
+
+          if (user) {
+            req.user = {
+              id: user._id.toString(),
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              schoolId: user.schoolId ? user.schoolId.toString() : null,
+              tenantId: user.tenantId ? user.tenantId.toString() : null,
+              studentId: user.studentId || null,
+              classId: user.classId ? user.classId.toString() : null,
+              rollNumber: user.rollNumber || null,
+              teacherId: user.teacherId ? user.teacherId.toString() : null,
+              avatarUrl: user.avatarUrl || null,
+              isClass: false
+            };
+          }
         }
       } catch (tokenError) {
         // Token is invalid, but we continue without user

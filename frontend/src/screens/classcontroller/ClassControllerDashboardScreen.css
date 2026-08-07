@@ -1,289 +1,543 @@
-/* ============================================
-   Light Theme Workspace & Enhanced Spacing
-   ============================================ */
+/* --- Professional, Decent & Calm Teacher Dashboard Styles --- */
 
-/* Force Light Background Everywhere */
-.light-loading-container,
-.light-dashboard-content {
-  --background: #F8FAFC !important;
-  background-color: #F8FAFC !important;
-  color: #0F172A !important;
+.teacher-loading-bg {
+  --background: #F8FAFC;
 }
 
-.main-wrapper {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding-bottom: 30px;
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
-/* Toolbar Header */
-.light-toolbar {
+.teacher-toolbar {
   --background: #FFFFFF;
-  --color: #0F172A;
+  --border-color: #E2E8F0;
   border-bottom: 1px solid #E2E8F0;
+  padding: 0 16px;
 }
 
-.brand-header {
+/* Custom Nav Bar Layout for Perfect Alignment & Visibility */
+.custom-nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 8px 0;
+}
+
+.brand-box {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 18px;
+}
+
+.toolbar-main-icon {
+  font-size: 1.3rem;
+  color: #1E293B;
+}
+
+.brand-text {
+  font-size: 1.05rem;
   font-weight: 800;
-  color: #0F172A;
+  color: #1E293B;
+  letter-spacing: -0.2px;
 }
 
-.brand-icon {
-  font-size: 24px;
-  color: #2563EB;
-}
-
-/* Hero Section Banner */
-.light-hero-card {
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  margin: 20px 16px;
-  padding: 24px;
-  border-radius: 20px;
-  color: #FFFFFF;
-  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
-}
-
-.hero-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.teacher-badge {
+/* Clear & Modern Header Sign Out Button */
+.nav-signout-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
   padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
   font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.code-pill {
+.nav-signout-btn ion-icon {
+  font-size: 1.1rem;
+}
+
+.nav-signout-btn:hover {
+  background: #FEE2E2;
+  border-color: #F87171;
+  transform: translateY(-1px);
+}
+
+.teacher-content-bg {
+  --background: #F8FAFC;
+}
+
+.teacher-container {
+  padding: 20px;
+  max-width: 1150px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeInSmooth 0.4s ease-out forwards;
+}
+
+@keyframes fadeInSmooth {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- PROFESSIONAL HERO CARD --- */
+.teacher-hero-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.hero-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.teacher-role-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #FFFFFF;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 12px;
-  color: #1E293B;
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  transition: transform 0.15s ease;
-}
-
-.code-pill:active {
-  transform: scale(0.95);
-}
-
-.code-label {
-  color: #64748B;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.code-value {
-  font-weight: 800;
-  color: #2563EB;
-  letter-spacing: 0.8px;
-}
-
-.hero-main .class-title {
-  font-size: 26px;
-  font-weight: 800;
-  margin: 0;
-}
-
-.class-section-pill {
-  display: inline-block;
-  margin-top: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2px 10px;
+  gap: 6px;
+  background: #F1F5F9;
+  color: #334155;
+  padding: 5px 12px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  border: 1px solid #E2E8F0;
+}
+
+.code-badge-btn {
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  color: #1E293B;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.code-badge-btn:hover {
+  background: #F1F5F9;
+}
+
+.code-label-text {
+  color: #64748B;
+  font-weight: 500;
+}
+
+.code-value-text {
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.hero-class-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
+}
+
+.hero-section-tag {
+  display: inline-block;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.hero-welcome-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748B;
+  font-weight: 400;
+}
+
+.hero-welcome-text strong {
+  color: #1E293B;
   font-weight: 600;
 }
 
-.teacher-greeting {
-  margin-top: 12px;
-  font-size: 14px;
-  color: #E0E7FF;
-}
-
-/* Quick Stats Bar */
-.stats-container {
+/* --- METRICS BLOCKS --- */
+.metrics-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  padding: 0 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 }
 
-@media (min-width: 640px) {
-  .stats-container {
-    grid-template-columns: repeat(4, 1fr);
+@media (max-width: 576px) {
+  .metrics-grid {
+    grid-template-columns: repeat(1, 1fr);
   }
 }
 
-.stat-box {
+.metric-box {
   background: #FFFFFF;
-  padding: 16px;
-  border-radius: 16px;
-  text-align: center;
   border: 1px solid #E2E8F0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
-.stat-box.blue { border-top: 4px solid #3B82F6; }
-.stat-box.purple { border-top: 4px solid #8B5CF6; }
-.stat-box.orange { border-top: 4px solid #F59E0B; }
-.stat-box.green { border-top: 4px solid #10B981; }
-
-.stat-number {
-  display: block;
-  font-size: 22px;
+.metric-digit {
+  font-size: 1.6rem;
   font-weight: 800;
   color: #0F172A;
+  line-height: 1.2;
 }
 
-.stat-desc {
-  font-size: 12px;
-  color: #64748B;
+.metric-label {
+  font-size: 0.75rem;
   font-weight: 600;
-  margin-top: 2px;
+  color: #64748B;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* Share Access Key Card */
-.share-code-card {
-  margin: 0 16px 24px 16px;
-  border-radius: 16px;
-  border: 1px solid #E2E8F0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+/* Quick Access Card */
+.quick-access-card {
+  margin: 0;
+  border-radius: 12px;
   background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: none;
 }
 
-.share-card-content {
+.quick-card-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 16px 20px !important;
+  gap: 12px;
 }
 
-.share-info h3 {
-  font-size: 15px;
+.quick-info h3 {
+  margin: 0 0 2px 0;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #0F172A;
+  color: #1E293B;
+}
+
+.quick-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748B;
+}
+
+.copy-action-btn {
+  --border-color: #CBD5E1;
+  --color: #334155;
+  --border-radius: 8px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.8rem;
   margin: 0;
 }
 
-.share-info p {
-  font-size: 13px;
-  color: #64748B;
-  margin: 4px 0 0 0;
+/* --- CONTROL SECTION CARDS --- */
+.control-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.copy-btn {
-  --border-radius: 10px;
-  --background: #2563EB;
-  font-size: 12px;
+.group-heading {
+  font-size: 1rem;
   font-weight: 700;
-  height: 38px;
+  color: #1E293B;
+  margin: 0;
 }
 
-/* Management Section Grid with Spacing */
-.management-section {
-  padding: 0 16px 20px 16px;
+.grid-row-gap {
+  margin-left: -6px;
+  margin-right: -6px;
 }
 
-.section-heading {
-  font-size: 18px;
-  font-weight: 800;
-  color: #0F172A;
-  margin: 0 0 16px 0;
+.grid-col-pad {
+  padding: 6px;
 }
 
-/* Adding Spacing between Ionic Grid Columns & Rows */
-.custom-row-gap {
-  margin-left: -8px !important;
-  margin-right: -8px !important;
-}
-
-.custom-col-padding {
-  padding: 8px !important; /* Proper distance/space between cards */
-}
-
-/* Colorful Card Styling */
-.color-action-card {
-  border: 1px solid;
-  border-radius: 18px;
-  padding: 18px 16px;
+.teacher-menu-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 16px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  height: 100%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  animation: cardAppear 0.4s ease forwards;
+  opacity: 0;
+  transform: translateY(6px);
 }
 
-.color-action-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+@keyframes cardAppear {
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.color-action-card:active {
-  transform: scale(0.97);
+.teacher-menu-card:hover {
+  border-color: #94A3B8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
-.color-icon-box {
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
+.menu-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
-  font-size: 24px;
+  font-size: 1.2rem;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
-.color-action-details {
-  overflow: hidden;
-}
+/* Professional muted icon background variants */
+.icon-blue { background: #EFF6FF; color: #2563EB; }
+.icon-indigo { background: #EEF2FF; color: #4F46E5; }
+.icon-purple { background: #F3E8FF; color: #7C3AED; }
+.icon-teal { background: #F0FDFA; color: #0D9488; }
+.icon-cyan { background: #ECFEFF; color: #0891B2; }
+.icon-emerald { background: #ECFDF5; color: #059669; }
+.icon-slate { background: #F1F5F9; color: #475569; }
 
-.color-action-details h3 {
-  font-size: 15px;
+.menu-text-content h3 {
+  margin: 0 0 2px 0;
+  font-size: 0.9rem;
   font-weight: 700;
+  color: #0F172A;
+}
+
+.menu-text-content p {
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  color: #64748B;
+  font-weight: 500;
 }
 
-.color-action-details p {
-  font-size: 12px;
-  margin: 3px 0 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* ============================================
+   Quick Actions Section
+   ============================================ */
+.quick-actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* Logout */
-.logout-wrapper {
-  padding: 12px 16px 30px 16px;
+.quick-action-card {
+  background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+  border: 1px solid #C7D2FE;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0;
 }
 
-.logout-btn {
-  --border-radius: 14px;
-  font-weight: 700;
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.15);
+  border-color: #A5B4FC;
+}
+
+.quick-action-card:active {
+  transform: translateY(0);
+}
+
+.quick-action-card ion-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px !important;
+}
+
+.quick-action-icon {
+  width: 48px;
   height: 48px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #4F46E5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+  flex-shrink: 0;
+}
+
+.quick-action-text h3 {
+  margin: 0 0 2px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1E1B4B;
+}
+
+.quick-action-text p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #4338CA;
+  font-weight: 500;
+}
+
+/* ============================================
+   Recent Homework Section
+   ============================================ */
+.recent-homework-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.homework-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.homework-card {
+  margin: 0;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.homework-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.homework-card ion-card-content {
+  padding: 14px 18px !important;
+}
+
+.homework-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.homework-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.homework-subject-badge {
+  display: inline-block;
+  background: #EFF6FF;
+  color: #2563EB;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.homework-date {
+  font-size: 0.75rem;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.homework-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.homework-description {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+/* ============================================
+   Dark Mode Support
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .quick-action-card {
+    background: linear-gradient(135deg, #1E293B 0%, #1E1B4B 100%);
+    border-color: #334155;
+  }
+
+  .quick-action-icon {
+    background: #0F172A;
+    color: #818CF8;
+  }
+
+  .quick-action-text h3 {
+    color: #E0E7FF;
+  }
+
+  .quick-action-text p {
+    color: #A5B4FC;
+  }
+
+  .homework-card {
+    background: #1E293B;
+    border-color: #334155;
+  }
+
+  .homework-card:hover {
+    border-color: #475569;
+  }
+
+  .homework-subject-badge {
+    background: #1E293B;
+    color: #60A5FA;
+  }
+
+  .homework-date {
+    color: #94A3B8;
+  }
+
+  .homework-title {
+    color: #F8FAFC;
+  }
+
+  .homework-description {
+    color: #94A3B8;
+  }
 }

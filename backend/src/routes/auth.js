@@ -7,11 +7,170 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const Tenant = require('../models/Tenant');
 const Class = require('../models/Class');
 const { authenticate, generateToken } = require('../middleware/auth');
+
+/**
+ * POST /api/auth/class-login
+ * Class login with class code and password
+ */
+router.post('/class-login', async (req, res, next) => {
+  try {
+    const { classCode, password } = req.body;
+
+    // DEBUG: Log incoming request
+    console.log('[CLASS-LOGIN] === Incoming Request ===');
+    console.log('[CLASS-LOGIN] Request body:', JSON.stringify({ classCode, password }));
+
+    // Validation
+    if (!classCode || !password) {
+      console.log('[CLASS-LOGIN] FAIL: Missing classCode or password');
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Class code and password are required',
+        },
+      });
+    }
+
+    // Find class by classCode (MongoDB) - with flexible lookup
+    // Trim whitespace and convert to uppercase
+    let normalizedCode = classCode.trim().toUpperCase();
+    
+    // Handle variations like "CLS-3" vs "CLS-003" by padding numbers
+    // Pattern: XXX-NNN where XXX is letters and NNN is 1-3 digit number
+    const codeMatch = normalizedCode.match(/^([A-Z]+)-(\d+)$/);
+    if (codeMatch) {
+      const prefix = codeMatch[1];
+      const number = codeMatch[2];
+      // Pad the number to 3 digits (e.g., "3" becomes "003")
+      normalizedCode = `${prefix}-${number.padStart(3, '0')}`;
+    }
+    
+    console.log('[CLASS-LOGIN] Normalized classCode:', normalizedCode, '(original:', classCode, ')');
+    
+    // Try exact match first, then try flexible lookup if not found
+    let classData = await Class.findOne({ 
+      classCode: normalizedCode 
+    }).select('+password');
+    
+    // If not found and the normalized code is different from what we computed, try alternative formats
+    if (!classData) {
+      // Try without padding (e.g., CLS-3)
+      if (codeMatch) {
+        const altCode = `${codeMatch[1]}-${codeMatch[2]}`;
+        console.log('[CLASS-LOGIN] Trying alternative format:', altCode);
+        classData = await Class.findOne({ 
+          classCode: altCode 
+        }).select('+password');
+      }
+    }
+
+    if (!classData) {
+      console.log('[CLASS-LOGIN] FAIL: Class not found in database');
+      console.log('[CLASS-LOGIN] Searched for:', { classCode: normalizedCode });
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Invalid class code or password',
+        },
+      });
+    }
+
+    console.log('[CLASS-LOGIN] Class found:', {
+      _id: classData._id,
+      name: classData.name,
+      section: classData.section,
+      classCode: classData.classCode,
+      hasPassword: !!classData.password,
+      passwordHash: classData.password ? classData.password.substring(0, 30) + '...' : null,
+      tenantId: classData.tenantId
+    });
+
+    // Check if password is set
+    if (!classData.password) {
+      console.log('[CLASS-LOGIN] FAIL: Class exists but password is not set');
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Class password not set. Please contact your administrator.',
+        },
+      });
+    }
+
+    // Verify password using the model's comparePassword method
+    console.log('[CLASS-LOGIN] Comparing password...');
+    const isPasswordValid = await classData.comparePassword(password);
+    console.log('[CLASS-LOGIN] Password comparison result:', isPasswordValid);
+
+    if (!isPasswordValid) {
+      console.log('[CLASS-LOGIN] FAIL: Password does not match');
+      console.log('[CLASS-LOGIN] Entered password:', password);
+      console.log('[CLASS-LOGIN] Stored hash:', classData.password);
+      return res.status(401).json({
+        success: false,
+        error: {
+          message: 'Invalid class code or password',
+        },
+      });
+    }
+
+    console.log('[CLASS-LOGIN] SUCCESS: Login successful for class', classData.classCode);
+
+    // Create JWT token with class context
+    const token = jwt.sign(
+      {
+        classId: classData._id,
+        classCode: classData.classCode,
+        tenantId: classData.tenantId,
+        type: 'CLASS',
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+    );
+
+    // Get teacher info if assigned
+    let teacher = null;
+    if (classData.teacherId) {
+      const teacherDoc = await User.findOne({ 
+        _id: classData.teacherId, 
+        role: 'TEACHER' 
+      }).select('name email');
+      
+      if (teacherDoc) {
+        teacher = {
+          name: teacherDoc.name,
+          email: teacherDoc.email,
+        };
+      }
+    }
+
+    // Return class data
+    res.status(200).json({
+      success: true,
+      data: {
+        class: {
+          id: classData._id,
+          classCode: classData.classCode,
+          name: classData.name,
+          section: classData.section,
+          teacher,
+          studentCount: 0,
+          homeworkCount: 0,
+          examCount: 0,
+        },
+        token,
+      },
+      message: 'Class login successful',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * POST /api/auth/login
@@ -51,7 +210,10 @@ router.post('/login', async (req, res, next) => {
       // If not found in Admin collection, try User collection (for students, teachers, parents)
       console.log(`[LOGIN] Not found in Admin collection, checking User collection...`);
       user = await User.findOne({
-        $or: [{ email: normalizedIdentifier }, { studentId: normalizedIdentifier }]
+        $or: [
+          { email: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
+          { studentId: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } }
+        ]
       }).select('+password').populate('schoolId').populate('classId');
 
       if (user) {

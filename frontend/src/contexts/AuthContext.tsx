@@ -10,7 +10,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
-import { User, ClassLoginResponse, AuthContextType } from '../types';
+import type { User, ClassLoginResponse, AuthContextType } from '../types';
 import { authAPI, storage, setTenantId, getTenantId, clearTenantCache } from '../services/api';
 
 // Extended Auth Context Type with tenant support

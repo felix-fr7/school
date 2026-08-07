@@ -1,11 +1,11 @@
 /* ============================================
    Global & Content Background
    ============================================ */
-.news-detail-content {
+.circular-detail-content {
   --background: #F8FAFC;
 }
 
-.news-detail-loading {
+.circular-detail-loading {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -13,12 +13,7 @@
   height: 100%;
 }
 
-.loading-text {
-  margin-top: 12px;
-  font-size: 14px;
-}
-
-.news-container {
+.circular-container {
   max-width: 680px;
   margin: 0 auto;
   padding-bottom: 40px;
@@ -32,44 +27,19 @@
   max-height: 240px;
   overflow: hidden;
   background: #E2E8F0;
-  position: relative;
-  cursor: pointer;
 }
 
-.banner-wrapper:hover {
-  opacity: 0.9;
-}
-
-.news-banner {
+.circular-banner {
   width: 100%;
   height: 240px;
   object-fit: cover;
   display: block;
 }
 
-.image-zoom-hint {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 8px 12px;
-  font-size: 12px;
-  text-align: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.banner-wrapper:hover .image-zoom-hint {
-  opacity: 1;
-}
-
 /* ============================================
-   News Body Section
+   Circular Body Section
    ============================================ */
-.news-body {
+.circular-body {
   padding: 20px 16px;
 }
 
@@ -78,15 +48,28 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.category-badge {
+.visibility-badge {
   font-size: 11px;
-  font-weight: 700;
-  padding: 6px 12px;
+  font-weight: 600;
+  padding: 6px 10px;
   border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.visibility-badge.visibility-all {
+  background: #EFF6FF;
+  color: #2563EB;
+}
+
+.visibility-badge.visibility-specific {
+  background: #FEF3C7;
+  color: #D97706;
 }
 
 .meta-item {
@@ -98,7 +81,7 @@
   font-weight: 500;
 }
 
-.news-title {
+.circular-title {
   font-size: 22px;
   font-weight: 800;
   color: #0F172A;
@@ -107,32 +90,14 @@
 }
 
 /* ============================================
-   Author Component
+   Author Info
    ============================================ */
-.author-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  margin-bottom: 16px;
-  border-bottom: 1px solid #E2E8F0;
-}
-
-.author-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #EFF6FF;
-  color: #2563EB;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
 .author-info {
   display: flex;
   flex-direction: column;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .author-label {
@@ -147,33 +112,6 @@
 }
 
 /* ============================================
-   Summary Callout Box
-   ============================================ */
-.summary-callout {
-  background: #EFF6FF;
-  border-left: 4px solid #2563EB;
-  border-radius: 0 8px 8px 0;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-}
-
-.summary-title {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  color: #1D4ED8;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.summary-text {
-  font-size: 13px;
-  color: #1E40AF;
-  line-height: 18px;
-  margin: 0;
-}
-
-/* ============================================
    Content Card
    ============================================ */
 .content-card {
@@ -183,14 +121,14 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.news-content-text p {
+.circular-content-text p {
   font-size: 15px;
   color: #334155;
   line-height: 24px;
   margin: 0 0 12px 0;
 }
 
-.news-content-text p:last-child {
+.circular-content-text p:last-child {
   margin-bottom: 0;
 }
 
@@ -206,6 +144,13 @@
   font-weight: 700;
   color: #334155;
   margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-icon {
+  font-size: 16px;
 }
 
 .attachment-card {
@@ -218,22 +163,32 @@
   gap: 12px;
   cursor: pointer;
   transition: background 0.15s ease;
+  margin-bottom: 8px;
+}
+
+.attachment-card:last-child {
+  margin-bottom: 0;
 }
 
 .attachment-card:active {
   background: #F1F5F9;
 }
 
-.pdf-icon-wrapper {
+.attachment-icon-wrapper {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: #FEE2E2;
-  color: #DC2626;
+  background: #EFF6FF;
+  color: #2563EB;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
+}
+
+.attachment-icon-wrapper.pdf {
+  background: #FEE2E2;
+  color: #DC2626;
 }
 
 .attachment-info {
@@ -252,11 +207,6 @@
   font-size: 11px;
   color: #64748B;
   margin-top: 2px;
-}
-
-.open-icon {
-  font-size: 18px;
-  color: #94A3B8;
 }
 
 /* ============================================
@@ -288,7 +238,7 @@
    Dark Mode Support
    ============================================ */
 @media (prefers-color-scheme: dark) {
-  .news-detail-content {
+  .circular-detail-content {
     --background: #0F172A;
   }
 
@@ -296,11 +246,11 @@
     background: #1E293B;
   }
 
-  .news-title {
+  .circular-title {
     color: #F8FAFC;
   }
 
-  .author-card {
+  .author-info {
     border-bottom-color: #334155;
   }
 
@@ -308,22 +258,8 @@
     color: #CBD5E1;
   }
 
-  .author-avatar {
-    background: #1E293B;
-    color: #60A5FA;
-  }
-
-  .summary-callout {
-    background: #1E293B;
-    border-left-color: #3B82F6;
-  }
-
-  .summary-title {
-    color: #60A5FA;
-  }
-
-  .summary-text {
-    color: #93C5FD;
+  .author-label {
+    color: #64748B;
   }
 
   .content-card,
@@ -332,7 +268,7 @@
     border-color: #334155;
   }
 
-  .news-content-text p {
+  .circular-content-text p {
     color: #CBD5E1;
   }
 
@@ -343,5 +279,29 @@
 
   .attachment-subtext {
     color: #94A3B8;
+  }
+
+  .visibility-badge.visibility-all {
+    background: #1E293B;
+    color: #60A5FA;
+  }
+
+  .visibility-badge.visibility-specific {
+    background: #78350F;
+    color: #FCD34D;
+  }
+
+  .meta-item {
+    color: #94A3B8;
+  }
+
+  .attachment-icon-wrapper {
+    background: #1E293B;
+    color: #60A5FA;
+  }
+
+  .attachment-icon-wrapper.pdf {
+    background: #7F1D1D;
+    color: #FCA5A5;
   }
 }

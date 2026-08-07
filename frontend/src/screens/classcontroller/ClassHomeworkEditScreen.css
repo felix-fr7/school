@@ -1,122 +1,14 @@
-/* Class Create Homework Screen Styles */
+/* Class Homework Edit Screen Styles */
 
-.homework-create-content {
+.homework-edit-content {
   --padding-start: 0;
   --padding-end: 0;
 }
 
 .form-container {
   padding: 16px;
-  max-width: 800px;
+  max-width: 600px;
   margin: 0 auto;
-}
-
-/* Section Header */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 0 4px;
-}
-
-.section-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  color: var(--ion-color-dark);
-}
-
-/* Loading Subjects */
-.loading-subjects {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  gap: 12px;
-  color: var(--ion-color-medium);
-}
-
-/* Empty Subjects */
-.empty-subjects {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  gap: 12px;
-  color: var(--ion-color-medium);
-  background: var(--ion-color-light);
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.empty-subjects .empty-icon {
-  font-size: 48px;
-  color: var(--ion-color-medium);
-}
-
-.empty-subjects p {
-  margin: 0;
-  text-align: center;
-}
-
-/* Subjects Grid */
-.subjects-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: var(--ion-color-light);
-  border-radius: 12px;
-}
-
-.subject-chip {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.subject-chip:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.subject-chip.selected {
-  background: var(--ion-color-primary);
-  color: white;
-}
-
-.subject-chip.selected ion-icon {
-  color: white;
-}
-
-.subject-chip .edit-icon {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.subject-chip:hover .edit-icon {
-  opacity: 0.7;
-}
-
-.subject-chip ion-icon[slot="icon-only"] {
-  font-size: 14px;
-  margin-left: 4px;
-}
-
-/* Form Section */
-.form-section {
-  margin-top: 24px;
-}
-
-.form-section h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--ion-color-dark);
 }
 
 .input-item {

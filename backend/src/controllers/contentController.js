@@ -455,14 +455,14 @@ const getExamSchedules = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // For students, filter by their class
+    // For students and class controllers, filter by their class (school-wide + their class)
     let whereClause = 'es."tenantId" = $1 AND es."isPublished" = true';
     let params = [tenantId];
     let paramIndex = 2;
 
-    if (userRole === 'student' && req.user.classId) {
+    if ((userRole === 'STUDENT' || userRole === 'CLASS_CONTROLLER') && req.user.classId) {
       params.push(req.user.classId);
-      whereClause += ` AND es."classId" = $${paramIndex}`;
+      whereClause += ` AND (es."classId" = $${paramIndex} OR es."classId" IS NULL)`;
       paramIndex++;
     }
 

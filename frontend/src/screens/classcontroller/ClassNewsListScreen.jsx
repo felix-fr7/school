@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -26,16 +26,11 @@ import {
   refreshOutline,
   chevronForwardOutline,
 } from 'ionicons/icons';
-import { News } from '../../types';
+import { classControllerAPI } from '../../services/api';
 import './ClassNewsListScreen.css';
 
-interface NewsItemProps {
-  item: News;
-  onClick: (item: News) => void;
-}
-
-const NewsItem: React.FC<NewsItemProps> = ({ item, onClick }) => {
-  const formatDate = (dateString: string) => {
+const NewsItem = ({ item, onClick }) => {
+  const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -52,9 +47,9 @@ const NewsItem: React.FC<NewsItemProps> = ({ item, onClick }) => {
       )}
       <IonCardContent className="news-content">
         <div className="card-header-meta">
-          {item.category && (
+          {item.type && (
             <IonBadge color="primary" className="category-badge">
-              {item.category}
+              {item.type}
             </IonBadge>
           )}
           <div className="news-date">
@@ -64,7 +59,7 @@ const NewsItem: React.FC<NewsItemProps> = ({ item, onClick }) => {
         </div>
 
         <h3 className="news-title">{item.title}</h3>
-        <p className="news-summary">{item.summary || item.content}</p>
+        <p className="news-summary">{item.content}</p>
 
         <div className="card-footer-meta">
           <div className="attachments">
@@ -86,73 +81,39 @@ const NewsItem: React.FC<NewsItemProps> = ({ item, onClick }) => {
   );
 };
 
-const ClassNewsListScreen: React.FC = () => {
+const ClassNewsListScreen = () => {
   const history = useHistory();
   
-  const [newsList, setNewsList] = useState<News[]>([]);
+  const [newsList, setNewsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  // Mock API Loader Function
-  const fetchNewsApi = async (pageNumber: number): Promise<{ data: News[]; totalPages: number }> => {
-    // API Call Simulate
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const mockData: News[] = [
-      {
-        id: '1',
-        title: 'Annual Sports Meet & Cultural Fest Schedule',
-        content: 'We are excited to announce our upcoming Annual Sports Meet for this academic year. Practice starts next Monday.',
-        summary: 'Annual Sports meet dates and event details announced for all classes.',
-        category: 'Sports',
-        imageUrl: 'https://picsum.photos/600/300?random=1',
-        pdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        visibility: 'ALL',
-        tenantId: '1',
-        postedBy: '1',
-        isPublished: true,
-      },
-      {
-        id: '2',
-        title: 'Parent-Teacher Meeting Next Saturday',
-        content: 'Parent-Teacher Meeting for Term 1 results will be held this Saturday between 9:00 AM and 1:00 PM.',
-        summary: 'PTM schedule and discussion topics for Term 1 progress.',
-        category: 'Academic',
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        visibility: 'ALL',
-        tenantId: '1',
-        postedBy: '1',
-        isPublished: true,
-      },
-    ];
-
-    return {
-      data: mockData,
-      totalPages: 2,
-    };
-  };
+  const [error, setError] = useState(null);
 
   const fetchNews = async (isRefresh = false, targetPage = 1) => {
     try {
       if (isRefresh) {
         setPage(1);
+        targetPage = 1;
       }
       
-      const response = await fetchNewsApi(targetPage);
-
-      if (isRefresh || targetPage === 1) {
-        setNewsList(response.data);
-      } else {
-        setNewsList((prev) => [...prev, ...response.data]);
+      const response = await classControllerAPI.getNews(targetPage, 10);
+      
+      if (response.success && response.data) {
+        const newsData = response.data.news || [];
+        const pagination = response.data.pagination || {};
+        
+        if (isRefresh || targetPage === 1) {
+          setNewsList(newsData);
+        } else {
+          setNewsList((prev) => [...prev, ...newsData]);
+        }
+        
+        setTotalPages(pagination.pages || 1);
       }
-
-      setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('Error fetching news:', error);
+    } catch (err) {
+      console.error('Error fetching news:', err);
+      setError('Failed to load announcements');
     } finally {
       setLoading(false);
     }
@@ -162,22 +123,22 @@ const ClassNewsListScreen: React.FC = () => {
     fetchNews(true, 1);
   }, []);
 
-  const onRefresh = async (event: CustomEvent) => {
+  const onRefresh = async (event) => {
     await fetchNews(true, 1);
     event.detail.complete();
   };
 
-  const handleNewsPress = (item: News) => {
+  const handleNewsPress = (item) => {
     history.push(`/class-controller/news/${item.id}`);
   };
 
-  const onIonInfinite = async (event: CustomEvent) => {
+  const onIonInfinite = async (event) => {
     if (page < totalPages) {
       const nextPage = page + 1;
       setPage(nextPage);
       await fetchNews(false, nextPage);
     }
-    (event.target as HTMLIonInfiniteScrollElement).complete();
+    event.target.complete();
   };
 
   return (
@@ -187,7 +148,7 @@ const ClassNewsListScreen: React.FC = () => {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller" />
           </IonButtons>
-          <IonTitle>Class Announcements</IonTitle>
+          <IonTitle>School Bulletin</IonTitle>
         </IonToolbar>
       </IonHeader>
 
@@ -197,6 +158,15 @@ const ClassNewsListScreen: React.FC = () => {
         </IonRefresher>
 
         <div className="news-container">
+          {/* Error State */}
+          {error && (
+            <div className="error-state">
+              <IonText color="danger">
+                <p>{error}</p>
+              </IonText>
+            </div>
+          )}
+
           {/* Skeleton Loading State */}
           {loading && newsList.length === 0 ? (
             <div className="skeleton-wrapper">

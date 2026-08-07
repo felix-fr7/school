@@ -14,12 +14,35 @@ const { uploadFields } = require('../middleware/fileUpload');
 const path = require('path');
 const fs = require('fs');
 
+/**
+ * Helper function to delete a file from the filesystem
+ * @param {string} filePath - The URL path of the file (e.g., '/uploads/circulars/file.pdf')
+ */
+const deleteFile = (filePath) => {
+  if (!filePath) return;
+  
+  try {
+    // Convert URL path to filesystem path
+    // Remove leading slash if present
+    const relativePath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    const fullPath = path.join(__dirname, '../', relativePath);
+    
+    // Check if file exists before deleting
+    if (fs.existsSync(fullPath)) {
+      fs.unlinkSync(fullPath);
+      console.log('[deleteFile] Deleted file:', fullPath);
+    }
+  } catch (error) {
+    console.error('[deleteFile] Error deleting file:', filePath, error.message);
+  }
+};
+
 // All routes require authentication
 router.use(authenticate);
 
 /**
  * @route   GET /api/circulars
- * @desc    Get all circulars
+ * @desc    Get all circulars (filtered by class for class controllers)
  * @query   page, limit
  * @access  Authenticated users
  */
@@ -33,19 +56,42 @@ router.get('/', async (req, res, next) => {
     
     console.log('[Circulars GET] Using tenantId:', queryTenantId);
     
-    const circulars = await Circular.find({
-      tenantId: queryTenantId,
-      isPublished: true
-    })
+    // Build query based on user type
+    let circularQuery;
+    
+    // Check if this is a class controller (teacher) - they should only see relevant circulars
+    if (req.user.isClass && req.user.classId) {
+      const classId = req.user.classId;
+      
+      // Class controllers see:
+      // 1. Circulars with visibility 'ALL' (for all classes)
+      // 2. Circulars with visibility 'SPECIFIC_CLASSES' where classId matches their class
+      circularQuery = {
+        tenantId: queryTenantId,
+        isPublished: true,
+        $or: [
+          { visibility: 'ALL' },
+          { visibility: 'SPECIFIC_CLASSES', classId: classId }
+        ]
+      };
+      
+      console.log('[Circulars GET] Class controller filtering for classId:', classId);
+    } else {
+      // For other users (admins, etc.), show all published circulars for the tenant
+      circularQuery = {
+        tenantId: queryTenantId,
+        isPublished: true
+      };
+    }
+    
+    const circulars = await Circular.find(circularQuery)
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(parseInt(limit))
-    .populate('authorId', 'name email');
+    .populate('authorId', 'name email')
+    .populate('classId', 'name section classCode');
     
-    const total = await Circular.countDocuments({
-      tenantId: queryTenantId,
-      isPublished: true
-    });
+    const total = await Circular.countDocuments(circularQuery);
     console.log('[Circulars GET] Total circulars found:', total);
     console.log('[Circulars GET] Circulars returned:', circulars.length);
     
@@ -277,7 +323,8 @@ router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
     
     console.log('[Circulars DELETE] Deleting circular:', req.params.id, 'with tenantId:', queryTenantId);
     
-    const circular = await Circular.findOneAndDelete({
+    // First, find the circular to get file URLs before deleting
+    const circular = await Circular.findOne({
       _id: req.params.id,
       tenantId: queryTenantId
     });
@@ -289,6 +336,20 @@ router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
         error: { message: 'Circular not found' }
       });
     }
+    
+    // Delete associated files (image and PDF)
+    if (circular.imageUrl) {
+      deleteFile(circular.imageUrl);
+    }
+    if (circular.attachmentUrl) {
+      deleteFile(circular.attachmentUrl);
+    }
+    
+    // Now delete the document from database
+    await Circular.deleteOne({
+      _id: req.params.id,
+      tenantId: queryTenantId
+    });
     
     console.log('[Circulars DELETE] Circular deleted successfully:', req.params.id);
     res.status(200).json({

@@ -24,20 +24,16 @@ import {
 import { useParams, useHistory } from 'react-router-dom';
 import { mailOutline, callOutline, bookOutline, trashOutline, createOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { User } from '../../types';
 import './AdminTheme.css';
 
-interface TeacherDetailParams {
-  teacherId: string;
-}
-
-const TeacherDetailScreen: React.FC = () => {
-  const { teacherId } = useParams<TeacherDetailParams>();
+const TeacherDetailScreen = () => {
+  const { teacherId } = useParams();
   const history = useHistory();
   const redirectAttemptedRef = useRef(false);
 
   // ✅ Hooks state declarations
-  const [teacher, setTeacher] = useState<User | null>(null);
+  /** @type {[import('../../types').User | null, React.Dispatch<React.SetStateAction<import('../../types').User | null>>]} */
+  const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
@@ -265,7 +261,7 @@ const TeacherDetailScreen: React.FC = () => {
 };
 
 /* Inline Object Styles for Guaranteed Layout Alignment */
-const styles: { [key: string]: React.CSSProperties } = {
+const styles = {
   headerCard: {
     backgroundColor: '#ffffff',
     padding: '24px 20px',
