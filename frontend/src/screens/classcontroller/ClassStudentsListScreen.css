@@ -1,218 +1,198 @@
-/**
- * Class Students List Screen - Light Modern Design System
- * Clean, professional, modern light theme
- */
+/* ==========================================================================
+   Class Students List Screen - Modern Clean Theme (Responsive)
+   ========================================================================== */
 
-/* ============================================
-   Layout & Page Setup
-   ============================================ */
 .students-list-content {
   --background: #f8fafc;
-  --ion-background-color: #f8fafc;
 }
 
 .students-loading {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   height: 100%;
 }
 
-.students-container {
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 16px 16px 80px 16px;
+.loading-text {
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #64748b;
 }
 
+.light-toolbar {
+  --background: #ffffff;
+  --border-color: #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Searchbar Customization */
 .student-searchbar {
   --background: #f1f5f9;
-  --color: #111827;
+  --color: #1e293b;
   --placeholder-color: #94a3b8;
   --icon-color: #64748b;
-  --clear-button-color: #64748b;
   --border-radius: 12px;
-  padding-start: 12px;
-  padding-end: 12px;
+  --box-shadow: none;
+  padding: 8px 16px;
 }
 
-/* ============================================
-   Empty State
-   ============================================ */
+/* Container Wrapper */
+.students-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .students-container {
+    padding: 24px;
+  }
+}
+
+/* Empty State */
 .empty-state {
+  margin: 40px auto;
+  padding: 40px 20px;
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px dashed #cbd5e1;
-  margin-top: 20px;
 }
 
 .empty-icon-badge {
   width: 64px;
   height: 64px;
-  border-radius: 50%;
   background: #eff6ff;
-  color: #3b82f6;
+  color: #2563eb;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 1.8rem;
   margin-bottom: 16px;
 }
 
 .empty-state h3 {
-  font-size: 18px;
-  font-weight: 700;
-  color: #111827;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0 0 6px 0;
 }
 
 .empty-subtext {
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #64748b;
   margin: 0 0 20px 0;
-  max-width: 280px;
+  line-height: 1.4;
+  max-width: 320px;
 }
 
 .add-first-btn {
-  --border-radius: 20px;
-  --background: #3b82f6;
-  --background-activated: #2563eb;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+  --border-radius: 12px;
+  font-weight: 700;
+  height: 44px;
+  text-transform: none;
+  --border-color: #2563eb;
 }
 
-/* ============================================
-   Student Item Card
-   ============================================ */
+/* Student List & Card Item */
 .student-list {
-  background: transparent;
-  padding: 0;
+  background: transparent !important;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .student-card-item {
   --background: #ffffff;
-  --padding-start: 14px;
-  --padding-end: 12px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  --border-radius: 12px;
-  --min-height: 72px;
-  margin-bottom: 10px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  --border-radius: 16px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .student-card-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  border-color: #2563eb;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
 }
 
 .student-avatar {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
   background: #eff6ff;
+  color: #2563eb;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 14px;
-  border: 1px solid #bfdbfe;
-}
-
-.student-avatar span {
-  font-size: 18px;
-  font-weight: 700;
-  color: #3b82f6;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-inline-end: 14px !important;
+  flex-shrink: 0;
 }
 
 .student-info {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .student-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #111827;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .student-email {
-  font-size: 12px;
+  font-size: 0.82rem;
   color: #64748b;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .student-id-badge {
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
   padding: 4px 8px;
-  border-radius: 20px;
-  background: #eff6ff;
-  color: #3b82f6;
+  border-radius: 6px;
+  width: fit-content;
 }
 
-/* ============================================
-   Actions & FAB
-   ============================================ */
 .student-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  margin-inline-start: 10px !important;
 }
 
 .student-actions ion-button {
+  margin: 0;
   --padding-start: 6px;
   --padding-end: 6px;
   height: 36px;
-  margin: 0;
-}
-
-ion-fab {
-  --background: #3b82f6;
-  --background-activated: #2563eb;
-}
-
-ion-fab-button {
-  --background: #3b82f6;
-  --background-activated: #2563eb;
-  --box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
-}
-
-/* ============================================
-   Dark Mode Support
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-  .students-list-content {
-    --background: #0F172A;
-  }
-
-  .student-card-item,
-  .empty-state {
-    --background: #1E293B;
-    border-color: #334155;
-  }
-
-  .student-name,
-  .empty-state h3 {
-    color: #F8FAFC;
-  }
-
-  .student-email,
-  .empty-subtext {
-    color: #94A3B8;
-  }
-
-  .student-avatar,
-  .empty-icon-badge {
-    background: #0F172A;
-    border-color: #334155;
-  }
+  width: 36px;
 }

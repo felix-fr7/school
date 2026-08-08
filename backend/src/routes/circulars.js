@@ -117,23 +117,31 @@ router.get('/', async (req, res, next) => {
  */
 router.get('/:id', async (req, res, next) => {
   try {
+    // Get tenantId - check multiple sources (consistent with GET / route)
+    const queryTenantId = req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId;
+    
+    console.log('[Circulars GET /:id] Using tenantId:', queryTenantId, 'for circular:', req.params.id);
+    
     const circular = await Circular.findOne({
       _id: req.params.id,
-      tenantId: req.user.tenantId
-    }).populate('authorId', 'name email');
+      tenantId: queryTenantId
+    }).populate('authorId', 'name email').populate('classId', 'name section classCode');
     
     if (!circular) {
+      console.log('[Circulars GET /:id] Circular not found:', req.params.id, 'with tenantId:', queryTenantId);
       return res.status(404).json({
         success: false,
         error: { message: 'Circular not found' }
       });
     }
     
+    console.log('[Circulars GET /:id] Circular found:', circular._id);
     res.status(200).json({
       success: true,
       data: circular
     });
   } catch (error) {
+    console.error('[Circulars GET /:id] Error:', error);
     next(error);
   }
 });
@@ -273,6 +281,11 @@ router.post('/',
  */
 router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
+    // Get tenantId - check multiple sources (consistent with other routes)
+    const queryTenantId = req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId;
+    
+    console.log('[Circulars PUT] Updating circular:', req.params.id, 'with tenantId:', queryTenantId);
+    
     const {
       title,
       content,
@@ -289,7 +302,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
     if (isPublished !== undefined) updates.isPublished = isPublished;
     
     const circular = await Circular.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.user.tenantId },
+      { _id: req.params.id, tenantId: queryTenantId },
       { $set: updates },
       { new: true, runValidators: true }
     );

@@ -34,28 +34,23 @@ import {
   barcodeOutline,
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
-import { Class } from '../../types';
 import './AdminTheme.css';
 
-interface RouteParams {
-  studentId: string;
-}
-
-const EditStudentScreen: React.FC = () => {
+const EditStudentScreen = () => {
   const history = useHistory();
-  const { studentId } = useParams<RouteParams>();
+  const { studentId } = useParams();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [classId, setClassId] = useState<string | undefined>(undefined);
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classId, setClassId] = useState(undefined);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-  const [alertCallback, setAlertCallback] = useState<(() => void) | null>(null);
+  const [alertCallback, setAlertCallback] = useState(null);
 
   useEffect(() => {
     // If studentId is 'create', redirect to the create student page
@@ -96,7 +91,7 @@ const EditStudentScreen: React.FC = () => {
     }
   };
 
-  const showAlertMessage = (header: string, message: string, callback?: () => void) => {
+  const showAlertMessage = (header, message, callback) => {
     setAlertHeader(header);
     setAlertMessage(message);
     setAlertCallback(() => callback || null);
@@ -127,7 +122,7 @@ const EditStudentScreen: React.FC = () => {
       } else {
         showAlertMessage('Error', response.error?.message || 'Failed to update student');
       }
-    } catch (error: any) {
+    } catch (error) {
       showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update student');
     } finally {
       setSaving(false);

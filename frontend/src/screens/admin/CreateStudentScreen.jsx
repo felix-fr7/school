@@ -22,17 +22,16 @@ import {
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
-import { Class } from '../../types';
 import './AdminTheme.css';
 
-const CreateStudentScreen: React.FC = () => {
+const CreateStudentScreen = () => {
   const history = useHistory();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [studentId, setStudentId] = useState('');
-  const [classId, setClassId] = useState<string | undefined>(undefined);
-  const [classes, setClasses] = useState<Class[]>([]);
+  const [classId, setClassId] = useState(undefined);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingClasses, setFetchingClasses] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -109,7 +108,7 @@ const CreateStudentScreen: React.FC = () => {
         setIsSuccess(false);
         setShowAlert(true);
       }
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.response?.data?.error?.message || 'Failed to create student';
       setAlertMessage(errorMessage);
       setIsSuccess(false);

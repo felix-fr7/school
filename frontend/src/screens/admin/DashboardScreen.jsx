@@ -32,6 +32,7 @@ import {
   addCircleOutline,
   sparklesOutline,
   pulseOutline,
+  filmOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -144,6 +145,14 @@ const AdminDashboardScreen = () => {
       icon: calendarOutline, 
       route: '/admin/admin-exams',
       gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
+    },
+    { 
+      id: '9', 
+      title: 'Videos', 
+      subtitle: 'Media & Video Library',
+      icon: filmOutline, 
+      route: '/admin/videos',
+      gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)'
     },
   ];
 

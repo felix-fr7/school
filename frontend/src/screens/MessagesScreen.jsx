@@ -1,7 +1,7 @@
 import React from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 
-const MessagesScreen: React.FC = () => {
+const MessagesScreen = () => {
   return (
     <IonPage>
       <IonHeader>

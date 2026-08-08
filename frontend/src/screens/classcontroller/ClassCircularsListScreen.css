@@ -1,236 +1,265 @@
-/* ============================================
-   Loading State
-   ============================================ */
+/* ==========================================================================
+   Class Circulars List Screen - Modern Clean Theme (Mobile & Tablet Responsive)
+   ========================================================================== */
+
+.light-toolbar {
+  --background: #ffffff;
+  --border-color: #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
+}
+
 .circulars-loading {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  justify-content: center;
+  height: 100%;
 }
 
-.circulars-loading .loading-text {
-  margin-top: 16px;
-  font-size: 15px;
-  font-weight: 500;
+.loading-text {
+  margin-top: 12px;
+  font-size: 0.95rem;
 }
 
-/* ============================================
-   Content Container
-   ============================================ */
+/* Main Content Container */
 .circulars-list-content {
-  --background: var(--ion-color-light, #f4f5f8);
+  --background: #f8fafc;
 }
 
 .circulars-wrapper {
-  max-width: 720px;
+  max-width: 800px;
   margin: 0 auto;
+  padding: 0 16px 24px 16px;
 }
 
-/* ============================================
-   Header Section
-   ============================================ */
+@media (min-width: 768px) {
+  .circulars-wrapper {
+    padding: 0 24px 32px 24px;
+  }
+}
+
+/* Header Section */
 .header-section {
-  padding: 16px 16px 8px 16px;
+  max-width: 800px;
+  margin: 20px auto 10px auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .header-section {
+    padding: 0 24px;
+  }
 }
 
 .header-title {
-  font-size: 26px;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: var(--ion-color-dark);
+  color: #0f172a;
   margin: 0 0 4px 0;
 }
 
+@media (min-width: 768px) {
+  .header-title {
+    font-size: 1.8rem;
+  }
+}
+
 .header-subtitle {
-  font-size: 14px;
+  font-size: 0.9rem;
+  color: #64748b;
   margin: 0;
 }
 
-/* ============================================
-   Info Banner
-   ============================================ */
+/* Info Banner */
 .info-banner {
+  max-width: 800px;
+  margin: 0 auto 16px auto;
+  padding: 0 16px;
   display: flex;
   align-items: center;
-  background: var(--ion-color-light-tint, #e0f2fe);
-  padding: 12px 16px;
-  border-radius: 12px;
-  margin: 8px 16px 16px 16px;
   gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+@media (min-width: 768px) {
+  .info-banner {
+    margin: 0 auto 20px auto;
+    padding: 12px 20px;
+  }
 }
 
 .info-icon {
-  font-size: 20px;
+  font-size: 1.2rem;
   flex-shrink: 0;
 }
 
 .info-text {
-  font-size: 13px;
-  line-height: 18px;
   margin: 0;
+  font-size: 0.88rem;
+  color: #1e40af;
+  font-weight: 500;
 }
 
-/* ============================================
-   Empty State
-   ============================================ */
+/* Empty State */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 16px;
   text-align: center;
+  padding: 60px 20px;
 }
 
 .empty-icon {
-  font-size: 56px;
-  margin-bottom: 12px;
+  font-size: 3.5rem;
+  margin-bottom: 16px;
 }
 
 .empty-state h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ion-color-dark);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
   margin: 0 0 6px 0;
 }
 
 .empty-subtext {
-  font-size: 14px;
-  color: var(--ion-color-medium);
+  font-size: 0.88rem;
+  color: #64748b;
   margin: 0;
 }
 
-/* ============================================
-   Circular Card
-   ============================================ */
+/* Circular Card Styling */
 .circular-card {
-  --background: var(--ion-card-background, #ffffff);
-  margin: 0 16px 12px 16px;
+  margin: 0 0 16px 0;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #edf2f7;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.circular-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
 }
 
 .circular-card ion-card-content {
-  padding: 16px;
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .circular-card ion-card-content {
+    padding: 24px;
+  }
 }
 
 .circular-header {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.circular-no-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.circular-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--ion-color-dark);
-  margin: 0;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+@media (min-width: 768px) {
+  .circular-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
 .visibility-badge {
-  font-size: 10px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
-.visibility-badge.visibility-all {
-  --background: var(--ion-color-success, #2dd36f);
-  --color: #ffffff;
+.visibility-all {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
-.visibility-badge.visibility-specific {
-  --background: var(--ion-color-warning, #ffc409);
-  --color: #000000;
+.visibility-specific {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.circular-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+  .circular-title {
+    font-size: 1.25rem;
+  }
 }
 
 .circular-content {
-  font-size: 14px;
-  color: var(--ion-color-step-600, #666666);
-  line-height: 20px;
-  margin: 0 0 12px 0;
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
+/* Circular Footer */
 .circular-footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid var(--ion-color-light-shade, #f0f0f0);
-  padding-top: 8px;
-  margin-top: 4px;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+@media (min-width: 768px) {
+  .circular-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
 .footer-left {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  color: var(--ion-color-medium);
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .footer-right {
   display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.attachment-icon {
-  font-size: 18px;
-  color: var(--ion-color-primary, #3880ff);
-  margin-right: 4px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .attachment-btn {
-  --color: var(--ion-color-primary, #3880ff);
-  --color-hover: var(--ion-color-primary-shade, #2664d8);
-  font-size: 11px;
+  --color: #2563eb;
+  --background: #eff6ff;
+  --border-radius: 8px;
+  font-size: 0.8rem;
   font-weight: 600;
-  height: 28px;
-  min-width: auto;
-  padding: 0 8px;
-  border-radius: 6px;
-  margin: 0 2px;
-}
-
-.attachment-btn ion-icon {
-  font-size: 14px;
-}
-
-.delete-btn {
-  --padding-start: 6px;
-  --padding-end: 6px;
-  margin: 0;
   height: 32px;
+  margin: 0;
+  text-transform: none;
 }
 
-/* ============================================
-   Dark Mode Adjustments
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-  .info-banner {
-    background: rgba(56, 128, 255, 0.15);
-  }
-  
-  .circular-footer {
-    border-top-color: var(--ion-color-step-150, #2a2a2a);
-  }
+.attachment-btn:hover {
+  --background: #dbeafe;
 }

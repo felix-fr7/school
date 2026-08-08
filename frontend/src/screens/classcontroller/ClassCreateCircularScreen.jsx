@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Class Create Circular Screen (Ionic React Version)
  * Create new circular for the class
  */
@@ -72,7 +72,7 @@ const ClassCreateCircularScreen = () => {
     return true;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
@@ -103,8 +103,8 @@ const ClassCreateCircularScreen = () => {
       setTimeout(() => {
         history.goBack();
       }, 1200);
-    } catch (error: any) {
-      console.error('Error creating circular, error);
+    } catch (error) {
+      console.error('Error creating circular:', error);
       setAlertHeader('Error');
       setAlertMessage(error?.message || 'Failed to create circular');
       setShowAlert(true);
@@ -178,7 +178,7 @@ const ClassCreateCircularScreen = () => {
                     id="issue-datetime"
                     presentation="date"
                     value={issueDate}
-                    onIonChange={(e) => setIssueDate(e.detail.value as string)}
+                    onIonChange={(e) => setIssueDate(e.detail.value)}
                     preferWheel={false}
                   />
                 </IonModal>

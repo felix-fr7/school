@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Class Create Exam Schedule Screen (Ionic React Version)
  * Create new exam schedules for the class
  */
@@ -111,7 +111,7 @@ const ClassCreateExamScheduleScreen = () => {
       setTimeout(() => {
         history.goBack();
       }, 1200);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating exam schedule:', error);
       setAlertHeader('Error');
       setAlertMessage(error?.message || 'Failed to create exam schedule');
@@ -207,7 +207,7 @@ const ClassCreateExamScheduleScreen = () => {
                 presentation="date"
                 value={examDate}
                 min={new Date().toISOString()}
-                onIonChange={(e) => setExamDate(e.detail.value as string)}
+                onIonChange={(e) => setExamDate(e.detail.value)}
                 preferWheel={false}
               />
             </IonModal>
@@ -217,7 +217,7 @@ const ClassCreateExamScheduleScreen = () => {
                 id="exam-time-picker"
                 presentation="time"
                 value={examTime}
-                onIonChange={(e) => setExamTime(e.detail.value as string)}
+                onIonChange={(e) => setExamTime(e.detail.value)}
                 preferWheel={true}
               />
             </IonModal>

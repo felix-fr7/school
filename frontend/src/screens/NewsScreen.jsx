@@ -1,7 +1,7 @@
 import React from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 
-const NewsScreen: React.FC = () => {
+const NewsScreen = () => {
   return (
     <IonPage>
       <IonHeader>

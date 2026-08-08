@@ -1,0 +1,305 @@
+/**
+ * MACVEL School Management Mobile App
+ * Premium Design System - theme.css
+ * Smart. Secure. Connected.
+ */
+
+/* ============================================
+ * Ionic CSS Variables - Premium Design System
+ * ============================================ */
+
+:root {
+  /* Primary Colors */
+  --ion-color-primary: #4F46E5;
+  --ion-color-primary-rgb: 79, 70, 229;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #4338CA;
+  --ion-color-primary-tint: #6366F1;
+
+  /* Secondary Colors */
+  --ion-color-secondary: #7C3AED;
+  --ion-color-secondary-rgb: 124, 58, 237;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #6D28D9;
+  --ion-color-secondary-tint: #8B5CF6;
+
+  /* Tertiary Colors */
+  --ion-color-tertiary: #EC4899;
+  --ion-color-tertiary-rgb: 236, 72, 153;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #DB2777;
+  --ion-color-tertiary-tint: #F472B6;
+
+  /* Success Colors */
+  --ion-color-success: #10B981;
+  --ion-color-success-rgb: 16, 185, 129;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #059669;
+  --ion-color-success-tint: #34D399;
+
+  /* Warning Colors */
+  --ion-color-warning: #F59E0B;
+  --ion-color-warning-rgb: 245, 158, 11;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #D97706;
+  --ion-color-warning-tint: #FBBF24;
+
+  /* Danger Colors */
+  --ion-color-danger: #EF4444;
+  --ion-color-danger-rgb: 239, 68, 68;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #DC2626;
+  --ion-color-danger-tint: #F87171;
+
+  /* Dark Colors */
+  --ion-color-dark: #1F2937;
+  --ion-color-dark-rgb: 31, 41, 55;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #1B2631;
+  --ion-color-dark-tint: #374151;
+
+  /* Medium Colors */
+  --ion-color-medium: #6B7280;
+  --ion-color-medium-rgb: 107, 114, 128;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #5D6670;
+  --ion-color-medium-tint: #7A8189;
+
+  /* Light Colors */
+  --ion-color-light: #F3F4F6;
+  --ion-color-light-rgb: 243, 244, 246;
+  --ion-color-light-contrast: #000000;
+  --ion-color-light-contrast-rgb: 0, 0, 0;
+  --ion-color-light-shade: #D7D8DA;
+  --ion-color-light-tint: #F4F5F7;
+
+  /* ============================================
+   * Typography
+   * ============================================ */
+  --ion-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* ============================================
+   * Spacing
+   * ============================================ */
+  --ion-margin-base: 16px;
+  --ion-padding-base: 16px;
+
+  /* ============================================
+   * Border Radius
+   * ============================================ */
+  --ion-border-radius-sm: 4px;
+  --ion-border-radius-md: 8px;
+  --ion-border-radius-lg: 12px;
+  --ion-border-radius-xl: 16px;
+  --ion-border-radius-2xl: 24px;
+
+  /* ============================================
+   * Shadows
+   * ============================================ */
+  --ion-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --ion-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --ion-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --ion-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* ============================================
+   * Transitions
+   * ============================================ */
+  --ion-transition-fast: 150ms ease;
+  --ion-transition-base: 200ms ease;
+  --ion-transition-slow: 300ms ease;
+}
+
+/* ============================================
+ * Global Styles
+ * ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--ion-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+ * Ionic Overrides
+ * ============================================ */
+
+ion-content {
+  --background: #F9FAFB;
+}
+
+ion-card {
+  border-radius: var(--ion-border-radius-lg);
+  box-shadow: var(--ion-shadow-md);
+}
+
+ion-button {
+  border-radius: var(--ion-border-radius-md);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.025em;
+}
+
+ion-input,
+ion-textarea,
+ion-select {
+  --border-radius: var(--ion-border-radius-md);
+  --padding-start: 12px;
+  --padding-end: 12px;
+}
+
+/* ============================================
+ * Scrollbar Styles
+ * ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ion-color-medium);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ion-color-dark);
+}
+
+/* ============================================
+ * Utility Classes
+ * ============================================ */
+
+.text-primary {
+  color: var(--ion-color-primary);
+}
+
+.text-secondary {
+  color: var(--ion-color-secondary);
+}
+
+.text-success {
+  color: var(--ion-color-success);
+}
+
+.text-warning {
+  color: var(--ion-color-warning);
+}
+
+.text-danger {
+  color: var(--ion-color-danger);
+}
+
+.text-muted {
+  color: var(--ion-color-medium);
+}
+
+.bg-primary {
+  background-color: var(--ion-color-primary);
+}
+
+.bg-secondary {
+  background-color: var(--ion-color-secondary);
+}
+
+.bg-light {
+  background-color: var(--ion-color-light);
+}
+
+/* ============================================
+ * Animation Classes
+ * ============================================ */
+
+.fade-in {
+  animation: fadeIn var(--ion-transition-base) ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp var(--ion-transition-slow) ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+ * Admin Alert Styles
+ * ============================================ */
+
+.admin-alert .alert-wrapper {
+  border-radius: var(--ion-border-radius-lg);
+}
+
+.admin-alert .alert-head {
+  padding: 24px 24px 8px;
+}
+
+.admin-alert .alert-message {
+  padding: 8px 24px 24px;
+}
+
+.admin-alert .alert-button-group {
+  padding: 0 24px 24px;
+  gap: 12px;
+}
+
+.admin-alert .alert-button {
+  border-radius: var(--ion-border-radius-md);
+  font-weight: 600;
+}
+
+/* ============================================
+ * Responsive Breakpoints
+ * ============================================ */
+
+@media (max-width: 576px) {
+  :root {
+    --ion-margin-base: 12px;
+    --ion-padding-base: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --ion-margin-base: 24px;
+    --ion-padding-base: 24px;
+  }
+}

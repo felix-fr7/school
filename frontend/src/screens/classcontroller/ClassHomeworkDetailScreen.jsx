@@ -43,13 +43,27 @@ const ClassHomeworkDetailScreen = () => {
   const { id } = useParams();
   const history = useHistory();
 
+  // Handle route mismatch: if id is "create", this screen shouldn't render
+  // The useEffect below handles the redirect, but we return early to prevent
+  // the loading spinner from showing briefly
+  if (id === 'create') {
+    return null;
+  }
+
   const [homework, setHomework] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
+    // Redirect to create page if id is "create" (route mismatch handling)
+    // Use window.location to avoid infinite loop from route matching
+    if (id === 'create') {
+      window.location.href = '/class-controller/homework/create';
+      return;
+    }
     fetchHomeworkDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchHomeworkDetail = async () => {

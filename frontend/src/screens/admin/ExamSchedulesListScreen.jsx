@@ -1,7 +1,7 @@
 import React from 'react';
 import PlaceholderScreen from './PlaceholderScreen';
 
-const ExamSchedulesListScreen: React.FC = () => (
+const ExamSchedulesListScreen = () => (
   <PlaceholderScreen title="Exam Schedules" description="View and manage exam schedules" />
 );
 

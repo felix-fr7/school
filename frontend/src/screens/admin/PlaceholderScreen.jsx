@@ -17,12 +17,7 @@ import {
 import { constructOutline } from 'ionicons/icons';
 import './PlaceholderScreen.css';
 
-interface PlaceholderScreenProps {
-  title: string;
-  description?: string;
-}
-
-const PlaceholderScreen: React.FC<PlaceholderScreenProps> = ({ title, description }) => {
+const PlaceholderScreen = ({ title, description }) => {
   return (
     <IonPage>
       <IonHeader>

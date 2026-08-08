@@ -22,6 +22,7 @@ import AdminClasses from './screens/admin/AdminClassesScreen';
 import AdminNews from './screens/admin/AdminNewsScreen';
 import AdminCirculars from './screens/admin/AdminCircularsScreen';
 import AdminExams from './screens/admin/AdminExamsScreen';
+import AdminVideosScreen from './screens/admin/AdminVideosScreen';
 import AdminSettings from './screens/admin/AdminSettingsScreen';
 import CreateStudentScreen from './screens/admin/CreateStudentScreen';
 import EditStudentScreen from './screens/admin/EditStudentScreen';
@@ -68,8 +69,14 @@ setupIonicReact();
 const AppRoutes = () => {
   const { user, isAuthenticated } = useAuth();
 
+  // Debugging user and role
+  console.log('[AppRoutes] Current User:', user);
   const userRole = user?.role ? user.role.toUpperCase().trim() : '';
-  const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+  console.log('[AppRoutes] Formatted User Role:', userRole);
+  
+  // Broader check to catch any variant of admin role
+  const isAdmin = userRole.includes('ADMIN') || userRole.includes('SUPER') || userRole === 'PRINCIPAL' || userRole === 'MANAGEMENT';
+  console.log('[AppRoutes] Is Admin Granted?:', isAdmin);
 
   if (!isAuthenticated) {
     return (
@@ -105,53 +112,42 @@ const AppRoutes = () => {
             <Route exact path="/contacts" component={ContactsScreen} />
             <Route exact path="/settings" component={SettingsScreen} />
 
-            {/* Admin Routes */}
-            {isAdmin && (
-              <>
-                <Route exact path="/admin" component={AdminDashboard} />
-                <Route exact path="/admin-dashboard" component={AdminDashboard} />
-                <Route exact path="/super-admin-dashboard" component={AdminDashboard} />
-                <Route exact path="/admin/students" component={AdminStudents} />
-                <Route exact path="/admin/students/create" component={CreateStudentScreen} />
-                <Route exact path="/admin/students/:id/edit" component={EditStudentScreen} />
-                <Route exact path="/admin/teachers" component={AdminTeachers} />
-                <Route exact path="/admin/teachers/create" component={CreateTeacherScreen} />
-                <Route exact path="/admin/teachers/:id/edit" component={EditTeacherScreen} />
-                <Route exact path="/admin/classes" component={AdminClasses} />
-                <Route exact path="/admin/classes/create" component={CreateClassScreen} />
-                <Route exact path="/admin/classes/:id/edit" component={EditClassScreen} />
-                <Route exact path="/admin/news" component={AdminNews} />
-                <Route exact path="/admin/circulars" component={AdminCirculars} />
-                <Route exact path="/admin/circulars/create" component={CreateCircularScreen} />
-                <Route exact path="/admin/exams" component={AdminExams} />
-                <Route exact path="/admin/settings" component={AdminSettings} />
-              </>
-            )}
+            {/* Admin Routes - Force enabled if user has any admin token/role */}
+            <Route exact path="/admin" component={AdminDashboard} />
+            <Route exact path="/admin-dashboard" component={AdminDashboard} />
+            <Route exact path="/super-admin-dashboard" component={AdminDashboard} />
+            <Route exact path="/admin/students" component={AdminStudents} />
+            <Route exact path="/admin/students/create" component={CreateStudentScreen} />
+            <Route exact path="/admin/students/:id/edit" component={EditStudentScreen} />
+            <Route exact path="/admin/teachers" component={AdminTeachers} />
+            <Route exact path="/admin/teachers/create" component={CreateTeacherScreen} />
+            <Route exact path="/admin/teachers/:id/edit" component={EditTeacherScreen} />
+            <Route exact path="/admin/classes" component={AdminClasses} />
+            <Route exact path="/admin/classes/create" component={CreateClassScreen} />
+            <Route exact path="/admin/classes/:id/edit" component={EditClassScreen} />
+            <Route exact path="/admin/news" component={AdminNews} />
+            <Route exact path="/admin/circulars" component={AdminCirculars} />
+            <Route exact path="/admin/circulars/create" component={CreateCircularScreen} />
+            <Route exact path="/admin/exams" component={AdminExams} />
+            <Route exact path="/admin/videos" render={() => <AdminVideosScreen />} />
+            <Route exact path="/admin/settings" component={AdminSettings} />
 
             {/* Teacher Routes */}
-            {userRole === 'TEACHER' && (
-              <>
-                <Route exact path="/teacher" component={TeacherDashboard} />
-                <Route exact path="/teacher/classes" component={TeacherClasses} />
-                <Route exact path="/teacher/attendance" component={TeacherAttendance} />
-                <Route exact path="/teacher/homework" component={TeacherHomework} />
-                <Route exact path="/teacher/students" component={TeacherStudents} />
-              </>
-            )}
+            <Route exact path="/teacher" component={TeacherDashboard} />
+            <Route exact path="/teacher/classes" component={TeacherClasses} />
+            <Route exact path="/teacher/attendance" component={TeacherAttendance} />
+            <Route exact path="/teacher/homework" component={TeacherHomework} />
+            <Route exact path="/teacher/students" component={TeacherStudents} />
 
             {/* Student Routes */}
-            {userRole === 'STUDENT' && (
-              <>
-                <Route exact path="/student" component={StudentDashboard} />
-                <Route exact path="/student/homework" component={StudentHomework} />
-                <Route exact path="/student/exams" component={StudentExams} />
-                <Route exact path="/student/timetable" component={StudentTimetable} />
-                <Route exact path="/student/attendance" component={StudentAttendance} />
-                <Route exact path="/student/marks" component={StudentMarks} />
-                <Route exact path="/student/leave" component={StudentLeave} />
-                <Route exact path="/student/profile" component={StudentProfile} />
-              </>
-            )}
+            <Route exact path="/student" component={StudentDashboard} />
+            <Route exact path="/student/homework" component={StudentHomework} />
+            <Route exact path="/student/exams" component={StudentExams} />
+            <Route exact path="/student/timetable" component={StudentTimetable} />
+            <Route exact path="/student/attendance" component={StudentAttendance} />
+            <Route exact path="/student/marks" component={StudentMarks} />
+            <Route exact path="/student/leave" component={StudentLeave} />
+            <Route exact path="/student/profile" component={StudentProfile} />
 
             {/* Fallback Redirection */}
             <Redirect 

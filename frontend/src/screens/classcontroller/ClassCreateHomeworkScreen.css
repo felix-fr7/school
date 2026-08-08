@@ -1,249 +1,140 @@
-/* Class Create Homework Screen Styles */
+/* ==========================================================================
+   Class Create Homework Screen - Modern Clean Theme (Responsive)
+   ========================================================================== */
 
 .homework-create-content {
-  --padding-start: 0;
-  --padding-end: 0;
+  --background: #f8fafc;
 }
 
 .form-container {
-  padding: 16px;
-  max-width: 800px;
+  max-width: 700px !important;
   margin: 0 auto;
+  padding: 20px 16px !important;
 }
 
-/* Section Header */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 0 4px;
-}
-
-.section-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-  color: var(--ion-color-dark);
-}
-
-/* Loading Subjects */
-.loading-subjects {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  gap: 12px;
-  color: var(--ion-color-medium);
-}
-
-/* Empty Subjects */
-.empty-subjects {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  gap: 12px;
-  color: var(--ion-color-medium);
-  background: var(--ion-color-light);
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
-
-.empty-subjects .empty-icon {
-  font-size: 48px;
-  color: var(--ion-color-medium);
-}
-
-.empty-subjects p {
-  margin: 0;
-  text-align: center;
-}
-
-/* Subjects Grid */
-.subjects-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: var(--ion-color-light);
-  border-radius: 12px;
-}
-
-.subject-chip {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.subject-chip:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.subject-chip.selected {
-  background: var(--ion-color-primary);
-  color: white;
-}
-
-.subject-chip.selected ion-icon {
-  color: white;
-}
-
-.subject-chip .edit-icon {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.subject-chip:hover .edit-icon {
-  opacity: 0.7;
-}
-
-.subject-chip ion-icon[slot="icon-only"] {
-  font-size: 14px;
-  margin-left: 4px;
-}
-
-/* Form Section */
-.form-section {
-  margin-top: 24px;
-}
-
-.form-section h2 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--ion-color-dark);
-}
-
-.input-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  margin-bottom: 8px;
-  border-radius: 12px;
-  background: var(--ion-color-light);
-  --background: var(--ion-color-light);
-}
-
-.field-icon {
-  color: var(--ion-color-primary);
-  font-size: 20px;
-  margin-right: 8px;
-}
-
-.textarea-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-}
-
-.date-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  cursor: pointer;
-  margin-bottom: 8px;
-  border-radius: 12px;
-  background: var(--ion-color-light);
-  --background: var(--ion-color-light);
-}
-
-.date-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.date-icon {
-  color: var(--ion-color-medium);
-  font-size: 18px;
-}
-
-.date-text {
-  font-size: 14px;
-  color: var(--ion-color-dark);
-}
-
-.date-text.placeholder {
-  color: var(--ion-color-medium);
-}
-
-.toggle-item {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  margin-top: 16px;
-  border-radius: 12px;
-  background: var(--ion-color-light);
-  --background: var(--ion-color-light);
-}
-
-.toggle-item h4 {
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.toggle-item p {
-  font-size: 12px;
-  color: var(--ion-color-medium);
-  margin: 2px 0 0 0;
-}
-
-/* Date Picker Modal */
-.date-picker-modal {
-  --height: auto;
-  --max-height: 90vh;
-}
-
-.date-picker-modal .modal-container {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.modal-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--ion-color-dark);
-}
-
-.date-picker-wrapper {
-  width: 100%;
-  max-width: 320px;
-  margin-bottom: 24px;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-  max-width: 320px;
-}
-
-.modal-buttons ion-button {
-  flex: 1;
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
+@media (min-width: 768px) {
   .form-container {
-    padding: 12px;
+    padding: 32px 24px !important;
   }
-  
-  .input-item,
-  .date-item {
-    --padding-start: 12px;
-    --padding-end: 12px;
+}
+
+/* Section Headings */
+h3 {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 0 10px 0 !important;
+}
+
+/* Form Sections */
+.form-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #edf2f7;
+  margin-top: 20px;
+}
+
+@media (min-width: 768px) {
+  .form-section {
+    padding: 32px;
   }
+}
+
+/* Subject Selection Chips */
+ion-chip {
+  --background: #f1f5f9;
+  --color: #334155;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 8px 14px;
+  height: auto;
+  transition: all 0.2s ease;
+}
+
+ion-chip:hover {
+  background: #e2e8f0;
+}
+
+/* Customizing Ionic Inputs and Textareas */
+.input-item {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --border-color: #e2e8f0;
+  --highlight-color: #2563eb;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 16px !important;
+  box-shadow: none !important;
+  padding-left: 8px;
+}
+
+.input-item ion-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-item ion-input,
+.input-item ion-textarea {
+  font-size: 0.95rem;
+  color: #1e293b;
+  --padding-top: 6px;
+  --padding-bottom: 10px;
+}
+
+/* Attachments Chip styling */
+.homework-create-content ion-chip ion-icon {
+  font-size: 1.1rem;
+}
+
+/* Modal Content Styling */
+ion-modal {
+  --height: auto;
+  --border-radius: 20px 20px 0 0;
+}
+
+@media (min-width: 768px) {
+  ion-modal {
+    --width: 450px;
+    --height: 500px;
+    --border-radius: 20px;
+  }
+}
+
+/* Modal Internal Wrapper Styling */
+ion-modal div[style*="padding: '20px'"],
+ion-modal div[style*="padding: 20px"] {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+ion-modal h2 {
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin-bottom: 16px !important;
+}
+
+/* Buttons inside Modals and Main Screen */
+ion-button {
+  --border-radius: 12px;
+  text-transform: none;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* Submit Action Button override */
+.homework-create-content ion-button[color="primary"] {
+  --background: #2563eb;
+  --background-hover: #1d4ed8;
+  --box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  height: 50px !important;
+  font-size: 1rem !important;
+  margin-top: 24px !important;
 }

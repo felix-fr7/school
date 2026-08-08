@@ -1,299 +1,276 @@
-/**
- * Class Controller Exam Detail Screen Styles
- * Theme: Deep Royal Blue / Educational Slate
- */
+/* ==========================================================================
+   Class Exam Detail Screen - Modern Clean Theme (Responsive)
+   ========================================================================== */
 
-:root {
-  --class-primary: #1E3A8A;
-  --class-primary-light: #2563EB;
-  --class-bg-light: #F8FAFC;
-  --class-card-bg: #FFFFFF;
-  --class-border: #E2E8F0;
-  --class-text-dark: #0F172A;
-  --class-text-muted: #64748B;
-}
-
-.class-toolbar {
-  --background: var(--class-primary);
-  --color: #FFFFFF;
-}
-
-/* Loading State */
-.exam-detail-loading {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: var(--class-bg-light);
-}
-
-.exam-detail-loading .loading-text {
-  margin-top: 14px;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--class-text-muted);
-}
-
-/* Content Area */
 .exam-detail-content {
-  --background: var(--class-bg-light);
+  --background: #f8fafc;
 }
 
-.exam-detail-wrapper {
-  padding: 16px;
-  max-width: 650px;
-  margin: 0 auto;
-}
-
-/* Error State */
+.exam-detail-loading,
 .error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  height: 100%;
   text-align: center;
+  padding: 24px;
+}
+
+.loading-text {
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #64748b;
 }
 
 .error-icon {
-  font-size: 56px;
-  color: #EF4444;
-  margin-bottom: 16px;
-}
-
-.error-state h2 {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--class-text-dark);
-  margin: 0 0 20px 0;
+  font-size: 3rem;
+  color: #dc2626;
+  margin-bottom: 12px;
 }
 
 .retry-btn {
-  --background: var(--class-primary);
-  --border-radius: 10px;
+  margin-top: 16px;
+  --border-radius: 12px;
+  font-weight: 700;
 }
 
-/* Exam Info Card */
+/* Wrapper Layout */
+.exam-detail-wrapper {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+@media (min-width: 768px) {
+  .exam-detail-wrapper {
+    padding: 32px 24px;
+  }
+}
+
+/* Main Info Card */
 .exam-info-card {
-  --background: var(--class-card-bg);
-  border-radius: 18px;
-  border: 1px solid var(--class-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-  margin: 0 0 16px 0;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #edf2f7;
+  margin: 0 0 20px 0;
+}
+
+.exam-info-card ion-card-header {
+  padding: 20px 20px 10px 20px;
+}
+
+@media (min-width: 768px) {
+  .exam-info-card ion-card-header {
+    padding: 28px 28px 10px 28px;
+  }
 }
 
 .title-row {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 12px;
 }
 
 .exam-title {
-  font-size: 20px;
+  font-size: 1.35rem;
   font-weight: 800;
-  color: var(--class-text-dark);
+  color: #0f172a;
   line-height: 1.3;
+  margin: 0;
+  flex: 1;
+}
+
+@media (min-width: 768px) {
+  .exam-title {
+    font-size: 1.6rem;
+  }
 }
 
 .published-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  border-radius: 20px;
+  gap: 6px;
   padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+}
+
+.exam-info-card ion-card-content {
+  padding: 0 20px 20px 20px;
+}
+
+@media (min-width: 768px) {
+  .exam-info-card ion-card-content {
+    padding: 0 28px 28px 28px;
+  }
 }
 
 /* Metadata Grid */
 .metadata-grid {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  background: var(--class-bg-light);
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 18px;
-  border: 1px solid var(--class-border);
+  gap: 12px;
+  margin: 16px 0 24px 0;
 }
 
 .info-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
 }
 
 .info-icon {
-  color: var(--class-primary-light);
-  font-size: 20px;
+  font-size: 1.3rem;
+  color: #2563eb;
   flex-shrink: 0;
 }
 
-.info-text {
-  display: flex;
-  flex-direction: column;
-}
-
 .info-label {
-  font-size: 11px;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
   text-transform: uppercase;
-  font-weight: 700;
-  color: var(--class-text-muted);
   letter-spacing: 0.5px;
+  margin-bottom: 2px;
 }
 
 .info-val {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--class-text-dark);
-  margin: 2px 0 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
 }
 
 .info-val.highlight {
-  color: var(--class-primary-light);
+  color: #2563eb;
 }
 
-/* Attachment Card */
+/* Attachment Status Card */
 .attachment-status-card {
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 14px 16px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .attachment-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .attachment-header.empty {
-  background: #FEF3C7;
-  border-color: #FDE68A;
+  opacity: 0.8;
 }
 
 .attachment-icon {
-  font-size: 26px;
-  color: var(--class-primary-light);
+  font-size: 1.8rem;
+  color: #2563eb;
+  flex-shrink: 0;
 }
 
 .attachment-icon.warning {
-  color: #D97706;
+  color: #d97706;
 }
 
 .attachment-title {
-  font-size: 14px;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--class-text-dark);
-  margin: 0;
+  color: #1e293b;
+  margin: 0 0 2px 0;
 }
 
 .attachment-sub {
-  font-size: 12px;
-  color: var(--class-text-muted);
-  margin: 2px 0 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
 }
 
-/* Action Button */
+/* Open Document Button */
 .open-doc-button {
-  --background: var(--class-primary);
+  --background: #2563eb;
+  --background-hover: #1d4ed8;
   --border-radius: 12px;
-  --box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
-  height: 48px;
+  --box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
   font-weight: 700;
-  margin-bottom: 16px;
+  height: 48px;
+  margin: 0 0 16px 0;
+  text-transform: none;
 }
 
 /* Preview Section */
 .preview-section {
-  margin-top: 16px;
-  border-top: 1px border var(--class-border);
+  margin-top: 20px;
+  border-top: 1px solid #edf2f7;
   padding-top: 16px;
 }
 
 .preview-label {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--class-text-muted);
-  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 10px;
 }
 
 .preview-image {
-  width: 100%;
   border-radius: 12px;
-  max-height: 220px;
-  object-fit: cover;
-  border: 1px solid var(--class-border);
+  border: 1px solid #e2e8f0;
+  max-height: 300px;
+  object-fit: contain;
+  width: 100%;
+  background: #f1f5f9;
 }
 
-/* Info Note */
+/* Info Note Banner */
 .info-note {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background-color: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  padding: 12px 16px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   border-radius: 12px;
-  margin-bottom: 16px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
 }
 
 .info-note-icon {
-  font-size: 20px;
-  color: var(--class-primary-light);
+  font-size: 1.2rem;
+  color: #2563eb;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .info-note-text {
-  font-size: 13px;
-  line-height: 1.4;
-  color: #1E40AF;
+  font-size: 0.85rem;
+  color: #1e40af;
   margin: 0;
+  line-height: 1.4;
 }
 
 /* Back Button */
 .back-button-container {
-  margin-top: 8px;
+  margin-bottom: 20px;
 }
 
 .back-button {
+  --border-color: #cbd5e1;
+  --color: #475569;
   --border-radius: 12px;
-  --color: var(--class-text-dark);
-  --border-color: var(--class-border);
   font-weight: 600;
-}
-
-/* Dark Mode Optimization */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --class-bg-light: #0F172A;
-    --class-card-bg: #1E293B;
-    --class-border: #334155;
-    --class-text-dark: #F8FAFC;
-    --class-text-muted: #94A3B8;
-  }
-
-  .attachment-status-card {
-    background: #1E293B;
-    border-color: #3B82F6;
-  }
-
-  .attachment-icon {
-    color: #60A5FA;
-  }
-
-  .info-note {
-    background-color: #1E293B;
-    border-color: #334155;
-  }
-
-  .info-note-text {
-    color: #93C5FD;
-  }
+  height: 46px;
+  text-transform: none;
 }

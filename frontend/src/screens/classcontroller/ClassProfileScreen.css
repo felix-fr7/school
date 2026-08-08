@@ -1,102 +1,160 @@
-/**
- * Class Profile Screen - Light Modern Design System
- * Clean, professional, modern light theme
- */
+/* ==========================================================================
+   Class Profile Screen - Modern Clean Theme (Responsive)
+   ========================================================================== */
 
-/* ============================================
-   Page Layout & Container
-   ============================================ */
 .profile-content {
   --background: #f8fafc;
-  --ion-background-color: #f8fafc;
 }
 
 .profile-loading {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   height: 100%;
 }
 
+.loading-text {
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+.light-toolbar {
+  --background: #ffffff;
+  --border-color: #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Container Wrapper */
 .profile-container {
-  max-width: 640px;
+  max-width: 700px;
   margin: 0 auto;
-  padding: 16px 16px 40px 16px;
+  padding: 20px 16px 32px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.card-section-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 16px 0;
+@media (min-width: 768px) {
+  .profile-container {
+    padding: 32px 24px 40px 24px;
+    gap: 20px;
+  }
 }
 
-/* ============================================
-   Header Card
-   ============================================ */
+/* Header Card (Hero Banner) */
 .header-card {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-radius: 18px;
-  padding: 24px 20px;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 20px;
+  padding: 28px 24px;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.header-card::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .class-code-badge {
-  display: inline-block;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
-  padding: 8px 20px;
-  border-radius: 12px;
-  margin-bottom: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .class-code-label {
-  display: block;
-  font-size: 10px;
+  font-size: 0.65rem;
   font-weight: 700;
-  color: #93c5fd;
   letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  margin-bottom: 2px;
 }
 
 .class-code-value {
-  display: block;
-  font-size: 28px;
+  font-size: 1rem;
   font-weight: 800;
   color: #ffffff;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
 }
 
-.class-name {
-  font-size: 22px;
+.class-info .class-name {
+  font-size: 1.6rem;
   font-weight: 800;
   margin: 0 0 4px 0;
+  letter-spacing: -0.3px;
 }
 
-.class-section {
-  font-size: 14px;
-  color: #bfdbfe;
-  margin: 0;
+@media (min-width: 768px) {
+  .class-info .class-name {
+    font-size: 2rem;
+  }
+}
+
+.class-info .class-section {
+  font-size: 0.95rem;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
 }
 
-/* ============================================
-   Stats Grid
-   ============================================ */
-.stats-card {
-  --background: #ffffff;
-  border-radius: 14px;
+/* Card Section Styles */
+.stats-card,
+.info-card,
+.settings-card,
+.about-card {
+  margin: 0;
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.stats-card ion-card-content,
+.info-card ion-card-content,
+.settings-card ion-card-content,
+.about-card ion-card-content {
+  padding: 20px !important;
+}
+
+@media (min-width: 768px) {
+  .stats-card ion-card-content,
+  .info-card ion-card-content,
+  .settings-card ion-card-content,
+  .about-card ion-card-content {
+    padding: 24px !important;
+  }
+}
+
+.card-section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0 0 16px 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
 }
 
+/* Stats Grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -104,219 +162,183 @@
 }
 
 .stat-item {
-  background: #f1f5f9;
-  border-radius: 10px;
-  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
 .stat-icon {
-  font-size: 20px;
-  color: #3b82f6;
-  margin-bottom: 4px;
+  font-size: 1.4rem;
+  color: #2563eb;
+  margin-bottom: 8px;
 }
 
 .stat-value {
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1e293b;
   margin-bottom: 2px;
+  word-break: break-all;
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: #64748b;
-  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
-/* ============================================
-   Teacher Info Card
-   ============================================ */
-.info-card {
-  --background: #ffffff;
-  border-radius: 14px;
-  margin: 0 0 16px 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
-}
-
+/* Teacher Info Layout */
 .teacher-info {
   display: flex;
   align-items: center;
   gap: 14px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 14px 16px;
 }
 
 .teacher-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   background: #eff6ff;
-  color: #3b82f6;
+  color: #2563eb;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: 700;
-  border: 1px solid #bfdbfe;
+  font-size: 1.2rem;
+  font-weight: 800;
+  flex-shrink: 0;
 }
 
 .teacher-details {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .teacher-name {
-  font-size: 15px;
+  font-size: 0.98rem;
   font-weight: 700;
-  color: #111827;
+  color: #1e293b;
   margin-bottom: 2px;
 }
 
 .teacher-email {
-  font-size: 13px;
+  font-size: 0.82rem;
+  font-weight: 500;
   color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ============================================
-   Settings List
-   ============================================ */
-.settings-card {
-  --background: #ffffff;
-  border-radius: 14px;
-  margin: 0 0 16px 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
-}
-
+/* Settings List */
 .settings-list {
-  background: transparent;
-  padding: 0;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .setting-item {
-  --background: transparent;
-  --padding-start: 0;
-  --inner-padding-end: 0;
-  --min-height: 54px;
-  margin-bottom: 4px;
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.setting-item:last-child {
+  margin-bottom: 0;
+}
+
+.setting-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .setting-icon-container {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
+  background: #eff6ff;
+  color: #2563eb;
   border-radius: 10px;
-  background: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3b82f6;
-  font-size: 18px;
-  margin-right: 12px;
+  font-size: 1.1rem;
+  margin-inline-end: 14px !important;
 }
 
 .setting-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
   margin: 0 0 2px 0;
 }
 
 .setting-subtitle {
-  font-size: 12px;
+  font-size: 0.78rem;
   color: #64748b;
   margin: 0;
 }
 
 .setting-arrow {
-  font-size: 18px;
   color: #94a3b8;
+  font-size: 1rem;
 }
 
-/* ============================================
-   About & Logout
-   ============================================ */
+/* About / App Info Card */
 .about-card {
-  --background: #ffffff;
-  border-radius: 14px;
-  margin: 0 0 20px 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
   text-align: center;
 }
 
 .about-title {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   color: #1e293b;
   margin: 0 0 4px 0;
 }
 
 .about-version {
-  font-size: 12px;
+  font-size: 0.8rem;
   color: #64748b;
-  margin: 0 0 4px 0;
+  margin: 0 0 2px 0;
 }
 
 .about-copyright {
-  font-size: 11px;
+  font-size: 0.75rem;
   color: #94a3b8;
   margin: 0;
 }
 
+/* Logout Wrapper */
 .logout-wrapper {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .logout-button {
-  --border-radius: 12px;
-  --border-width: 1.5px;
-  font-weight: 600;
-}
-
-/* ============================================
-   Dark Mode Support
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-  .profile-content {
-    --background: #0F172A;
-  }
-
-  .header-card {
-    background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%);
-  }
-
-  .stats-card,
-  .info-card,
-  .settings-card,
-  .about-card {
-    --background: #1E293B;
-    border-color: #334155;
-  }
-
-  .card-section-title {
-    color: #94A3B8;
-  }
-
-  .stat-item {
-    background: #0F172A;
-  }
-
-  .stat-value,
-  .teacher-name,
-  .setting-title,
-  .about-title {
-    color: #F8FAFC;
-  }
-
-  .stat-label,
-  .teacher-email,
-  .setting-subtitle,
-  .about-version {
-    color: #94A3B8;
-  }
-
-  .teacher-avatar,
-  .setting-icon-container {
-    background: #0F172A;
-    border-color: #334155;
-  }
+  --border-radius: 14px;
+  font-weight: 700;
+  height: 48px;
+  font-size: 0.95rem;
+  text-transform: none;
+  margin: 0;
+  --border-color: #fecaca;
+  --color: #dc2626;
+  --background-hover: #fef2f2;
 }

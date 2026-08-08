@@ -1,139 +1,140 @@
-/* ============================================
-   Light Theme Styling - Exam Schedules List
-   ============================================ */
+/* ==========================================================================
+   Class Exam Schedules List Screen - Modern Clean Theme (Responsive)
+   ========================================================================== */
 
 .exams-list-content {
-  --background: #F8FAFC !important;
-  background-color: #F8FAFC !important;
+  --background: #f8fafc;
 }
 
-.content-container {
-  max-width: 768px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-/* Toolbar Styling */
 .exams-toolbar {
-  --background: #FFFFFF !important;
-  --color: #0F172A !important;
-  --border-color: #E2E8F0;
-  border-bottom: 1px solid #E2E8F0;
-  text-align: center;
+  --background: #ffffff;
+  --border-color: #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .toolbar-title {
-  font-size: 17px;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #0F172A;
+  color: #0f172a;
 }
 
-/* Header Section */
-.header-section {
-  margin-bottom: 16px;
+/* Container Layout */
+.content-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px 16px;
 }
 
-.header-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #0F172A;
-  margin: 0 0 4px 0;
-}
-
-.header-subtitle {
-  font-size: 13px;
-  color: #64748B;
-  font-weight: 500;
-  margin: 0;
+@media (min-width: 768px) {
+  .content-container {
+    padding: 32px 24px;
+  }
 }
 
 /* Info Banner */
 .info-banner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  padding: 12px 14px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   border-radius: 12px;
+  padding: 14px 16px;
   margin-bottom: 20px;
 }
 
 .info-banner-icon {
-  font-size: 20px;
-  color: #2563EB;
+  font-size: 1.2rem;
+  color: #2563eb;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .info-banner-text {
-  font-size: 13px;
-  color: #1E40AF;
-  font-weight: 500;
+  font-size: 0.85rem;
+  color: #1e40af;
   line-height: 1.4;
 }
 
-/* Loading & Error Box */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 50px 0;
-  color: #64748B;
-  font-size: 14px;
+/* Header Section */
+.header-section {
+  margin-bottom: 20px;
 }
 
-.error-box {
-  text-align: center;
-  padding: 20px;
-  background: #FEF2F2;
-  border: 1px solid #FCA5A5;
-  border-radius: 12px;
-  color: #991B1B;
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
 }
 
-/* Empty State */
+@media (min-width: 768px) {
+  .header-title {
+    font-size: 1.8rem;
+  }
+}
+
+.header-subtitle {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Loading & Error States */
+.loading-state,
+.error-box,
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 50px 20px;
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 40px 20px;
   text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  margin-top: 20px;
+}
+
+.loading-state p,
+.error-box p,
+.empty-state p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 12px 0 0 0;
+}
+
+.error-box button {
+  margin-top: 16px;
+  --border-radius: 10px;
+  font-weight: 700;
 }
 
 .empty-icon-wrapper {
   width: 64px;
   height: 64px;
-  background: #E0F2FE;
-  color: #0284C7;
-  border-radius: 20px;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  margin-bottom: 16px;
+  font-size: 1.8rem;
+  margin: 0 auto 16px auto;
 }
 
 .empty-state h2 {
-  font-size: 18px;
-  font-weight: 700;
-  color: #0F172A;
-  margin: 0 0 6px 0;
-}
-
-.empty-state p {
-  font-size: 14px;
-  color: #64748B;
-  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
 }
 
 .refresh-btn {
+  margin-top: 16px;
+  --background: #2563eb;
   --border-radius: 10px;
-  --background: #2563EB;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* Exam Cards */
+/* Exams Grid List */
 .exams-grid {
   display: flex;
   flex-direction: column;
@@ -141,19 +142,19 @@
 }
 
 .exam-card {
-  --background: #FFFFFF !important;
-  background: #FFFFFF !important;
-  border: 1px solid #E2E8F0 !important;
-  border-radius: 14px !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02) !important;
-  margin: 0 !important;
+  margin: 0;
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
   cursor: pointer;
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.exam-card:active {
-  transform: scale(0.99);
-  background: #F8FAFC !important;
+.exam-card:hover {
+  transform: translateY(-2px);
+  border-color: #2563eb;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
 }
 
 .exam-card-content {
@@ -161,66 +162,83 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px !important;
+  gap: 14px;
 }
 
 .card-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
+  flex: 1;
+  min-width: 0;
 }
 
 .exam-icon-container {
   width: 44px;
   height: 44px;
-  background: #EFF6FF;
-  color: #2563EB;
+  background: #eff6ff;
+  color: #2563eb;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 1.3rem;
   flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.exam-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .exam-title {
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 700;
-  color: #0F172A;
+  color: #1e293b;
   margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .exam-meta {
   display: flex;
-  align-items: center;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 12px;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #64748B;
-  font-weight: 500;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.meta-item ion-icon {
+  font-size: 0.95rem;
+  color: #94a3b8;
 }
 
 .card-right {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .view-badge {
-  --background: #EFF6FF;
-  --color: #2563EB;
-  font-size: 11px;
+  --background: #eff6ff;
+  --color: #2563eb;
   font-weight: 700;
+  font-size: 0.75rem;
   padding: 6px 10px;
   border-radius: 8px;
 }
 
 .arrow-icon {
-  font-size: 18px;
-  color: #94A3B8;
+  font-size: 1.1rem;
+  color: #94a3b8;
 }

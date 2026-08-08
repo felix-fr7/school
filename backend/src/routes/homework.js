@@ -23,7 +23,7 @@ router.get('/', async (req, res, next) => {
     const { classId, page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    let query = { tenantId: req.user.tenantId };
+    let query = { schoolId: req.user.tenantId };
     
     // Filter by role
     if (req.user.role === 'Student') {
@@ -40,7 +40,6 @@ router.get('/', async (req, res, next) => {
       .skip(skip)
       .limit(parseInt(limit))
       .populate('teacher', 'name email')
-      .populate('tenantId', 'name')
       .populate('classId', 'name section');
     
     const total = await Homework.countDocuments(query);
@@ -69,10 +68,9 @@ router.get('/:id', async (req, res, next) => {
   try {
     const homework = await Homework.findOne({
       _id: req.params.id,
-      tenantId: req.user.tenantId
+      schoolId: req.user.tenantId
     })
     .populate('teacher', 'name email')
-    .populate('tenantId', 'name')
     .populate('classId', 'name section');
     
     if (!homework) {
@@ -119,7 +117,7 @@ router.post('/', authenticate, requireAdmin, async (req, res, next) => {
       dueDate: new Date(dueDate),
       attachments: attachments || [],
       teacher: req.user.id,
-      tenantId: req.user.tenantId,
+      schoolId: req.user.tenantId,
       classId: classId || req.user.classId,
       maxMarks: maxMarks || 100,
       tags: tags || [],
@@ -169,7 +167,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
     if (isPublished !== undefined) updates.isPublished = isPublished;
     
     const homework = await Homework.findOneAndUpdate(
-      { _id: req.params.id, tenantId: req.user.tenantId },
+      { _id: req.params.id, schoolId: req.user.tenantId },
       { $set: updates },
       { new: true, runValidators: true }
     );
@@ -200,7 +198,7 @@ router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
     const homework = await Homework.findOneAndDelete({
       _id: req.params.id,
-      tenantId: req.user.tenantId
+      schoolId: req.user.tenantId
     });
     
     if (!homework) {
@@ -238,7 +236,7 @@ router.post('/:id/submit', authenticate, async (req, res, next) => {
     
     const homework = await Homework.findOne({
       _id: req.params.id,
-      tenantId: req.user.tenantId
+      schoolId: req.user.tenantId
     });
     
     if (!homework) {
@@ -272,7 +270,7 @@ router.post('/:id/check', authenticate, requireTeacher, async (req, res, next) =
     
     const homework = await Homework.findOne({
       _id: req.params.id,
-      tenantId: req.user.tenantId
+      schoolId: req.user.tenantId
     });
     
     if (!homework) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import PlaceholderScreen from './PlaceholderScreen';
 
-const CreateCircularScreen: React.FC = () => (
+const CreateCircularScreen = () => (
   <PlaceholderScreen title="Create Circular" description="Create a new circular" />
 );
 

@@ -4,7 +4,7 @@ import { homeOutline, schoolOutline, peopleOutline, calendarOutline, bookOutline
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const TeacherMenu: React.FC = () => {
+const TeacherMenu = () => {
   const history = useHistory();
   const { logout } = useAuth();
 

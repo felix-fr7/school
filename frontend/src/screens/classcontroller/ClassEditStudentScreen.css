@@ -1,133 +1,342 @@
-:root {
-  --class-primary: #1E3A8A;
-  --class-bg-light: #F8FAFC;
-  --class-card-bg: #FFFFFF;
-  --class-border: #E2E8F0;
-  --class-text-dark: #0F172A;
-  --class-text-muted: #64748B;
+/* ==========================================================================
+   Class Edit Student Screen - Modern Clean Theme (Responsive)
+   ========================================================================== */
+
+.student-edit-content {
+  --background: #f8fafc;
 }
 
 .student-edit-loading {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background: var(--class-bg-light);
+  justify-content: center;
+  height: 100%;
+  color: #64748b;
 }
 
-.student-edit-content {
-  --background: var(--class-bg-light);
+.loading-text {
+  margin-top: 12px;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
-.student-id-card {
-  --background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
-  margin: 16px;
-  border-radius: 20px;
-  color: #FFFFFF;
-  box-shadow: 0 10px 20px rgba(30, 58, 138, 0.15);
+/* Container Wrapper */
+.student-edit-content .student-id-card,
+.student-edit-content .info-card,
+.student-edit-content .actions-card {
+  max-width: 700px;
+  margin: 16px auto;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #edf2f7;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+@media (min-width: 768px) {
+  .student-edit-content .student-id-card,
+  .student-edit-content .info-card,
+  .student-edit-content .actions-card {
+    margin: 24px auto;
+  }
+}
+
+/* Student ID Header Card */
+.student-id-card ion-card-content {
   text-align: center;
+  padding: 24px;
 }
 
 .badge-row {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
-.status-badge, .class-badge {
-  font-size: 11px;
-  padding: 6px 10px;
-  border-radius: 8px;
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #f0fdf4 !important;
+  color: #166534 !important;
 }
 
 .avatar-placeholder {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
-  font-size: 28px;
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  font-size: 2rem;
   font-weight: 800;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px auto;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  margin: 0 auto 14px auto;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
 }
 
 .student-name {
-  font-size: 22px;
+  font-size: 1.35rem;
   font-weight: 800;
+  color: #0f172a;
   margin: 0 0 12px 0;
 }
 
 .id-box {
-  background: rgba(0, 0, 0, 0.15);
-  padding: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  backdrop-filter: blur(4px);
+  padding: 10px;
+  display: inline-block;
+  min-width: 180px;
 }
 
 .id-box small {
-  font-size: 10px;
-  letter-spacing: 1px;
-  opacity: 0.8;
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
 }
 
 .student-id-value {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  margin: 2px 0 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: 0.5px;
 }
 
-.info-card, .actions-card {
-  --background: var(--class-card-bg);
-  margin: 16px;
-  border-radius: 16px;
-  border: 1px solid var(--class-border);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+/* Info Cards Header */
+.info-card ion-card-content,
+.actions-card ion-card-content {
+  padding: 20px;
+}
+
+@media (min-width: 768px) {
+  .info-card ion-card-content,
+  .actions-card ion-card-content {
+    padding: 28px;
+  }
 }
 
 .info-card-title {
-  font-size: 15px;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--class-text-dark);
-  margin: 0 0 12px 0;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+/* Input Group Styles */
+.input-group {
+  margin-bottom: 16px;
+}
+
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.label-icon {
+  font-size: 1rem;
+  color: #2563eb;
+}
+
+.custom-input-box ion-input {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --highlight-color: #2563eb;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+/* Save Button */
+.save-btn {
+  --background: #2563eb;
+  --background-hover: #1d4ed8;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+  font-weight: 700;
+  height: 48px;
+  margin-top: 16px;
+  text-transform: none;
+}
+
+/* Academic Profile List Items */
+.info-card ion-item {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.info-icon {
+  color: #2563eb;
+  font-size: 1.2rem;
+  margin-inline-end: 14px !important;
+}
+
+.info-card ion-label small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.info-icon {
-  color: var(--class-primary);
-  font-size: 20px;
-  margin-right: 12px;
+.info-card ion-label p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 2px 0 0 0;
+}
+
+/* Admin Actions Items */
+.action-button {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.action-button.danger-action {
+  --background: #fef2f2;
+  border-color: #fee2e2;
 }
 
 .action-icon-container {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
+  background: #eff6ff;
+  color: #2563eb;
   border-radius: 10px;
-  background: #EFF6FF;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  color: var(--class-primary);
+  font-size: 1.2rem;
+  margin-right: 14px;
+  flex-shrink: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --class-bg-light: #0F172A;
-    --class-card-bg: #1E293B;
-    --class-border: #334155;
-    --class-text-dark: #F8FAFC;
-    --class-text-muted: #94A3B8;
-  }
+.danger-action .action-icon-container {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
-  .action-icon-container {
-    background: #334155;
-    color: #60A5FA;
+.action-button ion-label h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 2px 0;
+}
+
+.danger-action ion-label h4 {
+  color: #dc2626;
+}
+
+.action-button ion-label p {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Reset Password Modal Wrapper */
+.reset-password-modal {
+  --height: auto;
+  --border-radius: 20px 20px 0 0;
+}
+
+@media (min-width: 768px) {
+  .reset-password-modal {
+    --width: 450px;
+    --height: auto;
+    --border-radius: 20px;
   }
+}
+
+.modal-container {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.modal-subtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 20px 0;
+}
+
+.modal-container .input-group {
+  margin-bottom: 16px;
+}
+
+.modal-container ion-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.modal-container ion-input {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.modal-container ion-button {
+  --border-radius: 12px;
+  font-weight: 700;
+  height: 46px;
+  margin-top: 12px;
+  text-transform: none;
+}
+
+.modal-container .default-btn {
+  --border-color: #cbd5e1;
+  --color: #475569;
+}
+
+.modal-container .submit-btn {
+  --background: #2563eb;
+  --background-hover: #1d4ed8;
+  --box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }

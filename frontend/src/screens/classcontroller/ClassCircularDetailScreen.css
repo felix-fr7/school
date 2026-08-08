@@ -1,130 +1,200 @@
-/* ============================================
-   Global & Content Background
-   ============================================ */
-.circular-detail-content {
-  --background: #F8FAFC;
-}
+/* ==========================================================================
+   Class Circular Detail Screen - Modern Clean Theme (Mobile & Tablet Responsive)
+   ========================================================================== */
 
 .circular-detail-loading {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   height: 100%;
 }
 
-.circular-container {
-  max-width: 680px;
-  margin: 0 auto;
-  padding-bottom: 40px;
+.loading-text {
+  margin-top: 12px;
+  font-size: 0.95rem;
 }
 
-/* ============================================
-   Banner Image
-   ============================================ */
+/* Error State */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: 24px;
+}
+
+.error-icon {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+}
+
+.error-state h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.error-state p {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 20px 0;
+}
+
+/* Main Content Container */
+.circular-detail-content {
+  --background: #f8fafc;
+}
+
+.circular-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .circular-container {
+    padding: 32px 24px;
+  }
+}
+
+/* Banner Image Wrapper */
 .banner-wrapper {
   width: 100%;
-  max-height: 240px;
+  max-height: 400px;
+  border-radius: 16px;
   overflow: hidden;
-  background: #E2E8F0;
+  margin-bottom: 20px;
+  background: #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .circular-banner {
   width: 100%;
-  height: 240px;
+  height: 100%;
   object-fit: cover;
   display: block;
+  max-height: 400px;
 }
 
-/* ============================================
-   Circular Body Section
-   ============================================ */
+/* Circular Body */
 .circular-body {
-  padding: 20px 16px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #edf2f7;
 }
 
+@media (min-width: 768px) {
+  .circular-body {
+    padding: 32px;
+  }
+}
+
+/* Meta Header */
 .meta-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .visibility-badge {
-  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
   font-weight: 600;
-  padding: 6px 10px;
-  border-radius: 6px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
-.visibility-badge.visibility-all {
-  background: #EFF6FF;
-  color: #2563EB;
+.visibility-all {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
-.visibility-badge.visibility-specific {
-  background: #FEF3C7;
-  color: #D97706;
+.visibility-specific {
+  background: #f0fdf4;
+  color: #16a34a;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  color: #64748B;
+  font-size: 0.85rem;
+  color: #64748b;
   font-weight: 500;
 }
 
+/* Title */
 .circular-title {
-  font-size: 22px;
+  font-size: 1.4rem;
   font-weight: 800;
-  color: #0F172A;
-  line-height: 30px;
-  margin: 0 0 16px 0;
+  color: #0f172a;
+  line-height: 1.4;
+  margin: 0 0 12px 0;
 }
 
-/* ============================================
-   Author Info
-   ============================================ */
+@media (min-width: 768px) {
+  .circular-title {
+    font-size: 1.8rem;
+  }
+}
+
+/* Author Info */
 .author-info {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .author-label {
-  font-size: 11px;
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .author-name {
-  font-size: 13px;
-  font-weight: 600;
   color: #334155;
+  font-weight: 600;
 }
 
-/* ============================================
-   Content Card
-   ============================================ */
+/* Content Card */
 .content-card {
-  margin: 0 0 20px 0;
-  background: #FFFFFF;
+  margin: 0 0 24px 0;
+  box-shadow: none;
+  background: #f8fafc;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.content-card ion-card-content {
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .content-card ion-card-content {
+    padding: 24px;
+  }
+}
+
+.circular-content-text {
+  font-size: 0.95rem;
+  color: #334155;
+  line-height: 1.7;
 }
 
 .circular-content-text p {
-  font-size: 15px;
-  color: #334155;
-  line-height: 24px;
   margin: 0 0 12px 0;
 }
 
@@ -132,176 +202,85 @@
   margin-bottom: 0;
 }
 
-/* ============================================
-   Attachment Section
-   ============================================ */
+/* Attachment Section */
 .attachment-section {
   margin-top: 24px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
 }
 
 .section-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #334155;
-  margin: 0 0 10px 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 14px 0;
 }
 
 .section-icon {
-  font-size: 16px;
+  color: #3b82f6;
+  font-size: 1.2rem;
 }
 
 .attachment-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  padding: 12px 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
   cursor: pointer;
-  transition: background 0.15s ease;
-  margin-bottom: 8px;
+  transition: all 0.2s ease;
 }
 
-.attachment-card:last-child {
-  margin-bottom: 0;
+.attachment-card:hover {
+  background: #f1f5f9;
+  border-color: #3b82f6;
+  transform: translateY(-1px);
 }
 
 .attachment-card:active {
-  background: #F1F5F9;
+  transform: translateY(0);
 }
 
 .attachment-icon-wrapper {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: #EFF6FF;
-  color: #2563EB;
+  width: 42px;
+  height: 42px;
+  background: #eff6ff;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  color: #2563eb;
+  font-size: 1.3rem;
+  flex-shrink: 0;
 }
 
 .attachment-icon-wrapper.pdf {
-  background: #FEE2E2;
-  color: #DC2626;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .attachment-info {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .attachment-name {
-  font-size: 13px;
+  font-size: 0.95rem;
   font-weight: 600;
-  color: #1E293B;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .attachment-subtext {
-  font-size: 11px;
-  color: #64748B;
-  margin-top: 2px;
-}
-
-/* ============================================
-   Error State
-   ============================================ */
-.error-state {
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.error-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-
-.error-state h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.error-state p {
-  font-size: 14px;
-  color: #64748B;
-  margin-bottom: 20px;
-}
-
-/* ============================================
-   Dark Mode Support
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-  .circular-detail-content {
-    --background: #0F172A;
-  }
-
-  .banner-wrapper {
-    background: #1E293B;
-  }
-
-  .circular-title {
-    color: #F8FAFC;
-  }
-
-  .author-info {
-    border-bottom-color: #334155;
-  }
-
-  .author-name {
-    color: #CBD5E1;
-  }
-
-  .author-label {
-    color: #64748B;
-  }
-
-  .content-card,
-  .attachment-card {
-    background: #1E293B;
-    border-color: #334155;
-  }
-
-  .circular-content-text p {
-    color: #CBD5E1;
-  }
-
-  .section-title,
-  .attachment-name {
-    color: #F8FAFC;
-  }
-
-  .attachment-subtext {
-    color: #94A3B8;
-  }
-
-  .visibility-badge.visibility-all {
-    background: #1E293B;
-    color: #60A5FA;
-  }
-
-  .visibility-badge.visibility-specific {
-    background: #78350F;
-    color: #FCD34D;
-  }
-
-  .meta-item {
-    color: #94A3B8;
-  }
-
-  .attachment-icon-wrapper {
-    background: #1E293B;
-    color: #60A5FA;
-  }
-
-  .attachment-icon-wrapper.pdf {
-    background: #7F1D1D;
-    color: #FCA5A5;
-  }
+  font-size: 0.8rem;
+  color: #64748b;
 }

@@ -1,10 +1,10 @@
 import React from 'react';
 import { IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel, IonMenuToggle } from '@ionic/react';
-import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, settingsOutline, logOutOutline } from 'ionicons/icons';
+import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, filmOutline, settingsOutline, logOutOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const AdminMenu: React.FC = () => {
+const AdminMenu = () => {
   const history = useHistory();
   const { logout } = useAuth();
 
@@ -16,6 +16,7 @@ const AdminMenu: React.FC = () => {
     { title: 'News', icon: newspaperOutline, path: '/admin/news' },
     { title: 'Circulars', icon: documentTextOutline, path: '/admin/circulars' },
     { title: 'Exams', icon: calendarOutline, path: '/admin/exams' },
+    { title: 'Videos', icon: filmOutline, path: '/admin/videos' },
     { title: 'Settings', icon: settingsOutline, path: '/settings' },
   ];
 

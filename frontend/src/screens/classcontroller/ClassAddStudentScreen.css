@@ -1,233 +1,222 @@
-/* ============================================
-   Light Theme Workspace & Form Styling
-   ============================================ */
+/* ==========================================================================
+   Class Add Student Screen Styling - Modern Clean Theme
+   ========================================================================== */
 
-.add-student-content {
-  --background: #F8FAFC !important;
-  background-color: #F8FAFC !important;
-  color: #0F172A !important;
-}
-
-.form-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-bottom: 40px;
-}
-
-/* Toolbar Header */
 .light-toolbar {
-  --background: #FFFFFF;
-  --color: #0F172A;
-  border-bottom: 1px solid #E2E8F0;
+  --background: #ffffff;
+  --border-color: #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .brand-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 18px;
-  font-weight: 800;
-  color: #0F172A;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #1a1a1a;
 }
 
 .brand-icon {
-  font-size: 22px;
-  color: #2563EB;
+  font-size: 1.3rem;
+  color: var(--ion-color-primary, #3880ff);
 }
 
-/* Hero Section Banner */
+.add-student-content {
+  --background: #f8fafc;
+}
+
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Hero Header Card */
 .light-hero-card {
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  padding: 22px;
-  border-radius: 20px;
-  color: #FFFFFF;
-  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.25);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #edf2f7;
 }
 
-.hero-main .class-title {
-  font-size: 24px;
-  font-weight: 800;
-  margin: 0;
+.class-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
 }
 
 .teacher-greeting {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #E0E7FF;
-  line-height: 1.4;
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
 }
 
 /* Next Student ID Preview Card */
 .preview-card {
-  background: #FFFFFF;
-  border-radius: 18px;
   margin: 0 0 20px 0;
-  border: 1px solid #BFDBFE;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
-  text-align: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
 }
 
 .preview-card ion-card-content {
-  padding: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .preview-label {
-  font-size: 11px;
-  font-weight: 800;
-  color: #2563EB;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 1px;
-  display: block;
+  opacity: 0.85;
+  margin-bottom: 6px;
 }
 
 .preview-value {
-  font-size: 30px;
+  font-size: 1.8rem;
   font-weight: 800;
-  color: #0F172A;
-  letter-spacing: 1.5px;
-  margin: 6px 0;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.5px;
 }
 
 .preview-note {
-  font-size: 12px;
-  color: #64748B;
-  display: block;
+  font-size: 0.8rem;
+  opacity: 0.9;
 }
 
-/* Main Form Card */
+/* Form Card Container */
 .form-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #edf2f7;
 }
 
+/* Input Group Styles */
 .input-group {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .input-label {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 700;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #334155;
   margin-bottom: 8px;
 }
 
 .label-icon {
-  font-size: 16px;
-  color: #2563EB;
+  font-size: 1.1rem;
+  color: #3b82f6;
 }
 
 .custom-input-box {
-  background: #F8FAFC;
-  border: 1.5px solid #E2E8F0;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
   border-radius: 12px;
-  transition: all 0.2s ease;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
 }
 
 .custom-input-box:focus-within {
-  border-color: #2563EB;
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.custom-input-box ion-input {
-  --padding-start: 14px;
-  --padding-end: 14px;
-  --padding-top: 12px;
-  --padding-bottom: 12px;
-  font-size: 15px;
-  color: #0F172A;
-  font-weight: 500;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .password-box {
-  display: flex;
-  align-items: center;
-}
-
-.password-box ion-input {
-  flex: 1;
+  padding-right: 4px;
 }
 
 .password-toggle {
-  --padding-start: 8px;
-  --padding-end: 12px;
-  color: #64748B;
+  --color: #64748b;
   margin: 0;
+  height: 36px;
 }
 
 /* Info Box */
 .info-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: #EFF6FF;
-  border: 1px solid #DBEAFE;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
   border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 22px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 24px;
 }
 
 .info-icon {
-  font-size: 18px;
-  color: #2563EB;
+  font-size: 1.3rem;
+  color: #2563eb;
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .info-box p {
-  font-size: 12.5px;
-  color: #1E40AF;
-  line-height: 1.45;
   margin: 0;
+  font-size: 0.88rem;
+  color: #1e40af;
+  line-height: 1.5;
 }
 
 .id-highlight {
-  color: #1E3A8A;
-  background: #DBEAFE;
-  padding: 2px 6px;
-  border-radius: 4px;
+  font-weight: 700;
+  color: #1d4ed8;
 }
 
 /* Submit Button */
 .submit-button {
+  --background: #3b82f6;
+  --background-hover: #2563eb;
   --border-radius: 12px;
-  --background: #2563EB;
-  --background-hover: #1D4ED8;
-  --box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-  font-weight: 700;
+  --box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  font-weight: 600;
+  letter-spacing: 0.5px;
   height: 48px;
   margin: 0;
 }
 
-/* ============================================
-   Success Modal
-   ============================================ */
+/* ==========================================================================
+   Success Modal Styling
+   ========================================================================== */
 .success-modal {
-  --height: auto;
-  --max-height: 90vh;
-  --width: 90%;
-  --max-width: 420px;
-  --border-radius: 24px;
+  --background: transparent;
 }
 
-.modal-container {
-  padding: 24px;
-  background: #FFFFFF;
+.success-modal .modal-container {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 30px 24px;
+  max-width: 420px;
+  margin: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  transform: translateY(-50%);
 }
 
 .success-icon-container {
-  width: 68px;
-  height: 68px;
+  width: 64px;
+  height: 64px;
+  background: #dcfce7;
   border-radius: 50%;
-  background: #ECFDF5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -235,147 +224,135 @@
 }
 
 .success-icon {
-  font-size: 38px;
-  color: #10B981;
+  font-size: 2rem;
+  color: #16a34a;
 }
 
 .modal-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #0F172A;
-  margin: 0 0 18px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 20px 0;
 }
 
 .modal-details {
-  width: 100%;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 14px;
-  margin-bottom: 16px;
-  text-align: left;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
 }
 
 .student-id-highlight {
-  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-  border-radius: 12px;
-  padding: 14px;
-  text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #cbd5e1;
 }
 
 .student-id-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #93C5FD;
-  text-transform: uppercase;
-  letter-spacing: 1px;
   display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
 }
 
 .student-id-value {
-  font-size: 24px;
+  font-size: 1.4rem;
   font-weight: 800;
-  color: #FFFFFF;
-  letter-spacing: 1.5px;
-  margin: 2px 0 0 0;
+  color: #2563eb;
+  margin: 0;
 }
 
 .detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #E2E8F0;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
 }
 
 .detail-label {
-  font-size: 12.5px;
-  color: #64748B;
-  font-weight: 600;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .detail-value {
-  font-size: 13.5px;
-  color: #0F172A;
-  font-weight: 700;
+  color: #1e293b;
+  font-weight: 600;
 }
 
 .password-row {
-  border-bottom: none;
-  padding-top: 10px;
   flex-direction: column;
   align-items: flex-start;
+  gap: 6px;
 }
 
 .modal-password-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 6px;
   width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 4px 4px 4px 12px;
 }
 
 .password-value {
-  font-size: 14px;
-  color: #1E40AF;
+  font-family: monospace;
+  font-size: 1rem;
   font-weight: 700;
-  background: #EFF6FF;
-  border: 1px solid #DBEAFE;
-  padding: 6px 12px;
-  border-radius: 8px;
-  letter-spacing: 0.5px;
+  color: #0f172a;
 }
 
 .copy-button {
-  --border-radius: 8px;
-  --background: #2563EB;
-  font-size: 12px;
-  font-weight: 700;
-  height: 34px;
+  --background: #f1f5f9;
+  --color: #334155;
+  --box-shadow: none;
+  font-size: 0.8rem;
   margin: 0;
+  height: 32px;
 }
 
-/* Modal Warning */
 .modal-warning {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  background: #FEF3C7;
-  border: 1px solid #FDE68A;
-  border-radius: 12px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: 10px;
   padding: 10px 12px;
   margin-bottom: 20px;
   text-align: left;
 }
 
 .warning-icon {
-  font-size: 16px;
-  color: #D97706;
+  font-size: 1.2rem;
+  color: #d97706;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .modal-warning p {
-  font-size: 11.5px;
-  color: #92400E;
-  line-height: 1.4;
   margin: 0;
-  font-weight: 600;
+  font-size: 0.8rem;
+  color: #b45309;
+  line-height: 1.4;
 }
 
-/* Modal Actions */
 .modal-actions {
   display: flex;
   gap: 10px;
-  width: 100%;
 }
 
 .modal-btn {
   flex: 1;
-  --border-radius: 10px;
-  font-weight: 700;
-  height: 42px;
   margin: 0;
+  --border-radius: 10px;
+  font-weight: 600;
 }

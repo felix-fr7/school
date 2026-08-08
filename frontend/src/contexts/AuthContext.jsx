@@ -26,6 +26,8 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [tenantId, setTenantIdState] = useState(null);
   const [isTenantSuspended, setIsTenantSuspended] = useState(false);
+  // Track authentication status explicitly to avoid async state update issues
+  const [authStatus, setAuthStatus] = useState({ isAuthenticated: false, hasRole: false, role: null });
 
   // Initialize auth state from storage on app start
   useEffect(() => {
@@ -35,120 +37,158 @@ export const AuthProvider = ({ children }) => {
   // Multi-tab sync: Listen for storage events from other tabs
   useEffect(() => {
     const handleStorageChange = (event) => {
-      // Only handle tenantId changes
       if (event.key === TENANT_ID_KEY && event.newValue !== event.oldValue) {
         console.log('[AuthContext] Tenant ID changed in another tab:', event.newValue);
-        
         const newTenantId = event.newValue;
-        
         if (newTenantId) {
-          // Sync tenant ID from another tab
           setTenantIdState(newTenantId);
-          // Clear cache to prevent stale data
           clearTenantCache();
         } else {
-          // Tenant ID was cleared
           setTenantIdState(null);
           clearTenantCache();
         }
       }
       
-      // Handle auth clearance from another tab (logout)
       if (event.key === 'authToken' && !event.newValue) {
         console.log('[AuthContext] Auth cleared in another tab');
         setUser(null);
         setToken(null);
         setTenantIdState(null);
         setIsTenantSuspended(false);
+        setAuthStatus({ isAuthenticated: false, hasRole: false, role: null });
       }
     };
 
-    // Add event listener for storage changes
     window.addEventListener('storage', handleStorageChange);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
   const initializeAuth = async () => {
+    let resolvedToken = null;
+    let resolvedUser = null;
+    let resolvedClass = null;
+    let resolvedTenantId = null;
+    let resolvedAuthStatus = { isAuthenticated: false, hasRole: false, role: null };
+
     try {
       const storedToken = await storage.getToken();
       const storedUser = await storage.getUser();
       const storedClass = await storage.getClass();
       const storedTenantId = getTenantId();
 
-      // If we have a stored token, verify it with the backend
+      console.log('[AuthContext] Initializing auth - token:', !!storedToken, 'user:', !!storedUser, 'class:', !!storedClass, 'tenantId:', storedTenantId);
+
       if (storedToken) {
-        // Check if this is a class login token (stored class data exists)
         if (storedClass) {
-          // Class login - restore class state without calling /auth/me
-          // Class tokens don't work with /auth/me endpoint
-          setToken(storedToken);
-          setCurrentClass(storedClass);
-          if (storedTenantId) {
-            setTenantIdState(storedTenantId);
-            setTenantId(storedTenantId);
-          }
+          resolvedToken = storedToken;
+          resolvedClass = storedClass;
+          resolvedTenantId = storedTenantId;
+          resolvedAuthStatus = { isAuthenticated: true, hasRole: false, role: null, isClass: true };
           console.log('[AuthContext] Restored class session from storage');
         } else if (storedUser) {
           try {
-            // User login - verify token by fetching current user
+            console.log('[AuthContext] Verifying token with /auth/me endpoint...');
             const response = await authAPI.getMe();
             
             if (response.success && response.data) {
-              // Token is valid, update with fresh user data
-              setUser(response.data);
-              setToken(storedToken);
-              // Set tenant ID from user data or stored value
-              const userTenantId = response.data.tenantId || storedTenantId;
-              if (userTenantId) {
-                setTenantIdState(userTenantId);
-                setTenantId(userTenantId);
-              }
-              console.log('[AuthContext] Restored user session from storage');
+              const userData = response.data;
+              let finalUserData = (!userData.role && storedUser.role) ? storedUser : userData;
+              
+              resolvedToken = storedToken;
+              resolvedUser = finalUserData;
+              resolvedTenantId = finalUserData.tenantId || storedTenantId;
+              resolvedAuthStatus = {
+                isAuthenticated: true,
+                hasRole: !!finalUserData.role,
+                role: finalUserData.role
+              };
+              
+              console.log('[AuthContext] ✓ User session restored successfully', {
+                userId: finalUserData._id || finalUserData.id,
+                name: finalUserData.name,
+                email: finalUserData.email,
+                role: finalUserData.role,
+                roleType: typeof finalUserData.role,
+                tenantId: resolvedTenantId,
+                isAuthenticated: true
+              });
             } else {
-              // Token invalid or response failed - clear storage
-              console.log('[AuthContext] Token invalid, clearing storage');
-              await clearAllData();
+              if (storedUser && storedUser.role) {
+                console.log('[AuthContext] getMe() failed but stored user available, using stored data');
+                resolvedToken = storedToken;
+                resolvedUser = storedUser;
+                resolvedTenantId = storedUser.tenantId || storedTenantId;
+                resolvedAuthStatus = {
+                  isAuthenticated: true,
+                  hasRole: !!storedUser.role,
+                  role: storedUser.role
+                };
+              } else {
+                console.log('[AuthContext] Token invalid and no valid stored user, clearing storage');
+                await clearAllData();
+                return;
+              }
             }
           } catch (verifyError) {
-            // Token verification failed - clear storage
-            console.log('Token verification failed, clearing stored auth');
-            await clearAllData();
+            if (storedUser && storedUser.role) {
+              console.log('[AuthContext] getMe() threw error but stored user available, using stored data:', verifyError.message);
+              resolvedToken = storedToken;
+              resolvedUser = storedUser;
+              resolvedTenantId = storedUser.tenantId || storedTenantId;
+              resolvedAuthStatus = {
+                isAuthenticated: true,
+                hasRole: !!storedUser.role,
+                role: storedUser.role
+              };
+            } else {
+              console.log('[AuthContext] Token verification failed and no valid stored user, clearing auth');
+              await clearAllData();
+              return;
+            }
           }
         } else {
-          // Token exists but no user or class data - clear storage
           console.log('[AuthContext] Token exists but no user/class data, clearing');
           await clearAllData();
+          return;
         }
       } else {
-        // No stored token - ensure clean state
+        console.log('[AuthContext] No stored token, ensuring clean state');
         await clearAllData();
+        return;
       }
     } catch (error) {
-      console.error('Error initializing auth:', error);
+      console.error('[AuthContext] Error initializing auth:', error);
       await clearAllData();
     } finally {
+      if (resolvedToken) setToken(resolvedToken);
+      if (resolvedUser) setUser(resolvedUser);
+      if (resolvedClass) setCurrentClass(resolvedClass);
+      if (resolvedTenantId) {
+        setTenantIdState(resolvedTenantId);
+        setTenantId(resolvedTenantId);
+      }
+      setAuthStatus(resolvedAuthStatus);
       setIsLoading(false);
+
+      console.log('[AuthContext] Auth initialization complete', {
+        isAuthenticated: resolvedAuthStatus.isAuthenticated,
+        userRole: resolvedUser?.role || resolvedAuthStatus.role,
+        authStatus: resolvedAuthStatus,
+        tokenExists: !!resolvedToken
+      });
     }
   };
 
-  // Clear all cached data for current tenant
   const clearCache = useCallback(() => {
     console.log('[AuthContext] Clearing cache for tenant:', tenantId);
     clearTenantCache();
     
-    // Clear any component-level cached data
     const cacheKeys = [
-      'products_cache',
-      'tenants_cache',
-      'students_cache',
-      'teachers_cache',
-      'classes_cache',
-      'homework_cache',
-      'news_cache',
-      'exams_cache'
+      'products_cache', 'tenants_cache', 'students_cache',
+      'teachers_cache', 'classes_cache', 'homework_cache',
+      'news_cache', 'exams_cache'
     ];
     
     cacheKeys.forEach(key => {
@@ -157,7 +197,6 @@ export const AuthProvider = ({ children }) => {
     });
   }, [tenantId]);
 
-  // Clear all auth data
   const clearAllData = async () => {
     await storage.clearAuth();
     await storage.clearClass();
@@ -167,12 +206,10 @@ export const AuthProvider = ({ children }) => {
     setTenantIdState(null);
     setTenantId(null);
     setIsTenantSuspended(false);
+    setAuthStatus({ isAuthenticated: false, hasRole: false, role: null });
     clearTenantCache();
   };
 
-  /**
-   * Login user with dual support: email OR studentId (roll number)
-   */
   const login = async (usernameOrEmailOrId, password) => {
     try {
       const response = await authAPI.login(usernameOrEmailOrId, password);
@@ -180,26 +217,27 @@ export const AuthProvider = ({ children }) => {
       if (response.success && response.data) {
         const { user: userData, token: authToken } = response.data;
 
-        // Clear class data if any
         setCurrentClass(null);
         await storage.clearClass();
 
-        // Save to storage
         await Promise.all([
           storage.saveToken(authToken),
           storage.saveUser(userData),
         ]);
 
-        // Update state
         setUser(userData);
         setToken(authToken);
         
-        // Set tenant ID for multi-tenant support
+        setAuthStatus({
+          isAuthenticated: true,
+          hasRole: !!userData.role,
+          role: userData.role
+        });
+        
         if (userData.tenantId) {
           setTenantIdState(userData.tenantId);
           setTenantId(userData.tenantId);
         } else if (userData.role === 'SUPER_ADMIN') {
-          // SUPER_ADMIN doesn't have a tenant
           setTenantIdState(null);
           setTenantId(null);
         }
@@ -211,9 +249,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Login as a class using class code and password
-   */
   const classLogin = async (classCode, password) => {
     try {
       const response = await authAPI.classLogin(classCode, password);
@@ -221,19 +256,23 @@ export const AuthProvider = ({ children }) => {
       if (response.success && response.data) {
         const { class: classData, token: authToken } = response.data;
 
-        // Clear user data if any
         setUser(null);
         await storage.clearUser();
 
-        // Save class data and token
         await Promise.all([
           storage.saveToken(authToken),
           storage.saveClass(classData),
         ]);
 
-        // Update state
         setToken(authToken);
         setCurrentClass(classData);
+        
+        setAuthStatus({
+          isAuthenticated: true,
+          hasRole: false,
+          role: null,
+          isClass: true
+        });
       } else {
         throw new Error(response.error?.message || 'Class login failed');
       }
@@ -242,9 +281,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Register new user
-   */
   const register = async (name, email, password) => {
     try {
       const response = await authAPI.register(name, email, password);
@@ -252,17 +288,20 @@ export const AuthProvider = ({ children }) => {
       if (response.success && response.data) {
         const { user: userData, token: authToken } = response.data;
 
-        // Save to storage
         await Promise.all([
           storage.saveToken(authToken),
           storage.saveUser(userData),
         ]);
 
-        // Update state
         setUser(userData);
         setToken(authToken);
         
-        // Set tenant ID if available
+        setAuthStatus({
+          isAuthenticated: true,
+          hasRole: !!userData.role,
+          role: userData.role
+        });
+        
         if (userData.tenantId) {
           setTenantIdState(userData.tenantId);
           setTenantId(userData.tenantId);
@@ -275,61 +314,35 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  /**
-   * Logout user - clears all data and notifies other tabs
-   */
   const logout = async () => {
     try {
-      // Clear cache first
       clearCache();
-      
-      // Clear all auth data
       await clearAllData();
-      
-      // Storage event will automatically notify other tabs
-      // since we're removing the authToken
     } catch (error) {
       console.error('Error during logout:', error);
       throw error;
     }
   };
 
-  /**
-   * Switch tenant context (for SUPER_ADMIN only)
-   * Clears cache before switching to prevent stale data
-   */
   const switchTenant = async (newTenantId) => {
     if (user?.role !== 'SUPER_ADMIN') {
       console.warn('Only SUPER_ADMIN can switch tenants');
       return;
     }
 
-    // Don't switch to the same tenant
     if (newTenantId === tenantId) {
       return;
     }
 
     console.log('[AuthContext] Switching tenant from', tenantId, 'to', newTenantId);
-
-    // Step 1: Clear cache for current tenant BEFORE switching
     clearCache();
-    
-    // Step 2: Update state
     setTenantIdState(newTenantId);
-    
-    // Step 3: Update localStorage (this will trigger storage event in other tabs)
     setTenantId(newTenantId);
     
-    // Step 4: Clear cache for new tenant to ensure fresh data
     const newCacheKeys = [
-      'products_cache',
-      'tenants_cache',
-      'students_cache',
-      'teachers_cache',
-      'classes_cache',
-      'homework_cache',
-      'news_cache',
-      'exams_cache'
+      'products_cache', 'tenants_cache', 'students_cache',
+      'teachers_cache', 'classes_cache', 'homework_cache',
+      'news_cache', 'exams_cache'
     ];
     
     newCacheKeys.forEach(key => {
@@ -337,54 +350,35 @@ export const AuthProvider = ({ children }) => {
       sessionStorage.removeItem(`${key}_${newTenantId}`);
     });
 
-    // Reset suspended state
     setIsTenantSuspended(false);
   };
 
-  /**
-   * Check if user is authenticated
-   */
-  const isAuthenticated = !!token;
+  const isAuthenticated = authStatus.isAuthenticated || !!token;
 
-  /**
-   * Check if user is Super Admin
-   * Handles both 'SUPER_ADMIN' and 'Super Admin' formats
-   */
-  const isSuperAdmin = user?.role && 
-    ['SUPER_ADMIN', 'Super Admin'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
+  const isSuperAdmin = user?.role && (
+    ['SUPER_ADMIN', 'SUPER ADMIN'].includes(user.role.toUpperCase().replace(/\s+/g, '_')) ||
+    user.role.toUpperCase().includes('SUPER')
+  );
 
-  /**
-   * Check if user is Admin (School Admin)
-   * Handles both 'ADMIN' and 'School Admin' formats
-   */
-  const isAdmin = user?.role && 
-    ['ADMIN', 'SCHOOL_ADMIN', 'School Admin'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
+  const isAdmin = user?.role && (
+    ['ADMIN', 'SCHOOL_ADMIN', 'SCHOOL ADMIN'].includes(user.role.toUpperCase().replace(/\s+/g, '_')) ||
+    user.role.toUpperCase().includes('ADMIN')
+  );
 
-  /**
-   * Check if user is Tenant Admin
-   */
   const isTenantAdmin = user?.role === 'TENANT_ADMIN';
 
-  /**
-   * Check if user is Student
-   * Handles both 'STUDENT' and 'Student' formats
-   */
-  const isStudent = user?.role && 
-    ['STUDENT', 'Student'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
+  const isStudent = user?.role && (
+    ['STUDENT'].includes(user.role.toUpperCase().replace(/\s+/g, '_')) ||
+    user.role.toUpperCase().includes('STUDENT')
+  );
 
-  /**
-   * Check if user is Teacher
-   * Handles both 'TEACHER' and 'Teacher' formats
-   */
-  const isTeacher = user?.role && 
-    ['TEACHER', 'Teacher'].includes(user.role.toUpperCase().replace(/\s+/g, '_'));
+  const isTeacher = user?.role && (
+    ['TEACHER'].includes(user.role.toUpperCase().replace(/\s+/g, '_')) ||
+    user.role.toUpperCase().includes('TEACHER')
+  );
 
-  /**
-   * Check if currently logged in as a class
-   */
   const isClass = !!currentClass;
 
-  // Handle tenant suspended state
   const handleTenantSuspended = useCallback(() => {
     console.log('[AuthContext] Tenant suspended detected');
     setIsTenantSuspended(true);
@@ -419,9 +413,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-/**
- * Custom hook to use auth context
- */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
