@@ -72,7 +72,7 @@ const StudentDashboardScreen = () => {
                 : (user?.classSection || 'Not Assigned')
             },
             school: {
-              name: data.tenantId?.name || 'School',
+              name: data.schoolId?.schoolName || 'School',
               logoUrl: null
             }
           });

@@ -19,7 +19,7 @@ router.use(authenticate);
 router.get('/', async (req, res, next) => {
   try {
     const user = await User.findOne({ _id: req.user.id })
-      .populate('tenantId', 'name')
+      .populate('schoolId', 'schoolName')
       .populate('classId', 'name section gradeLevel');
     
     if (!user) {
