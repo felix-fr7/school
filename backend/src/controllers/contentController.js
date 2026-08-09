@@ -31,7 +31,7 @@ const getNews = async (req, res, next) => {
     };
 
     // Apply visibility filtering for students - they only see 'ALL' visibility content
-    if (userRole === 'STUDENT') {
+    if (userRole === 'Student') {
       query.$or = [
         { visibility: { $exists: false } },
         { visibility: null },
@@ -40,7 +40,7 @@ const getNews = async (req, res, next) => {
     }
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
       // Students, Teachers, and Class Controllers see school-wide news + their class's specific news only
       query.$or = [
         ...(query.$or || []),
@@ -120,7 +120,7 @@ const getNewsById = async (req, res, next) => {
     };
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
       query.$or = [
         { classId: null },
         { classId: { $exists: false } },
@@ -191,14 +191,14 @@ const getCirculars = async (req, res, next) => {
 
     // Apply visibility filtering for students - they only see 'ALL' visibility content
     // Students should NOT see class-specific content (visibility = 'TEACHERS_ONLY')
-    if (userRole === 'STUDENT') {
+    if (userRole === 'Student') {
       // Strict filtering: Students only see content explicitly marked as 'ALL' or legacy NULL content
       whereClause += ` AND (c."visibility" = 'ALL' OR c."visibility" IS NULL)`;
     }
     // Teachers and Class Controllers see all visibility levels
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
       // Students, Teachers, and Class Controllers see school-wide circulars + their class's specific circulars only
       params.push(userClassId);
       whereClause += ` AND (c."class_id" IS NULL OR c."class_id" = $${paramIndex})`;
@@ -267,7 +267,7 @@ const getCircularById = async (req, res, next) => {
     let paramIndex = 3;
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
       params.push(userClassId);
       whereClause += ` AND (c."class_id" IS NULL OR c."class_id" = $${paramIndex})`;
       paramIndex++;
@@ -332,7 +332,7 @@ const getExams = async (req, res, next) => {
     let query = { tenantId };
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'STUDENT' || userRole === 'TEACHER' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
       // Students, Teachers, and Class Controllers see school-wide exams + their class's specific exams
       query.$or = [
         { classId: null },
@@ -460,7 +460,7 @@ const getExamSchedules = async (req, res, next) => {
     let params = [tenantId];
     let paramIndex = 2;
 
-    if ((userRole === 'STUDENT' || userRole === 'CLASS_CONTROLLER') && req.user.classId) {
+    if ((userRole === 'Student' || userRole === 'CLASS_CONTROLLER') && req.user.classId) {
       params.push(req.user.classId);
       whereClause += ` AND (es."classId" = $${paramIndex} OR es."classId" IS NULL)`;
       paramIndex++;
