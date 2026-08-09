@@ -800,7 +800,7 @@ export const studentAPI = {
   },
 
   async getDashboardProfile() {
-    const response = await api.get('/student/dashboard-profile');
+    const response = await api.get('/profile');
     return response.data;
   },
 

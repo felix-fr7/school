@@ -22,7 +22,6 @@ import AdminClasses from './screens/admin/AdminClassesScreen';
 import AdminNews from './screens/admin/AdminNewsScreen';
 import AdminCirculars from './screens/admin/AdminCircularsScreen';
 import AdminExams from './screens/admin/AdminExamsScreen';
-import AdminVideosScreen from './screens/admin/AdminVideosScreen';
 import AdminSettings from './screens/admin/AdminSettingsScreen';
 import CreateStudentScreen from './screens/admin/CreateStudentScreen';
 import EditStudentScreen from './screens/admin/EditStudentScreen';
@@ -58,6 +57,9 @@ import MessagesScreen from './screens/MessagesScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import ContactsScreen from './screens/ContactsScreen';
 import SettingsScreen from './screens/SettingsScreen';
+
+// Student Screens
+import StudentNewsListScreen from './screens/student/NewsListScreen';
 
 // Components
 import AdminMenu from './components/AdminMenu';
@@ -104,6 +106,8 @@ const AppRoutes = () => {
           <IonRouterOutlet id="main-content">
             {/* Common Routes */}
             <Route exact path="/news" component={NewsScreen} />
+            <Route exact path="/student/news" component={StudentNewsListScreen} />
+            <Route exact path="/student/news/:id" component={NewsScreen} />
             <Route exact path="/circulars" component={CircularsScreen} />
             <Route exact path="/gallery" component={GalleryScreen} />
             <Route exact path="/videos" component={VideosScreen} />
@@ -129,7 +133,6 @@ const AppRoutes = () => {
             <Route exact path="/admin/circulars" component={AdminCirculars} />
             <Route exact path="/admin/circulars/create" component={CreateCircularScreen} />
             <Route exact path="/admin/exams" component={AdminExams} />
-            <Route exact path="/admin/videos" render={() => <AdminVideosScreen />} />
             <Route exact path="/admin/settings" component={AdminSettings} />
 
             {/* Teacher Routes */}

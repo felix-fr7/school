@@ -20,6 +20,7 @@
   "author": "MACVEL",
   "license": "MIT",
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
     "@ionic/react": "^7.6.0",
     "@ionic/react-router": "^7.6.0",
     "axios": "^1.6.2",

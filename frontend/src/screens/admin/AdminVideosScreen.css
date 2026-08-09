@@ -1,4 +1,10 @@
 /* Container & Layout */
+.admin-videos-content {
+  --background: #f8fafc !important;
+  background: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%) !important;
+  min-height: 100%;
+}
+
 .onebyone-layout-container {
   padding: 16px;
   max-width: 800px;
@@ -165,4 +171,28 @@
   background: transparent;
   width: 100%;
   padding-left: 10px;
+}
+
+/* Video Preview Modal Styles */
+.video-preview-modal {
+  --background: rgba(0, 0, 0, 0.5);
+}
+
+.video-preview-modal ion-modal {
+  --border-radius: 12px;
+  --background: transparent;
+}
+
+.video-preview-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Video card hover effect */
+.feed-stream-section > div > div[style*="cursor: pointer"]:hover {
+  opacity: 0.9;
+}
+
+/* Ensure video player is responsive */
+.video-preview-modal iframe {
+  max-width: 100%;
 }
