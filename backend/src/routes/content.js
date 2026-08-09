@@ -48,10 +48,10 @@ const protectContent = async (req, res, next) => {
     }
 
     // Regular user token - fetch user using Mongoose and populate relations
-    const user = await User.findById(decoded.id)
+    const user = await User.findById(decoded.userId)
       .select('-password')
       .populate('schoolId', 'schoolName schoolCode address')
-      .populate('classId', 'className section');
+      .populate('classId', 'name section');
 
     if (!user) {
       return res.status(401).json({
@@ -76,7 +76,7 @@ const protectContent = async (req, res, next) => {
       } : null,
       class: user.classId ? {
         id: user.classId._id,
-        name: user.classId.className,
+        name: user.classId.name,
         section: user.classId.section,
       } : null,
     };
