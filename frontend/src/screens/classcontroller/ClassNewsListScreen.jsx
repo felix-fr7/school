@@ -29,6 +29,10 @@ import {
 import { classControllerAPI } from '../../services/api';
 import './ClassNewsListScreen.css';
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const BASE_URL = API_BASE_URL.replace('/api', '');
+
 const NewsItem = ({ item, onClick }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -42,7 +46,14 @@ const NewsItem = ({ item, onClick }) => {
     <IonCard className="news-card" button onClick={() => onClick(item)}>
       {item.imageUrl && (
         <div className="card-image-wrapper">
-          <img src={item.imageUrl} alt={item.title} className="news-image" />
+          <img 
+            src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} 
+            alt={item.title} 
+            className="news-image"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
         </div>
       )}
       <IonCardContent className="news-content">

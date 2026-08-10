@@ -56,7 +56,8 @@ const ExamSchema = new mongoose.Schema({
 
 // Index for efficient queries
 ExamSchema.index({ classId: 1, startDate: -1 });
-ExamSchema.index({ tenantId: 1, isPublished: 1 });
+ExamSchema.index({ tenantId: 1, isPublished: 1, classId: 1 });
+ExamSchema.index({ tenantId: 1, isPublished: 1, createdAt: -1 });
 
 // Virtual for class
 ExamSchema.virtual('class', {

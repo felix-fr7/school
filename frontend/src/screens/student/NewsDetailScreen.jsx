@@ -25,6 +25,9 @@ import { documentOutline, imageOutline, personOutline, calendarOutline, download
 import { studentAPI } from '../../services/api';
 import './NewsDetailScreen.css';
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+
 const StudentNewsDetailScreen = () => {
   const { newsId } = useParams();
   const [news, setNews] = useState(null);
@@ -37,13 +40,12 @@ const StudentNewsDetailScreen = () => {
 
   const fetchNewsDetail = async () => {
     try {
+      console.log('[NewsDetail] Fetching news by ID:', newsId);
       setLoading(true);
-      const response = await studentAPI.getNews(1, 20, '');
+      const response = await studentAPI.getNewsById(newsId);
+      console.log('[NewsDetail] Response:', response);
       if (response.success && response.data) {
-        const foundNews = response.data.news.find((n) => n.id === newsId);
-        if (foundNews) {
-          setNews(foundNews);
-        }
+        setNews(response.data);
       }
     } catch (error) {
       console.error('Error fetching news detail:', error);
@@ -63,14 +65,25 @@ const StudentNewsDetailScreen = () => {
 
   const handleOpenPdf = () => {
     if (!news?.pdfUrl) return;
-    // Open PDF in new tab (web) or show alert for mobile
-    window.open(news.pdfUrl, '_blank');
+    // Construct the full URL for the file
+    // Note: We use direct URL instead of blob URL because blob URLs
+    // cannot be opened in a new tab (they're scoped to the originating document)
+    const baseUrl = API_BASE_URL.replace('/api', '');
+    const fullUrl = news.pdfUrl.startsWith('http') 
+      ? news.pdfUrl 
+      : `${baseUrl}${news.pdfUrl}`;
+    // Open in new tab
+    window.open(fullUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleOpenImage = () => {
     if (!news?.imageUrl) return;
-    // Open image in new tab
-    window.open(news.imageUrl, '_blank');
+    // Construct full URL for image (same approach as PDF)
+    const baseUrl = API_BASE_URL.replace('/api', '');
+    const fullUrl = news.imageUrl.startsWith('http') 
+      ? news.imageUrl 
+      : `${baseUrl}${news.imageUrl}`;
+    window.open(fullUrl, '_blank');
   };
 
   if (loading) {
@@ -150,7 +163,14 @@ const StudentNewsDetailScreen = () => {
         {/* Image */}
         {news.imageUrl && (
           <div className="image-container" onClick={handleOpenImage}>
-            <IonImg src={news.imageUrl} className="news-image" />
+            <IonImg 
+              src={news.imageUrl.startsWith('http') ? news.imageUrl : `${API_BASE_URL.replace('/api', '')}${news.imageUrl}`} 
+              className="news-image" 
+              onError={(e) => {
+                console.error('Failed to load image:', news.imageUrl);
+                e.target.style.opacity = '0.5';
+              }}
+            />
             <div className="image-overlay">
               <IonIcon icon={imageOutline} />
               <span>Click to view full image</span>

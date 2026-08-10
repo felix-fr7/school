@@ -18,6 +18,11 @@ router.use(authenticate);
  * @desc    Get all exams (filtered by user role)
  * @query   classId, page, limit
  * @access  Authenticated users
+ * 
+ * Filtering logic:
+ * - Students: See school-wide exams (classId = null) + their class's specific exams
+ * - Teachers: See school-wide exams + their class's specific exams (if classId query param provided)
+ * - Admins: See all exams (no class filtering)
  */
 router.get('/', async (req, res, next) => {
   try {
@@ -26,12 +31,31 @@ router.get('/', async (req, res, next) => {
     
     let query = { tenantId: req.user.tenantId };
     
-    // Filter by role
+    // Filter by role with proper class isolation
     if (req.user.role === 'Student') {
-      query.classId = req.user.classId;
       query.isPublished = true;
+      // Students see school-wide exams (classId = null) AND their class's specific exams
+      if (req.user.classId) {
+        query.$or = [
+          { classId: null },
+          { classId: { $exists: false } },
+          { classId: req.user.classId }
+        ];
+      } else {
+        // Students without a class only see school-wide exams
+        query.$or = [
+          { classId: null },
+          { classId: { $exists: false } }
+        ];
+      }
     } else if (req.user.role === 'Teacher' && classId) {
-      query.classId = classId;
+      query.isPublished = true;
+      // Teachers see school-wide exams AND their class's specific exams
+      query.$or = [
+        { classId: null },
+        { classId: { $exists: false } },
+        { classId: classId }
+      ];
     }
     
     const exams = await Exam.find(query)
@@ -61,17 +85,47 @@ router.get('/', async (req, res, next) => {
  * @route   GET /api/exams/schedule/:classId
  * @desc    Get exam schedule for a class (Placed BEFORE /:id to prevent route clash)
  * @access  Authenticated users
+ * 
+ * Filtering logic:
+ * - Students: See school-wide schedules (classId = null) + their class's specific schedules
+ * - Teachers: See school-wide schedules + their class's specific schedules
+ * - Admins: See all schedules
  */
 router.get('/schedule/:classId', async (req, res, next) => {
   try {
-    const schedules = await ExamSchedule.find({
-      classId: req.params.classId,
+    let query = {
       tenantId: req.user.tenantId,
       isPublished: true
-    })
-    .sort({ date: 1, startTime: 1 })
-    .populate('examId', 'name type')
-    .populate('classId', 'name section');
+    };
+    
+    // Apply class-based filtering for students and teachers
+    if (req.user.role === 'Student' || req.user.role === 'Teacher' || req.user.role === 'CLASS_CONTROLLER') {
+      const userClassId = req.user.classId;
+      if (userClassId) {
+        // See school-wide schedules (classId = null) AND their class's specific schedules
+        query.$or = [
+          { classId: null },
+          { classId: { $exists: false } },
+          { classId: userClassId }
+        ];
+      } else {
+        // Users without a class only see school-wide schedules
+        query.$or = [
+          { classId: null },
+          { classId: { $exists: false } }
+        ];
+      }
+    } else {
+      // Admins can optionally filter by the classId in the URL
+      if (req.params.classId && req.params.classId !== 'null') {
+        query.classId = req.params.classId;
+      }
+    }
+    
+    const schedules = await ExamSchedule.find(query)
+      .sort({ date: 1, startTime: 1 })
+      .populate('examId', 'name type')
+      .populate('classId', 'name section');
     
     res.status(200).json({
       success: true,

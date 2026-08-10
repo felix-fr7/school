@@ -40,7 +40,14 @@ const StudentHomeworkDetailScreen = () => {
       setLoading(true);
       const response = await studentAPI.getHomework(1, 20);
       if (response.success && response.data) {
-        const foundHomework = response.data.homeworks.find((h) => h.id === homeworkId);
+        // Handle both array response and wrapped response
+        const homeworkList = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data.homeworks || []);
+        // Find homework by _id or id
+        const foundHomework = homeworkList.find((h) => 
+          h._id === homeworkId || h.id === homeworkId
+        );
         if (foundHomework) {
           setHomework(foundHomework);
         }

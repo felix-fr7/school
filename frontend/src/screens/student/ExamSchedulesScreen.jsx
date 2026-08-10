@@ -37,7 +37,11 @@ const StudentExamSchedulesScreen = () => {
       else setLoading(true);
       const response = await studentAPI.getExamSchedules(1, 20);
       if (response.success && response.data) {
-        setExamSchedules(response.data.examSchedules);
+        // Handle both array response and wrapped response
+        const scheduleData = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data.examSchedules || []);
+        setExamSchedules(scheduleData);
       }
     } catch (error) {
       console.error('Error fetching exam schedules:', error);

@@ -98,7 +98,8 @@ export const AuthProvider = ({ children }) => {
               
               resolvedToken = storedToken;
               resolvedUser = finalUserData;
-              resolvedTenantId = finalUserData.tenantId || storedTenantId;
+              // Use tenantId if available, otherwise use schoolId as fallback (for students/users without tenantId)
+              resolvedTenantId = finalUserData.tenantId || finalUserData.schoolId || storedTenantId;
               resolvedAuthStatus = {
                 isAuthenticated: true,
                 hasRole: !!finalUserData.role,
@@ -119,7 +120,8 @@ export const AuthProvider = ({ children }) => {
                 console.log('[AuthContext] getMe() failed but stored user available, using stored data');
                 resolvedToken = storedToken;
                 resolvedUser = storedUser;
-                resolvedTenantId = storedUser.tenantId || storedTenantId;
+                // Use tenantId if available, otherwise use schoolId as fallback
+                resolvedTenantId = storedUser.tenantId || storedUser.schoolId || storedTenantId;
                 resolvedAuthStatus = {
                   isAuthenticated: true,
                   hasRole: !!storedUser.role,
@@ -136,7 +138,8 @@ export const AuthProvider = ({ children }) => {
               console.log('[AuthContext] getMe() threw error but stored user available, using stored data:', verifyError.message);
               resolvedToken = storedToken;
               resolvedUser = storedUser;
-              resolvedTenantId = storedUser.tenantId || storedTenantId;
+              // Use tenantId if available, otherwise use schoolId as fallback
+              resolvedTenantId = storedUser.tenantId || storedUser.schoolId || storedTenantId;
               resolvedAuthStatus = {
                 isAuthenticated: true,
                 hasRole: !!storedUser.role,
@@ -215,7 +218,9 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(usernameOrEmailOrId, password);
 
       if (response.success && response.data) {
-        const { user: userData, token: authToken } = response.data;
+        // Backend returns: { success, message, data: { token, user, tenant } }
+        // So we need to access response.data.data to get token, user, tenant
+        const { user: userData, token: authToken, tenant } = response.data.data || response.data;
 
         setCurrentClass(null);
         await storage.clearClass();
@@ -234,10 +239,13 @@ export const AuthProvider = ({ children }) => {
           role: userData.role
         });
         
-        if (userData.tenantId) {
-          setTenantIdState(userData.tenantId);
-          setTenantId(userData.tenantId);
-        } else if (userData.role === 'SUPER_ADMIN') {
+        // Set tenantId: use tenant.id from response, or fall back to userData fields
+        // The backend returns tenant info separately from user info
+        const tenantIdValue = tenant?.id || userData.tenantId || userData.schoolId;
+        if (tenantIdValue) {
+          setTenantIdState(tenantIdValue);
+          setTenantId(tenantIdValue);
+        } else if (userData.role === 'SUPER_ADMIN' || userData.role === 'Super Admin') {
           setTenantIdState(null);
           setTenantId(null);
         }
@@ -254,7 +262,8 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.classLogin(classCode, password);
 
       if (response.success && response.data) {
-        const { class: classData, token: authToken } = response.data;
+        // Backend returns: { success, message, data: { token, class, teacher } }
+        const { class: classData, token: authToken } = response.data.data || response.data;
 
         setUser(null);
         await storage.clearUser();
@@ -266,6 +275,12 @@ export const AuthProvider = ({ children }) => {
 
         setToken(authToken);
         setCurrentClass(classData);
+        
+        // Set tenantId from class's tenantId
+        if (classData?.tenantId) {
+          setTenantIdState(classData.tenantId);
+          setTenantId(classData.tenantId);
+        }
         
         setAuthStatus({
           isAuthenticated: true,

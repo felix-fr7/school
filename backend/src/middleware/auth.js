@@ -94,12 +94,18 @@ const authenticate = async (req, res, next) => {
     }
 
     // Attach user to request
+    // Note: For users without tenantId field (e.g., User model), use schoolId as tenantId
+    // This ensures consistent tenant identification across all user types
+    const tenantId = user.tenantId 
+      ? user.tenantId.toString() 
+      : (user.schoolId ? user.schoolId.toString() : null);
+    
     req.user = {
       id: user._id.toString(),
       email: user.email,
       name: user.name,
       role: user.role,
-      tenantId: user.tenantId ? user.tenantId.toString() : null,
+      tenantId: tenantId,
       schoolId: user.schoolId ? user.schoolId.toString() : null,
       avatarUrl: user.avatarUrl || null,
       // Student specific
@@ -350,12 +356,18 @@ const optionalAuth = async (req, res, next) => {
         }
 
         if (user) {
+          // Note: For users without tenantId field (e.g., User model), use schoolId as tenantId
+          // This ensures consistent tenant identification across all user types
+          const tenantId = user.tenantId 
+            ? user.tenantId.toString() 
+            : (user.schoolId ? user.schoolId.toString() : null);
+          
           req.user = {
             id: user._id.toString(),
             email: user.email,
             name: user.name,
             role: user.role,
-            tenantId: user.tenantId ? user.tenantId.toString() : null,
+            tenantId: tenantId,
             schoolId: user.schoolId ? user.schoolId.toString() : null,
             avatarUrl: null,
             studentId: null,

@@ -178,11 +178,11 @@ const ClassCircularDetailScreen = () => {
           {circular.imageUrl && (
             <div className="banner-wrapper">
               <img 
-                src={circular.imageUrl} 
+                src={circular.imageUrl.startsWith('http') ? circular.imageUrl : `${API_BASE_URL.replace('/api', '')}${circular.imageUrl}`} 
                 alt={circular.title} 
                 className="circular-banner" 
                 onError={(e) => {
-                  // Hide image if it fails to load
+                  console.error('Failed to load circular image:', circular.imageUrl);
                   e.target.style.display = 'none';
                 }}
               />

@@ -32,6 +32,10 @@ import { newspaperOutline, calendarOutline, personOutline, imageOutline, refresh
 import { studentAPI } from '../../services/api';
 import './NewsListScreen.css';
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const BASE_URL = API_BASE_URL.replace('/api', '');
+
 const StudentNewsListScreen = () => {
   const history = useHistory();
   const [news, setNews] = useState([]);
@@ -40,12 +44,17 @@ const StudentNewsListScreen = () => {
 
   const fetchNews = async () => {
     try {
+      console.log('[NewsList] Fetching news...');
       const response = await studentAPI.getNews(1, 20, '');
+      console.log('[NewsList] Response:', response);
       if (response.success && response.data) {
+        console.log('[NewsList] News data:', response.data.news);
         setNews(response.data.news);
+      } else {
+        console.log('[NewsList] No news data in response');
       }
     } catch (error) {
-      console.error('Error fetching news:', error);
+      console.error('[NewsList] Error fetching news:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -122,9 +131,17 @@ const StudentNewsListScreen = () => {
               >
                 <IonCard className="news-card">
                   {item.imageUrl ? (
-                    <IonImg src={item.imageUrl} className="news-image" />
+                    <IonImg 
+                      src={item.imageUrl.startsWith('http') ? item.imageUrl : `${BASE_URL}${item.imageUrl}`} 
+                      className="news-image" 
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        const placeholder = e.target.parentElement.querySelector('.news-image-placeholder');
+                        if (placeholder) placeholder.style.display = 'flex';
+                      }}
+                    />
                   ) : (
-                    <div className="news-image-placeholder">
+                    <div className="news-image-placeholder" style={{ display: 'flex' }}>
                       <IonIcon icon={imageOutline} />
                     </div>
                   )}

@@ -312,9 +312,13 @@ router.post(
         type: 'NEWS'
       };
 
+      console.log('[AdminContent.createNews] Creating news with tenantId:', tenantId, 'visibility:', newsVisibility);
+
       const News = require('../models/News');
       const news = new News(newsData);
       await news.save();
+
+      console.log('[AdminContent.createNews] News created with _id:', news._id, 'tenantId:', news.tenantId);
 
       res.status(201).json({
         success: true,

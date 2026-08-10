@@ -41,7 +41,7 @@ import TeacherStudents from './screens/teacher/TeacherStudentsScreen';
 // Student Screens
 import StudentDashboard from './screens/student/StudentDashboardScreen';
 import StudentHomework from './screens/student/StudentHomeworkScreen';
-import StudentExams from './screens/student/StudentExamsScreen';
+import StudentExams from './screens/student/ExamSchedulesScreen';
 import StudentTimetable from './screens/student/StudentTimetableScreen';
 import StudentAttendance from './screens/student/StudentAttendanceScreen';
 import StudentMarks from './screens/student/StudentMarksScreen';

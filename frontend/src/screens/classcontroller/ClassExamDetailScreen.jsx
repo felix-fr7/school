@@ -40,6 +40,10 @@ import {
 import { classControllerAPI } from '../../services/api';
 import './ClassExamDetailScreen.css';
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const BASE_URL = API_BASE_URL.replace('/api', '');
+
 const ClassExamDetailScreen = () => {
   const history = useHistory();
   const examId = (window.location.pathname.match(/exams\/([^/]+)$/) || [])[1];
@@ -276,7 +280,15 @@ const ClassExamDetailScreen = () => {
               {exam.imageUrl && (
                 <div className="preview-section">
                   <p className="preview-label">Document Preview:</p>
-                  <IonImg src={exam.imageUrl} className="preview-image" alt="Exam preview" />
+                  <IonImg 
+                    src={exam.imageUrl.startsWith('http') ? exam.imageUrl : `${BASE_URL}${exam.imageUrl}`} 
+                    className="preview-image" 
+                    alt="Exam preview"
+                    onError={(e) => {
+                      console.error('Failed to load exam image:', exam.imageUrl);
+                      e.target.style.display = 'none';
+                    }}
+                  />
                 </div>
               )}
             </IonCardContent>

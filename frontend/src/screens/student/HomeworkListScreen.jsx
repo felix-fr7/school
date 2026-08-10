@@ -41,7 +41,11 @@ const StudentHomeworkListScreen = () => {
     try {
       const response = await studentAPI.getHomework(1, 20);
       if (response.success && response.data) {
-        setHomeworks(response.data.homeworks);
+        // Handle both array response and wrapped response
+        const homeworkData = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data.homeworks || []);
+        setHomeworks(homeworkData);
       }
     } catch (error) {
       console.error('Error fetching homework:', error);

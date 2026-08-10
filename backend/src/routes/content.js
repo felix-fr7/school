@@ -51,7 +51,7 @@ const protectContent = async (req, res, next) => {
     const user = await User.findById(decoded.userId)
       .select('-password')
       .populate('schoolId', 'schoolName schoolCode address')
-      .populate('classId', 'name section');
+      .populate('classId', 'name section tenantId');
 
     if (!user) {
       return res.status(401).json({
@@ -60,20 +60,30 @@ const protectContent = async (req, res, next) => {
       });
     }
 
+    // Get tenantId - priority: schoolId > class tenantId
+    // This ensures students without schoolId can still access content via their class's tenant
+    const tenantId = user.schoolId 
+      ? user.schoolId._id 
+      : (user.classId && user.classId.tenantId ? user.classId.tenantId : null);
+
     // Attach structured user object to req.user matching the app's expectations
     req.user = {
       id: user._id,
       email: user.email,
       name: user.name,
       role: user.role,
-      tenantId: user.schoolId ? user.schoolId._id : null,
+      tenantId: tenantId,
       classId: user.classId ? user.classId._id : null,
       studentId: user.studentId,
       tenant: user.schoolId ? {
         id: user.schoolId._id,
         name: user.schoolId.schoolName,
         code: user.schoolId.schoolCode,
-      } : null,
+      } : (user.classId && user.classId.tenantId ? {
+        id: user.classId.tenantId,
+        name: null,
+        code: null,
+      } : null),
       class: user.classId ? {
         id: user.classId._id,
         name: user.classId.name,

@@ -192,7 +192,15 @@ const ClassNewsDetailScreen = () => {
           {/* Header Image / Banner - Clickable to view full image */}
           {news.imageUrl && (
             <div className="banner-wrapper" onClick={handleOpenImage} style={{ cursor: 'pointer' }}>
-              <img src={news.imageUrl} alt={news.title} className="news-banner" />
+              <img 
+                src={news.imageUrl.startsWith('http') ? news.imageUrl : `${API_BASE_URL.replace('/api', '')}${news.imageUrl}`} 
+                alt={news.title} 
+                className="news-banner"
+                onError={(e) => {
+                  console.error('Failed to load news image:', news.imageUrl);
+                  e.target.style.display = 'none';
+                }}
+              />
               <div className="image-zoom-hint">Click to view full image</div>
             </div>
           )}

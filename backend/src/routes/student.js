@@ -32,30 +32,50 @@ router.use((req, res, next) => {
 // Dashboard
 router.get('/dashboard', async (req, res, next) => {
   try {
+    const mongoose = require('mongoose');
     const studentId = req.user.id;
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
+
+    // Convert tenantId to ObjectId for proper MongoDB comparison
+    const tenantObjectId = mongoose.Types.ObjectId.isValid(tenantId) 
+      ? new mongoose.Types.ObjectId(tenantId) 
+      : tenantId;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // Pending homework count
     const pendingHomeworkCount = await HomeworkSubmission.countDocuments({
-      tenantId,
+      tenantId: tenantObjectId,
       studentId,
       status: 'pending'
     });
 
-    // Upcoming exams
-    const exams = await ExamSchedule.find({
-      tenantId,
-      classId,
-      scheduleDate: { $gte: today }
-    })
-      .sort({ scheduleDate: 1, startTime: 1 })
+    // Upcoming exams - include both class-specific and school-wide (classId is null)
+    let examQuery = { tenantId: tenantObjectId, isPublished: true };
+    if (classId) {
+      // Convert classId to ObjectId as well
+      const classObjectId = mongoose.Types.ObjectId.isValid(classId)
+        ? new mongoose.Types.ObjectId(classId)
+        : classId;
+      examQuery.$or = [
+        { classId: classObjectId },
+        { classId: null },
+        { classId: { $exists: false } }
+      ];
+    } else {
+      examQuery.$or = [
+        { classId: null },
+        { classId: { $exists: false } }
+      ];
+    }
+    examQuery.date = { $gte: today };
+    
+    const exams = await ExamSchedule.find(examQuery)
+      .sort({ date: 1, startTime: 1 })
       .limit(5)
-      .populate('examId', 'name type')
-      .populate('subjectId', 'name');
+      .populate('examId', 'name type');
 
     // Recent homework
     const homework = await Homework.find({
@@ -64,8 +84,7 @@ router.get('/dashboard', async (req, res, next) => {
       isPublished: true
     })
       .sort({ dueDate: -1 })
-      .limit(5)
-      .populate('subjectId', 'name');
+      .limit(5);
 
     // Attach submission status for recent homework
     const homeworkWithSubmissions = await Promise.all(
@@ -109,7 +128,6 @@ router.get('/timetable', async (req, res, next) => {
       isActive: true
     })
       .sort({ dayOfWeek: 1, periodNumber: 1 })
-      .populate('subjectId', 'name')
       .populate('teacherId', 'name');
 
     res.json({ success: true, data: timetable });
@@ -130,8 +148,7 @@ router.get('/homework', async (req, res, next) => {
       classId,
       isPublished: true
     })
-      .sort({ dueDate: -1 })
-      .populate('subjectId', 'name');
+      .sort({ dueDate: -1 });
 
     const homeworkWithSubmissions = await Promise.all(
       homeworks.map(async (hw) => {
@@ -185,24 +202,50 @@ router.post('/homework/:id/submit', async (req, res, next) => {
   }
 });
 
-// Exams
+// Exams - Students see both their class-specific schedules AND school-wide schedules
 router.get('/exams', async (req, res, next) => {
   try {
+    const mongoose = require('mongoose');
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
 
-    const examSchedules = await ExamSchedule.find({ tenantId, classId })
+    // Convert tenantId to ObjectId for proper MongoDB comparison
+    const tenantObjectId = mongoose.Types.ObjectId.isValid(tenantId) 
+      ? new mongoose.Types.ObjectId(tenantId) 
+      : tenantId;
+
+    // Build query to include both class-specific and school-wide (classId is null) schedules
+    let query = { tenantId: tenantObjectId, isPublished: true };
+    if (classId) {
+      // Convert classId to ObjectId as well
+      const classObjectId = mongoose.Types.ObjectId.isValid(classId)
+        ? new mongoose.Types.ObjectId(classId)
+        : classId;
+      query.$or = [
+        { classId: classObjectId },
+        { classId: null },
+        { classId: { $exists: false } }
+      ];
+    } else {
+      // Student without a class - only show school-wide schedules
+      query.$or = [
+        { classId: null },
+        { classId: { $exists: false } }
+      ];
+    }
+
+    const examSchedules = await ExamSchedule.find(query)
       .populate({
         path: 'examId',
-        match: { isPublished: true, tenantId },
+        match: { isPublished: true, tenantId: tenantObjectId },
         select: 'name type isPublished'
       })
-      .populate('subjectId', 'name')
-      .sort({ scheduleDate: 1, startTime: 1 });
+      .populate('classId', 'name section')
+      .sort({ date: 1, startTime: 1 });
 
-    const filteredExams = examSchedules.filter(es => es.examId !== null);
-
-    res.json({ success: true, data: filteredExams });
+    // Include all schedules - both with and without examId
+    // (some schedules may be standalone without a linked exam)
+    res.json({ success: true, data: examSchedules });
   } catch (error) {
     next(error);
   }
@@ -216,8 +259,7 @@ router.get('/marks', async (req, res, next) => {
 
     const marks = await Mark.find({ tenantId, studentId })
       .populate('examId', 'name type startDate')
-      .populate('subjectId', 'name')
-      .sort({ 'examId.startDate': -1, 'subjectId.name': 1 });
+      .sort({ 'examId.startDate': -1 });
 
     res.json({ success: true, data: marks });
   } catch (error) {

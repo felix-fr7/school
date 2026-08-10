@@ -4,6 +4,7 @@
  * Implements role-based visibility filtering
  */
 
+const mongoose = require('mongoose');
 const News = require('../models/News');
 const Class = require('../models/Class');
 const db = require('../config/db');
@@ -21,33 +22,70 @@ const getNews = async (req, res, next) => {
     const userClassId = req.user.classId;
     const { category, page = 1, limit = 10 } = req.query;
 
+    console.log('[ContentController.getNews] Query params:', { tenantId, userRole, userClassId, category, page, limit });
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
+    // Convert string IDs to ObjectId for MongoDB queries
+    const tenantObjectId = mongoose.Types.ObjectId.isValid(tenantId) ? new mongoose.Types.ObjectId(tenantId) : tenantId;
+    const classObjectId = userClassId && mongoose.Types.ObjectId.isValid(userClassId) ? new mongoose.Types.ObjectId(userClassId) : null;
+
     // Build MongoDB query
     let query = {
-      tenantId,
+      tenantId: tenantObjectId,
       isPublished: true
     };
 
-    // Apply visibility filtering for students - they only see 'ALL' visibility content
-    if (userRole === 'Student') {
-      query.$or = [
-        { visibility: { $exists: false } },
-        { visibility: null },
-        { visibility: 'ALL' }
+    console.log('[ContentController.getNews] Initial query:', JSON.stringify(query));
+
+    // Build visibility and class isolation conditions
+    // Students see only 'ALL' visibility content, teachers/admins see all
+    const isStudent = userRole === 'Student';
+    const hasClassId = (userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && classObjectId;
+
+    // Build the combined $or conditions
+    let orConditions = [];
+
+    if (isStudent && hasClassId) {
+      // Students with a class: See school-wide news (no classId) with visibility='ALL', OR their class's specific news with visibility='ALL'
+      orConditions = [
+        // School-wide news (no classId) with proper visibility
+        {
+          $and: [
+            { $or: [{ classId: null }, { classId: { $exists: false } }] },
+            { $or: [{ visibility: { $exists: false } }, { visibility: null }, { visibility: 'ALL' }] }
+          ]
+        },
+        // Class-specific news for their class with proper visibility
+        {
+          $and: [
+            { classId: classObjectId },
+            { $or: [{ visibility: { $exists: false } }, { visibility: null }, { visibility: 'ALL' }] }
+          ]
+        }
+      ];
+    } else if (isStudent) {
+      // Students without a class: See only school-wide news with visibility='ALL'
+      orConditions = [
+        {
+          $and: [
+            { $or: [{ classId: null }, { classId: { $exists: false } }] },
+            { $or: [{ visibility: { $exists: false } }, { visibility: null }, { visibility: 'ALL' }] }
+          ]
+        }
+      ];
+    } else if (hasClassId) {
+      // Teachers/Class Controllers with a class: See school-wide news + their class's specific news
+      orConditions = [
+        { classId: null },
+        { classId: { $exists: false } },
+        { classId: classObjectId }
       ];
     }
 
-    // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
-      // Students, Teachers, and Class Controllers see school-wide news + their class's specific news only
-      query.$or = [
-        ...(query.$or || []),
-        { classId: null },
-        { classId: { $exists: false } },
-        { classId: userClassId }
-      ];
+    if (orConditions.length > 0) {
+      query.$or = orConditions;
     }
 
     if (category) {
@@ -112,19 +150,24 @@ const getNewsById = async (req, res, next) => {
     const userRole = req.user.role;
     const userClassId = req.user.classId;
 
+    // Convert string IDs to ObjectId for MongoDB queries
+    const newsObjectId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
+    const tenantObjectId = mongoose.Types.ObjectId.isValid(tenantId) ? new mongoose.Types.ObjectId(tenantId) : tenantId;
+    const classObjectId = userClassId && mongoose.Types.ObjectId.isValid(userClassId) ? new mongoose.Types.ObjectId(userClassId) : null;
+
     // Build MongoDB query
     let query = {
-      _id: id,
-      tenantId,
+      _id: newsObjectId,
+      tenantId: tenantObjectId,
       isPublished: true
     };
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && classObjectId) {
       query.$or = [
         { classId: null },
         { classId: { $exists: false } },
-        { classId: userClassId }
+        { classId: classObjectId }
       ];
     }
 
@@ -261,14 +304,17 @@ const getCircularById = async (req, res, next) => {
     const userRole = req.user.role;
     const userClassId = req.user.classId;
 
+    // Convert string IDs to ObjectId for MongoDB queries (if needed for joins)
+    const classObjectId = userClassId && mongoose.Types.ObjectId.isValid(userClassId) ? new mongoose.Types.ObjectId(userClassId) : null;
+
     // Build where clause with tenant, publication, and class isolation
     let whereClause = `c.id = $1 AND c."tenantId" = $2 AND c."isPublished" = true`;
     let params = [id, tenantId];
     let paramIndex = 3;
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
-      params.push(userClassId);
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && classObjectId) {
+      params.push(classObjectId);
       whereClause += ` AND (c."class_id" IS NULL OR c."class_id" = $${paramIndex})`;
       paramIndex++;
     }
@@ -328,16 +374,20 @@ const getExams = async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build MongoDB query with proper isolation
-    let query = { tenantId };
+    // Convert string IDs to ObjectId for MongoDB queries
+    const tenantObjectId = mongoose.Types.ObjectId.isValid(tenantId) ? new mongoose.Types.ObjectId(tenantId) : tenantId;
+    const classObjectId = userClassId && mongoose.Types.ObjectId.isValid(userClassId) ? new mongoose.Types.ObjectId(userClassId) : null;
+
+    // Build MongoDB query with proper isolation - only show published exams
+    let query = { tenantId: tenantObjectId, isPublished: true };
 
     // Apply class-based isolation for students, teachers, and class controllers
-    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && userClassId) {
+    if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && classObjectId) {
       // Students, Teachers, and Class Controllers see school-wide exams + their class's specific exams
       query.$or = [
         { classId: null },
         { classId: { $exists: false } },
-        { classId: userClassId }
+        { classId: classObjectId }
       ];
     }
     // Admins see all exams (no class filtering)
@@ -400,9 +450,13 @@ const getExamById = async (req, res, next) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
+    // Convert string IDs to ObjectId for MongoDB queries
+    const examObjectId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
+    const tenantObjectId = mongoose.Types.ObjectId.isValid(tenantId) ? new mongoose.Types.ObjectId(tenantId) : tenantId;
+
     const exam = await Exam.findOne({
-      _id: id,
-      tenantId
+      _id: examObjectId,
+      tenantId: tenantObjectId
     }).populate('classId', 'name section');
 
     if (!exam) {

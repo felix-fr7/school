@@ -788,14 +788,14 @@ export const studentAPI = {
   },
 
   async getExamSchedules(page = 1, limit = 10) {
-    const response = await api.get('/student/exam-schedules', {
+    const response = await api.get('/student/exams', {
       params: { page, limit },
     });
     return response.data;
   },
 
   async getExamScheduleById(id) {
-    const response = await api.get(`/student/exam-schedules/${id}`);
+    const response = await api.get(`/content/exam-schedules/${id}`);
     return response.data;
   },
 
