@@ -27,9 +27,8 @@ import './AdminTheme.css';
 const CreateStudentScreen = () => {
   const history = useHistory();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [rollNumber, setRollNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [studentId, setStudentId] = useState('');
   const [classId, setClassId] = useState(undefined);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -76,8 +75,8 @@ const CreateStudentScreen = () => {
       setShowAlert(true);
       return;
     }
-    if (!studentId.trim()) {
-      setAlertMessage('Please enter student ID');
+    if (!rollNumber.trim()) {
+      setAlertMessage('Please enter roll number');
       setIsSuccess(false);
       setShowAlert(true);
       return;
@@ -89,7 +88,7 @@ const CreateStudentScreen = () => {
         name: name.trim(),
         email: email.trim(),
         password,
-        studentId: studentId.trim(),
+        rollNumber: rollNumber.trim(),
         classId,
       });
 
@@ -101,7 +100,7 @@ const CreateStudentScreen = () => {
         setName('');
         setEmail('');
         setPassword('');
-        setStudentId('');
+        setRollNumber('');
         setClassId(undefined);
       } else {
         setAlertMessage(response.error?.message || 'Failed to create student');
@@ -173,11 +172,11 @@ const CreateStudentScreen = () => {
           </div>
 
           <div className="input-group">
-            <label className="input-label">Student ID *</label>
+            <label className="input-label">Roll Number *</label>
             <IonInput
-              placeholder="Enter student ID"
-              value={studentId}
-              onIonInput={(e) => setStudentId(e.detail.value || '')}
+              placeholder="Enter roll number (e.g., 001, A-01)"
+              value={rollNumber}
+              onIonInput={(e) => setRollNumber(e.detail.value || '')}
               autocapitalize="none"
               disabled={loading}
             />

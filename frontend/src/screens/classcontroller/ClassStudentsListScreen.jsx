@@ -70,7 +70,8 @@ const ClassStudentsListScreen = () => {
           id: s.id,
           email: s.email,
           name: s.name,
-          studentId: s.studentId || `STU-${s.id.slice(-4).toUpperCase()}`,
+          rollNumber: s.rollNumber || s.studentId || `STU-${s.id.slice(-4).toUpperCase()}`,
+          studentId: s.studentId,
           createdAt: s.createdAt,
         }));
         
@@ -271,13 +272,18 @@ const ClassStudentsListScreen = () => {
                     <span>{student.name.charAt(0).toUpperCase()}</span>
                   </IonAvatar>
 
-                  <IonLabel className="student-info">
-                    <h3 className="student-name">{student.name}</h3>
-                    <p className="student-email">{student.email}</p>
-                    <IonBadge color="primary" className="student-id-badge">
-                      {student.studentId}
-                    </IonBadge>
-                  </IonLabel>
+          <IonLabel className="student-info">
+            <h3 className="student-name">{student.name}</h3>
+            <p className="student-email">{student.email}</p>
+            <div className="student-badges">
+              <IonBadge color="primary" className="student-id-badge">
+                ID: {student.studentId}
+              </IonBadge>
+              <IonBadge color="secondary" className="student-roll-badge">
+                Roll: {student.rollNumber}
+              </IonBadge>
+            </div>
+          </IonLabel>
 
                   <div className="student-actions" slot="end">
                     <IonButton

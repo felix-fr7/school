@@ -170,11 +170,30 @@
   text-overflow: ellipsis;
 }
 
+.student-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
 .student-id-badge {
   display: inline-flex;
   align-items: center;
-  background: #f1f5f9;
-  color: #475569;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.student-roll-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #f0fdf4;
+  color: #16a34a;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 4px 8px;

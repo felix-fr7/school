@@ -212,7 +212,8 @@ router.post('/login', async (req, res, next) => {
       user = await User.findOne({
         $or: [
           { email: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
-          { studentId: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } }
+          { studentId: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
+          { rollNumber: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } }
         ]
       }).select('+password').populate('schoolId').populate('classId');
 

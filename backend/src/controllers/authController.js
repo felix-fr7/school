@@ -143,13 +143,14 @@ const login = async (req, res, next) => {
       user = await User.findOne({
         $or: [
           { email: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
+          { rollNumber: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
           { studentId: { $regex: new RegExp(`^${normalizedIdentifier}$`, 'i') } },
           { username: normalizedIdentifier }
         ]
       }).select('+password');
 
       if (user) {
-        console.log(`[LOGIN SUCCESS] Found user in User collection: ${user.email || user.username}`);
+        console.log(`[LOGIN SUCCESS] Found user in User collection: ${user.email || user.username || user.studentId}`);
       }
     }
 

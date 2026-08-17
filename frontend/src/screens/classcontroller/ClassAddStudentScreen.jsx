@@ -1,7 +1,7 @@
 ﻿/**
  * Class Add Student Screen (Ionic React Version)
- * Add a new student to the class with auto-generated sequential ID
- * Email-free flow: Only name and password required
+ * Add a new student to the class with roll number
+ * Requires: name, roll number, and password
  */
 
 import React, { useEffect, useState } from 'react';
@@ -44,6 +44,7 @@ const ClassAddStudentScreen = () => {
   const history = useHistory();
 
   const [name, setName] = useState('');
+  const [rollNumber, setRollNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -75,6 +76,12 @@ const ClassAddStudentScreen = () => {
       return false;
     }
 
+    if (!rollNumber.trim()) {
+      setValidationErrorMessage('Roll number is required');
+      setShowValidationError(true);
+      return false;
+    }
+
     if (!password.trim()) {
       setValidationErrorMessage('Password is required');
       setShowValidationError(true);
@@ -100,6 +107,7 @@ const ClassAddStudentScreen = () => {
     try {
       const response = await classControllerAPI.createStudent({
         name: name.trim(),
+        rollNumber: rollNumber.trim(),
         password: password.trim(),
       });
 
@@ -107,6 +115,7 @@ const ClassAddStudentScreen = () => {
         setCreatedStudent(response.data);
         setShowSuccessModal(true);
         setName('');
+        setRollNumber('');
         setPassword('');
         fetchNextStudentId();
       }
@@ -167,9 +176,9 @@ const ClassAddStudentScreen = () => {
           {nextStudentId && (
             <IonCard className="preview-card">
               <IonCardContent>
-                <span className="preview-label">NEXT GENERATED ID</span>
+                <span className="preview-label">NEXT GENERATED INTERNAL ID</span>
                 <h2 className="preview-value">{nextStudentId}</h2>
-                <span className="preview-note">This ID will be automatically assigned upon creation</span>
+                <span className="preview-note">An internal ID will be assigned. Students login with their roll number.</span>
               </IonCardContent>
             </IonCard>
           )}
@@ -188,6 +197,23 @@ const ClassAddStudentScreen = () => {
                   onIonInput={(e) => setName(e.detail.value || '')}
                   placeholder="Enter student's full name"
                   autoComplete="name"
+                  autoCorrect="off"
+                />
+              </div>
+            </div>
+
+            {/* Roll Number */}
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={personOutline} className="label-icon" />
+                Roll Number *
+              </label>
+              <div className="custom-input-box">
+                <IonInput
+                  value={rollNumber}
+                  onIonInput={(e) => setRollNumber(e.detail.value || '')}
+                  placeholder="Enter student's roll number (e.g., 001, A-01)"
+                  autoComplete="off"
                   autoCorrect="off"
                 />
               </div>
@@ -226,7 +252,7 @@ const ClassAddStudentScreen = () => {
             <div className="info-box">
               <IonIcon icon={informationCircleOutline} className="info-icon" />
               <p>
-                The student will use their assigned <strong className="id-highlight">Student ID</strong> as their username along with this password to access the app.
+                The student will use their <strong className="id-highlight">Roll Number</strong> along with this password to access the app.
               </p>
             </div>
 
@@ -258,9 +284,16 @@ const ClassAddStudentScreen = () => {
             {createdStudent && (
               <div className="modal-details">
                 <div className="student-id-highlight">
-                  <small className="student-id-label">Assigned Student ID</small>
-                  <h3 className="student-id-value">{createdStudent.studentId}</h3>
+                  <small className="student-id-label">Roll Number (Login ID)</small>
+                  <h3 className="student-id-value">{createdStudent.rollNumber}</h3>
                 </div>
+
+                {createdStudent.studentId && (
+                  <div className="detail-row">
+                    <span className="detail-label">Student ID (Internal)</span>
+                    <span className="detail-value">{createdStudent.studentId}</span>
+                  </div>
+                )}
 
                 <div className="detail-row">
                   <span className="detail-label">Full Name</span>
@@ -299,6 +332,7 @@ const ClassAddStudentScreen = () => {
                 onClick={() => {
                   setShowSuccessModal(false);
                   setName('');
+                  setRollNumber('');
                   setPassword('');
                   setCreatedStudent(null);
                   fetchNextStudentId();

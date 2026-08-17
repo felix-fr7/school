@@ -286,6 +286,7 @@ router.get('/students', async (req, res, next) => {
           name: s.name,
           email: s.email,
           studentId: s.studentId,
+          rollNumber: s.rollNumber,
           created_at: s.createdAt
         })),
         pagination: {
@@ -324,6 +325,7 @@ router.get('/students/next-id', async (req, res, next) => {
 /**
  * POST /api/class-controller/students
  * Add a new student to the class
+ * Requires: name, rollNumber, password
  */
 router.post('/students', async (req, res, next) => {
   try {
@@ -336,7 +338,7 @@ router.post('/students', async (req, res, next) => {
 
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
-    const { name, password } = req.body;
+    const { name, rollNumber, password } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({
@@ -345,7 +347,23 @@ router.post('/students', async (req, res, next) => {
       });
     }
 
+    if (!rollNumber || !rollNumber.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Roll number is required.' }
+      });
+    }
+
     const User = require('../models/User');
+
+    // Check if roll number already exists
+    const existingRollNumber = await User.findOne({ rollNumber: rollNumber.trim(), role: 'Student' });
+    if (existingRollNumber) {
+      return res.status(409).json({
+        success: false,
+        error: { message: 'Roll number already exists.' }
+      });
+    }
 
     // Generate student ID
     const count = await User.countDocuments({ role: 'Student' });
@@ -364,8 +382,9 @@ router.post('/students', async (req, res, next) => {
       password: finalPassword, // Plain password - will be hashed by model
       name: name.trim(),
       role: 'Student',
-      tenantId: tenantId,
+      schoolId: tenantId,
       studentId: studentId,
+      rollNumber: rollNumber.trim(),
       classId: classId,
       isActive: true
     });
@@ -376,10 +395,11 @@ router.post('/students', async (req, res, next) => {
         id: student._id,
         name: student.name,
         studentId: student.studentId,
+        rollNumber: student.rollNumber,
         created_at: student.createdAt,
         password: finalPassword
       },
-      message: 'Student created successfully.'
+      message: 'Student created successfully. Please save the roll number and password.'
     });
   } catch (error) {
     next(error);

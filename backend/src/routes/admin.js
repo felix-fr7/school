@@ -246,7 +246,7 @@ router.delete('/classes/:id', async (req, res, next) => {
     }
 
     // Get counts of related documents for the response
-    const studentCount = await User.countDocuments({ classId, role: 'STUDENT' });
+    const studentCount = await User.countDocuments({ classId, role: 'Student' });
     
     // Import models for cleanup
     const Homework = require('../models/Homework');
@@ -271,7 +271,7 @@ router.delete('/classes/:id', async (req, res, next) => {
     // Step 1: Detach students from this class (set classId to null)
     if (studentCount > 0) {
       await User.updateMany(
-        { classId, role: 'STUDENT' },
+        { classId, role: 'Student' },
         { $unset: { classId: 1 } }
       );
     }
@@ -370,7 +370,7 @@ router.get('/classes/:id/dashboard', async (req, res, next) => {
     const totalStudents = await User.countDocuments({
       tenantId,
       classId: classId,
-      role: 'STUDENT',
+      role: 'Student',
       isActive: true
     });
 
@@ -447,11 +447,12 @@ router.get('/students', async (req, res, next) => {
   try {
     const { classId, search, page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
-    const tenantId = req.user.tenantId || req.user.schoolId;
+    // Use schoolId for User model queries (User model uses schoolId, not tenantId)
+    const schoolId = req.user.schoolId || req.user.tenantId;
 
     let query = {
-      tenantId,
-      role: 'STUDENT',
+      schoolId,
+      role: 'Student',
       isActive: true
     };
 
@@ -505,11 +506,12 @@ router.get('/students', async (req, res, next) => {
 
 router.get('/students/:id', async (req, res, next) => {
   try {
-    const tenantId = req.user.tenantId || req.user.schoolId;
+    // Use schoolId for User model queries (User model uses schoolId, not tenantId)
+    const schoolId = req.user.schoolId || req.user.tenantId;
     const student = await User.findOne({
       _id: req.params.id,
-      tenantId,
-      role: 'STUDENT',
+      schoolId,
+      role: 'Student',
       isActive: true
     })
     .populate('classId', 'name section gradeLevel')
@@ -547,7 +549,8 @@ router.put('/students/:id', async (req, res, next) => {
   try {
     const { name, email, phone, classId, rollNumber, dateOfBirth, gender, 
             bloodGroup, address, city, state, fatherName, fatherPhone, motherName, motherPhone } = req.body;
-    const tenantId = req.user.tenantId || req.user.schoolId;
+    // Use schoolId for User model queries (User model uses schoolId, not tenantId)
+    const schoolId = req.user.schoolId || req.user.tenantId;
 
     const updateData = {
       name,
@@ -566,8 +569,8 @@ router.put('/students/:id', async (req, res, next) => {
     const updatedStudent = await User.findOneAndUpdate(
       { 
         _id: req.params.id, 
-        tenantId,
-        role: 'STUDENT'
+        schoolId,
+        role: 'Student'
       },
       updateData,
       { new: true }
@@ -599,12 +602,13 @@ router.put('/students/:id', async (req, res, next) => {
 
 router.delete('/students/:id', async (req, res, next) => {
   try {
-    const tenantId = req.user.tenantId || req.user.schoolId;
+    // Use schoolId for User model queries (User model uses schoolId, not tenantId)
+    const schoolId = req.user.schoolId || req.user.tenantId;
     const deletedStudent = await User.findOneAndUpdate(
       { 
         _id: req.params.id, 
-        tenantId,
-        role: 'STUDENT'
+        schoolId,
+        role: 'Student'
       },
       { isActive: false },
       { new: true }
@@ -616,6 +620,118 @@ router.delete('/students/:id', async (req, res, next) => {
 
     res.json({ success: true });
   } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================
+// Create Student
+// ============================================
+router.post('/students', async (req, res, next) => {
+  try {
+    const { name, email, password, rollNumber, classId } = req.body;
+    // Use schoolId for User model (tenantId is used for other models like Class, Teacher)
+    const schoolId = req.user.schoolId || req.user.tenantId;
+
+    // Validate required fields
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Student name is required' }
+      });
+    }
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Student email is required' }
+      });
+    }
+
+    if (!password || !password.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Password is required' }
+      });
+    }
+
+    if (!rollNumber || !rollNumber.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Roll number is required' }
+      });
+    }
+
+    // Check if email already exists
+    const existingEmail = await User.findOne({
+      email: email.trim().toLowerCase(),
+      schoolId
+    });
+
+    if (existingEmail) {
+      return res.status(409).json({
+        success: false,
+        error: { message: 'Student with this email already exists' }
+      });
+    }
+
+    // Check if roll number already exists
+    const existingRollNumber = await User.findOne({
+      rollNumber: rollNumber.trim(),
+      schoolId,
+      role: 'Student'
+    });
+
+    if (existingRollNumber) {
+      return res.status(409).json({
+        success: false,
+        error: { message: 'Roll number already exists. Please use a unique roll number.' }
+      });
+    }
+
+    // Generate studentId in STU-XXXX format
+    const studentCount = await User.countDocuments({
+      schoolId,
+      role: 'Student'
+    });
+    const studentId = `STU-${String(studentCount + 1).padStart(4, '0')}`;
+
+    // Create student data
+    const studentData = {
+      schoolId,
+      email: email.trim().toLowerCase(),
+      password,
+      name: name.trim(),
+      role: 'Student',
+      rollNumber: rollNumber.trim(),
+      studentId,
+      classId: classId || null,
+      isActive: true
+    };
+
+    // Create the student (password will be hashed by User model's pre-save hook)
+    const newStudent = new User(studentData);
+    await newStudent.save();
+
+    // Return success response (excluding password)
+    const studentObject = newStudent.toObject();
+    delete studentObject.password;
+
+    res.status(201).json({
+      success: true,
+      data: {
+        id: newStudent._id,
+        email: newStudent.email,
+        name: newStudent.name,
+        rollNumber: newStudent.rollNumber,
+        studentId: newStudent.studentId,
+        classId: newStudent.classId,
+        createdAt: newStudent.createdAt
+      },
+      message: 'Student created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating student:', error);
     next(error);
   }
 });

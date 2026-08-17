@@ -209,6 +209,13 @@ router.get('/exams', async (req, res, next) => {
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
 
+    console.log('[Student Exams] Request received:', { 
+      userId: req.user.id, 
+      tenantId, 
+      classId, 
+      role: req.user.role 
+    });
+
     // Convert tenantId to ObjectId for proper MongoDB comparison
     const tenantObjectId = mongoose.Types.ObjectId.isValid(tenantId) 
       ? new mongoose.Types.ObjectId(tenantId) 
@@ -233,6 +240,8 @@ router.get('/exams', async (req, res, next) => {
         { classId: { $exists: false } }
       ];
     }
+
+    console.log('[Student Exams] Query:', JSON.stringify(query));
 
     const examSchedules = await ExamSchedule.find(query)
       .populate({

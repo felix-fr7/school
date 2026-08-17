@@ -162,7 +162,7 @@ const getClassStudents = async (req, res, next) => {
 
     // Get students
     const students = await User.find(query)
-      .select('name email studentId createdAt')
+      .select('name email studentId rollNumber createdAt')
       .sort({ name: 1 })
       .skip(skip)
       .limit(take);
@@ -212,14 +212,15 @@ const getNextStudentId = async (req, res, next) => {
  * Add a new student to the class (with auto-generated ID)
  * POST /api/class-controller/students
  * Note: Email is no longer required. A dummy email is auto-generated for DB constraints.
+ * Requires: name, rollNumber, password
  */
 const addClassStudent = async (req, res, next) => {
   try {
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
-    const { name, password } = req.body;
+    const { name, rollNumber, password } = req.body;
 
-    // Validate required fields - only name is required now
+    // Validate required fields
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
@@ -229,7 +230,27 @@ const addClassStudent = async (req, res, next) => {
       });
     }
 
-    // Auto-generate student ID sequentially
+    if (!rollNumber || !rollNumber.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Roll number is required',
+        },
+      });
+    }
+
+    // Check if roll number already exists
+    const existingRollNumber = await User.findOne({ rollNumber: rollNumber.trim(), role: 'Student' });
+    if (existingRollNumber) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          message: 'Roll number already exists',
+        },
+      });
+    }
+
+    // Auto-generate student ID sequentially (internal use)
     const totalCount = await User.countDocuments({ role: 'Student' });
     const nextNumber = totalCount + 1;
     const finalStudentId = `STU-${String(nextNumber).padStart(4, '0')}`;
@@ -249,10 +270,13 @@ const addClassStudent = async (req, res, next) => {
       role: 'Student',
       schoolId: tenantId,
       studentId: finalStudentId,
+      rollNumber: rollNumber.trim(),
       classId: classId,
     });
 
+    console.log('[DEBUG] Creating student with rollNumber:', rollNumber.trim());
     await student.save();
+    console.log('[DEBUG] Student saved. rollNumber in DB:', student.rollNumber);
 
     res.status(201).json({
       success: true,
@@ -260,10 +284,11 @@ const addClassStudent = async (req, res, next) => {
         id: student._id.toString(),
         name: student.name,
         studentId: student.studentId,
+        rollNumber: student.rollNumber,
         created_at: student.createdAt,
         password: finalPassword, // Return the password used (either provided or default)
       },
-      message: 'Student created successfully. Please save the student ID and password.',
+      message: 'Student created successfully. Please save the roll number and password.',
     });
   } catch (error) {
     next(error);

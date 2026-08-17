@@ -78,7 +78,8 @@ const ClassEditStudentScreen = () => {
           const studentData = {
             id: foundStudent.id,
             name: foundStudent.name,
-            studentId: foundStudent.studentId || `STU-${foundStudent.id.slice(-4).toUpperCase()}`,
+            rollNumber: foundStudent.rollNumber || foundStudent.studentId || `STU-${foundStudent.id.slice(-4).toUpperCase()}`,
+            studentId: foundStudent.studentId,
             email: foundStudent.email,
             createdAt: foundStudent.createdAt,
           };
@@ -250,8 +251,8 @@ const ClassEditStudentScreen = () => {
 
             <h2 className="student-name">{student?.name}</h2>
             <div className="id-box">
-              <small>STUDENT ROLL / ID</small>
-              <h3 className="student-id-value">{student?.studentId}</h3>
+              <small>ROLL NUMBER</small>
+              <h3 className="student-id-value">{student?.rollNumber}</h3>
             </div>
           </IonCardContent>
         </IonCard>
@@ -311,8 +312,8 @@ const ClassEditStudentScreen = () => {
               <IonItem>
                 <IonIcon icon={schoolOutline} slot="start" className="info-icon" />
                 <IonLabel>
-                  <small>Student ID</small>
-                  <p>{student?.studentId}</p>
+                  <small>Roll Number</small>
+                  <p>{student?.rollNumber}</p>
                 </IonLabel>
               </IonItem>
 

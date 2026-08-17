@@ -726,7 +726,7 @@ const getAllStudents = async (req, res, next) => {
     // Get students
     const studentsQuery = `
       SELECT 
-        u.id, u.name, u.email, u."studentId", u."created_at",
+        u.id, u.name, u.email, u."studentId", u."rollNumber", u."created_at",
         c.id as "classId", c.name as "className", c.section as "classSection"
       FROM "User" u
       LEFT JOIN "Class" c ON u."classId" = c.id
@@ -829,12 +829,40 @@ const getStudentById = async (req, res, next) => {
  */
 const createStudent = async (req, res, next) => {
   try {
-    const { name, email, password, studentId, classId } = req.body;
+    const { name, email, password, rollNumber, classId } = req.body;
     const tenantId = req.user.tenantId;
+
+    // Validate required fields
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Student name is required',
+        },
+      });
+    }
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Student email is required',
+        },
+      });
+    }
+
+    if (!rollNumber || !rollNumber.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          message: 'Roll number is required',
+        },
+      });
+    }
 
     // Check if email already exists
     const emailCheckQuery = 'SELECT id FROM "User" WHERE email = $1';
-    const emailCheckResult = await db.query(emailCheckQuery, [email]);
+    const emailCheckResult = await db.query(emailCheckQuery, [email.trim().toLowerCase()]);
 
     if (emailCheckResult.rows.length > 0) {
       return res.status(409).json({
@@ -845,18 +873,24 @@ const createStudent = async (req, res, next) => {
       });
     }
 
-    // Check if studentId already exists
-    const studentIdCheckQuery = 'SELECT id FROM "User" WHERE "studentId" = $1';
-    const studentIdCheckResult = await db.query(studentIdCheckQuery, [studentId]);
+    // Check if roll number already exists
+    const rollNumberCheckQuery = 'SELECT id FROM "User" WHERE "rollNumber" = $1';
+    const rollNumberCheckResult = await db.query(rollNumberCheckQuery, [rollNumber.trim()]);
 
-    if (studentIdCheckResult.rows.length > 0) {
+    if (rollNumberCheckResult.rows.length > 0) {
       return res.status(409).json({
         success: false,
         error: {
-          message: 'Student ID already exists. Please use a unique ID.',
+          message: 'Roll number already exists. Please use a unique roll number.',
         },
       });
     }
+
+    // Generate studentId in STU-XXXX format
+    const studentCountQuery = 'SELECT COUNT(*) as count FROM "User" WHERE role = $1';
+    const studentCountResult = await db.query(studentCountQuery, ['STUDENT']);
+    const studentCount = parseInt(studentCountResult.rows[0].count);
+    const nextStudentId = `STU-${String(studentCount + 1).padStart(4, '0')}`;
 
     // Hash password
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
@@ -864,12 +898,12 @@ const createStudent = async (req, res, next) => {
 
     // Create student
     const createQuery = `
-      INSERT INTO "User" (email, password, name, role, "tenantId", "studentId", "classId", "created_at", "updated_at")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-      RETURNING id, email, name, "studentId", "classId", "created_at"
+      INSERT INTO "User" (email, password, name, role, "tenantId", "rollNumber", "studentId", "classId", "created_at", "updated_at")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      RETURNING id, email, name, "rollNumber", "studentId", "classId", "created_at"
     `;
 
-    const createResult = await db.query(createQuery, [email, hashedPassword, name, 'STUDENT', tenantId, studentId, classId || null]);
+    const createResult = await db.query(createQuery, [email.trim().toLowerCase(), hashedPassword, name.trim(), 'STUDENT', tenantId, rollNumber.trim(), nextStudentId, classId || null]);
     const student = createResult.rows[0];
 
     res.status(201).json({

@@ -26,7 +26,7 @@ const LoginScreen = () => {
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [rollNumber, setRollNumber] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -41,12 +41,12 @@ const LoginScreen = () => {
       let payload = {};
 
       if (loginMode === 'student') {
-        if (!studentId.trim() || !password.trim()) {
-          setError('Please enter Student ID and Password');
+        if (!rollNumber.trim() || !password.trim()) {
+          setError('Please enter Roll Number and Password');
           setIsLoading(false);
           return;
         }
-        payload = { usernameOrEmailOrId: studentId.trim(), password };
+        payload = { usernameOrEmailOrId: rollNumber.trim(), password };
       } else if (loginMode === 'cls') {
         if (!email.trim() || !password.trim()) {
           setError('Please enter Class ID / Code and Password');
@@ -181,12 +181,12 @@ const LoginScreen = () => {
             <form onSubmit={handleSubmit} className="luxury-form">
               {loginMode === 'student' ? (
                 <div className="input-field-group">
-                  <label className="field-label">Student ID</label>
+                  <label className="field-label">Roll Number</label>
                   <div className="input-box-wrapper">
                     <IonInput
-                      placeholder="e.g. STU-0001"
-                      value={studentId}
-                      onIonInput={(e) => setStudentId(e.detail.value || '')}
+                      placeholder="e.g. 001, A-01"
+                      value={rollNumber}
+                      onIonInput={(e) => setRollNumber(e.detail.value || '')}
                       disabled={isLoading}
                       className="luxury-input"
                     />
