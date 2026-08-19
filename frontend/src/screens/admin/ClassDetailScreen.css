@@ -1,0 +1,440 @@
+/**
+ * Class Detail Screen Styles
+ */
+
+.class-detail-content {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 80px;
+}
+
+.class-detail-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Class Info Card */
+.class-info-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.class-info-card ion-card-content {
+  padding: 20px;
+}
+
+.class-header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.class-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28px;
+}
+
+.class-title-info h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px 0;
+}
+
+.class-title-info p {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+.class-stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ion-color-light);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.stat-item ion-icon {
+  font-size: 20px;
+  color: var(--ion-color-medium);
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+/* Section Title */
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+  margin-bottom: 24px;
+}
+
+.action-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-card ion-card-content {
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-card ion-icon {
+  font-size: 28px;
+}
+
+.action-card span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.send-all-btn {
+  font-weight: 600;
+}
+
+.send-all-btn ion-icon {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title-row ion-icon {
+  font-size: 20px;
+  color: var(--ion-color-primary);
+}
+
+.section-title-row h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
+}
+
+/* Empty Card */
+.empty-card {
+  border-radius: 12px;
+  border: 2px dashed var(--ion-color-light);
+  margin-bottom: 16px;
+}
+
+.empty-card .empty-icon {
+  font-size: 48px;
+  color: var(--ion-color-light);
+  margin-bottom: 12px;
+}
+
+.empty-card h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px 0;
+}
+
+.empty-card p {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0 0 12px 0;
+}
+
+/* Report Cards Summary */
+.report-cards-summary {
+  margin-bottom: 24px;
+}
+
+.summary-cards-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summary-card {
+  flex: 1;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.summary-card.ion-color-success {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.summary-card.ion-color-warning {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.summary-card ion-card-content {
+  padding: 16px;
+}
+
+.summary-number {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.summary-card.published .summary-number {
+  color: var(--ion-color-success);
+}
+
+.summary-card.pending .summary-number {
+  color: var(--ion-color-warning);
+}
+
+.summary-label {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin-top: 4px;
+}
+
+.recent-cards-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+  margin-bottom: 12px;
+}
+
+.report-card-item {
+  margin-bottom: 8px;
+  border-radius: 10px;
+}
+
+.report-card-item ion-card-content {
+  padding: 12px 16px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-info.clickable {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.card-info.clickable:hover {
+  opacity: 0.7;
+}
+
+.card-info .student-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+.card-info .card-term {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pending-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pending-actions ion-button {
+  --padding-start: 4px;
+  --padding-end: 4px;
+  margin: 0;
+}
+
+.pending-actions ion-icon {
+  font-size: 16px;
+}
+
+/* Students Grid */
+.students-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.student-chip {
+  background: var(--ion-color-light);
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.student-chip ion-icon {
+  font-size: 16px;
+  color: var(--ion-color-primary);
+}
+
+.student-chip.more-chip {
+  background: var(--ion-color-primary);
+  color: white;
+}
+
+.student-chip.more-chip ion-icon {
+  display: none;
+}
+
+/* Send Report Card Button */
+.send-report-card-btn {
+  border: 2px solid var(--ion-color-tertiary) !important;
+}
+
+.send-report-card-btn ion-icon {
+  color: var(--ion-color-tertiary) !important;
+}
+
+/* Upload Report Card Modal */
+.upload-report-card-modal ion-modal {
+  --height: 90%;
+  --max-height: 90%;
+}
+
+.upload-report-card-modal .upload-form-container {
+  padding: 16px 0;
+}
+
+.upload-report-card-modal .upload-form-container h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 8px 0;
+}
+
+.upload-report-card-modal .upload-form-container .form-description {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0 0 24px 0;
+}
+
+.upload-report-card-modal ion-item {
+  margin-bottom: 16px;
+  --padding-start: 0;
+}
+
+.upload-report-card-modal ion-label {
+  font-weight: 500;
+  color: var(--ion-color-dark);
+}
+
+.upload-report-card-modal .file-input-custom {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--ion-color-light);
+  border-radius: 8px;
+  background: var(--ion-color-light);
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.upload-report-card-modal .file-input-custom:hover {
+  border-color: var(--ion-color-primary);
+}
+
+.upload-report-card-modal .upload-submit-btn {
+  margin-top: 24px;
+  --border-radius: 12px;
+  font-weight: 600;
+}
+
+.upload-report-card-modal .upload-submit-btn ion-icon {
+  margin-right: 8px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .class-stats-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .stat-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+  
+  .summary-cards-row {
+    flex-direction: column;
+  }
+}

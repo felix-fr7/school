@@ -683,6 +683,404 @@
   font-weight: 600;
 }
 
+/* Student class badge - more visible styling */
+.student-class-badge-modern {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  color: var(--royal-blue-primary);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  margin-top: 4px;
+}
+
+/* ============================================================================
+   18. STUDENTS LIST SPECIFIC STYLING
+   Modern card-based design with responsive layout
+   ============================================================================ */
+
+/* Students list container */
+.student-list-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+
+/* Student item wrapper */
+.student-item-modern {
+  width: 100%;
+}
+
+/* Student card - modern elevated design */
+.student-card-modern {
+  background: var(--royal-bg-card);
+  border-radius: var(--royal-radius-lg);
+  border: 1px solid var(--royal-border-light);
+  box-shadow: var(--royal-shadow-card);
+  transition: var(--royal-transition);
+  overflow: hidden;
+}
+
+.student-card-modern:hover {
+  box-shadow: var(--royal-shadow-elevated);
+  border-color: var(--royal-blue-light);
+  transform: translateY(-2px);
+}
+
+/* Student card content */
+.student-card-content-modern {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  gap: 16px;
+}
+
+/* Student avatar */
+.student-avatar-modern {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--royal-blue-primary), var(--royal-blue-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Student info section */
+.student-info-modern {
+  flex: 1;
+  min-width: 0;
+}
+
+.student-name-modern {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--royal-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-email-modern {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: var(--royal-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.student-id-modern {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  color: var(--royal-text-muted);
+  font-weight: 500;
+}
+
+/* Student actions */
+.student-actions-modern {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-btn-small {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--royal-radius-sm);
+  border: none;
+  background: var(--royal-bg-main);
+  color: var(--royal-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--royal-transition);
+}
+
+.action-btn-small:hover {
+  background: var(--royal-border-light);
+  color: var(--royal-text-primary);
+}
+
+.action-btn-small.delete-btn {
+  color: #ef4444;
+}
+
+.action-btn-small.delete-btn:hover {
+  background: #fef2f2;
+}
+
+/* Empty container */
+.empty-container-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.empty-icon-modern {
+  font-size: 64px;
+  color: var(--royal-border-light);
+  margin-bottom: 16px;
+}
+
+.empty-title-modern {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--royal-text-secondary);
+  margin: 0 0 8px 0;
+}
+
+.empty-text-modern {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+  margin: 0;
+}
+
+/* Loading state */
+.loading-state-modern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--royal-text-muted);
+}
+
+/* Filter/search bar */
+.filter-bar-modern {
+  padding: 16px 0;
+}
+
+.search-container-modern {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon-slot {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--royal-text-muted);
+  font-size: 18px;
+  pointer-events: none;
+}
+
+.search-input-modern {
+  --background: var(--royal-bg-card);
+  --border-radius: var(--royal-radius-lg);
+  --padding-start: 48px;
+  --padding-end: 16px;
+  border: 1px solid var(--royal-border-light);
+  transition: var(--royal-transition);
+}
+
+.search-input-modern:focus-within {
+  border-color: var(--royal-blue-primary);
+  box-shadow: var(--royal-shadow-focus);
+}
+
+/* Pagination */
+.pagination-modern {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination-text {
+  font-size: 14px;
+  color: var(--royal-text-secondary);
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.page-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--royal-radius-sm);
+  border: 1px solid var(--royal-border-light);
+  background: var(--royal-bg-card);
+  color: var(--royal-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--royal-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--royal-bg-main);
+  border-color: var(--royal-blue-light);
+  color: var(--royal-blue-primary);
+}
+
+.page-btn.active {
+  background: var(--royal-blue-primary);
+  border-color: var(--royal-blue-primary);
+  color: white;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Header styling */
+.students-list-header {
+  --background: var(--royal-navy) !important;
+}
+
+.students-list-content {
+  --background: var(--royal-bg-main) !important;
+}
+
+/* ============================================================================
+   19. RESPONSIVE ADJUSTMENTS FOR STUDENTS LIST
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .student-card-content-modern {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .student-avatar-modern {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .student-name-modern {
+    font-size: 15px;
+  }
+
+  .student-email-modern {
+    font-size: 12px;
+  }
+
+  .student-id-modern {
+    font-size: 11px;
+  }
+
+  .student-class-badge-modern {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+
+  .action-btn-small {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pagination-modern {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .pagination-controls {
+    justify-content: center;
+  }
+
+  .empty-container-modern {
+    padding: 48px 16px;
+  }
+
+  .empty-icon-modern {
+    font-size: 48px;
+  }
+
+  .empty-title-modern {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-card-content-modern {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .student-avatar-modern {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .student-name-modern {
+    font-size: 14px;
+  }
+
+  /* Stack student info vertically on very small screens */
+  .student-card-content-modern {
+    flex-wrap: wrap;
+  }
+
+  .student-info-modern {
+    min-width: calc(100% - 60px);
+  }
+
+  .student-actions-modern {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .student-card-modern {
+    position: relative;
+  }
+
+  .page-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .student-card-content-modern {
+    padding: 16px 18px;
+  }
+
+  .student-avatar-modern {
+    width: 44px;
+    height: 44px;
+    font-size: 17px;
+  }
+}
+
 /* ============================================================================
    16. MOBILE RESPONSIVENESS
    Pixel-perfect on all screen sizes

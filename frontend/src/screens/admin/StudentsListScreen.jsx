@@ -35,6 +35,7 @@ import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
 
 const StudentsListScreen = () => {
+  console.log('[StudentsList] Component rendered');
   const history = useHistory();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,20 +47,46 @@ const StudentsListScreen = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [pagination.page, searchQuery]);
+  }, [pagination?.page, searchQuery]);
 
   const fetchStudents = async (refresh = false) => {
     try {
       if (refresh) setRefreshing(true);
       else setLoading(true);
 
+      console.log('[StudentsList] Fetching students with params:', {
+        page: pagination.page,
+        limit: pagination.limit,
+        searchQuery
+      });
+
       const response = await adminAPI.getStudents(pagination.page, pagination.limit, searchQuery);
+      console.log('[StudentsList] API Response:', response);
+
+      // Check if response indicates an error about tenant/admin
+      if (response.message && response.message.includes('not associated with a school')) {
+        console.error('[StudentsList] Admin not associated with a school:', response.message);
+      }
+
       if (response.success && response.data) {
-        setStudents(response.data.students);
-        setPagination(response.data.pagination);
+        // Backend returns data as array directly, not nested as { students: [] }
+        const studentsData = Array.isArray(response.data) ? response.data : (response.data.students || []);
+        console.log('[StudentsList] Setting students:', studentsData.length, 'students');
+        setStudents(studentsData);
+        
+        // Handle pagination - could be in response.pagination or response.data.pagination
+        const paginationData = response.pagination || response.data.pagination;
+        if (paginationData) {
+          console.log('[StudentsList] Setting pagination:', paginationData);
+          setPagination(paginationData);
+        }
+      } else {
+        console.warn('[StudentsList] Response not successful or no data:', response);
+        setStudents([]);
       }
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('[StudentsList] Error fetching students:', error);
+      setStudents([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -172,9 +199,12 @@ const StudentsListScreen = () => {
         ) : (
           <div className="student-list-modern">
             {students.map((item) => {
-              const classFullName = item.class?.section
-                ? `${item.class.name} - ${item.class.section}`
-                : item.class?.name || null;
+              // Handle both nested class object and flat className/section fields
+              const className = item.class?.name || item.className;
+              const section = item.class?.section || item.section;
+              const classFullName = section
+                ? `${className} - ${section}`
+                : className || null;
 
               return (
                 <div key={item.id} className="student-item-modern">

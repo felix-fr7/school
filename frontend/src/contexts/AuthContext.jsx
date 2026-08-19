@@ -134,6 +134,13 @@ export const AuthProvider = ({ children }) => {
               }
             }
           } catch (verifyError) {
+            console.error('[AuthContext] getMe() error details:', {
+              message: verifyError.message,
+              code: verifyError.code,
+              isNetworkError: verifyError.code === 'ERR_NETWORK',
+              isConnectionRefused: verifyError.message?.includes('ERR_CONNECTION_REFUSED'),
+              stack: verifyError.stack
+            });
             if (storedUser && storedUser.role) {
               console.log('[AuthContext] getMe() threw error but stored user available, using stored data:', verifyError.message);
               resolvedToken = storedToken;

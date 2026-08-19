@@ -145,6 +145,14 @@ const AdminDashboardScreen = () => {
       route: '/admin/admin-exams',
       gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
     },
+    { 
+      id: '9', 
+      title: 'Report Cards', 
+      subtitle: 'Send & manage report cards',
+      icon: documentTextOutline, 
+      route: '/admin/report-cards',
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+    },
   ];
 
   if (loading) {

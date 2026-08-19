@@ -449,7 +449,56 @@ ion-col.module-col-wrapper {
     width: 100%;
     justify-content: space-between;
   }
+  
+  /* Hide admin name and avatar on mobile */
   .admin-name-light {
     display: none;
+  }
+  .admin-chip-light {
+    display: none;
+  }
+  
+  /* Make logout button fully visible on mobile */
+  .nextgen-logout-btn-light {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  .nextgen-logout-btn-light span {
+    display: inline;
+  }
+  
+  /* Compact nav on mobile */
+  .light-nav-pill {
+    padding: 8px 12px 8px 16px;
+    border-radius: 20px;
+  }
+  
+  .brand-logo-light {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+  
+  .brand-title-light {
+    font-size: 12px;
+  }
+  
+  .brand-badge-light {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screens - hide logout text, show only icon */
+  .nextgen-logout-btn-light span {
+    display: none;
+  }
+  .nextgen-logout-btn-light {
+    padding: 8px 10px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
   }
 }

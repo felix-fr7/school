@@ -121,13 +121,14 @@ const authenticate = async (req, res, next) => {
     }
 
     // Attach user information to request object
+    // Note: tenantId is derived from schoolId since User model uses schoolId to reference the tenant/school
     req.user = {
       id: user._id.toString(),
       email: user.email,
       name: user.name,
       role: user.role,
-      tenantId: user.tenantId ? user.tenantId.toString() : null,
       schoolId: user.schoolId ? user.schoolId.toString() : null,
+      tenantId: user.schoolId ? user.schoolId.toString() : null, // Use schoolId as tenantId for multi-tenant queries
       // Additional fields for specific roles (User collection specific)
       studentId: user.studentId || null,
       classId: user.classId ? user.classId.toString() : null,
@@ -239,13 +240,14 @@ const optionalAuth = async (req, res, next) => {
           }
 
           if (user) {
+            // Note: tenantId is derived from schoolId since User model uses schoolId to reference the tenant/school
             req.user = {
               id: user._id.toString(),
               email: user.email,
               name: user.name,
               role: user.role,
               schoolId: user.schoolId ? user.schoolId.toString() : null,
-              tenantId: user.tenantId ? user.tenantId.toString() : null,
+              tenantId: user.schoolId ? user.schoolId.toString() : null, // Use schoolId as tenantId for multi-tenant queries
               studentId: user.studentId || null,
               classId: user.classId ? user.classId.toString() : null,
               rollNumber: user.rollNumber || null,

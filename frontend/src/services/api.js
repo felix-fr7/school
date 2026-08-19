@@ -14,7 +14,18 @@ const API_BASE_URL =
   import.meta.env.EXPO_PUBLIC_API_URL || 
   'http://localhost:3000/api';
 
+console.log('[API] Environment variables:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  EXPO_PUBLIC_API_URL: import.meta.env.EXPO_PUBLIC_API_URL
+});
 console.log('[API] Using base URL:', API_BASE_URL);
+
+// Validate API_BASE_URL
+if (!API_BASE_URL || API_BASE_URL.startsWith(':')) {
+  console.error('[API] ERROR: Invalid API_BASE_URL:', API_BASE_URL);
+  console.error('[API] Falling back to http://localhost:3000/api');
+  // This is a safeguard - the fallback should never be needed since we have a default
+}
 
 // ============================================
 // Storage Service (Web - localStorage)
@@ -547,17 +558,17 @@ export const adminAPI = {
   },
 
   async createHomework(data) {
-    const response = await api.post('/admin/homework', data);
+    const response = await api.post('/homework', data);
     return response.data;
   },
 
   async updateHomework(id, data) {
-    const response = await api.put(`/admin/homework/${id}`, data);
+    const response = await api.put(`/homework/${id}`, data);
     return response.data;
   },
 
   async deleteHomework(id) {
-    const response = await api.delete(`/admin/homework/${id}`);
+    const response = await api.delete(`/homework/${id}`);
     return response.data;
   },
 
@@ -725,6 +736,74 @@ export const adminAPI = {
 
   async deleteSubject(id) {
     const response = await api.delete(`/admin/subjects/${id}`);
+    return response.data;
+  },
+
+  // Report Cards Management
+  async getReportCards(params = {}) {
+    const response = await api.get('/reportcards', { params });
+    return response.data;
+  },
+
+  async getReportCard(id) {
+    const response = await api.get(`/reportcards/${id}`);
+    return response.data;
+  },
+
+  async uploadReportCard(formData) {
+    const token = await storage.getToken();
+    const tenantId = getTenantId();
+    const response = await fetch(`${API_BASE_URL}/reportcards/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'x-tenant-id': tenantId || '',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw { response: { status: response.status, data: errorData } };
+    }
+
+    return await response.json();
+  },
+
+  async updateReportCard(id, data) {
+    const response = await api.put(`/reportcards/${id}`, data);
+    return response.data;
+  },
+
+  async deleteReportCard(id) {
+    const response = await api.delete(`/reportcards/${id}`);
+    return response.data;
+  },
+
+  async publishReportCard(id) {
+    const response = await api.put(`/reportcards/${id}/publish`);
+    return response.data;
+  },
+
+  async publishAllReportCardsForClass(classId) {
+    const response = await api.put(`/reportcards/class/${classId}/publish-all`);
+    return response.data;
+  },
+
+  async getSchoolInfo() {
+    const response = await api.get('/reportcards/school-info');
+    return response.data;
+  },
+
+  async createReportCard(data) {
+    const response = await api.post('/reportcards', data);
+    return response.data;
+  },
+
+  async getReportCardsByStudent(name, rollNumber) {
+    const response = await api.get('/reportcards/by-student', {
+      params: { name, rollNumber }
+    });
     return response.data;
   },
 };
@@ -1052,6 +1131,32 @@ export const productsAPI = {
 
   async deleteProduct(id) {
     const response = await api.delete(`/products/${id}`);
+    return response.data;
+  },
+};
+
+// ============================================
+// Report Cards API
+// ============================================
+
+export const reportCardsAPI = {
+  // Student endpoints
+  async getMyReportCards(term, academicYear) {
+    const response = await api.get('/reportcards/student/my-report-cards', {
+      params: { term, academicYear },
+    });
+    return response.data;
+  },
+
+  async getReportCard(id) {
+    const response = await api.get(`/reportcards/student/${id}`);
+    return response.data;
+  },
+
+  async acknowledgeReportCard(id, parentSignature) {
+    const response = await api.put(`/reportcards/student/${id}/acknowledge`, {
+      parentSignature,
+    });
     return response.data;
   },
 };

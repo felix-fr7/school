@@ -1,8 +1,13 @@
-import React from 'react';
-import PlaceholderScreen from './PlaceholderScreen';
+/**
+ * Create Homework Screen for Admin
+ * Allows admin to create new homework assignments
+ */
 
-const CreateHomeworkScreen = () => (
-  <PlaceholderScreen title="Create Homework" description="Assign homework to a class" />
-);
+import React from 'react';
+import AdminHomeworkScreen from './AdminHomeworkScreen';
+
+const CreateHomeworkScreen = () => {
+  return <AdminHomeworkScreen />;
+};
 
 export default CreateHomeworkScreen;

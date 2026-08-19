@@ -46,6 +46,7 @@ const contactsRoutes = require('./routes/contacts');
 const videosRoutes = require('./routes/videos');
 const productsRoutes = require('./routes/products');
 const classControllerRoutes = require('./routes/classController');
+const reportCardsRoutes = require('./routes/reportcards');
 
 // Import error handler
 const errorHandler = require('./middleware/errorHandler');
@@ -168,6 +169,9 @@ app.use('/api/weekly-lessons', weeklyLessonsRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/videos', videosRoutes);
+
+// Report Cards Routes
+app.use('/api/reportcards', reportCardsRoutes);
 
 // Tenant Management Routes
 app.use('/api/tenants', tenantsRoutes);

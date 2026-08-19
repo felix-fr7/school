@@ -54,6 +54,29 @@ const ReportCardSchema = new mongoose.Schema({
     ref: 'School',
     required: [true, 'School ID is required']
   },
+  classId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Class',
+    required: false
+  },
+  className: {
+    type: String,
+    trim: true
+  },
+  classSection: {
+    type: String,
+    trim: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
+  sentBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false
+  },
   term: {
     type: String,
     enum: {
@@ -70,12 +93,12 @@ const ReportCardSchema = new mongoose.Schema({
   },
   subjects: {
     type: [SubjectSchema],
-    required: [true, 'At least one subject is required'],
     validate: {
       validator: function(subjects) {
-        return subjects && subjects.length > 0;
+        // Either has subjects OR has a file-based report card
+        return !subjects || subjects.length === 0 ? !!this.reportCardFileUrl : true;
       },
-      message: 'At least one subject is required'
+      message: 'Either subjects or a report card file is required'
     }
   },
   totalPercentage: {
@@ -91,7 +114,8 @@ const ReportCardSchema = new mongoose.Schema({
   },
   rank: {
     type: Number,
-    min: [1, 'Rank must be at least 1']
+    min: [1, 'Rank must be at least 1'],
+    default: null
   },
   totalStudents: {
     type: Number
@@ -125,6 +149,25 @@ const ReportCardSchema = new mongoose.Schema({
       },
       message: 'PDF URL must be a valid URL'
     }
+  },
+  // File-based report card (image or PDF upload)
+  reportCardFileUrl: {
+    type: String,
+    trim: true,
+    validate: {
+      validator: function(value) {
+        if (value) {
+          return /^https?:\/\/.+/i.test(value);
+        }
+        return true;
+      },
+      message: 'Report card file URL must be a valid URL'
+    }
+  },
+  reportCardFileType: {
+    type: String,
+    enum: ['pdf', 'image', null],
+    default: null
   },
   teacherRemarks: {
     type: String,
@@ -182,32 +225,8 @@ ReportCardSchema.virtual('school', {
   justOne: true
 });
 
-// Pre-save: Calculate total percentage if not provided
-ReportCardSchema.pre('save', function(next) {
-  if (this.subjects && this.subjects.length > 0 && !this.totalPercentage) {
-    let totalObtained = 0;
-    let totalMax = 0;
-    
-    this.subjects.forEach(subject => {
-      totalObtained += subject.marksObtained;
-      totalMax += subject.totalMarks;
-    });
-    
-    if (totalMax > 0) {
-      this.totalPercentage = parseFloat(((totalObtained / totalMax) * 100).toFixed(2));
-    }
-  }
-  next();
-});
-
-// Pre-find to only return published report cards by default
-ReportCardSchema.pre(/^find/, function(next) {
-  // Only filter if not explicitly requested
-  if (!this.getFilter()['isPublished']) {
-    this.where({ isPublished: true });
-  }
-  next();
-});
+// Note: Pre-save and pre-find hooks removed - all calculations are done in the controller
+// The getReportCards function in controller bypasses any find hooks manually
 
 // Static method to find report cards by student
 ReportCardSchema.statics.findByStudent = function(studentId) {

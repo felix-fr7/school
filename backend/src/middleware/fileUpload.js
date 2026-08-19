@@ -15,8 +15,9 @@ const documentDir = path.join(uploadDir, 'documents');
 const audioDir = path.join(uploadDir, 'audio');
 const videoDir = path.join(uploadDir, 'videos');
 const examDir = path.join(uploadDir, 'exam');
+const reportcardDir = path.join(uploadDir, 'reportcard');
 
-[uploadDir, imageDir, documentDir, audioDir, videoDir, examDir].forEach(dir => {
+[uploadDir, imageDir, documentDir, audioDir, videoDir, examDir, reportcardDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -50,6 +51,18 @@ const storage = multer.diskStorage({
 const examStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, examDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const filename = `${uuidv4()}${ext}`;
+    cb(null, filename);
+  }
+});
+
+// Report Card-specific storage configuration (saves to uploads/reportcard/)
+const reportcardStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, reportcardDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -145,13 +158,74 @@ const uploadExamSingle = (fieldName) => {
   return uploadExam.single(fieldName);
 };
 
+// Report Card-specific upload configuration
+const uploadReportCard = multer({
+  storage: reportcardStorage,
+  fileFilter,
+  limits: {
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024,
+    files: 1
+  }
+});
+
+const uploadReportCardSingle = (fieldName) => {
+  return uploadReportCard.single(fieldName);
+};
+
+// Excel-specific storage configuration (saves to uploads/documents/)
+const excelStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, documentDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const filename = `${uuidv4()}${ext}`;
+    cb(null, filename);
+  }
+});
+
+// Excel file filter
+const excelFileFilter = (req, file, cb) => {
+  const allowedMimeTypes = [
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/csv',
+    'application/csv'
+  ];
+  
+  const allowedExtensions = ['.xls', '.xlsx', '.csv'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  
+  if (allowedMimeTypes.includes(file.mimetype) || allowedExtensions.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only Excel files (.xls, .xlsx) and CSV files are allowed'), false);
+  }
+};
+
+const uploadExcel = multer({
+  storage: excelStorage,
+  fileFilter: excelFileFilter,
+  limits: {
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024,
+    files: 1
+  }
+});
+
+const uploadExcelSingle = (fieldName) => {
+  return uploadExcel.single(fieldName);
+};
+
 module.exports = {
   uploadSingle,
   uploadArray,
   uploadFields,
   uploadExamSingle,
+  uploadReportCardSingle,
+  uploadExcelSingle,
   deleteFile,
   getFileUrl,
   uploadDir,
-  examDir
+  examDir,
+  reportcardDir
 };

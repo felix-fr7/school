@@ -20,9 +20,13 @@ import AdminStudents from './screens/admin/AdminStudentsScreen';
 import AdminTeachers from './screens/admin/AdminTeachersScreen';
 import AdminClasses from './screens/admin/AdminClassesScreen';
 import AdminNews from './screens/admin/AdminNewsScreen';
+import AdminHomework from './screens/admin/AdminHomeworkScreen';
 import AdminCirculars from './screens/admin/AdminCircularsScreen';
 import AdminExams from './screens/admin/AdminExamsScreen';
 import AdminSettings from './screens/admin/AdminSettingsScreen';
+import AdminReportCards from './screens/admin/ReportCardsScreen';
+import ReportCardViewScreen from './screens/admin/ReportCardViewScreen';
+import StudentReportCardSearchScreen from './screens/admin/StudentReportCardSearchScreen';
 import CreateStudentScreen from './screens/admin/CreateStudentScreen';
 import EditStudentScreen from './screens/admin/EditStudentScreen';
 import CreateTeacherScreen from './screens/admin/CreateTeacherScreen';
@@ -30,6 +34,7 @@ import EditTeacherScreen from './screens/admin/EditTeacherScreen';
 import CreateClassScreen from './screens/admin/CreateClassScreen';
 import EditClassScreen from './screens/admin/EditClassScreen';
 import CreateCircularScreen from './screens/admin/CreateCircularScreen';
+import ClassDetailScreen from './screens/admin/ClassDetailScreen';
 
 // Teacher Screens
 import TeacherDashboard from './screens/teacher/TeacherDashboardScreen';
@@ -42,11 +47,13 @@ import TeacherStudents from './screens/teacher/TeacherStudentsScreen';
 import StudentDashboard from './screens/student/StudentDashboardScreen';
 import StudentHomework from './screens/student/StudentHomeworkScreen';
 import StudentExams from './screens/student/ExamSchedulesScreen';
+import StudentExamDetail from './screens/student/StudentExamDetailScreen';
 import StudentTimetable from './screens/student/StudentTimetableScreen';
 import StudentAttendance from './screens/student/StudentAttendanceScreen';
 import StudentMarks from './screens/student/StudentMarksScreen';
 import StudentLeave from './screens/student/StudentLeaveScreen';
 import StudentProfile from './screens/student/StudentProfileScreen';
+import ReportCardsScreen from './screens/student/ReportCardsScreen';
 
 // Shared Screens
 import NewsScreen from './screens/NewsScreen';
@@ -128,11 +135,16 @@ const AppRoutes = () => {
             <Route exact path="/admin/teachers/:id/edit" component={EditTeacherScreen} />
             <Route exact path="/admin/classes" component={AdminClasses} />
             <Route exact path="/admin/classes/create" component={CreateClassScreen} />
+            <Route exact path="/admin/classes/:id" component={ClassDetailScreen} />
             <Route exact path="/admin/classes/:id/edit" component={EditClassScreen} />
             <Route exact path="/admin/news" component={AdminNews} />
+            <Route exact path="/admin/homework" component={AdminHomework} />
             <Route exact path="/admin/circulars" component={AdminCirculars} />
             <Route exact path="/admin/circulars/create" component={CreateCircularScreen} />
             <Route exact path="/admin/exams" component={AdminExams} />
+            <Route exact path="/admin/report-cards" component={AdminReportCards} />
+            <Route exact path="/admin/report-cards/search" component={StudentReportCardSearchScreen} />
+            <Route exact path="/admin/report-cards/:id" component={ReportCardViewScreen} />
             <Route exact path="/admin/settings" component={AdminSettings} />
 
             {/* Teacher Routes */}
@@ -146,11 +158,13 @@ const AppRoutes = () => {
             <Route exact path="/student" component={StudentDashboard} />
             <Route exact path="/student/homework" component={StudentHomework} />
             <Route exact path="/student/exams" component={StudentExams} />
+            <Route exact path="/student/exams/:examId" component={StudentExamDetail} />
             <Route exact path="/student/timetable" component={StudentTimetable} />
             <Route exact path="/student/attendance" component={StudentAttendance} />
             <Route exact path="/student/marks" component={StudentMarks} />
             <Route exact path="/student/leave" component={StudentLeave} />
             <Route exact path="/student/profile" component={StudentProfile} />
+            <Route exact path="/student/report-cards" component={ReportCardsScreen} />
 
             {/* Fallback Redirection */}
             <Redirect 

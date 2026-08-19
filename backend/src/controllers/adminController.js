@@ -218,7 +218,7 @@ const getClassById = async (req, res, next) => {
 
     // Get students
     const studentsQuery = `
-      SELECT id, name, email, "studentId", "created_at"
+      SELECT id, name, email, "studentId", "rollNumber", "created_at"
       FROM "User"
       WHERE "classId" = $1 AND role = 'STUDENT'
     `;

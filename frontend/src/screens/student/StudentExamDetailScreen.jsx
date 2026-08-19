@@ -43,6 +43,12 @@ import {
 } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 
+// API Base URL - same as in api.js but without /api suffix for file access
+const API_BASE_URL = 
+  import.meta.env.VITE_API_URL?.replace('/api', '') || 
+  import.meta.env.EXPO_PUBLIC_API_URL?.replace('/api', '') || 
+  'http://localhost:3000';
+
 const StudentExamDetailScreen = () => {
   const history = useHistory();
   const { examId } = useParams();
@@ -87,11 +93,18 @@ const StudentExamDetailScreen = () => {
     }
   };
 
-  // Safe-check incoming exam payload for file URL
+  // Safe-check incoming exam payload for file URL and convert to absolute URL
   const getFileUrl = () => {
     if (!exam) return null;
-    const url = exam.fileUrl || exam.file_url || exam.pdf_url || exam.pdfUrl || exam.image_url || exam.imageUrl;
-    return url || null;
+    let url = exam.fileUrl || exam.file_url || exam.pdf_url || exam.pdfUrl || exam.image_url || exam.imageUrl;
+    if (!url) return null;
+    
+    // Convert relative URL to absolute URL
+    if (url.startsWith('/')) {
+      url = `${API_BASE_URL}${url}`;
+    }
+    
+    return url;
   };
 
   // Detect if file is PDF

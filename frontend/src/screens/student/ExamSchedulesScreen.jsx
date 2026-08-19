@@ -1,9 +1,11 @@
 /**
  * Student Exam Schedules Screen (Ionic React Version)
  * View upcoming exam schedules
+ * Click on an exam to view details and attached files
  */
 
 import React, { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import {
   IonPage,
   IonContent,
@@ -22,11 +24,12 @@ import {
   IonRefresherContent,
   IonIcon,
 } from '@ionic/react';
-import { refreshOutline, calendarOutline, timeOutline, locationOutline } from 'ionicons/icons';
+import { refreshOutline, calendarOutline, timeOutline, locationOutline, chevronForwardOutline, documentTextOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './ExamSchedulesScreen.css';
 
 const StudentExamSchedulesScreen = () => {
+  const history = useHistory();
   const [examSchedules, setExamSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -63,6 +66,16 @@ const StudentExamSchedulesScreen = () => {
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  // Check if exam has a file attachment
+  const hasAttachment = (item) => {
+    return item.fileUrl || item.file_url || item.pdfUrl || item.pdf_url || item.imageUrl || item.image_url;
+  };
+
+  // Navigate to exam detail page
+  const handleExamClick = (examId) => {
+    history.push(`/student/exams/${examId}`);
   };
 
   if (loading) {
@@ -107,35 +120,59 @@ const StudentExamSchedulesScreen = () => {
           </div>
         ) : (
           <IonList>
-            {examSchedules.map((item) => (
-              <IonItem key={item.id} className="exam-item">
-                <IonCard className="exam-card">
-                  <IonCardContent>
-                    <div className="exam-header">
-                      <span className="exam-subject">{item.subject}</span>
-                      <IonText color="secondary" className="exam-date">
-                        <IonIcon icon={calendarOutline} /> {formatDate(item.date)}
-                      </IonText>
-                    </div>
-                    {item.startTime && item.endTime && (
-                      <p className="exam-detail">
-                        <IonIcon icon={timeOutline} /> {item.startTime} - {item.endTime}
-                      </p>
-                    )}
-                    {item.roomNumber && (
-                      <p className="exam-detail">
-                        <IonIcon icon={locationOutline} /> Room: {item.roomNumber}
-                      </p>
-                    )}
-                    {item.class && (
-                      <p className="exam-class">
-                        {item.class.name}{item.class.section ? ` - ${item.class.section}` : ''}
-                      </p>
-                    )}
-                  </IonCardContent>
-                </IonCard>
-              </IonItem>
-            ))}
+            {examSchedules.map((item) => {
+              const itemHasAttachment = hasAttachment(item);
+              return (
+                <IonItem 
+                  key={item.id} 
+                  className="exam-item"
+                  button
+                  onClick={() => handleExamClick(item.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <IonCard className="exam-card">
+                    <IonCardContent>
+                      <div className="exam-header">
+                        <span className="exam-subject">{item.subject}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {itemHasAttachment && (
+                            <IonIcon 
+                              icon={documentTextOutline} 
+                              style={{ color: '#6366f1', fontSize: '16px' }}
+                              title="Has attachment"
+                            />
+                          )}
+                          <IonText color="secondary" className="exam-date">
+                            <IonIcon icon={calendarOutline} /> {formatDate(item.date)}
+                          </IonText>
+                          <IonIcon icon={chevronForwardOutline} style={{ color: '#94a3b8', fontSize: '16px' }} />
+                        </div>
+                      </div>
+                      {item.startTime && item.endTime && (
+                        <p className="exam-detail">
+                          <IonIcon icon={timeOutline} /> {item.startTime} - {item.endTime}
+                        </p>
+                      )}
+                      {item.roomNumber && (
+                        <p className="exam-detail">
+                          <IonIcon icon={locationOutline} /> Room: {item.roomNumber}
+                        </p>
+                      )}
+                      {item.class && (
+                        <p className="exam-class">
+                          {item.class.name}{item.class.section ? ` - ${item.class.section}` : ''}
+                        </p>
+                      )}
+                      {itemHasAttachment && (
+                        <p style={{ fontSize: '12px', color: '#6366f1', marginTop: '8px', fontStyle: 'italic' }}>
+                          📎 Tap to view attachment
+                        </p>
+                      )}
+                    </IonCardContent>
+                  </IonCard>
+                </IonItem>
+              );
+            })}
           </IonList>
         )}
       </IonContent>

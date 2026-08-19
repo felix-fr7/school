@@ -1,0 +1,1022 @@
+/* Student Report Card Search Screen Styles - Enhanced */
+
+.student-search-content {
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Search Section */
+.search-section {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.search-header {
+  text-align: center;
+  margin-bottom: 32px;
+  color: white;
+  padding: 32px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.search-header ion-icon {
+  color: #ffd700;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.search-header h2 {
+  margin: 12px 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
+}
+
+.search-header p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  font-weight: 300;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Mode Selector Card */
+.mode-selector-card {
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin-bottom: 20px;
+  background: white;
+  overflow: hidden;
+}
+
+.mode-selector-card ion-card-content {
+  padding: 8px;
+}
+
+.mode-selector-card ion-segment {
+  margin: 0;
+  border-radius: 16px;
+  background: #f8f9fa;
+}
+
+.mode-selector-card ion-segment-button {
+  --border-radius: 14px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  margin: 4px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.95rem;
+}
+
+.mode-selector-card ion-segment-button ion-icon {
+  margin-bottom: 4px;
+}
+
+.mode-selector-card ion-segment-button.segment-button-checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.mode-selector-card ion-segment-button.segment-button-checked ion-icon {
+  color: white !important;
+}
+
+.mode-selector-card ion-segment-button.segment-button-checked ion-label {
+  color: white;
+}
+
+.search-card {
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin-bottom: 20px;
+  background: white;
+  overflow: hidden;
+}
+
+.search-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+}
+
+.search-card ion-card-content {
+  padding: 28px;
+  position: relative;
+}
+
+.input-group {
+  margin-bottom: 0;
+}
+
+.input-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-group label ion-icon {
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.input-group ion-input {
+  --background: #f8f9fa;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border: 2px solid #e8ecef;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.input-group ion-input:hover {
+  border-color: #b0b8c1;
+}
+
+.input-group ion-input:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  --background: #fff;
+}
+
+.button-col {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0;
+}
+
+.button-col ion-button {
+  margin-top: 4px;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  height: 48px;
+}
+
+.button-col ion-button:hover {
+  --box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  transform: translateY(-2px);
+}
+
+.button-col ion-button:active {
+  transform: translateY(0);
+}
+
+.search-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border-left: 4px solid #667eea;
+}
+
+.search-hint ion-icon {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+/* Step Indicator */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-title ion-icon {
+  color: #667eea;
+}
+
+/* Custom Select */
+.custom-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e8ecef;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: #333;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+}
+
+.custom-select:hover {
+  border-color: #b0b8c1;
+}
+
+.custom-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  background-color: #fff;
+}
+
+.custom-select option {
+  padding: 12px 16px;
+}
+
+/* Filter Card */
+.filter-card {
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin-bottom: 20px;
+  background: white;
+  overflow: hidden;
+  border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.filter-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
+}
+
+.filter-card ion-card-content {
+  padding: 24px 28px;
+  position: relative;
+}
+
+.filter-count-col {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: 0;
+}
+
+.filter-count {
+  margin-top: 4px;
+}
+
+.filter-count ion-badge {
+  font-size: 1rem;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+/* Required asterisk */
+.required {
+  color: #dc3545;
+  font-weight: 700;
+}
+
+/* Class info in student details */
+.class-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: #667eea;
+  font-weight: 500;
+  margin-top: 8px !important;
+}
+
+.class-info ion-icon {
+  color: #667eea;
+}
+
+.clear-button {
+  margin-top: 12px;
+  --border-radius: 10px;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  margin: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.loading-container ion-spinner {
+  margin-bottom: 20px;
+  --color: #ffd700;
+}
+
+.loading-container p {
+  font-size: 1.1rem;
+  font-weight: 300;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Error State */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 20px;
+  margin: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.error-container ion-icon {
+  margin-bottom: 20px;
+}
+
+.error-container h3 {
+  margin: 16px 0 8px;
+  color: #dc3545;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.error-container p {
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.error-container ion-button {
+  --border-radius: 12px;
+  --box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Initial State */
+.initial-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  text-align: center;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  margin: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.initial-state ion-icon {
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 20px;
+  font-size: 4rem;
+}
+
+.initial-state h3 {
+  margin: 16px 0 8px;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.initial-state p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+/* Results Section */
+.results-section {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Student Info Card */
+.student-info-card {
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin-bottom: 28px;
+  background: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.student-info-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+}
+
+.student-info-card ion-card-content {
+  padding: 32px;
+}
+
+.student-info-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.student-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.student-info-details h3 {
+  margin: 0 0 10px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.student-info-details p {
+  margin: 0 0 6px;
+  opacity: 0.8;
+  font-size: 1rem;
+  color: #555;
+}
+
+.student-info-details .roll-number {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.student-info-details .roll-number strong {
+  font-size: 1.2rem;
+}
+
+.student-info-details .email {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.report-count-badge {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.report-count-badge ion-badge {
+  font-size: 1rem;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* No Reports */
+.no-reports-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.no-reports-container ion-icon {
+  color: #ccc;
+  margin-bottom: 20px;
+  font-size: 3rem;
+}
+
+.no-reports-container h3 {
+  margin: 8px 0;
+  color: #555;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.no-reports-container p {
+  color: #888;
+  font-size: 1rem;
+}
+
+/* Report Cards List */
+.results-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 20px;
+  font-size: 1.3rem;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.results-title ion-icon {
+  color: #ffd700;
+}
+
+.report-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-card-item {
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  background: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.report-card-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.report-card-item ion-card-content {
+  padding: 24px;
+}
+
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.report-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.report-meta ion-chip {
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  height: 32px;
+  padding: 0 16px;
+}
+
+.academic-year {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 600;
+  background: #f8f9fa;
+  padding: 6px 14px;
+  border-radius: 20px;
+}
+
+.report-card-header ion-badge {
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* File Preview */
+.file-preview-section {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.report-card-preview {
+  max-height: 200px;
+  object-fit: contain;
+  width: 100%;
+  background: #f5f5f5;
+}
+
+.pdf-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  border-radius: 12px;
+  color: #666;
+}
+
+.pdf-preview ion-icon {
+  color: #dc3545;
+  font-size: 2.5rem;
+}
+
+.pdf-preview span {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Subjects Summary */
+.subjects-summary {
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.subjects-summary h5 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  color: #555;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.subjects-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.subjects-table th {
+  text-align: left;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.subjects-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+
+.subjects-table tr:last-child td {
+  border-bottom: none;
+}
+
+.subjects-table tr:hover td {
+  background: #f8f9fa;
+}
+
+.subjects-table td ion-badge {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Overall Results */
+.overall-results {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.result-item .label {
+  font-size: 0.95rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.result-item .value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.grade-badge {
+  font-size: 1.1rem;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+/* Remarks Section */
+.remarks-section {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border-left: 4px solid #667eea;
+}
+
+.remarks-section:last-child {
+  margin-bottom: 0;
+}
+
+.remarks-section strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #667eea;
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.remarks-section p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Report Card Actions */
+.report-card-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.report-card-actions ion-button {
+  --border-radius: 10px;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.report-card-actions ion-button:hover {
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.report-card-actions ion-chip {
+  font-size: 0.85rem;
+  height: 32px;
+  background: #f8f9fa;
+}
+
+.report-card-actions ion-chip ion-icon {
+  color: #28a745;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-section,
+  .results-section {
+    padding: 16px;
+  }
+
+  .search-header {
+    padding: 24px 16px;
+  }
+
+  .search-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .search-card ion-card-content {
+    padding: 20px;
+  }
+
+  .student-info-header {
+    gap: 20px;
+  }
+
+  .student-avatar-large {
+    width: 64px;
+    height: 64px;
+    font-size: 1.8rem;
+  }
+
+  .student-info-details h3 {
+    font-size: 1.3rem;
+  }
+
+  .report-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .report-meta {
+    flex-wrap: wrap;
+  }
+
+  .overall-results {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .button-col {
+    margin-top: 12px;
+  }
+
+  .button-col ion-button {
+    width: 100%;
+  }
+
+  .report-card-actions {
+    flex-direction: column;
+  }
+
+  .report-card-actions ion-button {
+    width: 100%;
+  }
+
+  .step-indicator {
+    flex-wrap: wrap;
+  }
+
+  .filter-count-col {
+    justify-content: flex-start;
+    margin-top: 12px;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.report-card-item {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.report-card-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.report-card-item:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.report-card-item:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+/* Scrollbar styling */
+.subjects-summary::-webkit-scrollbar {
+  height: 6px;
+}
+
+.subjects-summary::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.subjects-summary::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.subjects-summary::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Student Group Styles */
+.student-group {
+  margin-bottom: 32px;
+}
+
+.student-group-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  color: white;
+}
+
+.student-group-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.student-group-info h4 {
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.student-group-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* Responsive adjustments for student groups */
+@media (max-width: 768px) {
+  .student-group-header {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .student-group-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+  
+  .student-group-info h4 {
+    font-size: 1rem;
+  }
+  
+  .student-group-info p {
+    font-size: 0.85rem;
+  }
+}

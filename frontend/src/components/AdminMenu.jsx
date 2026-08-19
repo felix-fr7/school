@@ -1,6 +1,6 @@
 import React from 'react';
 import { IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel, IonMenuToggle } from '@ionic/react';
-import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, filmOutline, settingsOutline, logOutOutline } from 'ionicons/icons';
+import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, filmOutline, settingsOutline, logOutOutline, paperPlaneOutline, createOutline, searchOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,11 +8,14 @@ const AdminMenu = () => {
   const history = useHistory();
   const { logout } = useAuth();
 
-  const menuItems = [
+const menuItems = [
     { title: 'Dashboard', icon: homeOutline, path: '/admin' },
     { title: 'Students', icon: peopleOutline, path: '/admin/students' },
     { title: 'Teachers', icon: peopleOutline, path: '/admin/teachers' },
     { title: 'Classes', icon: schoolOutline, path: '/admin/classes' },
+    { title: 'Report Cards', icon: paperPlaneOutline, path: '/admin/report-cards' },
+    { title: 'Search Report Cards', icon: searchOutline, path: '/admin/report-cards/search' },
+    { title: 'Homework', icon: createOutline, path: '/admin/homework' },
     { title: 'News', icon: newspaperOutline, path: '/admin/news' },
     { title: 'Circulars', icon: documentTextOutline, path: '/admin/circulars' },
     { title: 'Exams', icon: calendarOutline, path: '/admin/exams' },

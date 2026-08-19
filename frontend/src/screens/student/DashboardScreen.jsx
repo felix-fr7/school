@@ -110,7 +110,7 @@ const StudentDashboardScreen = () => {
   const quickActions = [
     { id: '3', title: 'Homework', icon: bookOutline, route: '/student/homework', color: '#6366f1', count: null },
     { id: '4', title: 'Exams', icon: calendarNumberOutline, route: '/student/exams', color: '#8b5cf6', count: null },
-    { id: '14', title: 'Report Card', icon: statsChartOutline, route: '/student/marks', color: '#06b6d4', count: null },
+    { id: '14', title: 'Report Card', icon: statsChartOutline, route: '/student/report-cards', color: '#06b6d4', count: null },
     { id: '16', title: 'Timetable', icon: timerOutline, route: '/student/weekly-lessons', color: '#10b981', count: null },
   ];
 

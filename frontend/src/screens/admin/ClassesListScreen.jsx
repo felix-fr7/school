@@ -22,9 +22,10 @@ import {
   IonRefresher,
   IonRefresherContent,
   IonAlert,
+  IonToast,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
-import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline } from 'ionicons/icons';
+import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline, eyeOutline, sendOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './ClassesListScreen.css';
 
@@ -33,8 +34,11 @@ const ClassesListScreen = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [classToDelete, setClassToDelete] = useState(null);
+  const [showSendReportCardAlert, setShowSendReportCardAlert] = useState(false);
+  const [classToSendReportCard, setClassToSendReportCard] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', color: 'success' });
 
   const fetchClasses = async (refresh = false) => {
     try {
@@ -67,7 +71,7 @@ const ClassesListScreen = () => {
     setShowDeleteAlert(true);
   };
 
-  const handleDeleteConfirm = async () => {
+const handleDeleteConfirm = async () => {
     if (!classToDelete) return;
     try {
       const response = await adminAPI.deleteClass(classToDelete.id);
@@ -79,6 +83,27 @@ const ClassesListScreen = () => {
     }
     setShowDeleteAlert(false);
     setClassToDelete(null);
+  };
+
+  const handleSendReportCard = async () => {
+    if (!classToSendReportCard) return;
+    try {
+      const response = await adminAPI.publishAllReportCardsForClass(classToSendReportCard.id);
+      if (response.success) {
+        setToast({ 
+          show: true, 
+          message: `Sent ${response.data?.publishedCount || 0} report card(s) to ${classToSendReportCard.name}`, 
+          color: 'success' 
+        });
+      } else {
+        setToast({ show: true, message: response.message || 'No pending report cards found', color: 'warning' });
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to send report cards';
+      setToast({ show: true, message: errorMsg, color: 'danger' });
+    }
+    setShowSendReportCardAlert(false);
+    setClassToSendReportCard(null);
   };
 
   const formatDate = (dateStr) => {
@@ -167,14 +192,37 @@ const ClassesListScreen = () => {
                           </div>
                         </div>
 
-                        <div className="class-actions-modern">
+<div className="class-actions-modern">
+                          <button
+                            type="button"
+                            className="action-btn-small send-btn"
+                            title="Send Report Card"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setClassToSendReportCard({ id: item.id, name: classFullName });
+                              setShowSendReportCardAlert(true);
+                            }}
+                          >
+                            <IonIcon icon={sendOutline} />
+                          </button>
+                          <button
+                            type="button"
+                            className="action-btn-small view-btn"
+                            title="View Class Details"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              history.push(`/admin/classes/${item.id}`);
+                            }}
+                          >
+                            <IonIcon icon={eyeOutline} />
+                          </button>
                           <button
                             type="button"
                             className="action-btn-small"
                             title="Edit Class"
                             onClick={(e) => {
                               e.stopPropagation();
-                              history.push(`/admin/classes/${item.id}`);
+                              history.push(`/admin/classes/${item.id}/edit`);
                             }}
                           >
                             <IonIcon icon={createOutline} />
@@ -200,7 +248,7 @@ const ClassesListScreen = () => {
           )}
         </div>
 
-        <IonAlert
+<IonAlert
           isOpen={showDeleteAlert}
           onDidDismiss={() => setShowDeleteAlert(false)}
           header="Delete Class"
@@ -213,6 +261,31 @@ const ClassesListScreen = () => {
               handler: handleDeleteConfirm,
             },
           ]}
+        />
+
+        {/* Send Report Card Alert */}
+        <IonAlert
+          isOpen={showSendReportCardAlert}
+          onDidDismiss={() => {
+            setShowSendReportCardAlert(false);
+            setClassToSendReportCard(null);
+          }}
+          header="Send Report Card"
+          message={`Are you sure you want to send all pending report cards to students in "${classToSendReportCard?.name}"?`}
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            { text: 'Send', handler: handleSendReportCard },
+          ]}
+        />
+
+        {/* Toast Notifications */}
+        <IonToast
+          isOpen={toast.show}
+          onDidDismiss={() => setToast({ ...toast, show: false })}
+          message={toast.message}
+          duration={3000}
+          color={toast.color}
+          position="top"
         />
       </IonContent>
     </IonPage>

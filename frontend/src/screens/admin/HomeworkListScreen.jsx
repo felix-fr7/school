@@ -1,8 +1,13 @@
-import React from 'react';
-import PlaceholderScreen from './PlaceholderScreen';
+/**
+ * Homework List Screen for Admin
+ * Displays a list of all homework assignments
+ */
 
-const HomeworkListScreen = () => (
-  <PlaceholderScreen title="Homework List" description="View and manage homework assignments" />
-);
+import React from 'react';
+import AdminHomeworkScreen from './AdminHomeworkScreen';
+
+const HomeworkListScreen = () => {
+  return <AdminHomeworkScreen />;
+};
 
 export default HomeworkListScreen;
