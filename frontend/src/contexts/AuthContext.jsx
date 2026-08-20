@@ -28,9 +28,14 @@ export const AuthProvider = ({ children }) => {
   const [isTenantSuspended, setIsTenantSuspended] = useState(false);
   // Track authentication status explicitly to avoid async state update issues
   const [authStatus, setAuthStatus] = useState({ isAuthenticated: false, hasRole: false, role: null });
+  // Prevent multiple initializations
+  const initRef = React.useRef(false);
 
   // Initialize auth state from storage on app start
   useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    console.log('[AuthContext] Starting auth initialization (first time only)');
     initializeAuth();
   }, []);
 
@@ -180,13 +185,16 @@ export const AuthProvider = ({ children }) => {
         setTenantId(resolvedTenantId);
       }
       setAuthStatus(resolvedAuthStatus);
+      
+      console.log('[AuthContext] Setting isLoading to false');
       setIsLoading(false);
 
       console.log('[AuthContext] Auth initialization complete', {
         isAuthenticated: resolvedAuthStatus.isAuthenticated,
         userRole: resolvedUser?.role || resolvedAuthStatus.role,
         authStatus: resolvedAuthStatus,
-        tokenExists: !!resolvedToken
+        tokenExists: !!resolvedToken,
+        isLoading: false
       });
     }
   };

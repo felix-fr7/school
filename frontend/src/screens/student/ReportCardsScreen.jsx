@@ -24,7 +24,6 @@ import {
   IonBadge,
   IonButton,
   IonAlert,
-  IonInput,
 } from '@ionic/react';
 import { 
   refreshOutline, 
@@ -32,7 +31,8 @@ import {
   pdfOutline, 
   imageOutline,
   checkmarkCircleOutline,
-  eyeOutline 
+  eyeOutline,
+  closeCircleOutline
 } from 'ionicons/icons';
 import { reportCardsAPI, fetchFileAsBlobUrl, openFileInNewTab } from '../../services/api';
 import './ReportCardsScreen.css';
@@ -41,6 +41,7 @@ const ReportCardsScreen = () => {
   const [reportCards, setReportCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
   const [selectedCard, setSelectedCard] = useState(null);
   const [showViewer, setShowViewer] = useState(false);
   const [viewerUrl, setViewerUrl] = useState(null);
@@ -48,21 +49,49 @@ const ReportCardsScreen = () => {
   const [acknowledgingCard, setAcknowledgingCard] = useState(null);
   const [parentSignature, setParentSignature] = useState('');
 
+  // DEBUG: This will help us confirm the component is rendering
+  useEffect(() => {
+    console.log('*** REPORT CARDS SCREEN COMPONENT MOUNTED ***');
+    console.log('*** If you see this, the component IS rendering ***');
+    
+    // Force loading to false after 2 seconds to test
+    const timer = setTimeout(() => {
+      console.log('*** Forcing loading state to false ***');
+      setLoading(false);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   const fetchReportCards = async () => {
+    console.log('[ReportCardsScreen] fetchReportCards called');
+    setLoading(true);
+    setError('');
     try {
+      console.log('[ReportCardsScreen] Calling reportCardsAPI.getMyReportCards()');
       const response = await reportCardsAPI.getMyReportCards();
+      console.log('[ReportCardsScreen] API response:', response);
       if (response.success && response.data) {
         setReportCards(response.data);
+        console.log('[ReportCardsScreen] Set reportCards:', response.data.length);
+      } else {
+        setError('Failed to load report cards. Please try again.');
+        console.log('[ReportCardsScreen] No success or data in response');
       }
-    } catch (error) {
-      console.error('Error fetching report cards:', error);
+    } catch (err) {
+      console.error('[ReportCardsScreen] Error fetching report cards:', err);
+      const errorMessage = err?.response?.data?.error?.message || err?.message || 'Failed to load report cards';
+      setError(errorMessage);
+      console.log('[ReportCardsScreen] Error message:', errorMessage);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      console.log('[ReportCardsScreen] fetchReportCards completed, loading:', false);
     }
   };
 
   useEffect(() => {
+    console.log('[ReportCardsScreen] fetchReportCards useEffect triggered');
     fetchReportCards();
   }, []);
 
@@ -75,12 +104,10 @@ const ReportCardsScreen = () => {
   const handleViewReportCard = async (card) => {
     try {
       if (card.reportCardFileUrl) {
-        // Open the file URL directly
         await openFileInNewTab(card.reportCardFileUrl);
       } else if (card.pdfReportUrl) {
         await openFileInNewTab(card.pdfReportUrl);
       } else {
-        // If no file, show digital report card details
         setSelectedCard(card);
         setShowViewer(true);
       }
@@ -94,7 +121,6 @@ const ReportCardsScreen = () => {
     
     try {
       await reportCardsAPI.acknowledgeReportCard(acknowledgingCard._id, parentSignature);
-      // Update local state
       setReportCards(reportCards.map(card => 
         card._id === acknowledgingCard._id 
           ? { ...card, parentAcknowledgment: true, parentSignature }
@@ -134,7 +160,9 @@ const ReportCardsScreen = () => {
     return 'medium';
   };
 
+  // Loading state
   if (loading) {
+    console.log('[ReportCardsScreen] Rendering LOADING state');
     return (
       <IonPage>
         <IonHeader>
@@ -145,13 +173,61 @@ const ReportCardsScreen = () => {
             <IonTitle>Report Cards</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
-          <IonSpinner name="crescent" />
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center" style={{ '--background': '#e0e7ff' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gap: '16px',
+            minHeight: '200px',
+            padding: '20px',
+            backgroundColor: '#e0e7ff',
+            borderRadius: '12px',
+            margin: '20px'
+          }}>
+            <IonSpinner name="crescent" style={{ color: '#4F46E5' }} />
+            <IonText style={{ color: '#4F46E5', fontWeight: 'bold', fontSize: '16px' }}>
+              <p>Loading your report cards...</p>
+            </IonText>
+          </div>
         </IonContent>
       </IonPage>
     );
   }
 
+  // Error state
+  if (error) {
+    console.log('[ReportCardsScreen] Rendering ERROR state:', error);
+    return (
+      <IonPage>
+        <IonHeader>
+          <IonToolbar>
+            <IonButtons slot="start">
+              <IonBackButton defaultHref="/student/dashboard" />
+            </IonButtons>
+            <IonTitle>Report Cards</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+        <IonContent className="ion-padding" style={{ '--background': '#fef2f2' }}>
+          <div className="empty-container" style={{ backgroundColor: '#fef2f2', padding: '30px', borderRadius: '12px', margin: '20px' }}>
+            <IonIcon icon={closeCircleOutline} size="large" style={{ color: '#DC2626' }} />
+            <IonText style={{ color: '#DC2626' }}>
+              <h3 style={{ marginTop: '16px' }}>Error Loading Report Cards</h3>
+              <p>{error}</p>
+            </IonText>
+            <IonButton color="primary" onClick={fetchReportCards} style={{ marginTop: '20px' }}>
+              <IonIcon icon={refreshOutline} slot="start" />
+              Retry
+            </IonButton>
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  // Main content
+  console.log('[ReportCardsScreen] Rendering MAIN CONTENT, reportCards count:', reportCards.length);
   return (
     <IonPage>
       <IonHeader>
@@ -162,16 +238,16 @@ const ReportCardsScreen = () => {
           <IonTitle>Report Cards</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="report-cards-content">
+      <IonContent className="report-cards-content" style={{ '--background': '#f0fdf4' }}>
         <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
           <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
         </IonRefresher>
 
         {reportCards.length === 0 ? (
-          <div className="empty-container">
+          <div className="empty-container" style={{ minHeight: '200px' }}>
             <IonIcon icon={documentOutline} className="empty-icon" />
             <IonText color="medium">
-              <h3>No report cards available yet</h3>
+              <h3 style={{ marginTop: '16px' }}>No report cards available yet</h3>
               <p>Your report cards will appear here once published</p>
             </IonText>
           </div>

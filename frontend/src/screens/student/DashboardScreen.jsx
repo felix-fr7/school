@@ -116,10 +116,8 @@ const StudentDashboardScreen = () => {
 
   const menuItems = [
     { id: '1', title: 'News', subtitle: 'School updates', icon: newspaperOutline, route: '/student/news', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
-    { id: '2', title: 'Messages', subtitle: 'Chat & announcements', icon: chatbubbleEllipsesOutline, gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
     { id: '13', title: 'Circulars', subtitle: 'Official notices', icon: clipboardOutline, route: '/student/circulars', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
     { id: '10', title: 'Calendar', subtitle: 'Events & dates', icon: calendarOutline, gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
-    { id: '5', title: 'Toppers', subtitle: 'Achievements', icon: trophyOutline, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
     { id: '7', title: 'Albums', subtitle: 'Photo gallery', icon: imagesOutline, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
     { id: '6', title: 'Contact', subtitle: 'School directory', icon: callOutline, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
     { id: '15', title: 'Profile', subtitle: 'My information', icon: createOutline, route: '/student/profile', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },

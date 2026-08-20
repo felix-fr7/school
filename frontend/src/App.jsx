@@ -76,18 +76,41 @@ import StudentMenu from './components/StudentMenu';
 setupIonicReact();
 
 const AppRoutes = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  console.log('=================================================');
+  console.log('[AppRoutes] RENDERING - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+  console.log('[AppRoutes] User:', user);
+  console.log('=================================================');
 
   // Debugging user and role
-  console.log('[AppRoutes] Current User:', user);
   const userRole = user?.role ? user.role.toUpperCase().trim() : '';
-  console.log('[AppRoutes] Formatted User Role:', userRole);
   
   // Broader check to catch any variant of admin role
   const isAdmin = userRole.includes('ADMIN') || userRole.includes('SUPER') || userRole === 'PRINCIPAL' || userRole === 'MANAGEMENT';
-  console.log('[AppRoutes] Is Admin Granted?:', isAdmin);
+
+  // Show loading state while auth is initializing
+  if (isLoading) {
+    console.log('[AppRoutes] Loading - showing test div');
+    return (
+      <div style={{ 
+        background: '#FFD700', 
+        color: 'black', 
+        padding: '40px', 
+        fontSize: '24px', 
+        fontWeight: 'bold',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        LOADING - Auth is initializing...
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
+    console.log('[AppRoutes] Not authenticated, redirecting to login');
     return (
       <IonApp>
         <IonReactRouter>
