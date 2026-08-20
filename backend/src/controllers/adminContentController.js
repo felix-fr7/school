@@ -39,23 +39,28 @@ const deleteFile = (filePath) => {
 /**
  * Get all news for admin's school with visibility filtering
  * GET /api/admin-content/news
+ * Each admin only sees news they created (authorId filtering)
  */
 const getAllNews = async (req, res, next) => {
   try {
     const { visibility, isPublished, page = 1, limit = 10 } = req.query;
 
     console.log('[getAllNews] Query params:', { visibility, isPublished, page, limit });
+    console.log('[getAllNews] User:', { id: req.user.id, tenantId: req.user.tenantId });
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const take = parseInt(limit);
 
-    // Build MongoDB query - show all news without tenantId filter for admin
-    let query = {};
+    // Build MongoDB query - filter by tenantId and authorId for security
+    const tenantId = req.user.tenantId || req.user.schoolId;
+    const authorId = req.user.id;
+    
+    let query = {
+      tenantId: tenantId,
+      authorId: authorId  // Each admin only sees their own created news
+    };
     
     console.log('[getAllNews] Initial query:', query);
-    
-    // Optional: Filter by authorId if needed for security
-    // query.authorId = req.user.id;
 
     if (visibility) {
       query.visibility = visibility;
