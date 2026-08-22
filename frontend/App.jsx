@@ -47,6 +47,8 @@ const AdminNewsScreen = React.lazy(() => import('./src/screens/admin/AdminNewsSc
 const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminCircularsScreen.jsx'));
   const AdminExamsScreen = React.lazy(() => import('./src/screens/admin/AdminExamsScreen.jsx'));
   const AdminReportCardsScreen = React.lazy(() => import('./src/screens/admin/ReportCardsScreen.jsx'));
+  const AdminCalendarScreen = React.lazy(() => import('./src/screens/admin/CalendarScreen.jsx'));
+  const AdminCalendarEventDetailScreen = React.lazy(() => import('./src/screens/admin/CalendarEventDetailScreen.jsx'));
   const PlaceholderScreen = React.lazy(() => import('./src/screens/admin/PlaceholderScreen.jsx'));
 
 // Student Screens (Lazy loaded)
@@ -57,10 +59,15 @@ const StudentMarksListScreen = React.lazy(() => import('./src/screens/student/Ma
 const StudentNewsListScreen = React.lazy(() => import('./src/screens/student/NewsListScreen'));
 const StudentNewsDetailScreen = React.lazy(() => import('./src/screens/student/NewsDetailScreen'));
 const StudentCircularsListScreen = React.lazy(() => import('./src/screens/student/CircularsListScreen'));
+const StudentCircularDetailScreen = React.lazy(() => import('./src/screens/student/CircularDetailScreen'));
+const StudentReportCardsScreen = React.lazy(() => import('./src/screens/student/ReportCardsScreen'));
 const StudentExamSchedulesScreen = React.lazy(() => import('./src/screens/student/ExamSchedulesScreen'));
 const StudentProfileScreen = React.lazy(() => import('./src/screens/student/ProfileScreen'));
 const WeeklyLessonViewScreen = React.lazy(() => import('./src/screens/student/WeeklyLessonViewScreen'));
 const StudentExamDetailScreen = React.lazy(() => import('./src/screens/student/StudentExamDetailScreen'));
+const StudentCalendarScreen = React.lazy(() => import('./src/screens/student/CalendarScreen'));
+const StudentCalendarEventDetailScreen = React.lazy(() => import('./src/screens/student/CalendarEventDetailScreen'));
+
 
 // Class Controller Screens (Lazy loaded)
 const ClassControllerDashboardScreen = React.lazy(() => import('./src/screens/classcontroller/ClassControllerDashboardScreen'));
@@ -80,6 +87,8 @@ const ClassExamSchedulesListScreen = React.lazy(() => import('./src/screens/clas
 const ClassCreateExamScheduleScreen = React.lazy(() => import('./src/screens/classcontroller/ClassCreateExamScheduleScreen'));
 const ClassProfileScreen = React.lazy(() => import('./src/screens/classcontroller/ClassProfileScreen'));
 const ClassExamDetailScreen = React.lazy(() => import('./src/screens/classcontroller/ClassExamDetailScreen'));
+const ClassControllerCalendarScreen = React.lazy(() => import('./src/screens/classcontroller/ClassControllerCalendarScreen'));
+const ClassControllerCalendarEventDetailScreen = React.lazy(() => import('./src/screens/classcontroller/CalendarEventDetailScreen'));
 
 const ProtectedRoute = ({ 
   component: Component, 
@@ -238,6 +247,8 @@ const AppContent = () => {
             <ProtectedRoute exact path="/admin/admin-news" component={AdminNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/admin-circulars" component={AdminCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/admin-exams" component={AdminExamsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/calendar" component={AdminCalendarScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/admin/calendar/:eventId" component={AdminCalendarEventDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>
         )}
 
@@ -251,10 +262,14 @@ const AppContent = () => {
             <ProtectedRoute exact path="/student/news" component={StudentNewsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/news/:newsId" component={StudentNewsDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/circulars" component={StudentCircularsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/circulars/:id" component={StudentCircularDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/report-cards" component={StudentReportCardsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/exams" component={StudentExamSchedulesScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/exams/:examId" component={StudentExamDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/profile" component={StudentProfileScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/weekly-lessons" component={WeeklyLessonViewScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/calendar" component={StudentCalendarScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/student/calendar/:eventId" component={StudentCalendarEventDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>
         )}
 
@@ -278,6 +293,8 @@ const AppContent = () => {
             <ProtectedRoute exact path="/class-controller/exams" component={ClassExamSchedulesListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/exams/create" component={ClassCreateExamScheduleScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/exams/:examId" component={ClassExamDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/calendar" component={ClassControllerCalendarScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/calendar/:eventId" component={ClassControllerCalendarEventDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>
         )}
 

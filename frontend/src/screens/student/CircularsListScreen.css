@@ -67,3 +67,30 @@
   font-size: 12px;
   font-style: italic;
 }
+
+.circular-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.circular-arrow {
+  font-size: 18px;
+  color: var(--ion-color-primary);
+  flex-shrink: 0;
+}
+
+/* Make circular cards clickable with visual feedback */
+.circular-item {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.circular-item:active {
+  transform: scale(0.98);
+}
+
+.circular-item:hover .circular-card {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}

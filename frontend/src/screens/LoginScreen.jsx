@@ -17,6 +17,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './LoginScreen.css';
+import logoImage from '../logo/Macvel.jpg';
 
 const LoginScreen = () => {
   const history = useHistory();
@@ -138,15 +139,17 @@ const LoginScreen = () => {
         <div className="luxury-login-wrapper">
           <div className="luxury-login-card">
             
-            {/* Header Section */}
+            {/* Header Section with Logo */}
             <div className="brand-header">
-              <div className="brand-logo-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+              <div className="brand-logo-image-wrapper">
+                <img 
+                  src={logoImage} 
+                  alt="Macvel Softwear Solution Logo" 
+                  className="brand-logo-image"
+                />
               </div>
-              <h1 className="brand-title">EXCELLENCE ACADEMY</h1>
-              <p className="brand-subtitle">Enterprise School Management Portal</p>
+              <h1 className="brand-title">MACVEL SOFTWEAR SOLUTION</h1>
+              <p className="brand-subtitle">School Management System</p>
             </div>
 
             {/* Role Switcher Tabs */}

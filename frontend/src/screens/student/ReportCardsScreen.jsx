@@ -1,6 +1,6 @@
 /**
- * Student Report Cards Screen (Ionic React Version)
- * Displays all report cards (images/PDFs) for the student
+ * Student Report Cards Screen (Simplified Table View)
+ * Displays all published report cards for the student in a clean table format
  */
 
 import React, { useEffect, useState } from 'react';
@@ -12,29 +12,19 @@ import {
   IonTitle,
   IonBackButton,
   IonButtons,
-  IonList,
-  IonItem,
-  IonCard,
-  IonCardContent,
   IonText,
   IonSpinner,
   IonRefresher,
   IonRefresherContent,
   IonIcon,
   IonBadge,
-  IonButton,
-  IonAlert,
 } from '@ionic/react';
 import { 
   refreshOutline, 
   documentOutline, 
-  pdfOutline, 
-  imageOutline,
-  checkmarkCircleOutline,
-  eyeOutline,
-  closeCircleOutline
+  closeCircleOutline,
 } from 'ionicons/icons';
-import { reportCardsAPI, fetchFileAsBlobUrl, openFileInNewTab } from '../../services/api';
+import { studentAPI } from '../../services/api';
 import './ReportCardsScreen.css';
 
 const ReportCardsScreen = () => {
@@ -42,127 +32,65 @@ const ReportCardsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [showViewer, setShowViewer] = useState(false);
-  const [viewerUrl, setViewerUrl] = useState(null);
-  const [showAcknowledgeAlert, setShowAcknowledgeAlert] = useState(false);
-  const [acknowledgingCard, setAcknowledgingCard] = useState(null);
-  const [parentSignature, setParentSignature] = useState('');
 
-  // DEBUG: This will help us confirm the component is rendering
-  useEffect(() => {
-    console.log('*** REPORT CARDS SCREEN COMPONENT MOUNTED ***');
-    console.log('*** If you see this, the component IS rendering ***');
-    
-    // Force loading to false after 2 seconds to test
-    const timer = setTimeout(() => {
-      console.log('*** Forcing loading state to false ***');
-      setLoading(false);
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  const fetchReportCards = async () => {
-    console.log('[ReportCardsScreen] fetchReportCards called');
-    setLoading(true);
+  const fetchReportCards = async (refresh = false) => {
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
     setError('');
+    
     try {
-      console.log('[ReportCardsScreen] Calling reportCardsAPI.getMyReportCards()');
-      const response = await reportCardsAPI.getMyReportCards();
-      console.log('[ReportCardsScreen] API response:', response);
+      const response = await studentAPI.getReportCards();
+      
       if (response.success && response.data) {
-        setReportCards(response.data);
-        console.log('[ReportCardsScreen] Set reportCards:', response.data.length);
+        const cards = Array.isArray(response.data) ? response.data : [];
+        setReportCards(cards);
       } else {
         setError('Failed to load report cards. Please try again.');
-        console.log('[ReportCardsScreen] No success or data in response');
       }
     } catch (err) {
-      console.error('[ReportCardsScreen] Error fetching report cards:', err);
-      const errorMessage = err?.response?.data?.error?.message || err?.message || 'Failed to load report cards';
-      setError(errorMessage);
-      console.log('[ReportCardsScreen] Error message:', errorMessage);
+      console.error('Error fetching report cards:', err);
+      setError('Failed to load report cards. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
-      console.log('[ReportCardsScreen] fetchReportCards completed, loading:', false);
     }
   };
 
   useEffect(() => {
-    console.log('[ReportCardsScreen] fetchReportCards useEffect triggered');
     fetchReportCards();
   }, []);
 
   const onRefresh = async (event) => {
-    setRefreshing(true);
-    await fetchReportCards();
+    await fetchReportCards(true);
     event.detail.complete();
-  };
-
-  const handleViewReportCard = async (card) => {
-    try {
-      if (card.reportCardFileUrl) {
-        await openFileInNewTab(card.reportCardFileUrl);
-      } else if (card.pdfReportUrl) {
-        await openFileInNewTab(card.pdfReportUrl);
-      } else {
-        setSelectedCard(card);
-        setShowViewer(true);
-      }
-    } catch (error) {
-      console.error('Error opening report card:', error);
-    }
-  };
-
-  const handleAcknowledge = async () => {
-    if (!acknowledgingCard) return;
-    
-    try {
-      await reportCardsAPI.acknowledgeReportCard(acknowledgingCard._id, parentSignature);
-      setReportCards(reportCards.map(card => 
-        card._id === acknowledgingCard._id 
-          ? { ...card, parentAcknowledgment: true, parentSignature }
-          : card
-      ));
-      setShowAcknowledgeAlert(false);
-      setParentSignature('');
-      setAcknowledgingCard(null);
-    } catch (error) {
-      console.error('Error acknowledging report card:', error);
-    }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
-  const getFileTypeIcon = (card) => {
-    if (card.reportCardFileType === 'pdf') return pdfOutline;
-    if (card.reportCardFileType === 'image') return imageOutline;
-    return documentOutline;
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch {
+      return dateString;
+    }
   };
 
   const getGradeColor = (grade) => {
     if (!grade) return 'medium';
     const g = grade.toUpperCase();
-    if (['A+', 'A', 'A-'].includes(g)) return 'success';
-    if (['B+', 'B', 'B-'].includes(g)) return 'primary';
-    if (['C+', 'C', 'C-'].includes(g)) return 'warning';
-    if (['D', 'F'].includes(g)) return 'danger';
+    if (['A1', 'A2'].includes(g)) return 'success';
+    if (['B1', 'B2'].includes(g)) return 'primary';
+    if (['C1', 'C2'].includes(g)) return 'warning';
+    if (['D', 'E', 'F'].includes(g)) return 'danger';
     return 'medium';
   };
 
   // Loading state
   if (loading) {
-    console.log('[ReportCardsScreen] Rendering LOADING state');
     return (
       <IonPage>
         <IonHeader>
@@ -173,32 +101,18 @@ const ReportCardsScreen = () => {
             <IonTitle>Report Cards</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center" style={{ '--background': '#e0e7ff' }}>
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: '16px',
-            minHeight: '200px',
-            padding: '20px',
-            backgroundColor: '#e0e7ff',
-            borderRadius: '12px',
-            margin: '20px'
-          }}>
-            <IonSpinner name="crescent" style={{ color: '#4F46E5' }} />
-            <IonText style={{ color: '#4F46E5', fontWeight: 'bold', fontSize: '16px' }}>
-              <p>Loading your report cards...</p>
-            </IonText>
-          </div>
+        <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
+          <IonSpinner name="crescent" />
+          <IonText color="primary">
+            <p>Loading...</p>
+          </IonText>
         </IonContent>
       </IonPage>
     );
   }
 
   // Error state
-  if (error) {
-    console.log('[ReportCardsScreen] Rendering ERROR state:', error);
+  if (error && reportCards.length === 0) {
     return (
       <IonPage>
         <IonHeader>
@@ -209,17 +123,16 @@ const ReportCardsScreen = () => {
             <IonTitle>Report Cards</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding" style={{ '--background': '#fef2f2' }}>
-          <div className="empty-container" style={{ backgroundColor: '#fef2f2', padding: '30px', borderRadius: '12px', margin: '20px' }}>
-            <IonIcon icon={closeCircleOutline} size="large" style={{ color: '#DC2626' }} />
-            <IonText style={{ color: '#DC2626' }}>
-              <h3 style={{ marginTop: '16px' }}>Error Loading Report Cards</h3>
+        <IonContent className="ion-padding">
+          <div style={{ textAlign: 'center', padding: '30px' }}>
+            <IonIcon icon={closeCircleOutline} size="large" color="danger" />
+            <IonText color="danger">
+              <h3>Error Loading Report Cards</h3>
               <p>{error}</p>
             </IonText>
-            <IonButton color="primary" onClick={fetchReportCards} style={{ marginTop: '20px' }}>
-              <IonIcon icon={refreshOutline} slot="start" />
-              Retry
-            </IonButton>
+            <IonBadge color="primary" onClick={() => fetchReportCards()} style={{ marginTop: '20px', cursor: 'pointer' }}>
+              <IonIcon icon={refreshOutline} /> Retry
+            </IonBadge>
           </div>
         </IonContent>
       </IonPage>
@@ -227,7 +140,6 @@ const ReportCardsScreen = () => {
   }
 
   // Main content
-  console.log('[ReportCardsScreen] Rendering MAIN CONTENT, reportCards count:', reportCards.length);
   return (
     <IonPage>
       <IonHeader>
@@ -238,128 +150,111 @@ const ReportCardsScreen = () => {
           <IonTitle>Report Cards</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="report-cards-content" style={{ '--background': '#f0fdf4' }}>
+      <IonContent className="report-cards-content">
         <IonRefresher slot="fixed" onIonRefresh={onRefresh}>
           <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
         </IonRefresher>
 
         {reportCards.length === 0 ? (
-          <div className="empty-container" style={{ minHeight: '200px' }}>
-            <IonIcon icon={documentOutline} className="empty-icon" />
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <IonIcon icon={documentOutline} style={{ fontSize: '64px', color: '#999', marginBottom: '16px' }} />
             <IonText color="medium">
-              <h3 style={{ marginTop: '16px' }}>No report cards available yet</h3>
-              <p>Your report cards will appear here once published</p>
+              <h3>No report cards available</h3>
+              <p>Your report cards will appear here once published.</p>
             </IonText>
           </div>
         ) : (
-          <IonList>
-            {reportCards.map((card) => (
-              <IonItem key={card._id} className="report-card-item">
-                <IonCard className="report-card-card">
-                  <IonCardContent>
-                    <div className="report-card-header">
-                      <div className="report-card-title">
-                        <IonIcon icon={getFileTypeIcon(card)} className="file-type-icon" />
-                        <span className="term-badge">{card.term}</span>
-                        <span className="year-badge">{card.academicYear}</span>
-                      </div>
-                      {card.overallGrade && (
-                        <IonBadge color={getGradeColor(card.overallGrade)} className="grade-badge">
-                          Grade: {card.overallGrade}
-                        </IonBadge>
-                      )}
+          <div style={{ padding: '16px' }}>
+            {reportCards.map((card, index) => (
+              <div key={card._id || card.id || index} style={{ marginBottom: '32px' }}>
+                {/* Report Card Header */}
+                <div style={{ 
+                  backgroundColor: '#4F46E5', 
+                  color: 'white', 
+                  padding: '16px', 
+                  borderRadius: '8px 8px 0 0',
+                  textAlign: 'center'
+                }}>
+                  <h2 style={{ margin: '0 0 8px 0', fontSize: '20px' }}>{card.term} - {card.academicYear}</h2>
+                  {card.overallGrade && (
+                    <IonBadge color="light" style={{ fontSize: '16px', padding: '8px 16px' }}>
+                      Overall Grade: {card.overallGrade}
+                    </IonBadge>
+                  )}
+                  {card.totalPercentage !== undefined && (
+                    <div style={{ marginTop: '8px', fontSize: '18px', fontWeight: 'bold' }}>
+                      {card.totalPercentage.toFixed(1)}%
                     </div>
+                  )}
+                </div>
 
-                    {card.totalPercentage !== undefined && (
-                      <div className="percentage-display">
-                        <span className="percentage-value">{card.totalPercentage.toFixed(1)}%</span>
-                        {card.rank && card.totalStudents && (
-                          <span className="rank-info">Rank: {card.rank}/{card.totalStudents}</span>
-                        )}
-                      </div>
-                    )}
-
-                    {card.subjects && card.subjects.length > 0 && (
-                      <div className="subjects-summary">
-                        {card.subjects.slice(0, 3).map((subject, idx) => (
-                          <div key={idx} className="subject-mini">
-                            <span className="subject-name">{subject.subjectName}</span>
-                            <span className="subject-grade">{subject.grade}</span>
-                          </div>
+                {/* Subjects Table */}
+                {card.subjects && card.subjects.length > 0 && (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f3f4f6' }}>
+                          <th style={{ padding: '12px', border: '1px solid #e5e7eb', textAlign: 'left' }}>Subject</th>
+                          <th style={{ padding: '12px', border: '1px solid #e5e7eb', textAlign: 'center' }}>Marks Obtained</th>
+                          <th style={{ padding: '12px', border: '1px solid #e5e7eb', textAlign: 'center' }}>Total Marks</th>
+                          <th style={{ padding: '12px', border: '1px solid #e5e7eb', textAlign: 'center' }}>Grade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {card.subjects.map((subject, idx) => (
+                          <tr key={idx}>
+                            <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb' }}>{subject.subjectName}</td>
+                            <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb', textAlign: 'center' }}>{subject.marksObtained}</td>
+                            <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb', textAlign: 'center' }}>{subject.totalMarks}</td>
+                            <td style={{ padding: '10px 12px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                              <IonBadge color={getGradeColor(subject.grade)} style={{ minWidth: '40px' }}>
+                                {subject.grade}
+                              </IonBadge>
+                            </td>
+                          </tr>
                         ))}
-                        {card.subjects.length > 3 && (
-                          <span className="more-subjects">+{card.subjects.length - 3} more</span>
-                        )}
-                      </div>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Remarks */}
+                {(card.teacherRemarks || card.principalRemarks) && (
+                  <div style={{ 
+                    backgroundColor: '#f9fafb', 
+                    padding: '12px', 
+                    border: '1px solid #e5e7eb',
+                    borderTop: 'none',
+                    borderRadius: '0 0 8px 8px'
+                  }}>
+                    {card.teacherRemarks && (
+                      <p style={{ margin: '0 0 8px 0', fontSize: '14px' }}>
+                        <strong>Teacher's Remarks:</strong> {card.teacherRemarks}
+                      </p>
                     )}
+                    {card.principalRemarks && (
+                      <p style={{ margin: 0, fontSize: '14px' }}>
+                        <strong>Principal's Remarks:</strong> {card.principalRemarks}
+                      </p>
+                    )}
+                  </div>
+                )}
 
-                    <div className="report-card-footer">
-                      <span className="issued-date">
-                        Issued: {formatDate(card.issuedDate || card.publishedAt)}
-                      </span>
-                      {card.parentAcknowledgment ? (
-                        <IonBadge color="success" className="acknowledged-badge">
-                          <IonIcon icon={checkmarkCircleOutline} /> Acknowledged
-                        </IonBadge>
-                      ) : (
-                        <IonButton 
-                          size="small" 
-                          fill="outline"
-                          onClick={() => {
-                            setAcknowledgingCard(card);
-                            setShowAcknowledgeAlert(true);
-                          }}
-                        >
-                          Acknowledge
-                        </IonButton>
-                      )}
-                    </div>
-
-                    <IonButton 
-                      expand="block" 
-                      className="view-button"
-                      onClick={() => handleViewReportCard(card)}
-                    >
-                      <IonIcon icon={eyeOutline} /> View Report Card
-                    </IonButton>
-                  </IonCardContent>
-                </IonCard>
-              </IonItem>
+                {/* Footer */}
+                <div style={{ 
+                  backgroundColor: '#f3f4f6', 
+                  padding: '8px 12px', 
+                  fontSize: '12px', 
+                  color: '#6b7280',
+                  textAlign: 'right',
+                  borderRadius: '0 0 8px 8px'
+                }}>
+                  Issued: {formatDate(card.issuedDate || card.publishedAt || card.createdAt)}
+                </div>
+              </div>
             ))}
-          </IonList>
+          </div>
         )}
-
-        {/* Acknowledge Alert */}
-        <IonAlert
-          isOpen={showAcknowledgeAlert}
-          onDidDismiss={() => {
-            setShowAcknowledgeAlert(false);
-            setParentSignature('');
-            setAcknowledgingCard(null);
-          }}
-          header="Acknowledge Report Card"
-          subHeader={`${acknowledgingCard?.term} ${acknowledgingCard?.academicYear}`}
-          message="Please enter your name as parent/guardian signature to acknowledge this report card."
-          inputs={[
-            {
-              name: 'signature',
-              type: 'text',
-              placeholder: 'Parent/Guardian Name',
-              value: parentSignature,
-              handler: (value) => setParentSignature(value)
-            }
-          ]}
-          buttons={[
-            {
-              text: 'Cancel',
-              role: 'cancel'
-            },
-            {
-              text: 'Acknowledge',
-              handler: handleAcknowledge
-            }
-          ]}
-        />
       </IonContent>
     </IonPage>
   );

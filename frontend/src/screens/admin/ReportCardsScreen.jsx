@@ -99,6 +99,7 @@ const ReportCardsScreen = () => {
   const [editForm, setEditForm] = useState({
     teacherRemarks: '',
     principalRemarks: '',
+    subjects: [],
   });
 
   // Academic year options
@@ -454,13 +455,66 @@ const ReportCardsScreen = () => {
     }
   };
 
+  // Add subject row in edit form
+  const addEditSubject = () => {
+    setEditForm({
+      ...editForm,
+      subjects: [...editForm.subjects, { subjectName: '', marksObtained: '', totalMarks: 100 }],
+    });
+  };
+
+  // Remove subject row in edit form
+  const removeEditSubject = (index) => {
+    const newSubjects = [...editForm.subjects];
+    newSubjects.splice(index, 1);
+    setEditForm({ ...editForm, subjects: newSubjects });
+  };
+
+  // Update subject field in edit form
+  const updateEditSubject = (index, field, value) => {
+    const newSubjects = [...editForm.subjects];
+    newSubjects[index] = { ...newSubjects[index], [field]: value };
+    setEditForm({ ...editForm, subjects: newSubjects });
+  };
+
   // Handle edit save
   const handleEditSave = async () => {
     if (!selectedReportCard) return;
     
+    // Validate subjects
+    const validSubjects = editForm.subjects.filter(s => s.subjectName && s.marksObtained !== '' && s.totalMarks);
+    if (validSubjects.length === 0) {
+      showToast('Please add at least one subject with marks', 'danger');
+      return;
+    }
+
+    // Validate marks
+    for (const subject of validSubjects) {
+      if (parseFloat(subject.marksObtained) > parseFloat(subject.totalMarks)) {
+        showToast(`Marks obtained cannot exceed max marks for ${subject.subjectName}`, 'danger');
+        return;
+      }
+      if (parseFloat(subject.marksObtained) < 0) {
+        showToast(`Marks cannot be negative for ${subject.subjectName}`, 'danger');
+        return;
+      }
+    }
+    
     await presentLoading();
     try {
-      const response = await adminAPI.updateReportCard(selectedReportCard._id || selectedReportCard.id, editForm);
+      const subjects = validSubjects.map(s => ({
+        subjectName: s.subjectName,
+        marksObtained: parseFloat(s.marksObtained),
+        totalMarks: parseFloat(s.totalMarks),
+      }));
+
+      const payload = {
+        subjects,
+        teacherRemarks: editForm.teacherRemarks,
+        principalRemarks: editForm.principalRemarks,
+      };
+
+      const response = await adminAPI.updateReportCard(selectedReportCard._id || selectedReportCard.id, payload);
       if (response.success) {
         showToast('Report card updated successfully', 'success');
         fetchReportCards();
@@ -481,6 +535,11 @@ const ReportCardsScreen = () => {
     setEditForm({
       teacherRemarks: reportCard.teacherRemarks || '',
       principalRemarks: reportCard.principalRemarks || '',
+      subjects: reportCard.subjects ? reportCard.subjects.map(s => ({
+        subjectName: s.subjectName,
+        marksObtained: s.marksObtained,
+        totalMarks: s.totalMarks,
+      })) : [],
     });
     setShowEditModal(true);
   };
@@ -1053,6 +1112,54 @@ const ReportCardsScreen = () => {
                     </p>
                   </div>
 
+                  <div className="subjects-entry-section">
+                    <div className="section-header">
+                      <h4>Subjects & Marks (Editable)</h4>
+                      <IonButton size="small" color="primary" onClick={addEditSubject}>
+                        <IonIcon icon={addCircleOutline} slot="start" />
+                        Add Subject
+                      </IonButton>
+                    </div>
+
+                    {editForm.subjects.map((subject, index) => (
+                      <div key={index} className="subject-row">
+                        <div className="subject-input-group">
+                          <IonInput
+                            value={subject.subjectName}
+                            onIonInput={(e) => updateEditSubject(index, 'subjectName', e.detail.value)}
+                            placeholder="Subject Name"
+                            className="subject-name-input"
+                          />
+                          <IonInput
+                            type="number"
+                            value={subject.marksObtained}
+                            onIonInput={(e) => updateEditSubject(index, 'marksObtained', e.detail.value)}
+                            placeholder="Marks"
+                            className="marks-input"
+                          />
+                          <span className="separator">/</span>
+                          <IonInput
+                            type="number"
+                            value={subject.totalMarks}
+                            onIonInput={(e) => updateEditSubject(index, 'totalMarks', e.detail.value)}
+                            placeholder="Max"
+                            className="max-marks-input"
+                          />
+                          {editForm.subjects.length > 1 && (
+                            <IonButton
+                              size="small"
+                              color="danger"
+                              fill="clear"
+                              onClick={() => removeEditSubject(index)}
+                            >
+                              <IonIcon icon={trashOutline} />
+                            </IonButton>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   <div className="form-group">
                     <label>Teacher Remarks</label>
                     <IonInput
@@ -1071,7 +1178,7 @@ const ReportCardsScreen = () => {
                     />
                   </div>
 
-                  <IonButton expand="block" onClick={handleEditSave}>
+                  <IonButton expand="block" onClick={handleEditSave} color="success">
                     <IonIcon icon={checkmarkCircleOutline} slot="start" />
                     Save Changes
                   </IonButton>

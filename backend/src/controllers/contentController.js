@@ -238,21 +238,37 @@ const getCirculars = async (req, res, next) => {
       isPublished: true
     };
 
-    // Apply visibility filtering for students - they only see 'ALL' visibility content
-    if (userRole === 'Student') {
-      query.$or = [
-        { visibility: 'ALL' },
-        { visibility: { $exists: false } },
-        { visibility: null }
-      ];
-    }
-
-    // Apply class-based isolation for students, teachers, and class controllers
+    // Build combined conditions for students, teachers, and class controllers
     if ((userRole === 'Student' || userRole === 'Teacher' || userRole === 'CLASS_CONTROLLER') && classObjectId) {
-      query.$or = [
+      let orConditions = [];
+      
+      // Class-based isolation: See school-wide circulars (no classId) OR their class's specific circulars
+      const classConditions = [
         { classId: null },
         { classId: { $exists: false } },
         { classId: classObjectId }
+      ];
+      
+      // Apply visibility filtering for students - they only see 'ALL' visibility content
+      if (userRole === 'Student') {
+        // For each class condition, combine with visibility filter
+        orConditions = classConditions.map(classCond => ({
+          $and: [
+            classCond,
+            { $or: [{ visibility: 'ALL' }, { visibility: { $exists: false } }, { visibility: null }] }
+          ]
+        }));
+      } else {
+        // Teachers and Class Controllers see all circulars for their class
+        orConditions = classConditions;
+      }
+      
+      query.$or = orConditions;
+    } else if (userRole === 'Student') {
+      // Students without a class: See only school-wide circulars with visibility='ALL'
+      query.$and = [
+        { $or: [{ classId: null }, { classId: { $exists: false } }] },
+        { $or: [{ visibility: 'ALL' }, { visibility: { $exists: false } }, { visibility: null }] }
       ];
     }
 

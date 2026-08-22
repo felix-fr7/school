@@ -18,7 +18,8 @@ const menuItems = [
     { title: 'Homework', icon: createOutline, path: '/admin/homework' },
     { title: 'News', icon: newspaperOutline, path: '/admin/news' },
     { title: 'Circulars', icon: documentTextOutline, path: '/admin/circulars' },
-    { title: 'Exams', icon: calendarOutline, path: '/admin/exams' },
+    { title: 'Calendar', icon: calendarOutline, path: '/admin/calendar' },
+    { title: 'Exams', icon: schoolOutline, path: '/admin/exams' },
     { title: 'Videos', icon: filmOutline, path: '/admin/videos' },
     { title: 'Settings', icon: settingsOutline, path: '/settings' },
   ];

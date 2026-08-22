@@ -79,7 +79,7 @@ router.get('/dashboard', async (req, res, next) => {
 
     // Recent homework
     const homework = await Homework.find({
-      tenantId,
+      schoolId: tenantId,
       classId,
       isPublished: true
     })
@@ -141,10 +141,10 @@ router.get('/homework', async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const classId = req.user.classId;
-    const tenantId = req.user.tenantId;
+    const schoolId = req.user.tenantId;
 
     const homeworks = await Homework.find({
-      tenantId,
+      schoolId,
       classId,
       isPublished: true
     })
@@ -153,7 +153,7 @@ router.get('/homework', async (req, res, next) => {
     const homeworkWithSubmissions = await Promise.all(
       homeworks.map(async (hw) => {
         const submission = await HomeworkSubmission.findOne({
-          tenantId,
+          tenantId: schoolId,
           homeworkId: hw._id,
           studentId
         }).populate('gradedBy', 'name');

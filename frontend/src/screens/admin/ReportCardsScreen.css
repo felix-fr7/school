@@ -1,71 +1,109 @@
-/* Report Cards Management Screen Styles */
+/* ============================================
+   Admin Report Cards Screen - Premium Design
+   ============================================ */
 
 .report-cards-content {
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 16px;
-  --padding-bottom: 16px;
+  --background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
 }
 
-/* Filter Section */
+/* ============================================
+   Filter Section
+   ============================================ */
 .filter-section {
-  margin-bottom: 16px;
+  padding: 16px;
+  animation: slideDown 0.5s ease-out;
 }
 
-.filter-header {
-  margin-bottom: 8px;
-  padding: 0 4px;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .filter-header h4 {
-  margin: 0 0 4px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0 0 8px 0;
+  color: #1a1a2e;
+  font-size: 18px;
 }
 
 .filter-header h4 ion-icon {
-  color: #667eea;
+  color: #4F46E5;
 }
 
 .filter-hint {
-  margin: 0;
   font-size: 13px;
   color: #666;
+  margin: 0 0 16px 0;
 }
 
 .filter-card {
-  margin: 0;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: white;
+  overflow: hidden;
 }
 
-.filter-card ion-content {
-  padding: 0;
-}
-
-/* Filter Labels */
 .filter-label {
-  display: block;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: #555;
   margin-bottom: 4px;
+  display: block;
 }
 
 .filter-label .required {
-  color: #e53e3e;
+  color: #ef4444;
 }
 
 .filter-required {
-  border: 1px solid #f59e0b !important;
+  border: 2px solid #ef4444 !important;
   border-radius: 8px;
 }
 
-/* Filter Status Row */
+.search-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.search-box ion-icon {
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  padding: 10px 8px;
+  width: 100%;
+  font-size: 14px;
+  outline: none;
+}
+
 .filter-status-row {
   margin-top: 12px;
 }
@@ -74,155 +112,208 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
   font-size: 13px;
-}
-
-.filter-status.ready {
-  background: #f0fff4;
-  color: #276749;
+  transition: all 0.3s ease;
 }
 
 .filter-status.pending {
-  background: #fffaf0;
-  color: #c05621;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.filter-status.ready {
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .filter-status ion-icon {
-  font-size: 16px;
+  font-size: 18px;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  background: #f5f5f5;
-  border-radius: 8px;
-  padding: 0 12px;
-  height: 42px;
-}
-
-.search-box ion-icon {
-  color: #666;
-  margin-right: 8px;
-}
-
-.search-box input {
-  border: none;
-  background: transparent;
-  flex: 1;
-  font-size: 14px;
-  outline: none;
-}
-
-/* Action Bar */
+/* ============================================
+   Action Bar
+   ============================================ */
 .action-bar {
   display: flex;
   gap: 12px;
-  margin-bottom: 16px;
+  padding: 0 16px 16px 16px;
   flex-wrap: wrap;
+  animation: fadeIn 0.5s ease-out 0.2s both;
 }
 
-/* Stats Row */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.action-bar ion-button {
+  --border-radius: 10px;
+  --box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.action-bar ion-button:hover:not(:disabled) {
+  --box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+  transform: translateY(-2px);
+}
+
+.action-bar ion-button:disabled {
+  opacity: 0.5;
+}
+
+/* ============================================
+   Stats Row
+   ============================================ */
 .stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  display: flex;
+  gap: 16px;
+  padding: 0 16px 20px 16px;
+  animation: fadeIn 0.5s ease-out 0.3s both;
 }
 
 .stat-card {
-  margin: 0;
-  border-radius: 12px;
+  flex: 1;
+  min-width: 120px;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  background: white;
   text-align: center;
-  padding: 16px 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  transition: all 0.3s ease;
 }
 
-.stat-card .stat-value {
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
   font-size: 28px;
-  font-weight: bold;
-  color: #333;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 4px;
 }
 
-.stat-card .stat-label {
+.stat-label {
   font-size: 12px;
-  color: #666;
-  margin-top: 4px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .stat-card.published .stat-value {
-  color: #10b981;
+  color: #059669;
 }
 
 .stat-card.pending .stat-value {
-  color: #f59e0b;
+  color: #d97706;
 }
 
-/* Loading State */
+/* ============================================
+   Loading & Empty States
+   ============================================ */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  text-align: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 .loading-container ion-spinner {
-  margin-bottom: 16px;
+  width: 40px;
+  height: 40px;
+  color: #4F46E5;
 }
 
-/* Empty State */
+.loading-container p {
+  color: #6b7280;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
   text-align: center;
+  padding: 60px 20px;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .empty-state ion-icon {
   font-size: 64px;
-  color: #ccc;
+  color: #d1d5db;
   margin-bottom: 16px;
 }
 
 .empty-state h3 {
-  margin: 0 0 8px;
-  color: #333;
+  color: #4b5563;
+  margin: 0 0 8px 0;
 }
 
 .empty-state p {
-  color: #666;
-  max-width: 300px;
+  color: #9ca3af;
+  font-size: 14px;
+  margin: 0 0 20px 0;
 }
 
-/* Report Cards Grid */
+/* ============================================
+   Report Cards Grid
+   ============================================ */
 .report-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+  padding: 0 16px 20px 16px;
+  animation: fadeIn 0.5s ease-out 0.4s both;
 }
 
 .report-card-item {
-  margin: 0;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  background: white;
   overflow: hidden;
+  transition: all 0.3s ease;
+  animation: cardSlideIn 0.5s ease-out both;
 }
 
-.report-card-item ion-card-content {
-  padding: 16px;
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Report Card Header */
+.report-card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.report-card-item:nth-child(1) { animation-delay: 0.1s; }
+.report-card-item:nth-child(2) { animation-delay: 0.15s; }
+.report-card-item:nth-child(3) { animation-delay: 0.2s; }
+.report-card-item:nth-child(4) { animation-delay: 0.25s; }
+.report-card-item:nth-child(5) { animation-delay: 0.3s; }
+.report-card-item:nth-child(6) { animation-delay: 0.35s; }
+
+/* ============================================
+   Report Card Header
+   ============================================ */
 .report-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .student-info {
@@ -234,64 +325,78 @@
 .student-avatar {
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #4F46E5 0%, #7c3aed 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: bold;
   font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .student-details h4 {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: #1a1a2e;
+  font-weight: 600;
 }
 
 .student-details p {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: #666;
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #6b7280;
 }
 
-/* File Preview */
+/* ============================================
+   File Preview
+   ============================================ */
 .file-preview {
   margin: 12px 0;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #f5f5f5;
 }
 
 .file-preview ion-img {
   width: 100%;
-  max-height: 150px;
+  height: 150px;
   object-fit: cover;
+  border-radius: 12px;
 }
 
 .pdf-preview {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: 24px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
-  color: #666;
+  gap: 8px;
 }
 
 .pdf-preview ion-icon {
-  font-size: 48px;
-  color: #e53e3e;
-  margin-bottom: 8px;
+  font-size: 32px;
+  color: #92400e;
 }
 
-/* Report Card Meta */
+.pdf-preview span {
+  font-size: 13px;
+  color: #78350f;
+  font-weight: 500;
+}
+
+/* ============================================
+   Report Card Meta
+   ============================================ */
 .report-card-meta {
   display: flex;
-  gap: 16px;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0;
   font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
+  color: #6b7280;
 }
 
 .report-card-meta span {
@@ -304,219 +409,373 @@
   font-size: 14px;
 }
 
-/* Remarks */
+/* ============================================
+   Subjects Summary Table
+   ============================================ */
+.subjects-summary {
+  margin: 16px 0;
+}
+
+.subjects-summary h5 {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.subjects-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+.subjects-table thead {
+  background: #f3f4f6;
+}
+
+.subjects-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #4b5563;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.subjects-table td {
+  padding: 8px 12px;
+  border-top: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+.subjects-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.subjects-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ============================================
+   Remarks
+   ============================================ */
 .remarks {
   font-size: 13px;
-  color: #555;
-  margin: 8px 0;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border-left: 3px solid #667eea;
+  color: #6b7280;
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 3px solid #4F46E5;
 }
 
 .remarks strong {
-  color: #333;
+  color: #4b5563;
 }
 
-/* Report Card Actions */
+/* ============================================
+   Report Card Actions
+   ============================================ */
 .report-card-actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #eee;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
 }
 
-/* Modal Content */
+.report-card-actions ion-button {
+  --border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.report-card-actions ion-button:hover {
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   Modal Styles
+   ============================================ */
 .modal-content {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.modal-content ion-content {
-  flex: 1;
+.modal-content ion-header {
+  background: linear-gradient(135deg, #4F46E5 0%, #7c3aed 100%);
+  color: white;
 }
 
-/* Form Groups */
+.modal-content ion-toolbar {
+  --background: transparent;
+  --border-color: transparent;
+}
+
+.modal-content ion-title {
+  color: white;
+  font-weight: 600;
+}
+
+.modal-content ion-button {
+  --color: white;
+}
+
+.modal-content ion-content {
+  --background: #f9fafb;
+}
+
 .form-group {
   margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 6px;
 }
 
-/* File Upload Area */
-.file-upload-area {
-  border: 2px dashed #ddd;
-  border-radius: 12px;
-  padding: 32px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
+.form-group ion-input {
+  --background: white;
+  --border-radius: 10px;
+  --border-color: #e5e7eb;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
 }
 
-.file-upload-area:hover {
-  border-color: #667eea;
-  background: #f8f9ff;
+.form-group ion-input:focus-within {
+  --border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.file-upload-area ion-icon {
-  font-size: 48px;
-  color: #667eea;
+/* ============================================
+   Subjects Entry Section
+   ============================================ */
+.subjects-entry-section {
+  margin-bottom: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
 }
 
-.file-upload-area p {
-  margin: 0;
-  color: #666;
+.section-header h4 {
   font-size: 14px;
+  color: #4b5563;
+  margin: 0;
 }
 
-.file-preview-container {
-  margin-top: 12px;
-  border-radius: 8px;
-  overflow: hidden;
+.subject-row {
+  margin-bottom: 10px;
+  animation: slideIn 0.3s ease-out;
 }
 
-.file-preview-container ion-img {
-  width: 100%;
-  max-height: 200px;
-  object-fit: contain;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-/* Bulk Upload Info */
+.subject-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px;
+  transition: all 0.3s ease;
+}
+
+.subject-input-group:hover {
+  border-color: #4F46E5;
+}
+
+.subject-name-input {
+  flex: 2;
+  --background: transparent;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+.marks-input {
+  flex: 1;
+  --background: transparent;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  max-width: 80px;
+}
+
+.max-marks-input {
+  flex: 1;
+  --background: transparent;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  max-width: 80px;
+}
+
+.separator {
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.subject-input-group ion-button {
+  --padding-start: 4px;
+  --padding-end: 4px;
+}
+
+/* ============================================
+   Student Info Card (in modal)
+   ============================================ */
+.student-info-card {
+  background: linear-gradient(135deg, #4F46E5 0%, #7c3aed 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+}
+
+.student-info-card h4 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.student-info-card p {
+  margin: 2px 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* ============================================
+   Bulk Upload Styles
+   ============================================ */
 .bulk-upload-info {
-  background: #f0f7ff;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
   text-align: center;
 }
 
-.bulk-upload-info ion-icon {
-  font-size: 32px;
-  color: #3182ce;
-  margin-bottom: 12px;
-}
-
 .bulk-upload-info h4 {
-  margin: 0 0 8px;
-  color: #2c5282;
+  color: #0369a1;
+  margin: 12px 0 8px 0;
 }
 
-.bulk-upload-info > p {
-  margin: 0;
-  color: #4a5568;
-  font-size: 14px;
-  text-align: left;
+.bulk-upload-info p {
+  color: #0c4a6e;
+  font-size: 13px;
+  margin: 0 0 16px 0;
 }
 
-.bulk-upload-info ul {
-  margin: 8px 0;
-  padding-left: 20px;
-}
-
-.bulk-upload-info li {
-  margin-bottom: 4px;
-  font-size: 14px;
-  color: #4a5568;
-}
-
-.bulk-upload-info .note {
-  margin-top: 12px;
-  font-size: 12px;
-  color: #718096;
-  font-style: italic;
-}
-
-.bulk-upload-info code {
-  background: #e2e8f0;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-/* Format sections for bulk upload */
 .format-section {
+  text-align: left;
+  margin-bottom: 16px;
+  padding: 12px;
   background: white;
   border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-  text-align: left;
-  border: 1px solid #e2e8f0;
 }
 
 .format-section h5 {
-  margin: 0 0 8px;
-  color: #2b6cb0;
+  color: #0369a1;
+  margin: 0 0 8px 0;
   font-size: 14px;
 }
 
 .format-section p {
-  margin: 0 0 12px;
-  color: #718096;
   font-size: 13px;
+  margin: 0 0 8px 0;
 }
 
 .format-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  margin: 12px 0;
+  margin: 8px 0;
 }
 
 .format-table th {
-  background: #edf2f7;
-  color: #4a5568;
+  background: #e0f2fe;
   padding: 8px;
   text-align: left;
+  color: #0369a1;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
 }
 
 .format-table td {
   padding: 6px 8px;
-  border: 1px solid #e2e8f0;
-  color: #4a5568;
-}
-
-.format-table tbody tr:nth-child(even) {
-  background: #f7fafc;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
 }
 
 .format-note {
-  margin: 8px 0 0 !important;
   font-size: 12px;
-  color: #38a169 !important;
-  font-style: normal;
+  color: #059669;
+  margin-top: 8px;
+  font-style: italic;
 }
 
-.format-note code {
-  background: #e2e8f0;
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-size: 11px;
+.file-upload-area {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-/* Bulk Result */
+.file-upload-area:hover {
+  border-color: #4F46E5;
+  background: #f5f3ff;
+}
+
+.file-upload-area ion-icon {
+  font-size: 40px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.file-upload-area p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ============================================
+   Bulk Result
+   ============================================ */
 .bulk-result {
-  background: #f7fafc;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
   border-radius: 12px;
   padding: 16px;
-  margin-top: 16px;
+  margin-bottom: 20px;
 }
 
 .bulk-result h4 {
-  margin: 0 0 12px;
-  color: #2d3748;
+  color: #166534;
+  margin: 0 0 12px 0;
   font-size: 14px;
 }
 
@@ -524,307 +783,86 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .result-stat.success {
-  background: #f0fff4;
-  color: #276749;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .result-stat.failed {
-  background: #fff5f5;
-  color: #c53030;
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 .result-stat.not-found {
-  background: #fffff0;
-  color: #975a16;
+  background: #fef3c7;
+  color: #92400e;
 }
 
-.no-students-msg {
-  color: #e53e3e;
-  font-size: 13px;
-  margin-top: 8px;
-  font-style: italic;
-}
-
-/* Subjects Entry Section */
-.subjects-entry-section {
-  background: #f7fafc;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 20px;
-}
-
-.subjects-entry-section .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.subjects-entry-section .section-header h4 {
-  margin: 0;
-  color: #2d3748;
-  font-size: 14px;
-}
-
-.subject-row {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.subject-row:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.subject-input-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.subject-name-input {
-  flex: 1;
-}
-
-.marks-input {
-  width: 80px;
-}
-
-.max-marks-input {
-  width: 60px;
-}
-
-.separator {
-  color: #718096;
-  font-weight: bold;
-}
-
-/* Subjects Summary Table */
-.subjects-summary {
-  margin: 12px 0;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.subjects-summary h5 {
-  margin: 0 0 8px;
-  color: #4a5568;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.subjects-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-.subjects-table th {
-  background: #edf2f7;
-  color: #4a5568;
-  padding: 6px 8px;
-  text-align: left;
-  font-weight: 600;
-  border: 1px solid #e2e8f0;
-}
-
-.subjects-table td {
-  padding: 6px 8px;
-  border: 1px solid #e2e8f0;
-  color: #4a5568;
-}
-
-.subjects-table tbody tr:nth-child(even) {
-  background: #fff;
-}
-
-.subjects-table td IonBadge,
-.subjects-table td ion-badge {
-  font-size: 11px;
-  padding: 2px 6px;
-}
-
-/* Student Info Card */
-.student-info-card {
-  background: #f7fafc;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 20px;
-}
-
-.student-info-card h4 {
-  margin: 0 0 4px;
-  color: #2d3748;
-}
-
-.student-info-card p {
-  margin: 0;
-  color: #718096;
-  font-size: 14px;
-}
-
-/* Responsive - Tablet */
-@media (max-width: 992px) {
-  .report-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .stats-row {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Responsive - Mobile */
+/* ============================================
+   Responsive Design
+   ============================================ */
 @media (max-width: 768px) {
-  .report-cards-content {
-    --padding-start: 12px;
-    --padding-end: 12px;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
+  .report-cards-grid {
+    grid-template-columns: 1fr;
   }
   
-  /* Stack stats vertically on mobile */
   .stats-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    flex-wrap: wrap;
   }
   
   .stat-card {
-    padding: 12px;
+    min-width: calc(50% - 8px);
   }
   
-  .stat-card .stat-value {
-    font-size: 24px;
-  }
-  
-  /* Full width buttons on mobile */
   .action-bar {
     flex-direction: column;
-    gap: 8px;
   }
   
   .action-bar ion-button {
     width: 100%;
-    --border-radius: 8px;
   }
   
-  /* Single column report cards */
-  .report-cards-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  /* Compact filter section */
-  .filter-section {
-    margin-bottom: 12px;
-  }
-  
-  .filter-header h4 {
-    font-size: 14px;
-  }
-  
-  .filter-hint {
-    font-size: 12px;
-  }
-  
-  /* Search column below filters */
-  .search-col {
-    margin-top: 12px;
-  }
-  
-  /* Smaller student avatar on mobile */
-  .student-avatar {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
-  }
-  
-  .student-details h4 {
-    font-size: 14px;
-  }
-  
-  .student-details p {
-    font-size: 12px;
-  }
-  
-  /* Compact report card meta */
-  .report-card-meta {
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 12px;
-  }
-  
-  /* Stack actions vertically on mobile */
-  .report-card-actions {
-    flex-direction: column;
-  }
-  
-  .report-card-actions ion-button {
-    width: 100%;
-    --border-radius: 6px;
-  }
-  
-  /* Compact subjects table on mobile */
-  .subjects-table {
-    font-size: 11px;
-  }
-  
-  .subjects-table th,
-  .subjects-table td {
-    padding: 4px 6px;
-  }
-  
-  /* Smaller filter status */
-  .filter-status {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
-  
-  /* Compact modal content */
   .subject-input-group {
     flex-wrap: wrap;
   }
   
   .subject-name-input {
-    min-width: 100%;
+    flex: 1 1 100%;
   }
 }
 
-/* Responsive - Extra Small */
-@media (max-width: 480px) {
-  .report-cards-content {
-    --padding-start: 8px;
-    --padding-end: 8px;
-  }
-  
-  .filter-card {
-    border-radius: 8px;
-  }
-  
-  .stat-card .stat-value {
-    font-size: 20px;
-  }
-  
-  .stat-card .stat-label {
-    font-size: 11px;
-  }
-  
-  .report-card-item ion-card-content {
-    padding: 12px;
-  }
-  
-  .student-avatar {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
-  }
+/* ============================================
+   Badge Animations
+   ============================================ */
+ion-badge {
+  transition: all 0.3s ease;
+}
+
+ion-badge:hover {
+  transform: scale(1.05);
+}
+
+/* ============================================
+   Toast Customization
+   ============================================ */
+ion-toast {
+  --border-radius: 12px;
+  --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   Alert Customization
+   ============================================ */
+ion-alert {
+  --border-radius: 16px;
+}
+
+ion-alert .alert-button {
+  font-weight: 600;
 }

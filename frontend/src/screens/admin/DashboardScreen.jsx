@@ -153,6 +153,14 @@ const AdminDashboardScreen = () => {
       route: '/admin/report-cards',
       gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
     },
+    { 
+      id: '10', 
+      title: 'Calendar', 
+      subtitle: 'School events & dates',
+      icon: calendarOutline, 
+      route: '/admin/calendar',
+      gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)'
+    },
   ];
 
   if (loading) {

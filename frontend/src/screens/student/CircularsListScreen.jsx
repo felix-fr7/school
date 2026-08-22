@@ -23,11 +23,13 @@ import {
   IonRefresherContent,
   IonIcon,
 } from '@ionic/react';
-import { refreshOutline, clipboardOutline } from 'ionicons/icons';
+import { useHistory } from 'react-router-dom';
+import { refreshOutline, clipboardOutline, chevronForwardOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './CircularsListScreen.css';
 
 const StudentCircularsListScreen = () => {
+  const history = useHistory();
   const [circulars, setCirculars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -105,7 +107,13 @@ const StudentCircularsListScreen = () => {
         ) : (
           <IonList>
             {circulars.map((item) => (
-              <IonItem key={item.id} className="circular-item">
+              <IonItem 
+                key={item.id} 
+                className="circular-item"
+                button
+                detail={false}
+                onClick={() => history.push(`/student/circulars/${item.id}`)}
+              >
                 <IonCard className="circular-card">
                   <IonCardContent>
                     <div className="circular-header">
@@ -115,7 +123,7 @@ const StudentCircularsListScreen = () => {
                         </IonBadge>
                       )}
                       <IonText color="medium" className="circular-date">
-                        Issued: {formatDate(item.issueDate)}
+                        Issued: {formatDate(item.issueDate || item.createdAt)}
                       </IonText>
                     </div>
                     <h3 className="circular-title">{item.title}</h3>
@@ -124,9 +132,12 @@ const StudentCircularsListScreen = () => {
                         ? `${item.content.substring(0, 200)}...`
                         : item.content}
                     </p>
-                    <IonText color="medium" className="circular-author">
-                      Issued by: {item.issuedByUser?.name || 'Admin'}
-                    </IonText>
+                    <div className="circular-footer">
+                      <IonText color="medium" className="circular-author">
+                        Issued by: {item.issuedByUser?.name || 'Admin'}
+                      </IonText>
+                      <IonIcon icon={chevronForwardOutline} className="circular-arrow" />
+                    </div>
                   </IonCardContent>
                 </IonCard>
               </IonItem>

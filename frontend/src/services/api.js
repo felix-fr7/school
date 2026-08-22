@@ -739,6 +739,27 @@ export const adminAPI = {
     return response.data;
   },
 
+  // Calendar Events
+  async getCalendarEvents(params = {}) {
+    const response = await api.get('/calendar/admin/calendar-events', { params });
+    return response.data;
+  },
+
+  async createCalendarEvent(data) {
+    const response = await api.post('/calendar/admin/calendar-events', data);
+    return response.data;
+  },
+
+  async updateCalendarEvent(id, data) {
+    const response = await api.put(`/calendar/admin/calendar-events/${id}`, data);
+    return response.data;
+  },
+
+  async deleteCalendarEvent(id) {
+    const response = await api.delete(`/calendar/admin/calendar-events/${id}`);
+    return response.data;
+  },
+
   // Report Cards Management
   async getReportCards(params = {}) {
     const response = await api.get('/reportcards', { params });
@@ -855,14 +876,14 @@ export const studentAPI = {
   },
 
   async getCirculars(page = 1, limit = 10) {
-    const response = await api.get('/student/circulars', {
+    const response = await api.get('/content/circulars', {
       params: { page, limit },
     });
     return response.data;
   },
 
   async getCircularById(id) {
-    const response = await api.get(`/student/circulars/${id}`);
+    const response = await api.get(`/content/circulars/${id}`);
     return response.data;
   },
 
@@ -885,6 +906,29 @@ export const studentAPI = {
 
   async getProfile() {
     const response = await api.get('/student/profile');
+    return response.data;
+  },
+
+  async getReportCards() {
+    const response = await api.get('/reportcards/student/my-report-cards');
+    return response.data;
+  },
+
+  async getReportCard(id) {
+    const response = await api.get(`/reportcards/student/${id}`);
+    return response.data;
+  },
+
+  async acknowledgeReportCard(id, parentSignature) {
+    const response = await api.put(`/reportcards/student/${id}/acknowledge`, {
+      parentSignature,
+    });
+    return response.data;
+  },
+
+  // Calendar Events
+  async getCalendarEvents(params = {}) {
+    const response = await api.get('/calendar/student/calendar-events', { params });
     return response.data;
   },
 };
@@ -933,6 +977,12 @@ export const teacherAPI = {
 export const classControllerAPI = {
   async getDashboard() {
     const response = await api.get('/class-controller/dashboard');
+    return response.data;
+  },
+
+  // Calendar Events
+  async getCalendarEvents(params = {}) {
+    const response = await api.get('/calendar/class-controller/calendar-events', { params });
     return response.data;
   },
 

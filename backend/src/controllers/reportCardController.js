@@ -628,6 +628,9 @@ exports.getMyReportCards = async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const { term, academicYear } = req.query;
+    
+    console.log('[getMyReportCards] Student ID:', studentId);
+    console.log('[getMyReportCards] Query params:', { term, academicYear });
 
     let query = { 
       student: studentId,
@@ -637,14 +640,26 @@ exports.getMyReportCards = async (req, res, next) => {
     if (term) query.term = term;
     if (academicYear) query.academicYear = academicYear;
 
+    console.log('[getMyReportCards] Query:', JSON.stringify(query));
+    
+    // Debug: Check total report cards for this student (including unpublished)
+    const allCardsForStudent = await ReportCard.countDocuments({ student: studentId });
+    console.log('[getMyReportCards] Total report cards for student (all):', allCardsForStudent);
+    
+    const publishedCardsForStudent = await ReportCard.countDocuments({ student: studentId, isPublished: true });
+    console.log('[getMyReportCards] Published report cards for student:', publishedCardsForStudent);
+
     const reportCards = await ReportCard.find(query)
       .sort({ academicYear: -1, term: 1, issuedDate: -1 });
+
+    console.log('[getMyReportCards] Found', reportCards.length, 'report cards');
 
     res.json({
       success: true,
       data: reportCards
     });
   } catch (error) {
+    console.error('[getMyReportCards] Error:', error);
     next(error);
   }
 };

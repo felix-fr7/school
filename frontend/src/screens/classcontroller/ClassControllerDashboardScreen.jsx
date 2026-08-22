@@ -151,6 +151,14 @@ const ClassControllerDashboardScreen = () => {
       route: '/class-controller/circulars',
     },
     {
+      id: 'calendar',
+      title: 'School Calendar',
+      subtitle: 'Events & Dates',
+      iconIon: calendarOutline,
+      iconColorClass: 'icon-rose',
+      route: '/class-controller/calendar',
+    },
+    {
       id: 'add-student',
       title: 'New Admission',
       subtitle: 'Enroll Student',

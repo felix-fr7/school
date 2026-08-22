@@ -1,0 +1,200 @@
+/* Admin Calendar Event Detail Screen */
+.event-detail-content {
+  --background: #f0f2f5;
+}
+
+.event-detail-container {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Event Header with Color */
+.event-detail-header {
+  padding: 32px 24px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.event-status-badge {
+  margin-bottom: 8px;
+}
+
+.event-status-badge ion-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-type-badge {
+  margin-bottom: 12px;
+}
+
+.event-type-badge ion-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* Event Details Card */
+.event-detail-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detail-row:first-child {
+  padding-top: 0;
+}
+
+.detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.detail-icon ion-icon {
+  font-size: 20px;
+  color: #4F46E5;
+}
+
+.detail-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-label {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.detail-value {
+  display: block;
+  font-size: 16px;
+  color: #1a1a2e;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/* Description Card */
+.description-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.description-card h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.description-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Recurring Info */
+.recurring-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef3c7;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  color: #92400e;
+  font-size: 13px;
+}
+
+.recurring-info ion-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Action Buttons */
+.action-buttons {
+  margin-top: 24px;
+}
+
+.action-buttons ion-button {
+  margin-bottom: 8px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .event-detail-container {
+    padding: 12px;
+  }
+
+  .event-detail-header {
+    padding: 24px 16px;
+  }
+
+  .event-title {
+    font-size: 22px;
+  }
+
+  .detail-row {
+    gap: 12px;
+  }
+
+  .detail-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .detail-icon ion-icon {
+    font-size: 18px;
+  }
+
+  .detail-value {
+    font-size: 14px;
+  }
+}

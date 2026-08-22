@@ -141,12 +141,23 @@ const ExamItem = ({ item, classes, onDelete, onEdit, onTogglePublish, showAlertM
   const fetchSchedules = async () => {
     setLoadingSchedules(true);
     try {
-      const response = await api.get(`/exams/schedule/${item.id}`);
-      if (response.data.success) {
-        setSchedules(response.data.data);
+      // Use the correct endpoint to get exam with its schedules
+      const response = await api.get(`/exams/${item.id}`);
+      if (response.data.success && response.data.data) {
+        // The response includes the exam with a 'schedules' array
+        setSchedules(response.data.data.schedules || []);
       }
     } catch (error) {
       console.error('Error fetching schedules:', error);
+      // If the exam endpoint fails, try the schedule endpoint as fallback
+      try {
+        const fallbackResponse = await api.get(`/exams/schedule/${item.id}`);
+        if (fallbackResponse.data.success) {
+          setSchedules(fallbackResponse.data.data || []);
+        }
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
     } finally {
       setLoadingSchedules(false);
     }

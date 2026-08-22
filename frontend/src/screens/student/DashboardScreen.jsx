@@ -117,7 +117,7 @@ const StudentDashboardScreen = () => {
   const menuItems = [
     { id: '1', title: 'News', subtitle: 'School updates', icon: newspaperOutline, route: '/student/news', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
     { id: '13', title: 'Circulars', subtitle: 'Official notices', icon: clipboardOutline, route: '/student/circulars', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
-    { id: '10', title: 'Calendar', subtitle: 'Events & dates', icon: calendarOutline, gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
+    { id: '10', title: 'Calendar', subtitle: 'Events & dates', icon: calendarOutline, route: '/student/calendar', gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
     { id: '7', title: 'Albums', subtitle: 'Photo gallery', icon: imagesOutline, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
     { id: '6', title: 'Contact', subtitle: 'School directory', icon: callOutline, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
     { id: '15', title: 'Profile', subtitle: 'My information', icon: createOutline, route: '/student/profile', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
@@ -208,36 +208,6 @@ const StudentDashboardScreen = () => {
             </div>
           </div>
           
-          {/* Quick Stats */}
-          <div className="quick-stats">
-            <div className="stat-item">
-              <div className="stat-icon">
-                <IonIcon icon={bookOutline} />
-              </div>
-              <div className="stat-info">
-                <span className="stat-value">5</span>
-                <span className="stat-label">Subjects</span>
-              </div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-icon">
-                <IonIcon icon={timeOutline} />
-              </div>
-              <div className="stat-info">
-                <span className="stat-value">85%</span>
-                <span className="stat-label">Attendance</span>
-              </div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-icon">
-                <IonIcon icon={starOutline} />
-              </div>
-              <div className="stat-info">
-                <span className="stat-value">A</span>
-                <span className="stat-label">Grade</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Quick Actions - Horizontal Scroll */}
