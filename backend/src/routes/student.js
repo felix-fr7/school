@@ -116,25 +116,31 @@ router.get('/dashboard', async (req, res, next) => {
   }
 });
 
-// Timetable
+// Timetable — only published schedules for this student's class
 router.get('/timetable', async (req, res, next) => {
   try {
     const classId = req.user.classId;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.user.tenantId || req.user.schoolId;
+
+    if (!classId) {
+      return res.status(200).json({ success: true, data: [] });
+    }
 
     const timetable = await Timetable.find({
       tenantId,
       classId,
-      isActive: true
+      isActive: true,
+      isPublished: true
     })
-      .sort({ dayOfWeek: 1, periodNumber: 1 })
-      .populate('teacherId', 'name');
+      .sort({ updatedAt: -1 })
+      .populate('classId', 'name section');
 
     res.json({ success: true, data: timetable });
   } catch (error) {
     next(error);
   }
 });
+
 
 // Homework
 router.get('/homework', async (req, res, next) => {

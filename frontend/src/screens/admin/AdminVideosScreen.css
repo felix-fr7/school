@@ -196,3 +196,169 @@
 .video-preview-modal iframe {
   max-width: 100%;
 }
+
+/* ============================================
+   Albums Styles
+   ============================================ */
+
+.album-card {
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.album-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.album-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.album-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.album-description {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.album-links-preview h4 {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.link-item {
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.link-item ion-icon[slot="start"] {
+  margin-right: 8px;
+}
+
+.link-title {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.album-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.album-actions ion-button {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  font-size: 0.8rem;
+}
+
+/* Tags Container */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.tags-container ion-chip {
+  font-size: 0.8rem;
+}
+
+/* Album Meta */
+.album-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state h3 {
+  margin-top: 16px;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.empty-state p {
+  color: #666;
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.pagination-controls span {
+  color: #666;
+  font-size: 0.9rem;
+  min-width: 100px;
+  text-align: center;
+}
+
+/* Modal Styles */
+ion-modal {
+  --border-radius: 12px;
+}
+
+/* Album Modal Backdrop - ensure dark backdrop instead of white */
+.album-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.album-modal ion-modal {
+  --background: transparent;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .album-card {
+    margin-bottom: 16px;
+  }
+  
+  .album-actions {
+    flex-direction: column;
+  }
+  
+  .album-actions ion-button {
+    width: 100%;
+  }
+  
+  .pagination-controls {
+    flex-wrap: wrap;
+  }
+}

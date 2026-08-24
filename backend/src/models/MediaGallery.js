@@ -110,12 +110,11 @@ MediaGallerySchema.virtual('uploader', {
 });
 
 // Pre-find to only return published media by default
-MediaGallerySchema.pre(/^find/, function(next) {
+MediaGallerySchema.pre(/^find/, function() {
   // Only filter if not explicitly requested
   if (!this.getFilter()['isPublished']) {
     this.where({ isPublished: true });
   }
-  next();
 });
 
 // Static method to find media by category

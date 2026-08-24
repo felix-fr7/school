@@ -21,7 +21,7 @@ import {
   IonList,
   IonItem,
 } from '@ionic/react';
-import { personOutline, mailOutline, schoolOutline, bookOutline, businessOutline } from 'ionicons/icons';
+import { personOutline, schoolOutline, bookOutline, businessOutline, layersOutline } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { studentAPI } from '../../services/api';
 import './ProfileScreen.css';
@@ -67,6 +67,28 @@ const StudentProfileScreen = () => {
 
   const profile = user || currentUser;
 
+  // Resolve class name & section from multiple possible API shapes
+  const className =
+    profile?.class?.name ||
+    profile?.classId?.name ||
+    profile?.class_name ||
+    profile?.className ||
+    null;
+
+  const classSection =
+    profile?.class?.section ||
+    profile?.classId?.section ||
+    profile?.section ||
+    profile?.classSection ||
+    null;
+
+  const schoolName =
+    profile?.tenant?.name ||
+    profile?.schoolId?.schoolName ||
+    profile?.schoolId?.name ||
+    profile?.schoolName ||
+    null;
+
   return (
     <IonPage>
       <IonHeader>
@@ -78,15 +100,19 @@ const StudentProfileScreen = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent className="profile-content">
-        {/* Header */}
+        {/* Header — name + class/section only (no email) */}
         <div className="profile-header">
           <IonAvatar className="profile-avatar">
             <span>{profile?.name?.charAt(0) || 'S'}</span>
           </IonAvatar>
-          <h2 className="profile-name">{profile?.name}</h2>
-          <IonText color="light" className="profile-email">
-            <IonIcon icon={mailOutline} /> {profile?.email}
-          </IonText>
+          <h2 className="profile-name">{profile?.name || 'Student'}</h2>
+          {(className || classSection) && (
+            <IonText color="light" className="profile-class-badge">
+              <IonIcon icon={schoolOutline} />
+              {' '}
+              {[className, classSection].filter(Boolean).join(' - ')}
+            </IonText>
+          )}
         </div>
 
         {/* Student Information */}
@@ -103,23 +129,35 @@ const StudentProfileScreen = () => {
                   </IonText>
                 </IonItem>
               )}
-              {profile?.class && (
+              {profile?.rollNumber && (
                 <IonItem>
-                  <IonIcon icon={bookOutline} slot="start" />
+                  <IonIcon icon={personOutline} slot="start" />
                   <IonText>
-                    <span className="label">Class:</span>
-                    <span className="value">
-                      {profile.class.name}{profile.class.section ? ` - ${profile.class.section}` : ''}
-                    </span>
+                    <span className="label">Roll Number:</span>
+                    <span className="value">{profile.rollNumber}</span>
                   </IonText>
                 </IonItem>
               )}
-              {profile?.tenant && (
+              <IonItem>
+                <IonIcon icon={bookOutline} slot="start" />
+                <IonText>
+                  <span className="label">Class:</span>
+                  <span className="value">{className || 'Not Assigned'}</span>
+                </IonText>
+              </IonItem>
+              <IonItem>
+                <IonIcon icon={layersOutline} slot="start" />
+                <IonText>
+                  <span className="label">Section:</span>
+                  <span className="value">{classSection || 'Not Assigned'}</span>
+                </IonText>
+              </IonItem>
+              {schoolName && (
                 <IonItem>
                   <IonIcon icon={businessOutline} slot="start" />
                   <IonText>
                     <span className="label">School:</span>
-                    <span className="value">{profile.tenant.name}</span>
+                    <span className="value">{schoolName}</span>
                   </IonText>
                 </IonItem>
               )}

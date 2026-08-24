@@ -114,9 +114,8 @@ TenantSchema.methods.restore = function() {
 };
 
 // Pre-find to exclude deleted tenants by default
-TenantSchema.pre(/^find/, function(next) {
+TenantSchema.pre(/^find/, function() {
   this.where({ deletedAt: null });
-  next();
 });
 
 module.exports = mongoose.model('Tenant', TenantSchema);

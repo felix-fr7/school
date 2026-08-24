@@ -36,6 +36,9 @@ import CreateClassScreen from './screens/admin/CreateClassScreen';
 import EditClassScreen from './screens/admin/EditClassScreen';
 import CreateCircularScreen from './screens/admin/CreateCircularScreen';
 import ClassDetailScreen from './screens/admin/ClassDetailScreen';
+import AdminAlbumsScreen from './screens/admin/AdminAlbumsScreen';
+import CreateAlbumScreen from './screens/admin/CreateAlbumScreen';
+import EditAlbumScreen from './screens/admin/EditAlbumScreen';
 
 // Teacher Screens
 import TeacherDashboard from './screens/teacher/TeacherDashboardScreen';
@@ -61,6 +64,7 @@ import NewsScreen from './screens/NewsScreen';
 import CircularsScreen from './screens/CircularsScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import VideosScreen from './screens/VideosScreen';
+import AlbumsScreen from './screens/AlbumsScreen';
 import MessagesScreen from './screens/MessagesScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import ContactsScreen from './screens/ContactsScreen';
@@ -142,6 +146,7 @@ const AppRoutes = () => {
             <Route exact path="/circulars" component={CircularsScreen} />
             <Route exact path="/gallery" component={GalleryScreen} />
             <Route exact path="/videos" component={VideosScreen} />
+            <Route exact path="/albums" component={AlbumsScreen} />
             <Route exact path="/messages" component={MessagesScreen} />
             <Route exact path="/calendar" component={CalendarScreen} />
             <Route exact path="/contacts" component={ContactsScreen} />
@@ -170,6 +175,9 @@ const AppRoutes = () => {
             <Route exact path="/admin/report-cards" component={AdminReportCards} />
             <Route exact path="/admin/report-cards/search" component={StudentReportCardSearchScreen} />
             <Route exact path="/admin/report-cards/:id" component={ReportCardViewScreen} />
+            <Route exact path="/admin/albums" component={AdminAlbumsScreen} />
+            <Route exact path="/admin/albums/create" component={CreateAlbumScreen} />
+            <Route exact path="/admin/albums/:albumId/edit" component={EditAlbumScreen} />
             <Route exact path="/admin/settings" component={AdminSettings} />
 
             {/* Teacher Routes */}

@@ -22,7 +22,6 @@ import {
   peopleOutline,
   personOutline,
   documentTextOutline,
-  statsChartOutline,
   newspaperOutline,
   clipboardOutline,
   calendarOutline,
@@ -32,6 +31,8 @@ import {
   addCircleOutline,
   sparklesOutline,
   pulseOutline,
+  imagesOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI } from '../../services/api';
@@ -125,7 +126,7 @@ const AdminDashboardScreen = () => {
       title: 'News', 
       subtitle: 'Announcements',
       icon: newspaperOutline, 
-      route: '/admin/admin-news', 
+      route: '/admin/news', // திருத்தப்பட்டது
       count: stats.totalNews,
       gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)'
     },
@@ -134,7 +135,7 @@ const AdminDashboardScreen = () => {
       title: 'Circulars', 
       subtitle: 'Official communications',
       icon: clipboardOutline, 
-      route: '/admin/admin-circulars',
+      route: '/admin/circulars', // திருத்தப்பட்டது
       gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
     },
     { 
@@ -142,7 +143,7 @@ const AdminDashboardScreen = () => {
       title: 'Exams', 
       subtitle: 'Schedule & management',
       icon: calendarOutline, 
-      route: '/admin/admin-exams',
+      route: '/admin/exams', // திருத்தப்பட்டது
       gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
     },
     { 
@@ -160,6 +161,22 @@ const AdminDashboardScreen = () => {
       icon: calendarOutline, 
       route: '/admin/calendar',
       gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)'
+    },
+    { 
+      id: '11', 
+      title: 'Albums', 
+      subtitle: 'Video/Link collections',
+      icon: imagesOutline, 
+      route: '/admin/albums',
+      gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)'
+    },
+    { 
+      id: '12', 
+      title: 'Timetable', 
+      subtitle: 'All class weekly plans',
+      icon: timeOutline, 
+      route: '/admin/timetable',
+      gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)'
     },
   ];
 

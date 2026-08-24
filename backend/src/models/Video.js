@@ -114,7 +114,7 @@ VideoSchema.index({ uploadedBy: 1 });
 
 // Pre-find to only return published and active videos by default
 // Unless explicitly requested otherwise (e.g., for admin endpoints)
-VideoSchema.pre(/^find/, function(next) {
+VideoSchema.pre(/^find/, function() {
   // Check if this query is explicitly marked to bypass the default filter
   // This is done by checking for a custom flag in the query context
   const bypassDefaultFilter = this.getOptions().bypassDefaultFilter;
@@ -123,7 +123,6 @@ VideoSchema.pre(/^find/, function(next) {
   if (!bypassDefaultFilter && !this.getFilter()['isPublished'] && !this.getFilter()['isActive']) {
     this.where({ isPublished: true, isActive: true });
   }
-  next();
 });
 
 // Static method to find videos visible to a specific class

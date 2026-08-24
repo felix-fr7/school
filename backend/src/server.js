@@ -44,6 +44,7 @@ const weeklyLessonsRoutes = require('./routes/weeklyLessons');
 const calendarRoutes = require('./routes/calendar');
 const contactsRoutes = require('./routes/contacts');
 const videosRoutes = require('./routes/videos');
+const albumsRoutes = require('./routes/albums');
 const productsRoutes = require('./routes/products');
 const classControllerRoutes = require('./routes/classController');
 const reportCardsRoutes = require('./routes/reportcards');
@@ -169,6 +170,7 @@ app.use('/api/weekly-lessons', weeklyLessonsRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/videos', videosRoutes);
+app.use('/api/albums', albumsRoutes);
 
 // Report Cards Routes
 app.use('/api/reportcards', reportCardsRoutes);

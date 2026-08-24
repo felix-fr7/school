@@ -28,14 +28,12 @@ import {
   bookOutline,
   calendarNumberOutline,
   trophyOutline,
-  callOutline,
   imagesOutline,
   calendarOutline,
   clipboardOutline,
   statsChartOutline,
   createOutline,
   timerOutline,
-  settingsOutline,
   logOutOutline,
   refreshOutline,
   schoolOutline,
@@ -111,30 +109,18 @@ const StudentDashboardScreen = () => {
     { id: '3', title: 'Homework', icon: bookOutline, route: '/student/homework', color: '#6366f1', count: null },
     { id: '4', title: 'Exams', icon: calendarNumberOutline, route: '/student/exams', color: '#8b5cf6', count: null },
     { id: '14', title: 'Report Card', icon: statsChartOutline, route: '/student/report-cards', color: '#06b6d4', count: null },
-    { id: '16', title: 'Timetable', icon: timerOutline, route: '/student/weekly-lessons', color: '#10b981', count: null },
+    { id: '16', title: 'Timetable', icon: timerOutline, route: '/student/timetable', color: '#10b981', count: null },
   ];
 
   const menuItems = [
     { id: '1', title: 'News', subtitle: 'School updates', icon: newspaperOutline, route: '/student/news', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
     { id: '13', title: 'Circulars', subtitle: 'Official notices', icon: clipboardOutline, route: '/student/circulars', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
     { id: '10', title: 'Calendar', subtitle: 'Events & dates', icon: calendarOutline, route: '/student/calendar', gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
-    { id: '7', title: 'Albums', subtitle: 'Photo gallery', icon: imagesOutline, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
-    { id: '6', title: 'Contact', subtitle: 'School directory', icon: callOutline, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+    { id: '7', title: 'Albums', subtitle: 'Photo gallery', icon: imagesOutline, route: '/albums', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
     { id: '15', title: 'Profile', subtitle: 'My information', icon: createOutline, route: '/student/profile', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
-    { id: '19', title: 'Settings', subtitle: 'Preferences', icon: settingsOutline, gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)' },
   ];
 
   const handleMenuItemPress = (item) => {
-    if (item.id === '20' || item.id === '19') {
-      if (item.id === '20') {
-        logout();
-        history.push('/login');
-      } else {
-        // Settings - just show alert for now
-      }
-      return;
-    }
-
     if (item.route) {
       history.push(item.route);
     }

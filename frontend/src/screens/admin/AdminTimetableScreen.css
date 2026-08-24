@@ -1,0 +1,103 @@
+.admin-timetable-page .tt-hint {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.admin-timetable-page .tt-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: #64748b;
+}
+
+.admin-timetable-page .tt-empty ion-icon {
+  font-size: 56px;
+  color: #cbd5e1;
+  margin-bottom: 12px;
+}
+
+.admin-timetable-page .tt-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+}
+
+.admin-timetable-page .tt-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-timetable-page .tt-desc {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0 0 12px;
+}
+
+.admin-timetable-page .tt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-timetable-page .tt-periods-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0 8px;
+}
+
+.admin-timetable-page .tt-periods-header h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.05rem;
+}
+
+.admin-timetable-page .tt-period-form-card {
+  margin: 8px 0;
+}
+
+.admin-timetable-page .tt-period-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.admin-timetable-page .tt-day-block {
+  margin-top: 16px;
+}
+
+.admin-timetable-page .tt-day-block h4 {
+  margin: 0 0 8px;
+  color: #334155;
+  font-size: 1rem;
+}
+
+.admin-timetable-page .tt-period-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.admin-timetable-page .tt-p-num {
+  background: #e0e7ff;
+  color: #4338ca;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.admin-timetable-page .tt-p-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 2px;
+}

@@ -1,0 +1,292 @@
+/* ============================================================================
+   ADMIN HEADER - Royal Light Theme
+   ============================================================================ */
+.admin-header ion-toolbar {
+  --background: #1e293b !important;
+  --color: #ffffff !important;
+  --border-color: transparent !important;
+  padding-top: env(safe-area-inset-top);
+}
+
+.admin-title {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  text-align: center;
+}
+
+.admin-back-btn {
+  --color: #ffffff !important;
+  --icon-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.admin-back-btn ion-icon {
+  color: #ffffff !important;
+}
+
+/* ============================================================================
+   CREATE ALBUM SCREEN - Royal Light Theme
+   ============================================================================ */
+
+.create-album-content {
+  --background: #f8fafc;
+  background: #f8fafc;
+}
+
+.album-form-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Banner Card */
+.album-banner-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+.album-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px !important;
+}
+
+.album-banner-icon-box {
+  width: 48px;
+  height: 48px;
+  background: #eef2ff;
+  color: #6366f1;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.album-banner-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.album-banner-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Form Card */
+.album-form-card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+.album-form-card ion-card-content {
+  padding: 20px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Input Groups */
+.album-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.album-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.album-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 12px;
+  min-height: 48px;
+  transition: all 0.2s ease;
+}
+
+.album-input-wrapper:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.album-textarea-wrapper {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.album-textarea-wrapper:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.album-input-icon {
+  font-size: 20px;
+  color: #64748b;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.album-custom-input,
+.album-custom-select {
+  --background: transparent !important;
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  font-size: 14px;
+  width: 100%;
+}
+
+.album-custom-textarea {
+  --background: transparent !important;
+  --color: #0f172a !important;
+  --placeholder-color: #94a3b8 !important;
+  font-size: 14px;
+  width: 100%;
+}
+
+.album-hint {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.album-loading-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+/* Tags */
+.album-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.album-tag-chip {
+  margin: 0;
+  font-weight: 600;
+  height: 28px;
+}
+
+.album-tag-input-wrapper {
+  justify-content: space-between;
+}
+
+/* Toggle Row */
+.album-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Action Buttons */
+.album-button-actions-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  margin-bottom: 24px;
+}
+
+.album-btn-save {
+  --background: #6366f1 !important;
+  --background-activated: #4f46e5 !important;
+  --border-radius: 8px !important;
+  --box-shadow: none !important;
+  font-weight: 600 !important;
+  height: 44px !important;
+  min-width: 140px;
+  margin: 0;
+  flex: 1;
+}
+
+.album-btn-cancel {
+  --color: #475569 !important;
+  --border-color: #cbd5e1 !important;
+  --border-radius: 8px !important;
+  font-weight: 600 !important;
+  height: 44px !important;
+  min-width: 100px;
+  margin: 0;
+  flex: 1;
+}
+
+/* Loading Container (Edit Screen) */
+.album-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  gap: 12px;
+}
+
+/* Links Management (Edit Screen) */
+.album-links-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+}
+
+.album-links-list {
+  background: transparent;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .album-form-container {
+    padding: 12px 8px;
+  }
+
+  .album-form-card ion-card-content {
+    padding: 16px !important;
+  }
+
+  .album-button-actions-container {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .album-btn-save,
+  .album-btn-cancel {
+    width: 100%;
+  }
+}

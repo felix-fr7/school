@@ -1,6 +1,6 @@
 import React from 'react';
 import { IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel, IonMenuToggle } from '@ionic/react';
-import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, filmOutline, settingsOutline, logOutOutline, paperPlaneOutline, createOutline, searchOutline } from 'ionicons/icons';
+import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, filmOutline, settingsOutline, logOutOutline, paperPlaneOutline, createOutline, searchOutline, imagesOutline, timeOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -21,6 +21,8 @@ const menuItems = [
     { title: 'Calendar', icon: calendarOutline, path: '/admin/calendar' },
     { title: 'Exams', icon: schoolOutline, path: '/admin/exams' },
     { title: 'Videos', icon: filmOutline, path: '/admin/videos' },
+    { title: 'Albums', icon: imagesOutline, path: '/admin/albums' },
+    { title: 'Timetable', icon: timeOutline, path: '/admin/timetable' },
     { title: 'Settings', icon: settingsOutline, path: '/settings' },
   ];
 

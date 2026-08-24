@@ -37,6 +37,7 @@ import {
   schoolOutline,
   checkmarkCircleOutline,
   shieldCheckmarkOutline,
+  albumsOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -157,6 +158,22 @@ const ClassControllerDashboardScreen = () => {
       iconIon: calendarOutline,
       iconColorClass: 'icon-rose',
       route: '/class-controller/calendar',
+    },
+    {
+      id: 'albums',
+      title: 'Albums',
+      subtitle: 'Admin published albums',
+      iconIon: albumsOutline,
+      iconColorClass: 'icon-orange',
+      route: '/class-controller/albums',
+    },
+    {
+      id: 'timetable',
+      title: 'Timetable',
+      subtitle: 'Weekly classwork & homework',
+      iconIon: calendarOutline,
+      iconColorClass: 'icon-indigo',
+      route: '/class-controller/timetable',
     },
     {
       id: 'add-student',

@@ -77,9 +77,8 @@ ProductSchema.virtual('creator', {
 });
 
 // Pre-find to exclude deleted products by default
-ProductSchema.pre(/^find/, function(next) {
+ProductSchema.pre(/^find/, function() {
   this.where({ deletedAt: null });
-  next();
 });
 
 module.exports = mongoose.model('Product', ProductSchema);

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * API Service
  * Centralized API client with Axios
  * Multi-Tenant School Management System
@@ -1211,5 +1211,118 @@ export const reportCardsAPI = {
   },
 };
 
+// ============================================
+// Albums API
+// ============================================
+
+export const albumsAPI = {
+  // Admin endpoints
+  async getAdminAlbums(page = 1, limit = 20, category = '', isPublished = '') {
+    const response = await api.get('/albums/admin/all', {
+      params: { page, limit, category, isPublished }
+    });
+    return response.data;
+  },
+
+  async getAdminAlbum(id) {
+    const response = await api.get(`/albums/admin/${id}`);
+    return response.data;
+  },
+
+  // Public endpoints (for students/classes)
+  async getAlbums(page = 1, limit = 20, category = '') {
+    const response = await api.get('/albums', {
+      params: { page, limit, category }
+    });
+    return response.data;
+  },
+
+  async getAlbum(id) {
+    const response = await api.get(`/albums/${id}`);
+    return response.data;
+  },
+
+  async createAlbum(data) {
+    const response = await api.post('/albums', data);
+    return response.data;
+  },
+
+  async updateAlbum(id, data) {
+    const response = await api.put(`/albums/${id}`, data);
+    return response.data;
+  },
+
+  async deleteAlbum(id) {
+    const response = await api.delete(`/albums/${id}`);
+    return response.data;
+  },
+
+  // Link management
+  async addLinkToAlbum(albumId, linkData) {
+    const response = await api.post(`/albums/${albumId}/links`, linkData);
+    return response.data;
+  },
+
+  async removeLinkFromAlbum(albumId, linkIndex) {
+    const response = await api.delete(`/albums/${albumId}/links/${linkIndex}`);
+    return response.data;
+  },
+
+  async getCategories() {
+    const response = await api.get('/albums/categories/list');
+    return response.data;
+  },
+};
+
+
+// ============================================
+// Timetable API
+// ============================================
+
+export const timetableAPI = {
+  async getAdminTimetables(page = 1, limit = 50, classId = '', isPublished = '') {
+    const response = await api.get('/timetable/admin/all', {
+      params: { page, limit, classId, isPublished }
+    });
+    return response.data;
+  },
+
+  async getAdminTimetable(id) {
+    const response = await api.get(`/timetable/admin/${id}`);
+    return response.data;
+  },
+
+  async getMyTimetables() {
+    const response = await api.get('/timetable');
+    return response.data;
+  },
+
+  async getStudentTimetable() {
+    const response = await api.get('/student/timetable');
+    return response.data;
+  },
+
+  async createTimetable(data) {
+    const response = await api.post('/timetable', data);
+    return response.data;
+  },
+
+  async updateTimetable(id, data) {
+    const response = await api.put(`/timetable/${id}`, data);
+    return response.data;
+  },
+
+  async publishTimetable(id, isPublished) {
+    const response = await api.patch(`/timetable/${id}/publish`, { isPublished });
+    return response.data;
+  },
+
+  async deleteTimetable(id) {
+    const response = await api.delete(`/timetable/${id}`);
+    return response.data;
+  },
+};
+
 export { api };
 export default api;
+

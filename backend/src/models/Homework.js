@@ -56,14 +56,13 @@ const SubmissionSchema = new mongoose.Schema({
 }, { _id: false });
 
 // Pre-save for submission: Set submittedAt when status changes to Submitted
-SubmissionSchema.pre('save', function(next) {
+SubmissionSchema.pre('save', function() {
   if (this.status === 'Submitted' && !this.submittedAt) {
     this.submittedAt = new Date();
   }
   if (this.status === 'Checked' && !this.checkedAt) {
     this.checkedAt = new Date();
   }
-  next();
 });
 
 const HomeworkSchema = new mongoose.Schema({
