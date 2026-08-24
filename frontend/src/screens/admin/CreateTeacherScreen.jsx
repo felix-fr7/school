@@ -34,7 +34,6 @@ const CreateTeacherScreen = () => {
   const [qualification, setQualification] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -72,18 +71,6 @@ const CreateTeacherScreen = () => {
       setShowAlert(true);
       return;
     }
-    if (!password.trim()) {
-      setAlertMessage('Please enter password');
-      setIsSuccess(false);
-      setShowAlert(true);
-      return;
-    }
-    if (password.length < 6) {
-      setAlertMessage('Password must be at least 6 characters');
-      setIsSuccess(false);
-      setShowAlert(true);
-      return;
-    }
 
     try {
       setLoading(true);
@@ -94,11 +81,15 @@ const CreateTeacherScreen = () => {
         qualification: qualification.trim(),
         email: email.trim(),
         phone: phone.trim() || undefined,
-        password,
       });
 
       if (response.success) {
-        setAlertMessage('Teacher created successfully!');
+        const tempPassword = response.data?.tempPassword;
+        setAlertMessage(
+          tempPassword
+            ? `Teacher created successfully! Temporary password: ${tempPassword}`
+            : 'Teacher created successfully!'
+        );
         setIsSuccess(true);
         setShowAlert(true);
         // Reset form
@@ -108,14 +99,18 @@ const CreateTeacherScreen = () => {
         setQualification('');
         setEmail('');
         setPhone('');
-        setPassword('');
       } else {
-        setAlertMessage(response.error?.message || 'Failed to create teacher');
+        setAlertMessage(response.error?.message || response.message || 'Failed to create teacher');
         setIsSuccess(false);
         setShowAlert(true);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Failed to create teacher';
+      console.error('Create teacher error:', error.response?.status, JSON.stringify(error.response?.data));
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        (error.code === 'ECONNABORTED' ? 'Server timeout - please try again' : '') ||
+        'Failed to create teacher';
       setAlertMessage(errorMessage);
       setIsSuccess(false);
       setShowAlert(true);
@@ -148,7 +143,7 @@ const CreateTeacherScreen = () => {
             <div className="admin-card-header">
               <h2>Teacher Account Registration</h2>
               <p className="description">
-                Create a new teacher account. The teacher will be able to log in with the provided credentials.
+                Create a new teacher account. A temporary password will be generated automatically.
               </p>
             </div>
 
@@ -259,26 +254,6 @@ const CreateTeacherScreen = () => {
                         value={phone}
                         onIonInput={(e) => setPhone(e.detail.value || '')}
                         type="tel"
-                        disabled={loading}
-                      />
-                    </div>
-                  </IonCol>
-                </IonRow>
-
-                <IonRow>
-                  {/* Password */}
-                  <IonCol size="12" sizeMd="6">
-                    <div className="input-group">
-                      <label className="input-label">
-                        Password <span className="required">*</span>
-                      </label>
-                      <IonInput
-                        className="admin-input"
-                        type="password"
-                        placeholder="Enter password (min 6 characters)"
-                        value={password}
-                        onIonInput={(e) => setPassword(e.detail.value || '')}
-                        autocapitalize="off"
                         disabled={loading}
                       />
                     </div>

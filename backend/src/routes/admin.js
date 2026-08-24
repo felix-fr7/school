@@ -942,20 +942,26 @@ router.post('/teachers', async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Email already exists' });
     }
 
-    // Generate teacher ID
-    const teacherCount = await Teacher.countDocuments({
-      tenantId
-    });
-    const teacherId = `TCH-${String(teacherCount + 1).padStart(4, '0')}`;
+    // Generate a temporary password if none provided (model requires one)
+    const tempPassword = password || `Tch@${Math.random().toString(36).slice(-4)}${Date.now().toString().slice(-4)}`;
+
+    // Generate a unique teacher ID (global unique index, so check across all tenants)
+    const teacherCount = await Teacher.countDocuments({});
+    let teacherId = `TCH-${String(teacherCount + 1).padStart(4, '0')}`;
+    let suffix = 0;
+    while (await Teacher.findOne({ teacherId }, { _id: 1 })) {
+      suffix += 1;
+      teacherId = `TCH-${String(teacherCount + 1).padStart(4, '0')}-${suffix}`;
+    }
 
     const teacherData = {
       tenantId,
       email: email.toLowerCase(),
       phone,
-      password,
+      password: tempPassword,
       name,
       qualification,
-      experienceYears: experienceYears || (age ? parseInt(age) : undefined),
+      experienceYears,
       gender,
       specialization,
       subjects,
@@ -966,8 +972,9 @@ router.post('/teachers', async (req, res, next) => {
     const newTeacher = new Teacher(teacherData);
     await newTeacher.save();
 
-    res.status(201).json({ success: true, data: { userId: newTeacher._id, teacherId } });
+    res.status(201).json({ success: true, data: { userId: newTeacher._id, teacherId, tempPassword } });
   } catch (error) {
+    console.error('Create Teacher Error:', error.message, error.errors || '');
     next(error);
   }
 });
