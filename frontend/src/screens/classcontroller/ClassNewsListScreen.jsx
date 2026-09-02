@@ -28,6 +28,7 @@ import {
 } from 'ionicons/icons';
 import { classControllerAPI } from '../../services/api';
 import './ClassNewsListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -155,11 +156,12 @@ const ClassNewsListScreen = () => {
   return (
     <IonPage>
       <IonHeader className="ion-no-border">
-        <IonToolbar color="primary">
+        <IonToolbar className="light-toolbar">
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller" />
           </IonButtons>
           <IonTitle>School Bulletin</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

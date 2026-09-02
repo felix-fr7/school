@@ -33,6 +33,7 @@ import {
 } from 'ionicons/icons';
 import { classControllerAPI } from '../../services/api';
 import './ClassExamSchedulesListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassExamSchedulesListScreen = () => {
   const history = useHistory();
@@ -110,6 +111,7 @@ const ClassExamSchedulesListScreen = () => {
             <IonBackButton defaultHref="/class-controller/dashboard" text="" color="dark" />
           </IonButtons>
           <IonTitle className="toolbar-title">Exam Schedules</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       

@@ -31,6 +31,7 @@ import { useHistory } from 'react-router-dom';
 import { newspaperOutline, calendarOutline, personOutline, imageOutline, refreshOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './NewsListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -88,7 +89,8 @@ const StudentNewsListScreen = () => {
             <IonButtons slot="start">
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
-            <IonTitle>News</IonTitle>
+            <IonTitle>School Bulletin</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -105,7 +107,8 @@ const StudentNewsListScreen = () => {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
-          <IonTitle>News</IonTitle>
+          <IonTitle>School Bulletin</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="news-list-content">

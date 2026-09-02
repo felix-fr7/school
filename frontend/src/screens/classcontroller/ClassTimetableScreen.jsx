@@ -19,6 +19,7 @@ import { timetableAPI } from '../../services/api';
 import { DAYS, blankTemplateRows, classLabel, emptyRow } from '../../utils/timetableGrid';
 import TimetableGridTable from '../shared/TimetableGridTable';
 import '../shared/TimetableGrid.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassTimetableScreen = () => {
   const { currentClass } = useAuth();
@@ -178,6 +179,7 @@ const ClassTimetableScreen = () => {
           <IonToolbar>
             <IonButtons slot="start"><IonBackButton defaultHref="/class-controller/dashboard" /></IonButtons>
             <IonTitle>Timetable</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center"><IonSpinner /><p>Loading...</p></IonContent>
@@ -194,6 +196,7 @@ const ClassTimetableScreen = () => {
           <IonButtons slot="end">
             <IonButton onClick={openCreate}><IonIcon icon={addCircleOutline} slot="start" />Create</IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">

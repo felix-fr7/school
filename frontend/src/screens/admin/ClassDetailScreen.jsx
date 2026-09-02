@@ -52,6 +52,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './ClassDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassDetailScreen = () => {
   const { id } = useParams();
@@ -252,6 +253,7 @@ const ClassDetailScreen = () => {
               <IonBackButton defaultHref="/admin/classes" />
             </IonButtons>
             <IonTitle>Class Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -270,6 +272,7 @@ const ClassDetailScreen = () => {
               <IonBackButton defaultHref="/admin/classes" />
             </IonButtons>
             <IonTitle>Class Not Found</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
@@ -305,6 +308,7 @@ const ClassDetailScreen = () => {
           >
             <IonIcon icon={documentOutline} slot="start" /> Report Cards
           </IonButton>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

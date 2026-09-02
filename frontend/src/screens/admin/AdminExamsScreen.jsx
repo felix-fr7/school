@@ -41,6 +41,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI, api, openFileInNewTab } from '../../services/api';
 import './AdminExamsScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // API Base URL for constructing file URLs
 const API_BASE_URL = 
@@ -680,6 +681,7 @@ const AdminExamsScreen = () => {
               <IonBackButton defaultHref="/admin/dashboard" color="light" />
             </IonButtons>
             <IonTitle>Exam Timetables</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="admin-exams-content">
@@ -705,6 +707,7 @@ const AdminExamsScreen = () => {
               {examList.length} Published
             </IonBadge>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

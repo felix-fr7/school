@@ -31,6 +31,7 @@ import {
 import { sendOutline, calendarOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import './ClassCreateExamScheduleScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const SUBJECTS = [
   'Mathematics',
@@ -129,6 +130,7 @@ const ClassCreateExamScheduleScreen = () => {
             <IonBackButton defaultHref="/class-controller/exams" />
           </IonButtons>
           <IonTitle>Create Exam Schedule</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

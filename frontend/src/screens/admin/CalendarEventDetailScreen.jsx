@@ -32,6 +32,7 @@ import {
 import { useParams, useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import './CalendarEventDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const AdminCalendarEventDetailScreen = () => {
   const { eventId } = useParams();
@@ -104,6 +105,7 @@ const AdminCalendarEventDetailScreen = () => {
               <IonBackButton defaultHref="/admin/calendar" />
             </IonButtons>
             <IonTitle>Event Not Found</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
@@ -151,6 +153,7 @@ const AdminCalendarEventDetailScreen = () => {
               <IonIcon icon={trashOutline} slot="icon-only" />
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

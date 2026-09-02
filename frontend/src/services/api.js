@@ -27,6 +27,19 @@ if (!API_BASE_URL || API_BASE_URL.startsWith(':')) {
   // This is a safeguard - the fallback should never be needed since we have a default
 }
 
+/**
+ * Resolve a potentially relative media URL (stored as /uploads/...) into an
+ * absolute URL that the browser can load. Absolute URLs pass through untouched.
+ */
+export const resolveMediaUrl = (url) => {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:')) return url;
+  if (url.startsWith('/')) {
+    return API_BASE_URL.replace(/\/api\/?$/, '') + url;
+  }
+  return url;
+};
+
 // ============================================
 // Storage Service (Web - localStorage)
 // ============================================
@@ -410,8 +423,36 @@ export const tenantsAPI = {
     return response.data;
   },
 
-  async createTenant(data) {
+  async createTenant(data, logoFile = null) {
+    if (logoFile) {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, typeof value === 'object' && !(value instanceof File) ? JSON.stringify(value) : value);
+        }
+      });
+      formData.append('schoolLogo', logoFile);
+
+      const response = await api.post('/tenants', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    }
     const response = await api.post('/tenants', data);
+    return response.data;
+  },
+
+  async uploadTenantLogo(id, logoFile) {
+    const formData = new FormData();
+    formData.append('schoolLogo', logoFile);
+    const response = await api.put(`/tenants/${id}/logo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  async deleteTenantLogo(id) {
+    const response = await api.delete(`/tenants/${id}/logo`);
     return response.data;
   },
 
@@ -439,6 +480,11 @@ export const tenantsAPI = {
 
   async updateSchoolAdmin(schoolId, adminId, data) {
     const response = await api.put(`/super-admin/schools/${schoolId}/admins/${adminId}`, data);
+    return response.data;
+  },
+
+  async deleteSchoolAdmin(schoolId, adminId) {
+    const response = await api.delete(`/super-admin/schools/${schoolId}/admins/${adminId}`);
     return response.data;
   },
 
@@ -1105,6 +1151,47 @@ export const classControllerAPI = {
 
   async getNewsById(id) {
     const response = await api.get(`/content/news/${id}`);
+    return response.data;
+  },
+
+  // Report Cards (class accounts can upload/send report cards for their students)
+  async getReportCards(params = {}) {
+    const response = await api.get('/reportcards', { params });
+    return response.data;
+  },
+
+  async uploadReportCard(formData) {
+    const token = await storage.getToken();
+    const tenantId = getTenantId();
+    const response = await fetch(`${API_BASE_URL}/reportcards/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'x-tenant-id': tenantId || '',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw { response: { status: response.status, data: errorData } };
+    }
+
+    return await response.json();
+  },
+
+  async publishReportCard(id) {
+    const response = await api.put(`/reportcards/${id}/publish`);
+    return response.data;
+  },
+
+  async publishAllReportCards(classId) {
+    const response = await api.put(`/reportcards/class/${classId}/publish-all`);
+    return response.data;
+  },
+
+  async deleteReportCard(id) {
+    const response = await api.delete(`/reportcards/${id}`);
     return response.data;
   },
 };

@@ -117,6 +117,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // Date the student was admitted to the class/school
+  admittedDate: {
+    type: Date
+  },
   // Parent-specific fields
   parentOf: [{
     type: mongoose.Schema.Types.ObjectId,

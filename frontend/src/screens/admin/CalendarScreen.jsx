@@ -40,6 +40,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import './CalendarScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const AdminCalendarScreen = () => {
   const history = useHistory();
@@ -279,6 +280,7 @@ const AdminCalendarScreen = () => {
               <IonIcon icon={addCircleOutline} slot="icon-only" />
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

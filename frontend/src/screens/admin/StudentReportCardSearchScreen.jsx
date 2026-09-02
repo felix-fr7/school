@@ -49,6 +49,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './StudentReportCardSearchScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentReportCardSearchScreen = () => {
   // Search mode: 'student' = search by name/roll, 'class' = filter by class/term/year
@@ -235,6 +236,7 @@ const StudentReportCardSearchScreen = () => {
             <IonBackButton defaultHref="/admin" />
           </IonButtons>
           <IonTitle>Student Report Card Search</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

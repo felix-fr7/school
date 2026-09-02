@@ -50,6 +50,7 @@ import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { albumsAPI } from '../../services/api';
 import './AdminAlbumsScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const AdminAlbumsScreen = () => {
   const history = useHistory();
@@ -275,6 +276,7 @@ const AdminAlbumsScreen = () => {
               New Album
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

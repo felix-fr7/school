@@ -11,6 +11,7 @@ const express = require('express');
 const { body, param, validationResult } = require('express-validator');
 const tenantController = require('../controllers/tenantController');
 const { authenticate, isSuperAdmin } = require('../middleware/auth');
+const { uploadSingle } = require('../middleware/fileUpload');
 
 // Validation error handler middleware
 const handleValidationErrors = (req, res, next) => {
@@ -51,6 +52,7 @@ router.get('/', tenantController.getAllTenants);
  */
 router.post(
   '/',
+  uploadSingle('schoolLogo'),
   [
     body('schoolName')
       .trim()
@@ -167,6 +169,38 @@ router.delete(
   ],
   handleValidationErrors,
   tenantController.deleteTenant
+);
+
+/**
+ * @route   PUT /api/tenants/:id/logo
+ * @desc    Upload / replace the school logo
+ * @access  Super Admin
+ * @params  id (MongoDB ObjectId)
+ * @body    multipart/form-data field "schoolLogo"
+ */
+router.put(
+  '/:id/logo',
+  [
+    param('id').isMongoId().withMessage('Invalid tenant ID format'),
+  ],
+  handleValidationErrors,
+  uploadSingle('schoolLogo'),
+  tenantController.uploadSchoolLogo
+);
+
+/**
+ * @route   DELETE /api/tenants/:id/logo
+ * @desc    Delete the school logo
+ * @access  Super Admin
+ * @params  id (MongoDB ObjectId)
+ */
+router.delete(
+  '/:id/logo',
+  [
+    param('id').isMongoId().withMessage('Invalid tenant ID format'),
+  ],
+  handleValidationErrors,
+  tenantController.deleteSchoolLogo
 );
 
 /**

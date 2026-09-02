@@ -42,6 +42,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { albumsAPI } from '../services/api';
 import './AlbumsScreen.css';
+import HomeLogoutButtons from '../components/HomeLogoutButtons';
 
 const AlbumsScreen = () => {
   const { isClass, isStudent } = useAuth();
@@ -112,6 +113,7 @@ const AlbumsScreen = () => {
               <IonBackButton defaultHref={defaultBackHref} />
             </IonButtons>
             <IonTitle>Albums</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
@@ -130,6 +132,7 @@ const AlbumsScreen = () => {
             <IonBackButton defaultHref={defaultBackHref} />
           </IonButtons>
           <IonTitle>Albums</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -26,6 +26,7 @@ import {
 } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './ReportCardsScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ReportCardsScreen = () => {
   const [reportCards, setReportCards] = useState([]);
@@ -99,6 +100,7 @@ const ReportCardsScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Report Cards</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -121,6 +123,7 @@ const ReportCardsScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Report Cards</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
@@ -148,6 +151,7 @@ const ReportCardsScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Report Cards</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="report-cards-content">

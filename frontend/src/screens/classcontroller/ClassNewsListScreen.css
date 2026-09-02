@@ -2,6 +2,13 @@
    Class News List Screen - Modern Clean Theme (Responsive)
    ========================================================================== */
 
+/* White navigation bar (previously blue) */
+.light-toolbar {
+  --background: #ffffff;
+  --border-color: #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
+}
+
 .news-list-content {
   --background: #f8fafc;
 }

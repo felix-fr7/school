@@ -43,7 +43,7 @@ import {
   notificationsOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { studentAPI } from '../../services/api';
+import { studentAPI, resolveMediaUrl } from '../../services/api';
 import './DashboardScreen.css';
 
 const StudentDashboardScreen = () => {
@@ -70,8 +70,8 @@ const StudentDashboardScreen = () => {
                 : (user?.classSection || 'Not Assigned')
             },
             school: {
-              name: data.schoolId?.schoolName || 'School',
-              logoUrl: null
+              name: data.schoolId?.schoolName || data.schoolName || 'School',
+              logoUrl: data.schoolLogoUrl || data.schoolId?.schoolLogoUrl || null
             }
           });
         }
@@ -113,7 +113,7 @@ const StudentDashboardScreen = () => {
   ];
 
   const menuItems = [
-    { id: '1', title: 'News', subtitle: 'School updates', icon: newspaperOutline, route: '/student/news', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
+    { id: '1', title: 'School Bulletin', subtitle: 'School updates', icon: newspaperOutline, route: '/student/news', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
     { id: '13', title: 'Circulars', subtitle: 'Official notices', icon: clipboardOutline, route: '/student/circulars', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
     { id: '10', title: 'Calendar', subtitle: 'Events & dates', icon: calendarOutline, route: '/student/calendar', gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
     { id: '7', title: 'Albums', subtitle: 'Photo gallery', icon: imagesOutline, route: '/albums', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
@@ -253,7 +253,7 @@ const StudentDashboardScreen = () => {
         <div className="modern-footer">
           <div className="footer-content">
             <IonImg 
-              src={profile?.school.logoUrl || ''} 
+              src={resolveMediaUrl(profile?.school.logoUrl)} 
               className="footer-logo"
               onError={(e) => {
                 e.target.style.display = 'none';

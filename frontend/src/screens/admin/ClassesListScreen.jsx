@@ -28,6 +28,7 @@ import { useHistory } from 'react-router-dom';
 import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline, eyeOutline, sendOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './ClassesListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassesListScreen = () => {
   const history = useHistory();
@@ -147,6 +148,7 @@ const handleDeleteConfirm = async () => {
           >
             <IonIcon icon={addCircleOutline} slot="start" /> Add Class
           </IonButton>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -25,6 +25,7 @@ import {
 } from 'ionicons/icons';
 import axios from 'axios';
 import './AdminVideosScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
@@ -328,6 +329,7 @@ const AdminVideosScreen = () => {
             <IonBackButton defaultHref="/admin" />
           </IonButtons>
           <IonTitle>Media & Video Library</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -38,6 +38,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI, fetchFileAsBlobUrl } from '../../services/api';
 import './AdminCircularsScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -353,6 +354,7 @@ const AdminCircularsScreen = () => {
         <IonHeader className="ion-no-border">
           <IonToolbar>
             <IonTitle>Circulars Management</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="admin-circulars-content" fullscreen>
@@ -373,6 +375,7 @@ const AdminCircularsScreen = () => {
             <IonBackButton defaultHref="/admin/dashboard" text="" />
           </IonButtons>
           <IonTitle>Circulars Console</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -9,6 +9,7 @@ import { calendarOutline, schoolOutline } from 'ionicons/icons';
 import { timetableAPI } from '../../services/api';
 import { DAYS, classLabel } from '../../utils/timetableGrid';
 import '../shared/TimetableGrid.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentTimetableScreen = () => {
   const [list, setList] = useState([]);
@@ -72,6 +73,7 @@ const StudentTimetableScreen = () => {
         <IonHeader><IonToolbar>
           <IonButtons slot="start"><IonBackButton defaultHref="/student/dashboard" /></IonButtons>
           <IonTitle>Timetable</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar></IonHeader>
         <IonContent className="ion-padding ion-text-center"><IonSpinner /><p>Loading...</p></IonContent>
       </IonPage>
@@ -84,6 +86,7 @@ const StudentTimetableScreen = () => {
         <IonToolbar>
           <IonButtons slot="start"><IonBackButton defaultHref="/student/dashboard" /></IonButtons>
           <IonTitle>Timetable</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">

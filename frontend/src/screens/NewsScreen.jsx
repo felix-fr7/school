@@ -6,11 +6,11 @@ const NewsScreen = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>News & Announcements</IonTitle>
+          <IonTitle>School Bulletin</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        <p>News and announcements will appear here.</p>
+        <p>School bulletin posts and announcements will appear here.</p>
       </IonContent>
     </IonPage>
   );

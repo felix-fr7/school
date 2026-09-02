@@ -39,6 +39,7 @@ import {
 } from 'ionicons/icons';
 import { classControllerAPI } from '../../services/api';
 import './ClassExamDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -136,6 +137,7 @@ const ClassExamDetailScreen = () => {
               <IonBackButton defaultHref="/class-controller/exams" />
             </IonButtons>
             <IonTitle>Exam Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center exam-detail-loading">
@@ -157,6 +159,7 @@ const ClassExamDetailScreen = () => {
               <IonBackButton defaultHref="/class-controller/exams" />
             </IonButtons>
             <IonTitle>Exam Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
@@ -187,6 +190,7 @@ const ClassExamDetailScreen = () => {
             <IonBackButton defaultHref="/class-controller/exams" />
           </IonButtons>
           <IonTitle>Exam Details</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

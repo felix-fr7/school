@@ -37,6 +37,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassStudentsListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassStudentsListScreen = () => {
   const history = useHistory();
@@ -196,6 +197,7 @@ const ClassStudentsListScreen = () => {
               <IonBackButton defaultHref="/class-controller/dashboard" />
             </IonButtons>
             <IonTitle>Class Students</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center students-loading">
@@ -216,6 +218,7 @@ const ClassStudentsListScreen = () => {
             <IonBackButton defaultHref="/class-controller/dashboard" />
           </IonButtons>
           <IonTitle>Class Students ({students.length})</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
         <IonToolbar className="light-toolbar">
           <IonSearchbar

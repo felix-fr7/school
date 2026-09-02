@@ -33,6 +33,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentsListScreen = () => {
   console.log('[StudentsList] Component rendered');
@@ -139,6 +140,7 @@ const StudentsListScreen = () => {
               <IonIcon icon={addCircleOutline} slot="start" />
               Add Student
             </IonButton>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="students-list-content">
@@ -163,6 +165,7 @@ const StudentsListScreen = () => {
             <IonIcon icon={addCircleOutline} slot="start" />
             Add Student
           </IonButton>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

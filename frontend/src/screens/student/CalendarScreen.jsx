@@ -27,6 +27,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { studentAPI } from '../../services/api';
 import './CalendarScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentCalendarScreen = () => {
   const history = useHistory();
@@ -140,6 +141,7 @@ const StudentCalendarScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Calendar</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

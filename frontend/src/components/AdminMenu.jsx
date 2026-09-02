@@ -16,7 +16,7 @@ const menuItems = [
     { title: 'Report Cards', icon: paperPlaneOutline, path: '/admin/report-cards' },
     { title: 'Search Report Cards', icon: searchOutline, path: '/admin/report-cards/search' },
     { title: 'Homework', icon: createOutline, path: '/admin/homework' },
-    { title: 'News', icon: newspaperOutline, path: '/admin/news' },
+    { title: 'School Bulletin', icon: newspaperOutline, path: '/admin/news' },
     { title: 'Circulars', icon: documentTextOutline, path: '/admin/circulars' },
     { title: 'Calendar', icon: calendarOutline, path: '/admin/calendar' },
     { title: 'Exams', icon: schoolOutline, path: '/admin/exams' },

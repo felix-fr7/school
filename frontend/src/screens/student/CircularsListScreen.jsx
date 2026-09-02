@@ -27,6 +27,7 @@ import { useHistory } from 'react-router-dom';
 import { refreshOutline, clipboardOutline, chevronForwardOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './CircularsListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentCircularsListScreen = () => {
   const history = useHistory();
@@ -73,6 +74,7 @@ const StudentCircularsListScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Circulars</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -90,6 +92,7 @@ const StudentCircularsListScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Circulars</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="circulars-list-content">

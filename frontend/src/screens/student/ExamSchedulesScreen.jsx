@@ -27,6 +27,7 @@ import {
 import { refreshOutline, calendarOutline, timeOutline, locationOutline, chevronForwardOutline, documentTextOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './ExamSchedulesScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentExamSchedulesScreen = () => {
   const history = useHistory();
@@ -87,6 +88,7 @@ const StudentExamSchedulesScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Exam Schedules</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -104,6 +106,7 @@ const StudentExamSchedulesScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Exam Schedules</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="exam-schedules-content">

@@ -35,6 +35,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
 import './SchoolsListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const SchoolsListScreen = () => {
   const history = useHistory();
@@ -226,6 +227,7 @@ const SchoolsListScreen = () => {
         <IonHeader className="premium-header">
           <IonToolbar>
             <IonTitle>Schools List</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="schools-list-content ion-padding" fullscreen>
@@ -251,6 +253,7 @@ const SchoolsListScreen = () => {
             <IonIcon icon={arrowBackOutline} slot="icon-only" />
           </IonButton>
           <IonTitle>Schools Directory</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

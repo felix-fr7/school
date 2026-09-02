@@ -33,6 +33,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './TeachersListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const TeachersListScreen = () => {
   const history = useHistory();
@@ -130,6 +131,7 @@ const TeachersListScreen = () => {
               <IonIcon icon={addCircleOutline} slot="start" />
               Add Teacher
             </IonButton>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="teachers-list-content">
@@ -154,6 +156,7 @@ const TeachersListScreen = () => {
             <IonIcon icon={addCircleOutline} slot="start" />
             Add Teacher
           </IonButton>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

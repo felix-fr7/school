@@ -162,7 +162,7 @@ const getClassStudents = async (req, res, next) => {
 
     // Get students
     const students = await User.find(query)
-      .select('name email studentId rollNumber createdAt')
+      .select('name email studentId rollNumber createdAt admittedDate')
       .sort({ name: 1 })
       .skip(skip)
       .limit(take);
@@ -218,7 +218,7 @@ const addClassStudent = async (req, res, next) => {
   try {
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
-    const { name, rollNumber, password } = req.body;
+    const { name, rollNumber, password, admittedDate } = req.body;
 
     // Validate required fields
     if (!name || !name.trim()) {
@@ -272,6 +272,7 @@ const addClassStudent = async (req, res, next) => {
       studentId: finalStudentId,
       rollNumber: rollNumber.trim(),
       classId: classId,
+      admittedDate: admittedDate ? new Date(admittedDate) : new Date(),
     });
 
     console.log('[DEBUG] Creating student with rollNumber:', rollNumber.trim());
@@ -285,6 +286,7 @@ const addClassStudent = async (req, res, next) => {
         name: student.name,
         studentId: student.studentId,
         rollNumber: student.rollNumber,
+        admittedDate: student.admittedDate,
         created_at: student.createdAt,
         password: finalPassword, // Return the password used (either provided or default)
       },
@@ -303,7 +305,7 @@ const updateStudent = async (req, res, next) => {
   try {
     const classId = req.user.classId;
     const { id } = req.params;
-    const { name, email, studentId } = req.body;
+    const { name, email, studentId, admittedDate } = req.body;
 
     // Verify student exists and belongs to this class
     const student = await User.findOne({
@@ -348,6 +350,10 @@ const updateStudent = async (req, res, next) => {
         });
       }
       student.studentId = studentId;
+    }
+
+    if (admittedDate !== undefined) {
+      student.admittedDate = admittedDate ? new Date(admittedDate) : null;
     }
 
     await student.save();

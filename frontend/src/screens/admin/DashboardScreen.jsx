@@ -123,7 +123,7 @@ const AdminDashboardScreen = () => {
     },
     { 
       id: '6', 
-      title: 'News', 
+      title: 'School Bulletin', 
       subtitle: 'Announcements',
       icon: newspaperOutline, 
       route: '/admin/news', // திருத்தப்பட்டது

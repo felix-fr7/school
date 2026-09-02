@@ -32,6 +32,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI, openFileInNewTab } from '../../services/api';
 import './AdminNewsScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -248,7 +249,8 @@ const AdminNewsScreen = () => {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/admin/dashboard" />
           </IonButtons>
-          <IonTitle>News & Announcements</IonTitle>
+          <IonTitle>School Bulletin</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
@@ -257,10 +259,10 @@ const AdminNewsScreen = () => {
           {/* Top Header Summary Banner */}
           <div className="header-summary-card">
             <div>
-              <h2>📢 Announcement Publisher</h2>
-              <p>Create, target, and broadcast News to students</p>
+              <h2>📢 Bulletin Publisher</h2>
+              <p>Create, target, and broadcast Bulletins to students</p>
             </div>
-            <div className="summary-badge">{newsList.length} Total News</div>
+            <div className="summary-badge">{newsList.length} Total Bulletins</div>
           </div>
 
           {/* ONE BY ONE VERTICAL FORM FLOW */}

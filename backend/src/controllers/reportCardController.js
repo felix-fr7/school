@@ -96,6 +96,22 @@ exports.uploadReportCard = async (req, res, next) => {
       console.warn('[uploadReportCard] Could not fetch student profile for class info:', profileError.message);
     }
 
+    // Fallback: if the uploader is a class account and no student profile was found,
+    // stamp the report card with the logged-in class so it appears in class listings
+    if (!studentClassId && req.user.isClass && req.user.classId) {
+      try {
+        const Class = require('../models/Class');
+        const classDoc = await Class.findById(req.user.classId).select('name section');
+        studentClassId = req.user.classId;
+        if (classDoc) {
+          className = classDoc.name;
+          classSection = classDoc.section;
+        }
+      } catch (classError) {
+        console.warn('[uploadReportCard] Could not fetch class info from class token:', classError.message);
+      }
+    }
+
     // Check if report card already exists for this student/term/year
     let reportCard = await ReportCard.findOne({
       student: studentId,
@@ -762,14 +778,25 @@ exports.publishAllReportCardsForClass = async (req, res, next) => {
       isActive: true 
     }).select('userId');
     
+    // Fallback: class-created students may not have StudentProfile records
+    let studentIds;
     if (studentProfiles.length === 0) {
+      const classStudents = await User.find({
+        classId,
+        role: 'Student',
+        isActive: true
+      }).select('_id');
+      studentIds = classStudents.map(s => s._id);
+    } else {
+      studentIds = studentProfiles.map(sp => sp.userId);
+    }
+
+    if (studentIds.length === 0) {
       return res.status(404).json({
         success: false,
         error: { message: 'No students found in this class' }
       });
     }
-
-    const studentIds = studentProfiles.map(sp => sp.userId);
 
     // Find all unpublished report cards for students in this class
     const unpublishedReportCards = await ReportCard.find({
@@ -1040,6 +1067,20 @@ exports.bulkUploadReportCards = async (req, res, next) => {
       }
     });
 
+    // Fallback: class-created students may not have StudentProfile records
+    if (Object.keys(studentMap).length === 0) {
+      const classStudents = await User.find({
+        classId,
+        role: 'Student',
+        isActive: true
+      }).select('name rollNumber');
+      classStudents.forEach(student => {
+        if (student.rollNumber) {
+          studentMap[String(student.rollNumber).trim()] = student;
+        }
+      });
+    }
+
     const results = {
       success: [],
       failed: [],
@@ -1121,6 +1162,7 @@ exports.bulkUploadReportCards = async (req, res, next) => {
             reportCard.subjects = studentData.subjects;
             reportCard.totalPercentage = parseFloat(overallPercentage.toFixed(2));
             reportCard.overallGrade = overallGrade;
+            if (!reportCard.classId) reportCard.classId = classId;
             reportCard.isPublished = false;
             reportCard.publishedAt = undefined;
             reportCard.issuedDate = undefined;
@@ -1129,6 +1171,7 @@ exports.bulkUploadReportCards = async (req, res, next) => {
             reportCard = new ReportCard({
               student: student._id,
               schoolId: tenantId,
+              classId,
               term,
               academicYear,
               subjects: studentData.subjects,
@@ -1217,6 +1260,7 @@ exports.bulkUploadReportCards = async (req, res, next) => {
           if (reportCard) {
             reportCard.reportCardFileUrl = fileUrl;
             reportCard.reportCardFileType = fileType;
+            if (!reportCard.classId) reportCard.classId = classId;
             reportCard.isPublished = false;
             reportCard.publishedAt = undefined;
             reportCard.issuedDate = undefined;
@@ -1224,6 +1268,7 @@ exports.bulkUploadReportCards = async (req, res, next) => {
             reportCard = new ReportCard({
               student: student._id,
               schoolId: tenantId,
+              classId,
               term,
               academicYear,
               reportCardFileUrl: fileUrl,

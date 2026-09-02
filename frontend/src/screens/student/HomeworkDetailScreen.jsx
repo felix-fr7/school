@@ -25,6 +25,7 @@ import { useParams } from 'react-router-dom';
 import { calendarOutline, personOutline, bookOutline, alertCircleOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './HomeworkDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentHomeworkDetailScreen = () => {
   const { homeworkId } = useParams();
@@ -85,6 +86,7 @@ const StudentHomeworkDetailScreen = () => {
               <IonBackButton defaultHref="/student/homework" />
             </IonButtons>
             <IonTitle>Homework Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -103,6 +105,7 @@ const StudentHomeworkDetailScreen = () => {
               <IonBackButton defaultHref="/student/homework" />
             </IonButtons>
             <IonTitle>Homework Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="homework-detail-content">
@@ -125,6 +128,7 @@ const StudentHomeworkDetailScreen = () => {
             <IonBackButton defaultHref="/student/homework" />
           </IonButtons>
           <IonTitle>Homework Details</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="homework-detail-content">

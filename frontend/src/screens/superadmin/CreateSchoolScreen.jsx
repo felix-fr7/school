@@ -4,7 +4,7 @@
  * Enhanced with Ionic Storage support, validation, and state management
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -27,6 +27,7 @@ import { schoolOutline, checkmarkCircleOutline, alertCircleOutline } from 'ionic
 import { useHistory } from 'react-router-dom';
 import { tenantsAPI } from '../../services/api';
 import './CreateSchoolScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Form validation patterns
 const VALIDATIONS = {
@@ -39,8 +40,9 @@ const VALIDATIONS = {
 
 const CreateSchoolScreen = () => {
   const history = useHistory();
-  const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -57,35 +59,6 @@ const CreateSchoolScreen = () => {
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSuccess, setAlertSuccess] = useState(false);
-
-  // Initialize storage using standard localStorage
-  useEffect(() => {
-    const initStorage = async () => {
-      // Use standard localStorage instead of Ionic Storage to avoid "Illegal constructor" error
-      const newStore = {
-        get: async (key) => {
-          try {
-            const item = localStorage.getItem(key);
-            return item ? JSON.parse(item) : null;
-          } catch (e) {
-            return null;
-          }
-        },
-        set: async (key, value) => {
-          try {
-            localStorage.setItem(key, JSON.stringify(value));
-          } catch (e) {
-            // Silent fail for storage errors
-          }
-        },
-        remove: async (key) => {
-          localStorage.removeItem(key);
-        }
-      };
-      setStore(newStore);
-    };
-    initStorage();
-  }, []);
 
   /**
    * Generate a URL-safe, lowercase tenant ID from the school name
@@ -194,6 +167,26 @@ const CreateSchoolScreen = () => {
   };
 
   /**
+   * Handle school logo file selection
+   */
+  const handleLogoChange = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAlertHeader('Invalid File');
+      setAlertMessage('Please choose an image file (JPG, PNG, etc.) for the school logo.');
+      setAlertSuccess(false);
+      setShowAlert(true);
+      event.target.value = '';
+      return;
+    }
+
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  /**
    * Handle form submission & Tenant creation
    */
   const handleCreate = async () => {
@@ -224,10 +217,7 @@ const CreateSchoolScreen = () => {
         adminPassword: formData.adminPassword,
       };
 
-      // Optional: Get token from Ionic Storage to pass in header if needed
-      const token = store ? await store.get('token') : null;
-
-      const response = await tenantsAPI.createTenant(submissionData, token);
+      const response = await tenantsAPI.createTenant(submissionData, logoFile);
       
       if (response && (response.success || response.status === 201 || response.status === 200)) {
         setAlertHeader('Success');
@@ -272,6 +262,7 @@ const CreateSchoolScreen = () => {
             />
           </IonButtons>
           <IonTitle>Create School</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
@@ -367,6 +358,41 @@ const CreateSchoolScreen = () => {
                     <IonIcon icon={alertCircleOutline} /> <span>{formErrors.email}</span>
                   </div>
                 )}
+              </div>
+              <div className="input-group" style={{ marginBottom: '15px' }}>
+                <label className="input-label" style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>School Logo</label>
+                <div className="logo-upload-container">
+                  <div className="logo-preview">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="School Logo Preview" className="logo-preview-img" />
+                    ) : (
+                      <div className="logo-preview-placeholder">
+                        <IonIcon icon={schoolOutline} />
+                        <span>No logo selected</span>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    id="school-logo-input"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleLogoChange}
+                  />
+                  <div className="logo-upload-actions">
+                    <IonButton
+                      fill="outline"
+                      size="small"
+                      onClick={() => document.getElementById('school-logo-input')?.click()}
+                    >
+                      <IonIcon icon={checkmarkCircleOutline} style={{ marginRight: '6px' }} />
+                      {logoFile ? 'Change Logo' : 'Upload Logo'}
+                    </IonButton>
+                    {logoFile && (
+                      <span className="logo-file-name">{logoFile.name}</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </IonCardContent>
           </IonCard>

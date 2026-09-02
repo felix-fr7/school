@@ -34,6 +34,7 @@ import {
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import './ClassProfileScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassProfileScreen = () => {
   const history = useHistory();
@@ -151,6 +152,7 @@ const ClassProfileScreen = () => {
               <IonBackButton defaultHref="/class-controller/dashboard" />
             </IonButtons>
             <IonTitle>Class Profile</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center profile-loading">
@@ -171,6 +173,7 @@ const ClassProfileScreen = () => {
             <IonBackButton defaultHref="/class-controller/dashboard" />
           </IonButtons>
           <IonTitle>Class Profile</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -42,6 +42,10 @@ const SchoolSchema = new mongoose.Schema({
     trim: true,
     match: [/^[\d\s\-\+\(\)]+$/, 'Please provide a valid phone number']
   },
+  schoolLogoUrl: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     enum: {

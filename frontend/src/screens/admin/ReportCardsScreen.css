@@ -866,3 +866,22 @@ ion-alert {
 ion-alert .alert-button {
   font-weight: 600;
 }
+/* ============================================
+   Manually Editable Filter Inputs (Term / Academic Year)
+   ============================================ */
+.editable-filter-input {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.editable-filter-input:focus {
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #fff;
+}

@@ -10,6 +10,7 @@ const School = require('../models/School'); // Ungaloda School Mongoose Model
 const User = require('../models/User');     // Ungaloda User Mongoose Model
 const Admin = require('../models/Admin');   // Ungaloda Admin Mongoose Model
 const Class = require('../models/Class');   // Ungaloda Class Mongoose Model
+const { deleteFile } = require('../middleware/fileUpload');
 
 /**
  * Generate JWT token for user
@@ -197,6 +198,7 @@ const createTenant = async (req, res, next) => {
       address,
       contactPhone,
       contactEmail,
+      schoolLogoUrl: req.file ? `/uploads/images/${req.file.filename}` : undefined,
     });
     await newSchool.save({ session });
 
@@ -402,6 +404,104 @@ const getTenantStats = async (req, res, next) => {
   }
 };
 
+/**
+ * Upload / replace a school logo
+ * PUT /api/tenants/:id/logo
+ */
+const uploadSchoolLogo = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid Tenant ID format.' },
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Please upload a logo image file.' },
+      });
+    }
+
+    const school = await School.findById(id);
+    if (!school) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School not found' },
+      });
+    }
+
+    // Delete the old logo file (if any) before saving the new one
+    const oldLogoUrl = school.schoolLogoUrl;
+    school.schoolLogoUrl = `/uploads/images/${req.file.filename}`;
+    await school.save();
+
+    if (oldLogoUrl) {
+      try {
+        await deleteFile(oldLogoUrl);
+      } catch (fileErr) {
+        console.error('[Upload School Logo] Failed to delete old logo file:', fileErr);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { id: school._id, schoolLogoUrl: school.schoolLogoUrl },
+      message: 'School logo uploaded successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete a school logo
+ * DELETE /api/tenants/:id/logo
+ */
+const deleteSchoolLogo = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid Tenant ID format.' },
+      });
+    }
+
+    const school = await School.findById(id);
+    if (!school) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School not found' },
+      });
+    }
+
+    const oldLogoUrl = school.schoolLogoUrl;
+    if (oldLogoUrl) {
+      school.schoolLogoUrl = null;
+      await school.save();
+
+      try {
+        await deleteFile(oldLogoUrl);
+      } catch (fileErr) {
+        console.error('[Delete School Logo] Failed to delete logo file:', fileErr);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: { id: school._id, schoolLogoUrl: null },
+      message: 'School logo removed successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getAllTenants,
   getTenantById,
@@ -409,4 +509,6 @@ module.exports = {
   updateTenant,
   deleteTenant,
   getTenantStats,
+  uploadSchoolLogo,
+  deleteSchoolLogo,
 };

@@ -56,10 +56,15 @@ import {
   closeCircleOutline,
   informationCircleOutline,
 } from 'ionicons/icons';
-import { adminAPI } from '../../services/api';
+import { adminAPI, classControllerAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import './ReportCardsScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ReportCardsScreen = () => {
+  const { isClass, currentClass } = useAuth();
+  const classAccountId = currentClass?.id || currentClass?._id || '';
+
   // State management
   const [classes, setClasses] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -156,6 +161,17 @@ const ReportCardsScreen = () => {
 
   const fetchClasses = async () => {
     try {
+      // Class accounts can only access their own class
+      if (isClass) {
+        setClasses([{
+          id: classAccountId,
+          _id: classAccountId,
+          name: currentClass?.name || 'My Class',
+          section: currentClass?.section || '',
+        }]);
+        if (classAccountId) setSelectedClassId(classAccountId);
+        return;
+      }
       const response = await adminAPI.getClasses();
       if (response.success && response.data) {
         setClasses(response.data);
@@ -170,6 +186,16 @@ const ReportCardsScreen = () => {
     if (!selectedClassId) return;
     
     try {
+      // Class accounts fetch their own roster via the class-controller API
+      if (isClass) {
+        const classResponse = await classControllerAPI.getStudents('', 1, 1000, '');
+        if (classResponse && classResponse.success && classResponse.data) {
+          setClassStudents(classResponse.data.students || []);
+        } else {
+          setClassStudents([]);
+        }
+        return;
+      }
       const response = await adminAPI.getStudents(1, 200, '', selectedClassId);
       if (response.success && response.data) {
         setClassStudents(response.data.students || response.data || []);
@@ -569,9 +595,10 @@ const ReportCardsScreen = () => {
       <IonHeader className="ion-no-border">
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin" />
+            <IonBackButton defaultHref={isClass ? '/class-controller/dashboard' : '/admin/dashboard'} />
           </IonButtons>
           <IonTitle>Report Cards Management</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
@@ -600,6 +627,7 @@ const ReportCardsScreen = () => {
                       placeholder="Select Class"
                       interface="popover"
                       className={!selectedClassId ? 'filter-required' : ''}
+                      disabled={isClass}
                     >
                       {classes.map((cls) => (
                         <IonSelectOption key={cls._id} value={cls._id}>
@@ -612,32 +640,37 @@ const ReportCardsScreen = () => {
                     <label className="filter-label">
                       Term <span className="required">*</span>
                     </label>
-                    <IonSelect
+                    <input
+                      type="text"
+                      className="editable-filter-input"
                       value={term}
-                      onIonChange={(e) => setTerm(e.detail.value)}
-                      placeholder="Select Term"
-                      interface="popover"
-                      className={!term ? 'filter-required' : ''}
-                    >
+                      onChange={(e) => setTerm(e.target.value)}
+                      placeholder="Type or select a term"
+                      list="term-options-list"
+                    />
+                    <datalist id="term-options-list">
                       {termOptions.map((t) => (
-                        <IonSelectOption key={t} value={t}>{t}</IonSelectOption>
+                        <option key={t} value={t} />
                       ))}
-                    </IonSelect>
+                    </datalist>
                   </IonCol>
                   <IonCol size="12" size-md="3">
                     <label className="filter-label">
                       Academic Year <span className="required">*</span>
                     </label>
-                    <IonSelect
+                    <input
+                      type="text"
+                      className="editable-filter-input"
                       value={academicYear}
-                      onIonChange={(e) => setAcademicYear(e.detail.value)}
-                      placeholder="Academic Year"
-                      interface="popover"
-                    >
+                      onChange={(e) => setAcademicYear(e.target.value)}
+                      placeholder="Type or select a year (e.g., 2025-2026)"
+                      list="academic-year-options-list"
+                    />
+                    <datalist id="academic-year-options-list">
                       {academicYearOptions.map((y) => (
-                        <IonSelectOption key={y} value={y}>{y}</IonSelectOption>
+                        <option key={y} value={y} />
                       ))}
-                    </IonSelect>
+                    </datalist>
                   </IonCol>
                   <IonCol size="12" size-md="3" className="search-col">
                     <label className="filter-label">Search Student</label>

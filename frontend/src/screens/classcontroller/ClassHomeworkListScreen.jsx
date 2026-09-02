@@ -40,6 +40,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassHomeworkListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassHomeworkListScreen = () => {
   const history = useHistory();
@@ -184,6 +185,7 @@ const ClassHomeworkListScreen = () => {
             <IonBackButton defaultHref="/class-controller/dashboard" />
           </IonButtons>
           <IonTitle>Class Homework</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

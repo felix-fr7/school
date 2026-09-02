@@ -25,6 +25,7 @@ import { useParams, useHistory } from 'react-router-dom';
 import { mailOutline, callOutline, bookOutline, trashOutline, createOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const TeacherDetailScreen = () => {
   const { teacherId } = useParams();
@@ -99,6 +100,7 @@ const TeacherDetailScreen = () => {
               <IonBackButton defaultHref="/admin/teachers" />
             </IonButtons>
             <IonTitle>Teacher Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -120,6 +122,7 @@ const TeacherDetailScreen = () => {
               <IonBackButton defaultHref="/admin/teachers" />
             </IonButtons>
             <IonTitle>Teacher Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent style={{ '--background': '#f8fafc' }}>
@@ -151,6 +154,7 @@ const TeacherDetailScreen = () => {
             <IonBackButton defaultHref="/admin/teachers" />
           </IonButtons>
           <IonTitle>Teacher Details</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

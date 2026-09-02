@@ -15,6 +15,7 @@ import { adminAPI, timetableAPI } from '../../services/api';
 import { DAYS, blankTemplateRows, classLabel, emptyRow } from '../../utils/timetableGrid';
 import TimetableGridTable from '../shared/TimetableGridTable';
 import '../shared/TimetableGrid.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const AdminTimetableScreen = () => {
   const [list, setList] = useState([]);
@@ -184,6 +185,7 @@ const AdminTimetableScreen = () => {
           <IonToolbar>
             <IonButtons slot="start"><IonBackButton defaultHref="/admin/dashboard" /></IonButtons>
             <IonTitle>Timetables</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center"><IonSpinner /><p>Loading...</p></IonContent>
@@ -200,6 +202,7 @@ const AdminTimetableScreen = () => {
           <IonButtons slot="end">
             <IonButton onClick={openCreate}><IonIcon icon={addCircleOutline} slot="start" />Create</IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">

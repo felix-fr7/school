@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -26,6 +26,7 @@ import {
 } from 'ionicons/icons';
 import { classControllerAPI } from '../../services/api';
 import './ClassNewsDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // API Base URL for file links
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -130,7 +131,8 @@ const ClassNewsDetailScreen = () => {
             <IonButtons slot="start">
               <IonBackButton defaultHref="/class-controller/news" />
             </IonButtons>
-            <IonTitle>News Detail</IonTitle>
+            <IonTitle>Bulletin Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center news-detail-loading">
@@ -151,12 +153,13 @@ const ClassNewsDetailScreen = () => {
             <IonButtons slot="start">
               <IonBackButton defaultHref="/class-controller/news" />
             </IonButtons>
-            <IonTitle>News Detail</IonTitle>
+            <IonTitle>Bulletin Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
           <div className="error-state">
-            <div className="error-icon">📰</div>
+            <div className="error-icon">??</div>
             <IonText color="dark">
               <h3>Announcement Not Found</h3>
               <p>The requested news article might have been deleted or moved.</p>
@@ -177,12 +180,13 @@ const ClassNewsDetailScreen = () => {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/class-controller/news" />
           </IonButtons>
-          <IonTitle>News Detail</IonTitle>
+          <IonTitle>Bulletin Details</IonTitle>
           <IonButtons slot="end">
             <IonButton onClick={handleShare}>
               <IonIcon slot="icon-only" icon={shareSocialOutline} />
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

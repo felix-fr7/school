@@ -26,6 +26,7 @@ import {
 import { refreshOutline, statsChartOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './MarksListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentMarksListScreen = () => {
   const [marks, setMarks] = useState([]);
@@ -77,6 +78,7 @@ const StudentMarksListScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Marks</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -94,6 +96,7 @@ const StudentMarksListScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Marks</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="marks-list-content">

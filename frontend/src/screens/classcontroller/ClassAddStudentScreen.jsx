@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Class Add Student Screen (Ionic React Version)
  * Add a new student to the class with roll number
  * Requires: name, roll number, and password
@@ -35,10 +35,12 @@ import {
   personAddOutline,
   keyOutline,
   personOutline,
+  calendarOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassAddStudentScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassAddStudentScreen = () => {
   const history = useHistory();
@@ -46,6 +48,7 @@ const ClassAddStudentScreen = () => {
   const [name, setName] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [admittedDate, setAdmittedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [nextStudentId, setNextStudentId] = useState(null);
@@ -109,6 +112,7 @@ const ClassAddStudentScreen = () => {
         name: name.trim(),
         rollNumber: rollNumber.trim(),
         password: password.trim(),
+        admittedDate: admittedDate || undefined,
       });
 
       if (response.success && response.data) {
@@ -117,6 +121,7 @@ const ClassAddStudentScreen = () => {
         setName('');
         setRollNumber('');
         setPassword('');
+        setAdmittedDate(new Date().toISOString().split('T')[0]);
         fetchNextStudentId();
       }
     } catch (error) {
@@ -157,6 +162,7 @@ const ClassAddStudentScreen = () => {
               <span>Add New Student</span>
             </div>
           </IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
@@ -215,6 +221,22 @@ const ClassAddStudentScreen = () => {
                   placeholder="Enter student's roll number (e.g., 001, A-01)"
                   autoComplete="off"
                   autoCorrect="off"
+                />
+              </div>
+            </div>
+
+            {/* Admitted Date */}
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={calendarOutline} className="label-icon" />
+                Admitted Date
+              </label>
+              <div className="custom-input-box">
+                <IonInput
+                  type="date"
+                  value={admittedDate}
+                  onIonInput={(e) => setAdmittedDate(e.detail.value || '')}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -300,6 +322,15 @@ const ClassAddStudentScreen = () => {
                   <span className="detail-value">{createdStudent.name}</span>
                 </div>
 
+                <div className="detail-row">
+                  <span className="detail-label">Admitted Date</span>
+                  <span className="detail-value">
+                    {createdStudent.admittedDate
+                      ? new Date(createdStudent.admittedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                      : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
+                </div>
+
                 <div className="detail-row password-row">
                   <span className="detail-label">Login Password</span>
                   <div className="modal-password-container">
@@ -334,6 +365,7 @@ const ClassAddStudentScreen = () => {
                   setName('');
                   setRollNumber('');
                   setPassword('');
+                  setAdmittedDate(new Date().toISOString().split('T')[0]);
                   setCreatedStudent(null);
                   fetchNextStudentId();
                 }}

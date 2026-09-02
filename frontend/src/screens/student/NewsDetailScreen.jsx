@@ -24,6 +24,7 @@ import { useParams } from 'react-router-dom';
 import { documentOutline, imageOutline, personOutline, calendarOutline, downloadOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './NewsDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -94,7 +95,8 @@ const StudentNewsDetailScreen = () => {
             <IonButtons slot="start">
               <IonBackButton defaultHref="/student/news" />
             </IonButtons>
-            <IonTitle>News Details</IonTitle>
+            <IonTitle>Bulletin Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -112,14 +114,15 @@ const StudentNewsDetailScreen = () => {
             <IonButtons slot="start">
               <IonBackButton defaultHref="/student/news" />
             </IonButtons>
-            <IonTitle>News Details</IonTitle>
+            <IonTitle>Bulletin Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="news-detail-content">
           <div className="error-container">
             <IonIcon icon={documentOutline} className="error-icon" />
             <IonText color="medium">
-              <h3>News article not found</h3>
+              <h3>Bulletin article not found</h3>
             </IonText>
           </div>
         </IonContent>
@@ -134,7 +137,8 @@ const StudentNewsDetailScreen = () => {
           <IonButtons slot="start">
             <IonBackButton defaultHref="/student/news" />
           </IonButtons>
-          <IonTitle>News Details</IonTitle>
+          <IonTitle>Bulletin Details</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="news-detail-content">

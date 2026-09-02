@@ -2,7 +2,7 @@ import React from 'react';
 import PlaceholderScreen from './PlaceholderScreen';
 
 const NewsListScreen = () => (
-  <PlaceholderScreen title="News List" description="View and manage school news" />
+  <PlaceholderScreen title="School Bulletin" description="View and manage school bulletin posts" />
 );
 
 export default NewsListScreen;

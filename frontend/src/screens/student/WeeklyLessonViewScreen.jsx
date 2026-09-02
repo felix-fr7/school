@@ -37,6 +37,7 @@ import {
 } from 'ionicons/icons';
 import { weeklyLessonsAPI } from '../../services/api';
 import './WeeklyLessonViewScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Helper to format date as "DD Month YYYY" (e.g., "06 July 2026")
 const formatDisplayDate = (dateStr) => {
@@ -128,6 +129,7 @@ const WeeklyLessonViewScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Weekly Lessons</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -148,6 +150,7 @@ const WeeklyLessonViewScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Weekly Lessons</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="weekly-lessons-content">

@@ -36,6 +36,7 @@ import {
   closeCircleOutline,
 } from 'ionicons/icons';
 import './ClassCreateCircularScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassCreateCircularScreen = () => {
   const history = useHistory();
@@ -121,6 +122,7 @@ const ClassCreateCircularScreen = () => {
             <IonBackButton defaultHref="/class-controller/circulars" />
           </IonButtons>
           <IonTitle>Create Circular</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

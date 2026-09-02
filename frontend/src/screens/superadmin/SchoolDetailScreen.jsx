@@ -41,10 +41,13 @@ import {
   closeOutline,
   checkmarkOutline,
   warningOutline,
+  cloudUploadOutline,
+  trashOutline,
 } from 'ionicons/icons';
 import { useParams, Redirect } from 'react-router-dom';
-import { tenantsAPI } from '../../services/api';
+import { tenantsAPI, resolveMediaUrl } from '../../services/api';
 import './SchoolDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const SchoolDetailScreen = () => {
   const { tenantId } = useParams();
@@ -82,11 +85,20 @@ const SchoolDetailScreen = () => {
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
   const [resetPasswordError, setResetPasswordError] = useState('');
 
+  // Delete Admin State
+  const [showDeleteAdminAlert, setShowDeleteAdminAlert] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState(null);
+  const [deletingAdmin, setDeletingAdmin] = useState(false);
+
   // Alert State
   const [showAlert, setShowAlert] = useState(false);
   const [alertHeader, setAlertHeader] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSuccess, setAlertSuccess] = useState(false);
+
+  // School Logo State
+  const [logoUpdating, setLogoUpdating] = useState(false);
+  const [logoDeleting, setLogoDeleting] = useState(false);
 
   useEffect(() => {
     const fetchSchoolDetails = async () => {
@@ -107,6 +119,7 @@ const SchoolDetailScreen = () => {
             code: rawSchool.schoolCode || rawSchool.code,
             phone: rawSchool.contactPhone || rawSchool.phone,
             email: rawSchool.contactEmail || rawSchool.email,
+            logoUrl: rawSchool.schoolLogoUrl || rawSchool.logoUrl || null,
           });
         }
         
@@ -138,6 +151,7 @@ const SchoolDetailScreen = () => {
               <IonBackButton defaultHref="/superadmin/schools" className="gold-back-btn" />
             </IonButtons>
             <IonTitle>School Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="school-detail-content ion-padding" fullscreen>
@@ -159,6 +173,7 @@ const SchoolDetailScreen = () => {
               <IonBackButton defaultHref="/superadmin/schools" className="gold-back-btn" />
             </IonButtons>
             <IonTitle>School Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="school-detail-content ion-padding" fullscreen>
@@ -170,6 +185,71 @@ const SchoolDetailScreen = () => {
       </IonPage>
     );
   }
+
+  // ==========================================
+  // School Logo Management (upload / replace / delete)
+  // ==========================================
+  const handleLogoChange = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (file) {
+      handleLogoUpload(file);
+    }
+    event.target.value = '';
+  };
+
+  const handleLogoUpload = async (file) => {
+    if (!file || !tenantId) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAlertHeader('Invalid File');
+      setAlertMessage('Please choose an image file (JPG, PNG, etc.) for the school logo.');
+      setAlertSuccess(false);
+      setShowAlert(true);
+      return;
+    }
+
+    setLogoUpdating(true);
+    try {
+      const response = await tenantsAPI.uploadTenantLogo(tenantId, file);
+      if (response.success) {
+        setSchool((prev) => ({ ...prev, logoUrl: response.data?.schoolLogoUrl || null }));
+        setAlertHeader('Success');
+        setAlertMessage('School logo updated successfully.');
+        setAlertSuccess(true);
+        setShowAlert(true);
+      }
+    } catch (error) {
+      setAlertHeader('Error');
+      setAlertMessage(error?.response?.data?.error?.message || 'Failed to upload school logo. Please try again.');
+      setAlertSuccess(false);
+      setShowAlert(true);
+    } finally {
+      setLogoUpdating(false);
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    if (!tenantId) return;
+
+    setLogoDeleting(true);
+    try {
+      const response = await tenantsAPI.deleteTenantLogo(tenantId);
+      if (response.success) {
+        setSchool((prev) => ({ ...prev, logoUrl: null }));
+        setAlertHeader('Success');
+        setAlertMessage('School logo removed successfully.');
+        setAlertSuccess(true);
+        setShowAlert(true);
+      }
+    } catch (error) {
+      setAlertHeader('Error');
+      setAlertMessage(error?.response?.data?.error?.message || 'Failed to delete school logo. Please try again.');
+      setAlertSuccess(false);
+      setShowAlert(true);
+    } finally {
+      setLogoDeleting(false);
+    }
+  };
 
   // Open Edit Admin Modal
   const openEditAdminModal = (admin) => {
@@ -247,6 +327,77 @@ const SchoolDetailScreen = () => {
     setResetPasswordModalVisible(true);
   };
 
+  // ==========================================
+  // Delete Admin (permanent removal from database)
+  // ==========================================
+  const openDeleteAdminAlert = (admin) => {
+    setAdminToDelete(admin);
+    setShowDeleteAdminAlert(true);
+  };
+
+  const closeDeleteAdminAlert = () => {
+    setShowDeleteAdminAlert(false);
+    setAdminToDelete(null);
+  };
+
+  const handleDeleteAdmin = async () => {
+    if (!adminToDelete || !tenantId) return;
+
+    const adminId = adminToDelete._id || adminToDelete.id;
+    if (!adminId) {
+      closeDeleteAdminAlert();
+      return;
+    }
+
+    setDeletingAdmin(true);
+    try {
+      const response = await tenantsAPI.deleteSchoolAdmin(tenantId, adminId);
+
+      if (response.success) {
+        // Remove the admin from the local list immediately
+        setAdmins((prevAdmins) => prevAdmins.filter(
+          (a) => (a._id || a.id) !== adminId
+        ));
+
+        // Re-fetch the admins list and stats from the server so the UI
+        // reflects the actual database state (admin must be gone).
+        try {
+          const [adminsRes, statsRes] = await Promise.all([
+            tenantsAPI.getSchoolAdmins(tenantId),
+            tenantsAPI.getTenantStats(tenantId),
+          ]);
+          if (adminsRes.success && adminsRes.data) {
+            setAdmins(adminsRes.data.admins || []);
+          }
+          if (statsRes.success && statsRes.data) {
+            setStats(statsRes.data.stats);
+          }
+        } catch (refreshError) {
+          console.error('Error refreshing admins after delete:', refreshError);
+        }
+
+        const adminCount = response.data?.adminCollectionDeleted ?? 0;
+        const userCount = response.data?.userCollectionDeleted ?? 0;
+        setAlertHeader('Success');
+        setAlertMessage(
+          `${adminToDelete.name || 'Admin'} has been permanently deleted from the database` +
+          ` (Admin records removed: ${adminCount}, User records removed: ${userCount}).`
+        );
+        setAlertSuccess(true);
+        setShowAlert(true);
+      }
+    } catch (error) {
+      setAlertHeader('Error');
+      setAlertMessage(error?.response?.data?.error?.message || 'Failed to delete admin. Please try again.');
+      setAlertSuccess(false);
+      setShowAlert(true);
+    } finally {
+      setDeletingAdmin(false);
+      closeDeleteAdminAlert();
+    }
+  };
+
+
   // Close Password Reset Modal
   const closeResetPasswordModal = () => {
     setResetPasswordModalVisible(false);
@@ -303,6 +454,7 @@ const SchoolDetailScreen = () => {
             <IonBackButton defaultHref="/superadmin/schools" className="gold-back-btn" />
           </IonButtons>
           <IonTitle>{school.name}</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
@@ -312,13 +464,64 @@ const SchoolDetailScreen = () => {
           <IonCard className="header-card">
             <IonCardContent>
               <div className="header-content">
-                <div className="header-icon-wrapper">
-                  <IonIcon icon={businessOutline} className="header-icon" />
-                </div>
+                {school.logoUrl ? (
+                  <div className="header-logo-wrapper">
+                    <img
+                      src={resolveMediaUrl(school.logoUrl)}
+                      alt={`${school.name} logo`}
+                      className="header-logo-img"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div className="header-icon-wrapper header-logo-fallback" style={{ display: 'none' }}>
+                      <IonIcon icon={businessOutline} className="header-icon" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="header-icon-wrapper">
+                    <IonIcon icon={businessOutline} className="header-icon" />
+                  </div>
+                )}
                 <div className="header-info">
                   <h1 className="school-name">{school.name}</h1>
                   <span className="school-code-badge">{school.code}</span>
                 </div>
+              </div>
+
+              {/* School Logo Management */}
+              <div className="logo-management-row">
+                <input
+                  type="file"
+                  id="school-logo-upload-input"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleLogoChange}
+                />
+                <IonButton
+                  fill="outline"
+                  size="small"
+                  className="logo-action-btn"
+                  disabled={logoUpdating}
+                  onClick={() => document.getElementById('school-logo-upload-input')?.click()}
+                >
+                  <IonIcon icon={cloudUploadOutline} slot="start" />
+                  {logoUpdating ? 'Uploading…' : school.logoUrl ? 'Edit Logo' : 'Upload Logo'}
+                </IonButton>
+                {school.logoUrl && (
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    color="danger"
+                    className="logo-action-btn"
+                    disabled={logoDeleting}
+                    onClick={handleLogoDelete}
+                  >
+                    <IonIcon icon={trashOutline} slot="start" />
+                    {logoDeleting ? 'Removing…' : 'Delete Logo'}
+                  </IonButton>
+                )}
               </div>
             </IonCardContent>
           </IonCard>
@@ -419,6 +622,14 @@ const SchoolDetailScreen = () => {
                           title="Reset Password"
                         >
                           <IonIcon icon={keyOutline} />
+                        </button>
+                        <button
+                          className="action-btn btn-delete-admin"
+                          onClick={() => openDeleteAdminAlert(admin)}
+                          title="Delete Admin"
+                          disabled={deletingAdmin}
+                        >
+                          <IonIcon icon={trashOutline} />
                         </button>
                       </div>
                     </div>
@@ -608,6 +819,30 @@ const SchoolDetailScreen = () => {
           </div>
         </div>
       </IonModal>
+
+      {/* Delete Admin Confirmation Alert */}
+      <IonAlert
+        isOpen={showDeleteAdminAlert}
+        onDidDismiss={closeDeleteAdminAlert}
+        header="Delete Admin"
+        message={
+          adminToDelete
+            ? `Are you sure you want to permanently delete "${adminToDelete.name}" (${adminToDelete.email})? This will remove the admin account from the database and cannot be undone.`
+            : ''
+        }
+        buttons={[
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            handler: closeDeleteAdminAlert,
+          },
+          {
+            text: deletingAdmin ? 'Deleting…' : 'Delete',
+            role: 'destructive',
+            handler: handleDeleteAdmin,
+          },
+        ]}
+      />
 
       {/* Alert */}
       <IonAlert

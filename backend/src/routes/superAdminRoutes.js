@@ -19,6 +19,7 @@ const {
   getSystemStats,
   getSchoolAdmins,
   updateSchoolAdmin,
+  deleteSchoolAdmin,
   resetSchoolAdminPassword
 } = require('../controllers/superAdminController');
 
@@ -148,6 +149,21 @@ router.put(
     param('adminId').isMongoId().withMessage('Invalid admin ID format')
   ],
   updateSchoolAdmin
+);
+
+/**
+ * @route   DELETE /api/super-admin/schools/:schoolId/admins/:adminId
+ * @desc    Permanently delete a school admin from the database
+ * @params  schoolId, adminId (MongoDB ObjectId)
+ * @access  Super Admin
+ */
+router.delete(
+  '/schools/:schoolId/admins/:adminId',
+  [
+    param('schoolId').isMongoId().withMessage('Invalid school ID format'),
+    param('adminId').isMongoId().withMessage('Invalid admin ID format')
+  ],
+  deleteSchoolAdmin
 );
 
 /**

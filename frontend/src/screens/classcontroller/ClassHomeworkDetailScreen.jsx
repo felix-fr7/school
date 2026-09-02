@@ -35,6 +35,7 @@ import {
 import { useHistory, useParams } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassHomeworkDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // API Base URL for file links
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
@@ -160,6 +161,7 @@ const ClassHomeworkDetailScreen = () => {
               <IonBackButton defaultHref="/class-controller/homework" />
             </IonButtons>
             <IonTitle>Homework Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
@@ -190,6 +192,7 @@ const ClassHomeworkDetailScreen = () => {
               <IonIcon icon={createOutline} slot="icon-only" />
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

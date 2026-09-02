@@ -31,6 +31,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './EditTeacherScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const EditTeacherScreen = () => {
   const history = useHistory();
@@ -125,6 +126,7 @@ const EditTeacherScreen = () => {
               <IonBackButton defaultHref="/admin/teachers" className="admin-back-btn" />
             </IonButtons>
             <IonTitle className="admin-title">Edit Teacher</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="admin-loading-container">
@@ -143,6 +145,7 @@ const EditTeacherScreen = () => {
             <IonBackButton defaultHref="/admin/teachers" className="admin-back-btn" />
           </IonButtons>
           <IonTitle className="admin-title">Edit Teacher</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

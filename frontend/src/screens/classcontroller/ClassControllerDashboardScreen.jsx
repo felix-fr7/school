@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Class Controller / Teacher Dashboard Screen (Ionic React Version)
  * Professional Layout with Clear Header Sign-Out Button
  */
@@ -38,6 +38,7 @@ import {
   checkmarkCircleOutline,
   shieldCheckmarkOutline,
   albumsOutline,
+  ribbonOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -134,6 +135,14 @@ const ClassControllerDashboardScreen = () => {
       iconIon: calendarOutline,
       iconColorClass: 'icon-purple',
       route: '/class-controller/exams',
+    },
+    {
+      id: 'report-cards',
+      title: 'Report Cards',
+      subtitle: 'Send student report cards',
+      iconIon: ribbonOutline,
+      iconColorClass: 'icon-rose',
+      route: '/class-controller/report-cards',
     },
     {
       id: 'news',

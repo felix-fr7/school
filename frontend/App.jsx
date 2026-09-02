@@ -313,6 +313,7 @@ const AppContent = () => {
             <ProtectedRoute exact path="/class-controller/calendar" component={ClassControllerCalendarScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/calendar/:eventId" component={ClassControllerCalendarEventDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/albums" component={AlbumsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/report-cards" component={AdminReportCardsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/timetable" component={ClassTimetableScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>
         )}

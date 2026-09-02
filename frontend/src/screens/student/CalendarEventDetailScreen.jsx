@@ -28,6 +28,7 @@ import {
 import { useParams, useHistory } from 'react-router-dom';
 import { studentAPI } from '../../services/api';
 import './CalendarEventDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const CalendarEventDetailScreen = () => {
   const { eventId } = useParams();
@@ -115,6 +116,7 @@ const CalendarEventDetailScreen = () => {
               <IonBackButton defaultHref="/student/calendar" />
             </IonButtons>
             <IonTitle>Event Not Found</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
@@ -136,6 +138,7 @@ const CalendarEventDetailScreen = () => {
             <IonBackButton defaultHref="/student/calendar" />
           </IonButtons>
           <IonTitle>Event Details</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

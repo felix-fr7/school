@@ -37,6 +37,7 @@ import {
 } from 'ionicons/icons';
 import { albumsAPI, adminAPI } from '../../services/api';
 import './CreateAlbumScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const CreateAlbumScreen = () => {
   const history = useHistory();
@@ -169,6 +170,7 @@ const CreateAlbumScreen = () => {
             <IonBackButton defaultHref="/admin/albums" className="admin-back-btn" />
           </IonButtons>
           <IonTitle className="admin-title">Create New Album</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonBadge, IonIcon } from '@ionic/react';
 import { checkmarkCircle, closeCircle, timeOutline } from 'ionicons/icons';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentAttendanceScreen = () => {
   const [attendance, setAttendance] = useState([
@@ -25,6 +26,7 @@ const StudentAttendanceScreen = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>My Attendance</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent>

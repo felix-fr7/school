@@ -256,3 +256,67 @@ ion-input.input-error {
     padding: 16px 16px 12px 16px;
   }
 }
+/* ============================================
+   7. SCHOOL LOGO UPLOAD
+   ============================================ */
+.logo-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px dashed #d4af37;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.logo-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.logo-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.logo-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.logo-preview-placeholder ion-icon {
+  font-size: 40px;
+  color: #9ca3af;
+}
+
+.logo-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.logo-file-name {
+  font-size: 12px;
+  color: #6b7280;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

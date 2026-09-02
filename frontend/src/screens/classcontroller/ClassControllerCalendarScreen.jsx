@@ -27,6 +27,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassControllerCalendarScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassControllerCalendarScreen = () => {
   const history = useHistory();
@@ -131,6 +132,7 @@ const handleDayClick = (dayEvents) => {
             <IonBackButton defaultHref="/class-controller/dashboard" />
           </IonButtons>
           <IonTitle>Calendar</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

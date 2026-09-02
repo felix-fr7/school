@@ -16,6 +16,7 @@ import {
 } from '@ionic/react';
 import { constructOutline } from 'ionicons/icons';
 import './PlaceholderScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const PlaceholderScreen = ({ title, description }) => {
   return (
@@ -26,6 +27,7 @@ const PlaceholderScreen = ({ title, description }) => {
             <IonBackButton defaultHref="/admin/dashboard" />
           </IonButtons>
           <IonTitle>{title}</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="placeholder-content">

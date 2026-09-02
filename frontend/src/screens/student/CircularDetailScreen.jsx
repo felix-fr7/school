@@ -30,6 +30,7 @@ import {
 } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './CircularDetailScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL for constructing attachment URLs
 const API_BASE_URL = 
@@ -117,6 +118,7 @@ const StudentCircularDetailScreen = () => {
               <IonBackButton defaultHref="/student/circulars" />
             </IonButtons>
             <IonTitle>Circular Detail</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center circular-detail-loading">
@@ -138,6 +140,7 @@ const StudentCircularDetailScreen = () => {
               <IonBackButton defaultHref="/student/circulars" />
             </IonButtons>
             <IonTitle>Circular Detail</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
@@ -164,6 +167,7 @@ const StudentCircularDetailScreen = () => {
             <IonBackButton defaultHref="/student/circulars" />
           </IonButtons>
           <IonTitle>Circular Detail</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -37,6 +37,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI, storage } from '../../services/api';
 import './ClassCreateHomeworkScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -315,6 +316,7 @@ const ClassCreateHomeworkScreen = () => {
             </IonButton>
           </IonButtons>
           <IonTitle style={{ color: '#000000', fontWeight: 'bold' }}>Create Homework</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

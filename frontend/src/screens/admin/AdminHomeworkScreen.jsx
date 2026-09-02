@@ -39,6 +39,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminHomeworkScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -277,6 +278,7 @@ const AdminHomeworkScreen = () => {
             <IonBackButton defaultHref="/admin/dashboard" />
           </IonButtons>
           <IonTitle>Homework Management</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonToggle, IonIcon, IonButton } from '@ionic/react';
 import { settingsOutline, notificationsOutline, lockClosedOutline, colorPaletteOutline, languageOutline, helpCircleOutline, logOutOutline } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const AdminSettingsScreen = () => {
   const { logout } = useAuth();
@@ -11,6 +12,7 @@ const AdminSettingsScreen = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Settings</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">

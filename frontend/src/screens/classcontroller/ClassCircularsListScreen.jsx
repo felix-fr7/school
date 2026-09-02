@@ -39,6 +39,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI, storage } from '../../services/api';
 import './ClassCircularsListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // Get API base URL for constructing attachment URLs
 const API_BASE_URL = 
@@ -176,6 +177,7 @@ const ClassCircularsListScreen = () => {
               <IonBackButton defaultHref="/class-controller/dashboard" />
             </IonButtons>
             <IonTitle>Circulars</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="circulars-loading ion-text-center">
@@ -196,6 +198,7 @@ const ClassCircularsListScreen = () => {
             <IonBackButton defaultHref="/class-controller/dashboard" />
           </IonButtons>
           <IonTitle>Circulars ({circulars.length})</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

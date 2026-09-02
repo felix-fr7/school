@@ -23,6 +23,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const CreateStudentScreen = () => {
   const history = useHistory();
@@ -132,6 +133,7 @@ const CreateStudentScreen = () => {
             <IonBackButton defaultHref="/admin/students" />
           </IonButtons>
           <IonTitle>Create Student</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="create-student-content">

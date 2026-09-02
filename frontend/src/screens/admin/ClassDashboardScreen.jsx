@@ -41,6 +41,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './ClassDashboardScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassDashboardScreen = () => {
   const { classId } = useParams();
@@ -147,6 +148,7 @@ const ClassDashboardScreen = () => {
               <IonBackButton defaultHref="/admin/classes" className="admin-back-btn" />
             </IonButtons>
             <IonTitle className="admin-title">Class Dashboard</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="admin-loading-container">
@@ -166,6 +168,7 @@ const ClassDashboardScreen = () => {
               <IonBackButton defaultHref="/admin/classes" className="admin-back-btn" />
             </IonButtons>
             <IonTitle className="admin-title">Class Dashboard</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="class-dashboard-content">
@@ -200,6 +203,7 @@ const ClassDashboardScreen = () => {
               <IonIcon icon={createOutline} />
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

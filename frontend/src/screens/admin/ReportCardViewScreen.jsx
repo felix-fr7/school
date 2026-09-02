@@ -30,6 +30,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './ReportCardViewScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ReportCardViewScreen = ({ match }) => {
   const reportCardId = match?.params?.id;
@@ -146,6 +147,7 @@ const ReportCardViewScreen = ({ match }) => {
               <IonBackButton defaultHref="/admin/report-cards" />
             </IonButtons>
             <IonTitle>Error</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
@@ -172,6 +174,7 @@ const ReportCardViewScreen = ({ match }) => {
               <IonBackButton defaultHref="/admin/report-cards" />
             </IonButtons>
             <IonTitle>Not Found</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
@@ -205,6 +208,7 @@ const ReportCardViewScreen = ({ match }) => {
               Print
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

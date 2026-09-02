@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   IonPage,
   IonHeader,
@@ -26,6 +26,7 @@ import {
   keyOutline,
   personOutline,
   calendarOutline,
+  createOutline,
   chevronForwardOutline,
   refreshOutline,
   schoolOutline,
@@ -38,6 +39,7 @@ import {
 import { useParams, useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassEditStudentScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassEditStudentScreen = () => {
   const { studentId: routeStudentId } = useParams();
@@ -56,6 +58,9 @@ const ClassEditStudentScreen = () => {
   const [alertMessage, setAlertMessage] = useState('');
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [editAdmittedDate, setEditAdmittedDate] = useState('');
+  const [savingDate, setSavingDate] = useState(false);
   
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
@@ -64,6 +69,13 @@ const ClassEditStudentScreen = () => {
   useEffect(() => {
     fetchStudent();
   }, [routeStudentId]);
+
+  const toDateInputValue = (dateValue) => {
+    if (!dateValue) return '';
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  };
 
   const fetchStudent = async () => {
     setLoading(true);
@@ -82,10 +94,12 @@ const ClassEditStudentScreen = () => {
             studentId: foundStudent.studentId,
             email: foundStudent.email,
             createdAt: foundStudent.createdAt,
+            admittedDate: foundStudent.admittedDate || foundStudent.createdAt,
           };
           setStudent(studentData);
           setEditName(studentData.name);
           setOriginalName(studentData.name);
+          setEditAdmittedDate(toDateInputValue(studentData.admittedDate));
         } else {
           setAlertHeader('Error');
           setAlertMessage('Student not found.');
@@ -140,6 +154,39 @@ const ClassEditStudentScreen = () => {
       setSaving(false);
     }
   };
+
+  const handleSaveAdmittedDate = async () => {
+    if (!editAdmittedDate) {
+      setAlertHeader('Validation Error');
+      setAlertMessage('Please select an admitted date.');
+      setShowAlert(true);
+      return;
+    }
+
+    setSavingDate(true);
+    try {
+      const response = await classControllerAPI.updateStudent(student.id, {
+        admittedDate: editAdmittedDate,
+      });
+
+      if (response.success) {
+        setStudent(prev => ({ ...prev, admittedDate: editAdmittedDate }));
+        setToastMessage('Admitted date updated successfully.');
+        setToastColor('success');
+        setShowToast(true);
+        setShowDateModal(false);
+      }
+    } catch (error) {
+      console.error('Error updating admitted date:', error);
+      const errorMsg = error?.response?.data?.error?.message || 'Failed to update admitted date.';
+      setAlertHeader('Error');
+      setAlertMessage(errorMsg);
+      setShowAlert(true);
+    } finally {
+      setSavingDate(false);
+    }
+  };
+
 
   const handleResetPassword = async () => {
     if (!newPassword.trim() || newPassword.length < 6) {
@@ -214,6 +261,7 @@ const ClassEditStudentScreen = () => {
               <IonBackButton defaultHref="/class-controller/students" />
             </IonButtons>
             <IonTitle>Class Student Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
@@ -232,6 +280,7 @@ const ClassEditStudentScreen = () => {
             <IonBackButton defaultHref="/class-controller/students" />
           </IonButtons>
           <IonTitle>Class Student Details</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
@@ -325,12 +374,13 @@ const ClassEditStudentScreen = () => {
                 </IonLabel>
               </IonItem>
               
-              <IonItem>
+              <IonItem button detail={false} onClick={() => setShowDateModal(true)}>
                 <IonIcon icon={calendarOutline} slot="start" className="info-icon" />
                 <IonLabel>
                   <small>Admitted Date</small>
-                  <p>{new Date(student?.createdAt || '').toLocaleDateString()}</p>
+                  <p>{student?.admittedDate ? new Date(student.admittedDate).toLocaleDateString() : 'Not set'}</p>
                 </IonLabel>
+                <IonIcon icon={createOutline} slot="end" color="medium" />
               </IonItem>
             </IonList>
           </IonCardContent>
@@ -391,6 +441,31 @@ const ClassEditStudentScreen = () => {
             </IonButton>
 
             <IonButton expand="block" fill="clear" color="dark" onClick={() => { setShowResetModal(false); setNewPassword(''); }}>
+              Cancel
+            </IonButton>
+          </div>
+        </IonModal>
+
+        {/* Edit Admitted Date Modal */}
+        <IonModal isOpen={showDateModal} onDidDismiss={() => setShowDateModal(false)} className="reset-password-modal">
+          <div className="modal-container">
+            <h2 className="modal-title">Edit Admitted Date</h2>
+            <p className="modal-subtitle">Update the admission date for <strong>{student?.name}</strong></p>
+
+            <div className="input-group">
+              <IonLabel>Admitted Date</IonLabel>
+              <IonInput
+                type="date"
+                value={editAdmittedDate}
+                onIonInput={(e) => setEditAdmittedDate(e.detail.value || '')}
+              />
+            </div>
+
+            <IonButton expand="block" color="primary" onClick={handleSaveAdmittedDate} disabled={savingDate || !editAdmittedDate} className="submit-btn">
+              {savingDate ? <IonSpinner name="crescent" /> : 'Save Admitted Date'}
+            </IonButton>
+
+            <IonButton expand="block" fill="clear" color="dark" onClick={() => setShowDateModal(false)}>
               Cancel
             </IonButton>
           </div>

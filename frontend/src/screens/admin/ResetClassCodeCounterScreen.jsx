@@ -25,6 +25,7 @@ import { useHistory } from 'react-router-dom';
 import { warningOutline, checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ResetClassCodeCounterScreen = () => {
   const history = useHistory();
@@ -83,6 +84,7 @@ const ResetClassCodeCounterScreen = () => {
             <IonBackButton defaultHref="/admin/classes" className="admin-back-btn" />
           </IonButtons>
           <IonTitle className="admin-title">Reset Class Code Counter</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

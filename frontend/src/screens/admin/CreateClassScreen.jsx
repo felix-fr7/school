@@ -38,6 +38,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './CreateClassScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const CreateClassScreen = () => {
   const history = useHistory();
@@ -162,6 +163,7 @@ const CreateClassScreen = () => {
             <IonBackButton defaultHref="/admin/classes" className="admin-back-btn" />
           </IonButtons>
           <IonTitle className="admin-title">Create New Class</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

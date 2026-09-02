@@ -25,21 +25,36 @@ import { personOutline, schoolOutline, bookOutline, businessOutline, layersOutli
 import { useAuth } from '../../contexts/AuthContext';
 import { studentAPI } from '../../services/api';
 import './ProfileScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentProfileScreen = () => {
   const { user: currentUser } = useAuth();
   const [user, setUser] = useState(null);
+  const [dashboardProfile, setDashboardProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        // Primary: full profile endpoint (/student/profile)
         const response = await studentAPI.getProfile();
         if (response.success && response.data) {
           setUser(response.data);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+      }
+
+      try {
+        // Fallback / enrichment: dashboard profile endpoint (/profile) which
+        // includes the student's populated class/section and school branding
+        const dashboardRes = await studentAPI.getDashboardProfile();
+        if (dashboardRes.success && dashboardRes.data) {
+          const dash = dashboardRes.data;
+          setDashboardProfile(dash.student || dash);
+        }
+      } catch (dashError) {
+        console.error('Error fetching dashboard profile:', dashError);
       } finally {
         setLoading(false);
       }
@@ -56,6 +71,7 @@ const StudentProfileScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Profile</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -67,19 +83,32 @@ const StudentProfileScreen = () => {
 
   const profile = user || currentUser;
 
+  // Additional profile data from the dashboard endpoint (if available)
+  const dash = dashboardProfile || {};
+
+  // Classic \"VIII-TERRA\" style combined value may come from the dashboard API
+  const dashClassSection = dash?.classSection ? String(dash.classSection) : '';
+  const dashParts = dashClassSection.includes('-') ? dashClassSection.split('-') : [];
+
   // Resolve class name & section from multiple possible API shapes
   const className =
     profile?.class?.name ||
     profile?.classId?.name ||
+    dash?.classId?.name ||
     profile?.class_name ||
     profile?.className ||
+    dash?.className ||
+    (dashParts[0] || null) ||
     null;
 
   const classSection =
     profile?.class?.section ||
     profile?.classId?.section ||
+    dash?.classId?.section ||
     profile?.section ||
     profile?.classSection ||
+    dash?.sectionName ||
+    (dashParts.length > 1 ? dashParts.slice(1).join('-') : null) ||
     null;
 
   const schoolName =
@@ -97,6 +126,7 @@ const StudentProfileScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Profile</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="profile-content">

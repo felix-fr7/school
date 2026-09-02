@@ -32,6 +32,7 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -149,6 +150,7 @@ const AddStudentScreen = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Add Student</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

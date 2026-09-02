@@ -332,25 +332,36 @@ router.get('/profile', async (req, res, next) => {
     const studentId = req.user.id;
     const tenantId = req.user.tenantId;
 
-    const studentProfile = await StudentProfile.findOne({ tenantId, userId: studentId })
+    // Always fetch the student from the User collection with class populated,
+    // so class/section are available even if a StudentProfile doc is missing.
+    const user = await User.findOne({ _id: studentId })
       .populate({
-        path: 'userId',
-        match: { tenantId },
-        select: '-password'
+        path: 'classId',
+        select: 'name section gradeLevel'
       })
-      .populate('classId', 'name section gradeLevel');
+      .select('-password');
 
-    if (!studentProfile || !studentProfile.userId) {
+    if (!user) {
       return res.status(404).json({ success: false, message: 'Profile not found' });
     }
 
-    const profileData = {
-      ...studentProfile.userId.toObject(),
-      ...studentProfile.toObject(),
-      class_name: studentProfile.classId?.name,
-      section: studentProfile.classId?.section,
-      grade_level: studentProfile.classId?.gradeLevel
-    };
+    const profileData = { ...user.toObject() };
+
+    // Overlay the richer StudentProfile document when it exists
+    const studentProfile = await StudentProfile.findOne({ tenantId, userId: studentId })
+      .populate('classId', 'name section gradeLevel');
+
+    if (studentProfile) {
+      Object.assign(profileData, studentProfile.toObject(), {
+        class_name: studentProfile.classId?.name,
+        section: studentProfile.classId?.section,
+        grade_level: studentProfile.classId?.gradeLevel
+      });
+    } else if (user.classId) {
+      profileData.class_name = user.classId.name;
+      profileData.section = user.classId.section;
+      profileData.grade_level = user.classId.gradeLevel;
+    }
 
     res.json({ success: true, data: profileData });
   } catch (error) {

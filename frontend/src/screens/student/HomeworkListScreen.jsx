@@ -30,6 +30,7 @@ import { useHistory } from 'react-router-dom';
 import { bookOutline, calendarOutline, timeOutline, refreshOutline } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
 import './HomeworkListScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentHomeworkListScreen = () => {
   const history = useHistory();
@@ -78,6 +79,7 @@ const StudentHomeworkListScreen = () => {
               <IonBackButton defaultHref="/student/dashboard" />
             </IonButtons>
             <IonTitle>Homework</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center ion-justify-content-center ion-align-items-center">
@@ -95,6 +97,7 @@ const StudentHomeworkListScreen = () => {
             <IonBackButton defaultHref="/student/dashboard" />
           </IonButtons>
           <IonTitle>Homework</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
       <IonContent className="homework-list-content">

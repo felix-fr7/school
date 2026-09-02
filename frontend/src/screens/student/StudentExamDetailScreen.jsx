@@ -42,6 +42,7 @@ import {
   expandOutline,
 } from 'ionicons/icons';
 import { studentAPI } from '../../services/api';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 // API Base URL - same as in api.js but without /api suffix for file access
 const API_BASE_URL = 
@@ -161,6 +162,7 @@ const StudentExamDetailScreen = () => {
               <IonBackButton defaultHref="/student-exams" />
             </IonButtons>
             <IonTitle>Exam Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding ion-text-center">
@@ -190,6 +192,7 @@ const StudentExamDetailScreen = () => {
               <IonBackButton defaultHref="/student-exams" />
             </IonButtons>
             <IonTitle>Exam Details</IonTitle>
+          <HomeLogoutButtons />
           </IonToolbar>
         </IonHeader>
         <IonContent className="ion-padding">
@@ -226,6 +229,7 @@ const StudentExamDetailScreen = () => {
             <IonBackButton defaultHref="/student-exams" />
           </IonButtons>
           <IonTitle>📅 Exam Details</IonTitle>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 

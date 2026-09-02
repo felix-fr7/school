@@ -33,6 +33,7 @@ import {
 import { useHistory, useParams } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
 import './ClassHomeworkEditScreen.css';
+import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const ClassHomeworkEditScreen = () => {
   const history = useHistory();
@@ -226,6 +227,7 @@ const ClassHomeworkEditScreen = () => {
               )}
             </IonButton>
           </IonButtons>
+        <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
