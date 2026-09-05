@@ -180,7 +180,7 @@ const StudentDashboardScreen = () => {
           <div className="hero-content">
             <div className="welcome-text">
               <p className="greeting">{getGreeting()},</p>
-              <h1 className="student-name-hero">{profile?.student.name?.split(' ')[0] || 'Student'}</h1>
+              <h1 className="student-name-hero">{profile?.student.name || 'Student'}</h1>
               <div className="class-info-badge">
                 <IonIcon icon={schoolOutline} />
                 <span>{profile?.student.classSection || 'Class Not Assigned'}</span>

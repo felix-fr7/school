@@ -23,14 +23,16 @@ import {
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+import './CreateStudentScreen.css';
 import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const CreateStudentScreen = () => {
   const history = useHistory();
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [classId, setClassId] = useState(undefined);
+  const [classId, setClassId] = useState(null);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingClasses, setFetchingClasses] = useState(false);
@@ -70,6 +72,12 @@ const CreateStudentScreen = () => {
       setShowAlert(true);
       return;
     }
+    if (!classId) {
+      setAlertMessage('Please select a class');
+      setIsSuccess(false);
+      setShowAlert(true);
+      return;
+    }
     if (!password.trim()) {
       setAlertMessage('Please enter password');
       setIsSuccess(false);
@@ -102,7 +110,7 @@ const CreateStudentScreen = () => {
         setEmail('');
         setPassword('');
         setRollNumber('');
-        setClassId(undefined);
+        setClassId(null);
       } else {
         setAlertMessage(response.error?.message || 'Failed to create student');
         setIsSuccess(false);
@@ -136,9 +144,10 @@ const CreateStudentScreen = () => {
         <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
-      <IonContent className="create-student-content">
+      <IonContent className="create-student-content" fullscreen>
         <div className="form-container">
-          <div className="input-group">
+          <div className="form-card">
+            <div className="input-group">
             <label className="input-label">Student Name *</label>
             <IonInput
               placeholder="Enter student name"
@@ -185,7 +194,7 @@ const CreateStudentScreen = () => {
           </div>
 
           <div className="input-group">
-            <label className="input-label">Class</label>
+            <label className="input-label">Class *</label>
             {fetchingClasses ? (
               <div className="picker-loading">
                 <IonSpinner name="crescent" />
@@ -194,15 +203,17 @@ const CreateStudentScreen = () => {
             ) : (
               <IonSelect
                 value={classId}
-                placeholder="Select a class (optional)"
+                placeholder="Select a class"
                 interface="popover"
-                onIonChange={(e) => setClassId(e.detail.value || undefined)}
+                onIonChange={(e) => setClassId(e.detail.value || null)}
                 disabled={loading}
                 className="class-select"
               >
-                <IonSelectOption value="">Select a class (optional)</IonSelectOption>
+                <IonSelectOption value="" disabled>
+                  Select a class
+                </IonSelectOption>
                 {classes.map((cls) => (
-                  <IonSelectOption key={cls.id} value={cls.id}>
+                  <IonSelectOption key={cls._id || cls.id} value={cls._id || cls.id}>
                     {cls.section ? `${cls.name} - ${cls.section}` : cls.name}
                   </IonSelectOption>
                 ))}
@@ -211,13 +222,14 @@ const CreateStudentScreen = () => {
           </div>
 
           <div className="button-row">
-            <IonButton expand="block" color="medium" onClick={() => history.goBack()} disabled={loading}>
+            <IonButton className="cancel-button" expand="block" color="medium" onClick={() => history.goBack()} disabled={loading}>
               Cancel
             </IonButton>
-            <IonButton expand="block" color="primary" onClick={handleSubmit} disabled={loading}>
+            <IonButton className="create-submit-button" expand="block" color="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? <IonSpinner name="crescent" /> : 'Create Student'}
             </IonButton>
           </div>
+        </div>
         </div>
 
         <IonAlert

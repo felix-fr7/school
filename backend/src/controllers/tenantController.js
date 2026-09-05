@@ -30,6 +30,30 @@ const generateToken = (user) => {
   );
 };
 
+const deleteUploadedLogo = async (logoUrl) => {
+  if (!logoUrl) return;
+
+  try {
+    await deleteFile(logoUrl);
+    console.log(`[Create Tenant] Deleted uploaded logo after failed creation: ${logoUrl}`);
+  } catch (error) {
+    console.error('[Create Tenant] Failed to delete uploaded logo after failed creation:', error.message);
+  }
+};
+
+const deleteUploadedFileIfExists = async (fileUrl) => {
+  if (!fileUrl) return false;
+
+  try {
+    await deleteFile(fileUrl);
+    console.log(`[Delete Tenant] Deleted uploaded file: ${fileUrl}`);
+    return true;
+  } catch (error) {
+    console.error('[Delete Tenant] Failed to delete uploaded file:', error.message);
+    return false;
+  }
+};
+
 /**
  * Get all tenants (schools) with search and pagination
  * GET /api/tenants
@@ -159,6 +183,7 @@ const getTenantById = async (req, res, next) => {
 const createTenant = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+  const uploadedLogoUrl = req.file ? `/uploads/images/${req.file.filename}` : null;
 
   try {
     const {
@@ -174,7 +199,9 @@ const createTenant = async (req, res, next) => {
 
     const existingCode = await School.findOne({ schoolCode }).session(session);
     if (existingCode) {
+      await session.abortTransaction();
       await session.endSession();
+      await deleteUploadedLogo(uploadedLogoUrl);
       return res.status(409).json({
         success: false,
         error: { message: 'School code already exists. Please use a unique code.' },
@@ -184,7 +211,9 @@ const createTenant = async (req, res, next) => {
     // Check if admin email already exists in Admin collection
     const existingAdmin = await Admin.findOne({ email: adminEmail.toLowerCase() }).session(session);
     if (existingAdmin) {
+      await session.abortTransaction();
       await session.endSession();
+      await deleteUploadedLogo(uploadedLogoUrl);
       return res.status(409).json({
         success: false,
         error: { message: 'Admin with this email already exists.' },
@@ -238,7 +267,8 @@ const createTenant = async (req, res, next) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
+    await session.endSession();
+    await deleteUploadedLogo(uploadedLogoUrl);
     next(error);
   }
 };
@@ -308,6 +338,7 @@ const deleteTenant = async (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      await session.abortTransaction();
       await session.endSession();
       return res.status(400).json({
         success: false,
@@ -317,12 +348,15 @@ const deleteTenant = async (req, res, next) => {
 
     const existingTenant = await School.findById(id).session(session);
     if (!existingTenant) {
+      await session.abortTransaction();
       await session.endSession();
       return res.status(404).json({
         success: false,
         error: { message: 'School not found' },
       });
     }
+
+    const deletedLogoUrl = existingTenant.schoolLogoUrl || null;
 
     const userCount = await User.countDocuments({ tenantId: id }).session(session);
     const classCount = await Class.countDocuments({ tenantId: id }).session(session);
@@ -333,7 +367,12 @@ const deleteTenant = async (req, res, next) => {
     await School.findByIdAndDelete(id).session(session);
 
     await session.commitTransaction();
-    session.endSession();
+    await session.endSession();
+
+    let schoolLogoDeleted = false;
+    if (deletedLogoUrl) {
+      schoolLogoDeleted = await deleteUploadedFileIfExists(deletedLogoUrl);
+    }
 
     res.status(200).json({
       success: true,
@@ -343,11 +382,12 @@ const deleteTenant = async (req, res, next) => {
         tenantName: existingTenant.schoolName,
         tenantCode: existingTenant.schoolCode,
         dependenciesHandled: { userCount, classCount },
+        schoolLogoDeleted,
       },
     });
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
+    await session.endSession();
     next(error);
   }
 };

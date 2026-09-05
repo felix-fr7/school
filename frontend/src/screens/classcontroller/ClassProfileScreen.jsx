@@ -56,30 +56,33 @@ const ClassProfileScreen = () => {
     try {
       console.log('Fetching class profile...');
       
-      // Auth context à®…à®²à¯à®²à®¤à¯ Backend API à®¤à®°à®µà¯
+      // Use real data from AuthContext (populated during classLogin from backend)
       if (currentClass) {
+        // Prefer teacher data returned by backend during login
+        const teacherInfo = currentClass.teacher || { 
+          name: 'Not Assigned', 
+          email: 'Contact admin to assign teacher' 
+        };
+
         setProfile({
-          id: currentClass.id || 'cls-101',
-          classCode: currentClass.classCode || '10-A-2026',
-          name: currentClass.name || 'Grade 10',
+          id: currentClass.id || currentClass._id || 'cls-101',
+          classCode: currentClass.classCode || 'N/A',
+          name: currentClass.name || 'Grade',
           section: currentClass.section || 'A',
-          academicYear: '2025 - 2026',
-          teacher: {
-            name: 'K. Rajkumar',
-            email: 'rajkumar.teacher@school.edu',
-          },
+          academicYear: currentClass.academicYear || '2025 - 2026',
+          teacher: teacherInfo,
         });
       } else {
-        // Fallback profile data for demo
+        // Fallback profile data (should rarely happen)
         setProfile({
           id: 'cls-101',
-          classCode: '10-A-2026',
-          name: 'Grade 10',
-          section: 'Section A',
+          classCode: 'N/A',
+          name: 'Grade',
+          section: 'A',
           academicYear: '2025 - 2026',
-          teacher: {
-            name: 'K. Rajkumar',
-            email: 'rajkumar.teacher@school.edu',
+          teacher: { 
+            name: 'Not Assigned', 
+            email: 'Contact admin to assign a teacher in-charge' 
           },
         });
       }
@@ -224,17 +227,32 @@ const ClassProfileScreen = () => {
           </IonCard>
 
           {/* Teacher Info Card */}
-          {profile?.teacher && (
+          {profile?.teacher ? (
             <IonCard className="info-card">
               <IonCardContent>
                 <h3 className="card-section-title">Class In-Charge Teacher</h3>
                 <div className="teacher-info">
                   <div className="teacher-avatar">
-                    {profile.teacher.name.charAt(0).toUpperCase()}
+                    {(profile.teacher.name || 'N').charAt(0).toUpperCase()}
                   </div>
                   <div className="teacher-details">
                     <div className="teacher-name">{profile.teacher.name}</div>
                     <div className="teacher-email">{profile.teacher.email}</div>
+                  </div>
+                </div>
+              </IonCardContent>
+            </IonCard>
+          ) : (
+            <IonCard className="info-card no-teacher-card">
+              <IonCardContent>
+                <h3 className="card-section-title">Class In-Charge Teacher</h3>
+                <div className="no-teacher-info">
+                  <div className="no-teacher-icon">⚠️</div>
+                  <div className="no-teacher-text">
+                    <div className="teacher-name">No Teacher Assigned</div>
+                    <div className="teacher-email">
+                      Contact your school admin to assign a teacher in-charge for this class.
+                    </div>
                   </div>
                 </div>
               </IonCardContent>

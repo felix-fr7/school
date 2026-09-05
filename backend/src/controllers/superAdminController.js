@@ -8,6 +8,24 @@ const School = require('../models/School');
 const User = require('../models/User');
 const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
+const { deleteFile } = require('../middleware/fileUpload');
+
+/**
+ * Delete an uploaded file by its stored URL/path.
+ * File deletion is best-effort so DB deletion is not blocked by missing files.
+ */
+const deleteUploadedFile = async (fileUrl, label) => {
+  if (!fileUrl) return false;
+
+  try {
+    await deleteFile(fileUrl);
+    console.log(`[Delete Uploaded File] Deleted ${label}: ${fileUrl}`);
+    return true;
+  } catch (error) {
+    console.error(`[Delete Uploaded File] Failed to delete ${label}:`, error.message);
+    return false;
+  }
+};
 
 /**
  * Register a new school with its admin account
@@ -334,8 +352,19 @@ const updateSchoolStatus = async (req, res, next) => {
 const deleteSchool = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const mongoose = require('mongoose');
 
-    // Delete all users associated with the school
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid school ID format' }
+      });
+    }
+
+    const schoolIdObj = new mongoose.Types.ObjectId(id);
+
+    // Delete all admins/users associated with the school
+    await Admin.collection.deleteMany({ schoolId: schoolIdObj });
     await User.deleteMany({ schoolId: id });
 
     // Delete the school
@@ -348,8 +377,15 @@ const deleteSchool = async (req, res, next) => {
       });
     }
 
+    const schoolLogoDeleted = school.schoolLogoUrl
+      ? await deleteUploadedFile(school.schoolLogoUrl, 'school logo image')
+      : false;
+
     res.status(200).json({
       success: true,
+      data: {
+        schoolLogoDeleted
+      },
       message: 'School and all associated data deleted successfully'
     });
   } catch (error) {
@@ -527,6 +563,14 @@ const updateSchoolAdmin = async (req, res, next) => {
 const deleteSchoolAdmin = async (req, res, next) => {
   try {
     const { schoolId, adminId } = req.params;
+    const mongoose = require('mongoose');
+
+    if (!mongoose.Types.ObjectId.isValid(adminId) || !mongoose.Types.ObjectId.isValid(schoolId)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Invalid admin ID or school ID format' }
+      });
+    }
 
     // Verify school exists
     const school = await School.findById(schoolId);
@@ -537,75 +581,65 @@ const deleteSchoolAdmin = async (req, res, next) => {
       });
     }
 
-    // Locate the admin record — it may live in the Admin collection
-    // (created via Super Admin) or in the User collection.
-    let adminEmail = null;
-    let adminName = null;
-    let adminDeletedCount = 0;
-    let userDeletedCount = 0;
+    // Locate the admin record before deleting it so we can clean up uploaded images.
+    // It may live in the Admin collection (created via Super Admin) or in the User collection.
 
-    const mongoose = require('mongoose');
     const adminIdObj = new mongoose.Types.ObjectId(adminId);
-
-    // ========== STEP 0: IMMEDIATE RAW FORCE DELETE (to handle any hook issues) ==========
-    console.log('[Delete School Admin] STEP 0: Performing immediate raw force delete on both collections...');
-    const forceAdmin0 = await Admin.collection.deleteOne({ _id: adminIdObj });
-    const forceUser0 = await User.collection.deleteOne({ _id: adminIdObj });
-    adminDeletedCount += (forceAdmin0.deletedCount || 0);
-    userDeletedCount += (forceUser0.deletedCount || 0);
-    console.log(`[Delete School Admin] Raw force delete (step 0): Admin=${forceAdmin0.deletedCount}, User=${forceUser0.deletedCount}`);
-
-    // STEP 1: Find the admin - bypass the isActive pre-find hook
-    // by explicitly including isActive in the filter.
-    // We also make the lookup less strict for delete (just _id).
+    const schoolIdObj = new mongoose.Types.ObjectId(schoolId);
     const adminRecord = await Admin.collection.findOne({ _id: adminIdObj });
-
-    if (adminRecord) {
-      adminEmail = adminRecord.email;
-      adminName = adminRecord.name;
-      console.log(`[Delete School Admin] Found record in Admin collection: ${adminEmail}`);
-    } else {
-      console.log(`[Delete School Admin] Admin not found in lookup. Will still attempt direct _id delete.`);
-    }
-
-    // STEP 2: HARD DELETE using RAW collection (bypasses ALL hooks and isActive filters)
-    // This is the most reliable way.
-    console.log('[Delete School Admin] STEP 2: Raw hard delete on Admin collection...');
-    const adminRawDel1 = await Admin.collection.deleteOne({ _id: adminIdObj });
-    adminDeletedCount += (adminRawDel1.deletedCount || 0);
-
-    const adminRawDel2 = await Admin.collection.deleteOne({ _id: adminIdObj, schoolId: schoolId });
-    adminDeletedCount += (adminRawDel2.deletedCount || 0);
-
-    console.log(`[Delete School Admin] Admin raw delete result: ${adminDeletedCount} record(s)`);
-
-    // STEP 3: HARD DELETE from User using RAW
-    console.log('[Delete School Admin] STEP 3: Raw hard delete on User collection...');
-    const userRawDel = await User.collection.deleteMany({
+    const userRecord = await User.collection.findOne({
       $or: [
         { _id: adminIdObj },
-        adminEmail ? { email: adminEmail.toLowerCase() } : {}
-      ]
+        adminRecord?.email ? { schoolId: schoolIdObj, role: 'School Admin', email: adminRecord.email.toLowerCase() } : {}
+      ].filter(Boolean)
     });
-    userDeletedCount += (userRawDel.deletedCount || 0);
 
-    console.log(`[Delete School Admin] User raw delete result: ${userDeletedCount} record(s)`);
+    const adminBelongsToSchool = !adminRecord || adminRecord.schoolId?.toString() === schoolId;
+    const userBelongsToSchool = !userRecord || userRecord.schoolId?.toString() === schoolId;
 
-    // STEP 4: Aggressive fallback — use RAW collection only (never normal Mongoose delete)
-    if (adminDeletedCount === 0 && userDeletedCount === 0) {
-      console.log('[Delete School Admin] No records deleted in first pass — final raw fallback...');
-
-      const lastAdminRaw = await Admin.collection.deleteOne({ _id: adminIdObj });
-      const lastUserRaw = await User.collection.deleteMany({
-        $or: [
-          { _id: adminIdObj },
-          adminEmail ? { email: adminEmail.toLowerCase() } : {}
-        ]
+    if ((!adminRecord && !userRecord) || !adminBelongsToSchool || !userBelongsToSchool) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'School admin not found in the database' }
       });
-
-      adminDeletedCount = (lastAdminRaw.deletedCount || 0);
-      userDeletedCount = (lastUserRaw.deletedCount || 0);
     }
+
+    const adminEmail = adminRecord?.email || userRecord?.email || null;
+    const adminName = adminRecord?.name || userRecord?.name || null;
+    const schoolLogoUrl = school.schoolLogoUrl || null;
+
+    const uploadedFileUrls = [...new Set([
+      adminRecord?.profileImage,
+      userRecord?.profileImage,
+      schoolLogoUrl
+    ].filter(Boolean))];
+
+    const adminDeleteFilters = [
+      { _id: adminIdObj }
+    ];
+
+    if (adminEmail) {
+      adminDeleteFilters.push({ email: adminEmail.toLowerCase(), schoolId: schoolIdObj });
+      adminDeleteFilters.push({ email: adminEmail.toLowerCase(), role: 'School Admin' });
+    }
+
+    const userDeleteFilters = [
+      { _id: adminIdObj }
+    ];
+
+    if (adminEmail && userRecord) {
+      userDeleteFilters.push({ email: adminEmail.toLowerCase(), schoolId: schoolIdObj, role: 'School Admin' });
+    }
+
+    console.log('[Delete School Admin] STEP 1: Raw hard delete on Admin collection...');
+    const adminDeleteResult = await Admin.collection.deleteMany({ $or: adminDeleteFilters });
+    const adminDeletedCount = adminDeleteResult.deletedCount || 0;
+    console.log(`[Delete School Admin] Admin raw delete result: ${adminDeletedCount} record(s)`);
+
+    console.log('[Delete School Admin] STEP 2: Raw hard delete on User collection...');
+    const userDeleteResult = await User.collection.deleteMany({ $or: userDeleteFilters });
+    const userDeletedCount = userDeleteResult.deletedCount || 0;
+    console.log(`[Delete School Admin] User raw delete result: ${userDeletedCount} record(s)`);
 
     // If still nothing, admin truly doesn't exist
     if (adminDeletedCount === 0 && userDeletedCount === 0) {
@@ -615,18 +649,18 @@ const deleteSchoolAdmin = async (req, res, next) => {
       });
     }
 
-    // Verify the admin is really gone from both collections
-    const stillInAdmin = await Admin.findById(adminId);
-    const stillInUser = await User.findById(adminId);
+    // Verify the admin is really gone from both collections using raw collection lookups.
+    const stillInAdmin = await Admin.collection.findOne({ _id: adminIdObj });
+    const stillInUser = await User.collection.findOne({ _id: adminIdObj });
     const stillAdminByEmail = adminEmail
-      ? await Admin.findOne({ email: adminEmail.toLowerCase() })
+      ? await Admin.collection.findOne({ email: adminEmail.toLowerCase() })
       : null;
     const stillUserByEmail = adminEmail
-      ? await User.findOne({ email: adminEmail.toLowerCase() })
+      ? await User.collection.findOne({ email: adminEmail.toLowerCase() })
       : null;
 
     if (stillInAdmin || stillInUser || stillAdminByEmail || stillUserByEmail) {
-      console.error('[Delete School Admin] FAILED VERIFICATION — records still exist:', {
+      console.error('[Delete School Admin] FAILED VERIFICATION - records still exist:', {
         stillInAdmin: !!stillInAdmin,
         stillInUser: !!stillInUser,
         stillAdminByEmail: !!stillAdminByEmail,
@@ -640,6 +674,20 @@ const deleteSchoolAdmin = async (req, res, next) => {
 
     console.log(`[Delete School Admin] Verified removal. Admin "${adminName || adminId}" permanently deleted.`);
 
+    const deletedFiles = [];
+    for (const fileUrl of uploadedFileUrls) {
+      const deleted = await deleteUploadedFile(fileUrl, fileUrl === schoolLogoUrl ? 'school logo image' : 'admin profile image');
+      deletedFiles.push({
+        fileUrl,
+        deleted,
+        type: fileUrl === schoolLogoUrl ? 'schoolLogo' : 'adminProfileImage'
+      });
+    }
+
+    if (schoolLogoUrl && deletedFiles.some(file => file.fileUrl === schoolLogoUrl && file.deleted)) {
+      await School.updateOne({ _id: schoolIdObj }, { $unset: { schoolLogoUrl: '' } });
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -647,7 +695,9 @@ const deleteSchoolAdmin = async (req, res, next) => {
         email: adminEmail,
         name: adminName,
         adminCollectionDeleted: adminDeletedCount,
-        userCollectionDeleted: userDeletedCount
+        userCollectionDeleted: userDeletedCount,
+        deletedFiles,
+        schoolLogoDeleted: deletedFiles.some(file => file.fileUrl === schoolLogoUrl && file.deleted)
       },
       message: 'School admin permanently deleted from the database'
     });

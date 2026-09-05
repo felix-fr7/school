@@ -121,12 +121,43 @@ const deleteFile = (filePath) => {
       resolve(true);
       return;
     }
-    
-    // Extract relative path from URL
-    const relativePath = filePath.replace('/uploads/', '');
+
+    let relativePath = filePath;
+
+    try {
+      const parsedUrl = new URL(filePath);
+      const uploadIndex = parsedUrl.pathname.indexOf('/uploads/');
+      if (uploadIndex !== -1) {
+        relativePath = parsedUrl.pathname.slice(uploadIndex + 1);
+      }
+    } catch (error) {
+      // Not a URL; use the stored path as-is.
+    }
+
+    if (relativePath.startsWith('/')) {
+      relativePath = relativePath.slice(1);
+    }
+
+    relativePath = relativePath.replace(/\\/g, '/');
+    const uploadIndex = relativePath.indexOf('uploads/');
+    if (uploadIndex > 0) {
+      relativePath = relativePath.slice(uploadIndex);
+    }
+
+    if (!relativePath.startsWith('uploads/')) {
+      relativePath = `uploads/${relativePath.replace(/^\.+\//, '')}`;
+    }
+
     const fullPath = path.join(__dirname, '../../', relativePath);
+    const resolvedFullPath = path.resolve(fullPath);
+    const resolvedUploadRoot = path.resolve(path.join(__dirname, '../../uploads'));
+
+    if (!resolvedFullPath.startsWith(`${resolvedUploadRoot}${path.sep}`)) {
+      reject(new Error('Invalid upload file path'));
+      return;
+    }
     
-    fs.unlink(fullPath, (err) => {
+    fs.unlink(resolvedFullPath, (err) => {
       if (err && err.code !== 'ENOENT') {
         reject(err);
       } else {
