@@ -51,6 +51,9 @@ import {
   searchOutline,
   schoolOutline,
   calendarOutline,
+  calendarNumberOutline,
+  statsChartOutline,
+  ribbonOutline,
   personOutline,
   checkmarkCircleOutline,
   closeCircleOutline,
@@ -589,20 +592,67 @@ const ReportCardsScreen = () => {
 
   // Get unpublished count
   const unpublishedCount = reportCards.filter(rc => !rc.isPublished).length;
+  const publishedCount = reportCards.filter(rc => rc.isPublished).length;
+
+  // Selected class display name
+  const selectedClassName = classes.find(c => (c.id || c._id) === selectedClassId)?.name || '';
+  const selectedClassSection = classes.find(c => (c.id || c._id) === selectedClassId)?.section || '';
+  const selectedClassLabel =
+    (selectedClassName ? `Class ${selectedClassName}` : 'Select a class') +
+    (selectedClassName && selectedClassSection ? ` - ${selectedClassSection}` : '');
+
+  const publishPercent = reportCards.length > 0 ? Math.round((publishedCount / reportCards.length) * 100) : 0;
 
   return (
     <IonPage>
       <IonHeader className="ion-no-border">
-        <IonToolbar>
+        <IonToolbar className="report-toolbar">
           <IonButtons slot="start">
-            <IonBackButton defaultHref={isClass ? '/class-controller/dashboard' : '/admin/dashboard'} />
+            <IonBackButton defaultHref={isClass ? '/class-controller/dashboard' : '/admin/dashboard'} color="dark" />
           </IonButtons>
-          <IonTitle>Report Cards Management</IonTitle>
-        <HomeLogoutButtons />
+          <IonTitle>
+            <div className="report-toolbar-title">
+              <IonIcon icon={statsChartOutline} className="report-toolbar-icon" />
+              <span>Report Card Management</span>
+            </div>
+          </IonTitle>
+          <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
 
       <IonContent className="report-cards-content" fullscreen>
+        {/* Hero Summary */}
+        <div className="report-hero">
+          <div className="report-hero-glow"></div>
+          <div className="report-hero-top">
+            <div className="report-hero-badge">
+              <IonIcon icon={ribbonOutline} />
+              <span>{isClass ? 'Class In-Charge Portal' : 'School Admin Portal'}</span>
+            </div>
+            {(selectedClassId && term && academicYear) && (
+              <div className="report-hero-code">
+                <IonIcon icon={schoolOutline} />
+                <span>{selectedClassLabel}</span>
+              </div>
+            )}
+          </div>
+          <div className="report-hero-main">
+            <h1 className="report-hero-title">Report Cards</h1>
+            <p className="report-hero-subtitle">Create, manage and send academic report cards to students.</p>
+            <div className="report-hero-meta">
+              {term && <span><IonIcon icon={calendarOutline} /> {term}</span>}
+              {academicYear && <span><IonIcon icon={calendarNumberOutline} /> {academicYear}</span>}
+              {reportCards.length > 0 && <span><IonIcon icon={peopleOutline} /> {reportCards.length} record{reportCards.length !== 1 ? 's' : ''}</span>}
+            </div>
+          </div>
+          <div className="report-hero-percent">
+            <div className="percent-circle" style={{ '--p': `${publishPercent * 3.6}deg` }}>
+              <span>{publishPercent}%</span>
+            </div>
+            <p>Published</p>
+          </div>
+        </div>
+
         {/* Filter Section */}
         <div className="filter-section">
           <div className="filter-header">
@@ -736,24 +786,34 @@ const ReportCardsScreen = () => {
 
         {/* Stats Summary */}
         <div className="stats-row">
-          <IonCard className="stat-card">
-            <IonCardContent>
+          <div className="metric-card metric-total">
+            <div className="metric-icon"><IonIcon icon={documentOutline} /></div>
+            <div className="metric-info">
               <div className="stat-value">{reportCards.length}</div>
               <div className="stat-label">Total Report Cards</div>
-            </IonCardContent>
-          </IonCard>
-          <IonCard className="stat-card published">
-            <IonCardContent>
-              <div className="stat-value">{reportCards.filter(r => r.isPublished).length}</div>
+            </div>
+          </div>
+          <div className="metric-card metric-sent">
+            <div className="metric-icon"><IonIcon icon={sendOutline} /></div>
+            <div className="metric-info">
+              <div className="stat-value">{publishedCount}</div>
               <div className="stat-label">Sent to Students</div>
-            </IonCardContent>
-          </IonCard>
-          <IonCard className="stat-card pending">
-            <IonCardContent>
+            </div>
+          </div>
+          <div className="metric-card metric-pending">
+            <div className="metric-icon"><IonIcon icon={cloudUploadOutline} /></div>
+            <div className="metric-info">
               <div className="stat-value">{unpublishedCount}</div>
-              <div className="stat-label">Pending</div>
-            </IonCardContent>
-          </IonCard>
+              <div className="stat-label">Pending Review</div>
+            </div>
+          </div>
+          <div className="metric-card metric-percent">
+            <div className="metric-icon"><IonIcon icon={statsChartOutline} /></div>
+            <div className="metric-info">
+              <div className="stat-value">{publishPercent}%</div>
+              <div className="stat-label">Published Rate</div>
+            </div>
+          </div>
         </div>
 
         {/* Report Cards List */}
@@ -801,10 +861,31 @@ const ReportCardsScreen = () => {
                         <p>Roll: {reportCard.student?.rollNumber || 'N/A'}</p>
                       </div>
                     </div>
-                    <IonBadge color={reportCard.isPublished ? 'success' : 'warning'}>
+                    <IonBadge className={`status-badge ${reportCard.isPublished ? 'badge-sent' : 'badge-draft'}`} color={reportCard.isPublished ? 'success' : 'warning'}>
                       {reportCard.isPublished ? 'Sent' : 'Draft'}
                     </IonBadge>
                   </div>
+
+                  {(reportCard.overallGrade || (reportCard.totalPercentage !== undefined && reportCard.totalPercentage > 0)) && (
+                    <div className="score-strip">
+                      {reportCard.overallGrade && reportCard.overallGrade !== 'N/A' && (
+                        <div className="score-block">
+                          <span className="score-value">{reportCard.overallGrade}</span>
+                          <span className="score-label">Grade</span>
+                        </div>
+                      )}
+                      {reportCard.totalPercentage !== undefined && reportCard.totalPercentage > 0 && (
+                        <div className="score-block">
+                          <span className="score-value">{reportCard.totalPercentage}%</span>
+                          <span className="score-label">Percentage</span>
+                        </div>
+                      )}
+                      <div className="score-block">
+                        <span className="score-value">{reportCard.subjects?.length ?? 0}</span>
+                        <span className="score-label">Subjects</span>
+                      </div>
+                    </div>
+                  )}
 
                   {reportCard.reportCardFileUrl && (
                     <div className="file-preview">
@@ -822,17 +903,11 @@ const ReportCardsScreen = () => {
                   <div className="report-card-meta">
                     <span><IonIcon icon={calendarOutline} /> {reportCard.term}</span>
                     <span>{reportCard.academicYear}</span>
-                    {reportCard.overallGrade && reportCard.overallGrade !== 'N/A' && (
-                      <IonBadge color="primary">Grade: {reportCard.overallGrade}</IonBadge>
-                    )}
-                    {reportCard.totalPercentage !== undefined && reportCard.totalPercentage > 0 && (
-                      <span>{reportCard.totalPercentage}%</span>
-                    )}
                   </div>
 
                   {reportCard.subjects && reportCard.subjects.length > 0 && (
                     <div className="subjects-summary">
-                      <h5>Subjects</h5>
+                      <h5>Subject Results</h5>
                       <table className="subjects-table">
                         <thead>
                           <tr>
@@ -846,7 +921,7 @@ const ReportCardsScreen = () => {
                             <tr key={idx}>
                               <td>{subject.subjectName}</td>
                               <td>{subject.marksObtained}/{subject.totalMarks}</td>
-                              <td><IonBadge color={subject.grade === 'E' ? 'danger' : 'success'}>{subject.grade}</IonBadge></td>
+                              <td><IonBadge className="grade-badge" color={subject.grade === 'E' ? 'danger' : 'success'}>{subject.grade || '—'}</IonBadge></td>
                             </tr>
                           ))}
                         </tbody>

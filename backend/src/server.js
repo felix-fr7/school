@@ -67,26 +67,25 @@ app.use(helmet({
 // ============================================
 // CORS Configuration
 // ============================================
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',') 
-  : ['http://localhost:5173', 'http://localhost:3001', 'http://localhost:8100'];
-
-app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow all origins for development
-    }
-  },
+// Reflect any request origin and allow credentials. This is required so the
+// browser (e.g. http://localhost:5173 in dev) can call the API cross-origin,
+// including for preflight OPTIONS requests which must also carry the
+// Access-Control-Allow-Origin header.
+const corsOptions = {
+  origin: true, // Reflect the request's Origin header (allow any origin)
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-tenant-id', 'ngrok-skip-browser-warning']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-tenant-id', 'ngrok-skip-browser-warning'],
+  maxAge: 86400, // Cache preflight response for 24h
+};
 
-// Handle preflight OPTIONS requests
-app.options('*', cors());
+app.use(cors(corsOptions));
+
+// Handle preflight OPTIONS requests explicitly with the same CORS settings
+// so they always return the required access-control headers.
+app.options('*', cors(corsOptions), (req, res) => {
+  res.sendStatus(204);
+});
 
 // ============================================
 // Body Parsing Middleware

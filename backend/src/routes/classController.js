@@ -287,6 +287,7 @@ router.get('/students', async (req, res, next) => {
           email: s.email,
           studentId: s.studentId,
           rollNumber: s.rollNumber,
+          admittedDate: s.admittedDate,
           created_at: s.createdAt
         })),
         pagination: {
@@ -338,7 +339,7 @@ router.post('/students', async (req, res, next) => {
 
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
-    const { name, rollNumber, password } = req.body;
+    const { name, rollNumber, password, admittedDate } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({
@@ -386,6 +387,7 @@ router.post('/students', async (req, res, next) => {
       studentId: studentId,
       rollNumber: rollNumber.trim(),
       classId: classId,
+      admittedDate: admittedDate ? new Date(admittedDate) : new Date(),
       isActive: true
     });
 
@@ -396,6 +398,7 @@ router.post('/students', async (req, res, next) => {
         name: student.name,
         studentId: student.studentId,
         rollNumber: student.rollNumber,
+        admittedDate: student.admittedDate,
         created_at: student.createdAt,
         password: finalPassword
       },
@@ -421,7 +424,7 @@ router.put('/students/:id', async (req, res, next) => {
 
     const classId = req.user.classId;
     const { id } = req.params;
-    const { name, email, studentId } = req.body;
+    const { name, email, studentId, rollNumber, admittedDate } = req.body;
 
     const User = require('../models/User');
 
@@ -444,6 +447,8 @@ router.put('/students/:id', async (req, res, next) => {
     if (name !== undefined) updateData.name = name.trim();
     if (email !== undefined) updateData.email = email.trim();
     if (studentId !== undefined) updateData.studentId = studentId;
+    if (rollNumber !== undefined) updateData.rollNumber = rollNumber.trim();
+    if (admittedDate !== undefined) updateData.admittedDate = admittedDate ? new Date(admittedDate) : null;
 
     const updatedStudent = await User.findOneAndUpdate(
       { _id: id, classId: classId, role: 'Student' },

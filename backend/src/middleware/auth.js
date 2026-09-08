@@ -6,6 +6,18 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+
+// Middleware for checking super admin role
+const checkSuperAdmin = (req, res, next) => {
+  // Logic to check if the user is a super admin
+  if (req.user && req.user.role === 'superadmin') {
+    // Proceed to the next middleware
+    next();
+  } else {
+    // Send unauthorized status if not a super admin
+    res.status(401).json({ message: 'Unauthorized' });
+  }
+};
 const Admin = require('../models/Admin');
 
 // JWT Secret

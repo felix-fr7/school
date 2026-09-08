@@ -4,6 +4,15 @@
  * Smart. Secure. Connected.
  */
 
+
+:root {
+  /* Theme Colors */
+  --ion-color-primary-background: #F8FAFC;
+  --ion-color-primary: #1E3A8A;
+  --ion-color-action-accent: #3B82F6;
+  --ion-color-success-alert: #10B981;
+}
+
 /* ============================================
  * Ionic CSS Variables - Premium Design System
  * ============================================ */

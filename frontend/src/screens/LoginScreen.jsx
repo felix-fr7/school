@@ -148,7 +148,7 @@ const LoginScreen = () => {
                   className="brand-logo-image"
                 />
               </div>
-              <h1 className="brand-title">MACVEL SOFTWEAR SOLUTION</h1>
+              <h1 className="brand-title">MACVEL SOFTWARE SOLUTIONS</h1>
               <p className="brand-subtitle">School Management System</p>
             </div>
 

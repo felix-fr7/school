@@ -103,6 +103,8 @@ const getClassDashboard = async (req, res, next) => {
       });
     }
 
+  shouldDeleteAdminEntities = true;
+
     const classData = classResult.rows[0];
 
     // Access Control: Check if user has permission to view this class dashboard
@@ -199,6 +201,8 @@ const getClassById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
+      // Check if the user is a super admin
+      checkSuperAdmin(req, res, next);
 
     const classQuery = `
       SELECT * FROM "Class" WHERE id = $1 AND "tenantId" = $2
