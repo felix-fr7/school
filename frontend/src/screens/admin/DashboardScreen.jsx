@@ -21,7 +21,6 @@ import {
   bookOutline,
   peopleOutline,
   personOutline,
-  documentTextOutline,
   newspaperOutline,
   clipboardOutline,
   calendarOutline,
@@ -44,24 +43,21 @@ const AdminDashboardScreen = () => {
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalClasses: 0,
-    totalHomework: 0,
     totalNews: 0,
   });
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
     try {
-      const [classesRes, studentsRes, homeworkRes, newsRes] = await Promise.all([
+      const [classesRes, studentsRes, newsRes] = await Promise.all([
         adminAPI.getClasses(),
         adminAPI.getStudents(1, 1),
-        adminAPI.getHomework(1, 1),
         adminAPI.getNews(1, 1),
       ]);
 
       setStats({
         totalStudents: studentsRes.success ? studentsRes.data?.pagination?.total || 0 : 0,
         totalClasses: classesRes.success ? classesRes.data?.length || 0 : 0,
-        totalHomework: homeworkRes.success ? homeworkRes.data?.pagination?.total || 0 : 0,
         totalNews: newsRes.success ? newsRes.data?.pagination?.total || 0 : 0,
       });
     } catch (error) {
@@ -111,15 +107,6 @@ const AdminDashboardScreen = () => {
       route: '/admin/students', 
       count: stats.totalStudents,
       gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
-    },
-    { 
-      id: '4', 
-      title: 'Homework', 
-      subtitle: 'Assignments & tracking',
-      icon: documentTextOutline, 
-      route: '/admin/homework', 
-      count: stats.totalHomework,
-      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
     },
     { 
       id: '6', 

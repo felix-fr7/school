@@ -591,33 +591,6 @@ export const adminAPI = {
     return response.data;
   },
 
-  async getHomework(page = 1, limit = 10, classId = '', isPublished = '') {
-    const response = await api.get('/homework', {
-      params: { page, limit, classId, isPublished },
-    });
-    return response.data;
-  },
-
-  async getHomeworkById(id) {
-    const response = await api.get(`/admin/homework/${id}`);
-    return response.data;
-  },
-
-  async createHomework(data) {
-    const response = await api.post('/homework', data);
-    return response.data;
-  },
-
-  async updateHomework(id, data) {
-    const response = await api.put(`/homework/${id}`, data);
-    return response.data;
-  },
-
-  async deleteHomework(id) {
-    const response = await api.delete(`/homework/${id}`);
-    return response.data;
-  },
-
   async getNews(page = 1, limit = 10, visibility = '', isPublished = '') {
     const response = await api.get('/admin-content/news', {
       params: { page, limit, visibility, isPublished },

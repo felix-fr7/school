@@ -31,7 +31,6 @@ import {
   createOutline,
   peopleOutline,
   calendarNumberOutline,
-  bookOutline,
   newspaperOutline,
   chevronForwardOutline,
   schoolOutline,
@@ -183,7 +182,7 @@ const ClassDashboardScreen = () => {
     );
   }
 
-  const { class: classData, metrics, recentHomework, upcomingExams, recentAnnouncements } = dashboardData;
+  const { class: classData, metrics, upcomingExams, recentAnnouncements } = dashboardData;
   const classFullName = classData.section ? `${classData.name} - ${classData.section}` : classData.name;
 
   const formatDate = (dateStr) => {
@@ -305,45 +304,6 @@ const ClassDashboardScreen = () => {
               </div>
             </div>
           </div>
-
-          {/* Recent Homework */}
-          <IonCard className="admin-card section-card">
-            <IonCardContent>
-              <div className="section-header">
-                <div className="section-header-title">
-                  <IonIcon icon={bookOutline} className="section-header-icon text-blue" />
-                  <h3 className="section-title">Recent Homework</h3>
-                </div>
-                <IonButton fill="clear" size="small" className="see-all-btn" onClick={() => history.push(`/admin/homework?classId=${classId}`)}>
-                  See All <IonIcon icon={chevronForwardOutline} />
-                </IonButton>
-              </div>
-
-              {recentHomework.length > 0 ? (
-                recentHomework.slice(0, 3).map((homework) => (
-                  <div key={homework.id} className="list-item">
-                    <div className="list-item-content">
-                      <span className="list-item-title">{homework.title}</span>
-                      <span className="list-item-subtitle">{homework.subject}</span>
-                      {homework.dueDate && (
-                        <span className="list-item-meta">
-                          <IonIcon icon={timeOutline} /> Due: {formatDate(homework.dueDate)}
-                        </span>
-                      )}
-                    </div>
-                    <IonButton fill="outline" size="small" className="item-action-btn" onClick={() => history.push(`/admin/homework?classId=${classId}`)}>
-                      View
-                    </IonButton>
-                  </div>
-                ))
-              ) : (
-                <div className="empty-state">
-                  <IonIcon icon={bookOutline} className="empty-icon" />
-                  <IonText className="empty-text">No homework assigned yet</IonText>
-                </div>
-              )}
-            </IonCardContent>
-          </IonCard>
 
           {/* Upcoming Exams */}
           <IonCard className="admin-card section-card">

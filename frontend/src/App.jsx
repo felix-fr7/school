@@ -20,7 +20,6 @@ import AdminStudents from './screens/admin/AdminStudentsScreen';
 import AdminTeachers from './screens/admin/AdminTeachersScreen';
 import AdminClasses from './screens/admin/AdminClassesScreen';
 import AdminNews from './screens/admin/AdminNewsScreen';
-import AdminHomework from './screens/admin/AdminHomeworkScreen';
 import AdminCirculars from './screens/admin/AdminCircularsScreen';
 import AdminCalendar from './screens/admin/CalendarScreen';
 import AdminExams from './screens/admin/AdminExamsScreen';
@@ -167,7 +166,6 @@ const AppRoutes = () => {
             <Route exact path="/admin/classes/:id" component={ClassDetailScreen} />
             <Route exact path="/admin/classes/:id/edit" component={EditClassScreen} />
             <Route exact path="/admin/news" component={AdminNews} />
-            <Route exact path="/admin/homework" component={AdminHomework} />
             <Route exact path="/admin/circulars" component={AdminCirculars} />
             <Route exact path="/admin/circulars/create" component={CreateCircularScreen} />
             <Route exact path="/admin/calendar" component={AdminCalendar} />

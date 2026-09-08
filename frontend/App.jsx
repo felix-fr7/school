@@ -36,8 +36,6 @@ const CreateTeacherScreen = React.lazy(() => import('./src/screens/admin/CreateT
 const StudentsListScreen = React.lazy(() => import('./src/screens/admin/StudentsListScreen.jsx'));
 const CreateStudentScreen = React.lazy(() => import('./src/screens/admin/CreateStudentScreen.jsx'));
 const EditStudentScreen = React.lazy(() => import('./src/screens/admin/EditStudentScreen.jsx'));
-const HomeworkListScreen = React.lazy(() => import('./src/screens/admin/HomeworkListScreen.jsx'));
-const CreateHomeworkScreen = React.lazy(() => import('./src/screens/admin/CreateHomeworkScreen.jsx'));
 const NewsListScreen = React.lazy(() => import('./src/screens/admin/NewsListScreen.jsx'));
 const CircularsListScreen = React.lazy(() => import('./src/screens/admin/CircularsListScreen.jsx'));
 const CreateCircularScreen = React.lazy(() => import('./src/screens/admin/CreateCircularScreen.jsx'));
@@ -247,8 +245,6 @@ const AppContent = () => {
             <ProtectedRoute exact path="/admin/students/create" component={CreateStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/students/edit/:studentId" component={EditStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/students/:studentId/edit" component={EditStudentScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/admin/homework" component={HomeworkListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/admin/homework/create" component={CreateHomeworkScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/news" component={AdminNewsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/circulars" component={AdminCircularsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/admin/circulars/create" component={CreateCircularScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
