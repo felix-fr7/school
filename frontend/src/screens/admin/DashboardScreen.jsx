@@ -21,6 +21,7 @@ import {
   bookOutline,
   peopleOutline,
   personOutline,
+  documentTextOutline,
   newspaperOutline,
   clipboardOutline,
   calendarOutline,
