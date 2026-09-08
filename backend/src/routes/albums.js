@@ -547,10 +547,13 @@ router.delete(
   ],
   async (req, res, next) => {
     try {
-      const album = await Album.findOneAndDelete({
-        _id: req.params.id,
-        tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId
-      });
+      const album = await Album.findOneAndDelete(
+        {
+          _id: req.params.id,
+          tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId
+        },
+        { bypassDefaultFilter: true }
+      );
       
       if (!album) {
         return res.status(404).json({

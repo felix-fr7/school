@@ -169,7 +169,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
     const homework = await Homework.findOneAndUpdate(
       { _id: req.params.id, schoolId: req.user.tenantId },
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, bypassDefaultFilter: true }
     );
     
     if (!homework) {
@@ -196,10 +196,13 @@ router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
  */
 router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const homework = await Homework.findOneAndDelete({
-      _id: req.params.id,
-      schoolId: req.user.tenantId
-    });
+    const homework = await Homework.findOneAndDelete(
+      {
+        _id: req.params.id,
+        schoolId: req.user.tenantId
+      },
+      { bypassDefaultFilter: true }
+    );
     
     if (!homework) {
       return res.status(404).json({

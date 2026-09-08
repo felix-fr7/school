@@ -401,10 +401,13 @@ router.delete(
   ],
   async (req, res, next) => {
     try {
-      const video = await Video.findOneAndDelete({
-        _id: req.params.id,
-        tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId
-      });
+      const video = await Video.findOneAndDelete(
+        {
+          _id: req.params.id,
+          tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId
+        },
+        { bypassDefaultFilter: true }
+      );
       
       if (!video) {
         return res.status(404).json({

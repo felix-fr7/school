@@ -194,8 +194,10 @@ HomeworkSchema.virtual('checkedCount').get(function() {
 
 // Pre-find to only return published homework by default
 HomeworkSchema.pre(/^find/, function() {
-  // Only filter if not explicitly requested
-  if (!this.getFilter()['isPublished']) {
+  const bypassDefaultFilter = this.getOptions().bypassDefaultFilter;
+
+  // Only filter if not explicitly requested or bypassed (e.g., admin endpoints)
+  if (!bypassDefaultFilter && !this.getFilter()['isPublished']) {
     this.where({ isPublished: true });
   }
 });
