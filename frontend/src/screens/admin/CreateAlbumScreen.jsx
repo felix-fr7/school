@@ -34,6 +34,8 @@ import {
   peopleOutline,
   closeOutline,
   addCircleOutline,
+  linkOutline,
+  trashOutline,
 } from 'ionicons/icons';
 import { albumsAPI, adminAPI } from '../../services/api';
 import './CreateAlbumScreen.css';
@@ -50,6 +52,10 @@ const CreateAlbumScreen = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
+
+  // Album create pannum pothu links add panna - Add Link button click panna
+  // innoru row varum, ethana thadava venalum add pannalam (vera logic mathala)
+  const [links, setLinks] = useState([{ title: '', url: '' }]);
 
   const [categories, setCategories] = useState([]);
   const [classes, setClasses] = useState([]);
@@ -114,6 +120,18 @@ const CreateAlbumScreen = () => {
     setTags(tags.filter((t) => t !== tag));
   };
 
+  const handleLinkChange = (index, field, value) => {
+    setLinks((prev) => prev.map((l, i) => (i === index ? { ...l, [field]: value } : l)));
+  };
+
+  const handleAddLinkRow = () => {
+    setLinks((prev) => [...prev, { title: '', url: '' }]);
+  };
+
+  const handleRemoveLinkRow = (index) => {
+    setLinks((prev) => (prev.length <= 1 ? [{ title: '', url: '' }] : prev.filter((_, i) => i !== index)));
+  };
+
   const handleSubmit = async () => {
     if (!title.trim()) {
       setAlertMessage('Please enter an album title');
@@ -137,6 +155,11 @@ const CreateAlbumScreen = () => {
         targetClasses: visibility === 'SPECIFIC_CLASSES' ? targetClasses : [],
         isPublished,
         tags,
+        // Add Link rows-la type panna links-a album create pothu save pannu
+        // (empty rows-a skip pannu - backend links array-ve accept pannum, vera logic mathala)
+        links: links
+          .map((l) => ({ title: (l.title || '').trim(), url: (l.url || '').trim() }))
+          .filter((l) => l.title && l.url),
       };
 
       const response = await albumsAPI.createAlbum(payload);
@@ -335,6 +358,52 @@ const CreateAlbumScreen = () => {
               <span className="album-hint">
                 Unpublished albums are saved as drafts and stay hidden from students until published.
               </span>
+
+              {/* Add Link - album create pannum pothu links add panna section.
+                  Add Link button click panna innoru row varum,
+                  ethana thadava venalum add pannalam. */}
+              <div className="album-input-group" style={{ marginTop: '8px' }}>
+                <label className="album-label">Album Links (Optional)</label>
+                <span className="album-hint">
+                  Link Title + URL kudunga. Theva pattalum “+ Add Link” click panni innoru link add pannunga.
+                </span>
+                {links.map((link, idx) => (
+                  <div key={idx} className="album-input-wrapper" style={{ marginBottom: '8px', flexDirection: 'column', alignItems: 'stretch', gap: '8px', padding: '10px 12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <IonIcon icon={linkOutline} className="album-input-icon" />
+                      <span style={{ fontWeight: 700, fontSize: '13px' }}>Link {idx + 1}</span>
+                      <span style={{ flex: 1 }} />
+                      <IonButton
+                        fill="clear"
+                        size="small"
+                        color="danger"
+                        onClick={() => handleRemoveLinkRow(idx)}
+                        disabled={loading}
+                      >
+                        <IonIcon icon={trashOutline} slot="icon-only" />
+                      </IonButton>
+                    </div>
+                    <IonInput
+                      placeholder="Link Title (e.g. Science video)"
+                      value={link.title}
+                      onIonInput={(e) => handleLinkChange(idx, 'title', e.detail.value || '')}
+                      disabled={loading}
+                      className="album-custom-input"
+                    />
+                    <IonInput
+                      placeholder="https://..."
+                      value={link.url}
+                      onIonInput={(e) => handleLinkChange(idx, 'url', e.detail.value || '')}
+                      disabled={loading}
+                      className="album-custom-input"
+                    />
+                  </div>
+                ))}
+                <IonButton expand="block" fill="outline" onClick={handleAddLinkRow} disabled={loading} style={{ marginTop: '4px' }}>
+                  <IonIcon icon={addCircleOutline} slot="start" />
+                  Add Link
+                </IonButton>
+              </div>
 
             </IonCardContent>
           </IonCard>
