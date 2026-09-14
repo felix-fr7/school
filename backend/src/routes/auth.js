@@ -41,14 +41,19 @@ router.post('/class-login', async (req, res, next) => {
     // Trim whitespace and convert to uppercase
     let normalizedCode = classCode.trim().toUpperCase();
     
-    // Handle variations like "CLS-3" vs "CLS-003" by padding numbers
-    // Pattern: XXX-NNN where XXX is letters and NNN is 1-3 digit number
+    // Handle variations like "CLS-3" vs "CLS-003" and "GRE001" (no dash) by padding numbers
+    // Pattern 1: XXX-NNN where XXX is letters and NNN is 1-3 digit number (old: CLS-3)
+    // Pattern 2: XXXNNN where XXX is letters and NNN is digits (new: GRE001 / STGRE0001)
     const codeMatch = normalizedCode.match(/^([A-Z]+)-(\d+)$/);
+    const noDashMatch = !codeMatch ? normalizedCode.match(/^([A-Z]+)(\d+)$/) : null;
     if (codeMatch) {
       const prefix = codeMatch[1];
       const number = codeMatch[2];
       // Pad the number to 3 digits (e.g., "3" becomes "003")
       normalizedCode = `${prefix}-${number.padStart(3, '0')}`;
+    } else if (noDashMatch) {
+      // New format already - just uppercase, no change needed
+      normalizedCode = `${noDashMatch[1]}${noDashMatch[2]}`;
     }
     
     console.log('[CLASS-LOGIN] Normalized classCode:', normalizedCode, '(original:', classCode, ')');
@@ -150,6 +155,15 @@ router.post('/class-login', async (req, res, next) => {
     }
 
     // Return class data
+    // Vera logic mathala - only that school's name + logo extra add pannrom
+    let classSchool = null;
+    try {
+      const SchoolModel = require('../models/School');
+      const sid = classData.tenantId || null;
+      if (sid) {
+        classSchool = await SchoolModel.findById(sid).select('schoolName schoolCode schoolLogoUrl').lean();
+      }
+    } catch (e) { classSchool = null; }
     res.status(200).json({
       success: true,
       data: {
@@ -162,6 +176,10 @@ router.post('/class-login', async (req, res, next) => {
           studentCount: 0,
           homeworkCount: 0,
           examCount: 0,
+          tenantId: classData.tenantId,
+          schoolId: classData.tenantId,
+          schoolName: classSchool?.schoolName || null,
+          schoolLogoUrl: classSchool?.schoolLogoUrl || null,
         },
         token,
       },
@@ -199,9 +217,10 @@ router.post('/login', async (req, res, next) => {
     let isAdminLogin = false;
 
     // First, try to find admin in Admin collection (for Super Admin and School Admin)
+    // Populate schoolId so we can return that school's name + logo (Vera logic mathala)
     user = await Admin.findOne({
       email: normalizedIdentifier
-    }).select('+password');
+    }).select('+password').populate('schoolId', 'schoolName schoolCode schoolLogoUrl');
 
     if (user) {
       isAdminLogin = true;
@@ -250,17 +269,44 @@ router.post('/login', async (req, res, next) => {
     const token = generateToken(user._id);
 
     // Get tenant/school info (SUPER_ADMIN has no school)
+    // Vera logic mathala - only logoUrl add pannrom
     let tenant = null;
     if (user.schoolId) {
-      // For now, we'll use school as tenant equivalent
-      tenant = {
-        id: user.schoolId._id,
-        name: user.schoolId.schoolName,
-        code: user.schoolId.schoolCode,
-        address: user.schoolId.address,
-        phone: user.schoolId.contactPhone,
-        email: user.schoolId.contactEmail
-      };
+      // Admin login: schoolId is populated above; User login: schoolId populated in query
+      const sch = user.schoolId;
+      const isPopulated = sch && typeof sch === 'object' && sch.schoolName;
+      let schoolDoc = isPopulated ? sch : null;
+      if (!schoolDoc && sch) {
+        try {
+          const SchoolModel = require('../models/School');
+          schoolDoc = await SchoolModel.findById(sch).select('schoolName schoolCode address contactPhone contactEmail schoolLogoUrl').lean();
+        } catch (e) { schoolDoc = null; }
+      }
+      if (schoolDoc) {
+        tenant = {
+          id: schoolDoc._id || sch,
+          name: schoolDoc.schoolName,
+          code: schoolDoc.schoolCode,
+          address: schoolDoc.address,
+          phone: schoolDoc.contactPhone,
+          email: schoolDoc.contactEmail,
+          logoUrl: schoolDoc.schoolLogoUrl || null,
+          schoolName: schoolDoc.schoolName,
+          schoolLogoUrl: schoolDoc.schoolLogoUrl || null
+        };
+      } else if (sch) {
+        tenant = {
+          id: sch._id || sch,
+          name: sch.schoolName || null,
+          code: sch.schoolCode || null,
+          address: sch.address || null,
+          phone: sch.contactPhone || null,
+          email: sch.contactEmail || null,
+          logoUrl: sch.schoolLogoUrl || null,
+          schoolName: sch.schoolName || null,
+          schoolLogoUrl: sch.schoolLogoUrl || null
+        };
+      }
     }
 
     // Get class code if user is a student
@@ -270,6 +316,9 @@ router.post('/login', async (req, res, next) => {
     }
 
     // Return user data (excluding password)
+    // Vera logic mathala - schoolName + schoolLogoUrl extra fields only add pannrom
+    const tenantSchoolName = tenant?.schoolName || tenant?.name || (user.schoolId && user.schoolId.schoolName) || null;
+    const tenantLogo = tenant?.schoolLogoUrl || tenant?.logoUrl || (user.schoolId && user.schoolId.schoolLogoUrl) || null;
     res.json({
       success: true,
       message: 'Login successful.',
@@ -281,6 +330,9 @@ router.post('/login', async (req, res, next) => {
           name: user.name,
           role: user.role,
           phone: user.phone,
+          schoolId: user.schoolId?._id || user.schoolId || null,
+          schoolName: tenantSchoolName,
+          schoolLogoUrl: tenantLogo,
           // Student specific
           studentId: user.studentId,
           classId: user.classId ? user.classId._id : null,
@@ -396,9 +448,12 @@ router.post('/register', authenticate, async (req, res, next) => {
       userData.schoolId = req.user.schoolId;
     }
 
-    // Add student-specific fields
+    // Add student-specific fields: ST + SCHOOL3 + NUMBER (no dash, per-school unique)
     if (mappedRole === 'Student' && classId) {
-      userData.studentId = `STU-${String(Date.now()).slice(-6)}`;
+      const { getSchoolPrefixById, generateUniqueStudentId } = require('../utils/idGenerator');
+      const sid = req.user.schoolId || null;
+      const { prefix: regPrefix } = await getSchoolPrefixById(sid);
+      userData.studentId = await generateUniqueStudentId(User, sid, regPrefix);
       userData.rollNumber = rollNumber || null;
       userData.classId = classId;
     }

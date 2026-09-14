@@ -189,7 +189,11 @@ router.post('/classes', async (req, res, next) => {
     const newClass = new Class(classData);
     await newClass.save();
 
-    res.status(201).json({ success: true, data: { id: newClass._id, classCode: newClass.classCode } });
+    res.status(201).json({
+      success: true,
+      data: { id: newClass._id, classCode: newClass.classCode },
+      message: 'Class created successfully! Note: Intha ID-a students/parents ku share panna kudathu.',
+    });
   } catch (error) {
     next(error);
   }
@@ -689,12 +693,12 @@ router.post('/students', async (req, res, next) => {
       });
     }
 
-    // Generate studentId in STU-XXXX format
-    const studentCount = await User.countDocuments({
-      schoolId,
-      role: 'Student'
-    });
-    const studentId = `STU-${String(studentCount + 1).padStart(4, '0')}`;
+    // Generate studentId: ST + SCHOOL_FIRST_3_LETTERS + NUMBER (no dash)
+    // e.g. School "Green Valley" -> STGRE0001, different school -> different prefix
+    // Vera logic ethuvum mathala - only prefix logic mathum change
+    const { getSchoolPrefixById, generateUniqueStudentId } = require('../utils/idGenerator');
+    const { prefix: schoolPrefix } = await getSchoolPrefixById(schoolId);
+    const studentId = await generateUniqueStudentId(User, schoolId, schoolPrefix);
 
     // Create student data
     const studentData = {

@@ -48,6 +48,7 @@ const albumsRoutes = require('./routes/albums');
 const productsRoutes = require('./routes/products');
 const classControllerRoutes = require('./routes/classController');
 const reportCardsRoutes = require('./routes/reportcards');
+const schoolContextRoutes = require('./routes/schoolContext');
 
 // Import error handler
 const errorHandler = require('./middleware/errorHandler');
@@ -176,6 +177,9 @@ app.use('/api/reportcards', reportCardsRoutes);
 
 // Tenant Management Routes
 app.use('/api/tenants', tenantsRoutes);
+
+// School Context (logo + name for that school's dashboards) - NO logic change, NEW route only
+app.use('/api/school-context', schoolContextRoutes);
 
 // Cleanup Routes (Super Admin only)
 app.use('/api/cleanup', cleanupRoutes);

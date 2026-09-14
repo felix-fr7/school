@@ -1384,5 +1384,12 @@ export const timetableAPI = {
 };
 
 export { api };
+export const schoolContextAPI = {
+  async getMySchool() {
+    const response = await api.get('/school-context/me');
+    return response.data;
+  },
+};
+
 export default api;
 

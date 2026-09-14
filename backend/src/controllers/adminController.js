@@ -890,11 +890,19 @@ const createStudent = async (req, res, next) => {
       });
     }
 
-    // Generate studentId in STU-XXXX format
+    // Generate studentId ST+SCHOOL3+NUMBER no dash per-school unique
     const studentCountQuery = 'SELECT COUNT(*) as count FROM "User" WHERE role = $1';
     const studentCountResult = await db.query(studentCountQuery, ['STUDENT']);
     const studentCount = parseInt(studentCountResult.rows[0].count);
-    const nextStudentId = `STU-${String(studentCount + 1).padStart(4, '0')}`;
+    let nextStudentId = null;
+    try {
+      const { getSchoolPrefixById: getPrefixLegacy, generateUniqueStudentId: genStuLegacy } = require('../utils/idGenerator');
+      const UserLegacy = require('../models/User');
+      const { prefix: legacyPrefix } = await getPrefixLegacy(tenantId);
+      nextStudentId = await genStuLegacy(UserLegacy, tenantId, legacyPrefix);
+    } catch (e) {
+      nextStudentId = `STU-${String(studentCount + 1).padStart(4, '0')}`;
+    }
 
     // Hash password
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;

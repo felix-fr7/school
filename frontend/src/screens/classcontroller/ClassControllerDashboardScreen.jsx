@@ -42,12 +42,14 @@ import {
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { classControllerAPI } from '../../services/api';
+import { classControllerAPI, resolveMediaUrl } from '../../services/api';
+import { useSchoolBranding } from '../../services/useSchoolBranding';
 import './ClassControllerDashboardScreen.css';
 
 const ClassControllerDashboardScreen = () => {
   const history = useHistory();
   const { currentClass, user, logout } = useAuth();
+  const { schoolName: brandSchoolName, resolvedLogoUrl: brandSchoolLogo } = useSchoolBranding();
   
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -225,8 +227,17 @@ const ClassControllerDashboardScreen = () => {
         <IonToolbar className="teacher-toolbar">
           <div className="custom-nav-container">
             <div className="brand-box">
-              <IonIcon icon={schoolOutline} className="toolbar-main-icon" />
-              <span className="brand-text">Teacher Portal</span>
+              {(brandSchoolLogo || resolveMediaUrl(currentClass?.schoolLogoUrl)) ? (
+                <img
+                  src={brandSchoolLogo || resolveMediaUrl(currentClass?.schoolLogoUrl)}
+                  alt={brandSchoolName || currentClass?.schoolName || 'School logo'}
+                  style={{ width: 30, height: 30, borderRadius: 8, objectFit: 'cover' }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <IonIcon icon={schoolOutline} className="toolbar-main-icon" />
+              )}
+              <span className="brand-text">{brandSchoolName || currentClass?.schoolName || 'Teacher Portal'}</span>
             </div>
             <button 
               className="nav-signout-btn" 
@@ -260,6 +271,11 @@ const ClassControllerDashboardScreen = () => {
             </div>
 
             <div className="hero-body">
+              {(brandSchoolName || currentClass?.schoolName) && (
+                <p className="hero-school-name" style={{ fontWeight: 700, opacity: 0.95, margin: '0 0 4px' }}>
+                  {brandSchoolName || currentClass?.schoolName}
+                </p>
+              )}
               <h1 className="hero-class-name">{className}</h1>
               {classSection && <span className="hero-section-tag">Section {classSection}</span>}
               <p className="hero-welcome-text">

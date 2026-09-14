@@ -44,11 +44,13 @@ import {
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { studentAPI, resolveMediaUrl } from '../../services/api';
+import { useSchoolBranding } from '../../services/useSchoolBranding';
 import './DashboardScreen.css';
 
 const StudentDashboardScreen = () => {
   const history = useHistory();
   const { user, logout } = useAuth();
+  const { schoolName: brandName, resolvedLogoUrl: brandLogo } = useSchoolBranding();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -156,8 +158,17 @@ const StudentDashboardScreen = () => {
         <IonToolbar>
           <IonTitle>
             <div className="header-title-content">
-              <IonIcon icon={schoolOutline} className="header-school-icon" />
-              <span>{profile?.school.name || 'School'}</span>
+              {(brandLogo || resolveMediaUrl(profile?.school.logoUrl)) ? (
+                <img
+                  src={brandLogo || resolveMediaUrl(profile?.school.logoUrl)}
+                  alt={brandName || profile?.school.name || 'School logo'}
+                  style={{ width: 26, height: 26, borderRadius: 8, objectFit: 'cover' }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <IonIcon icon={schoolOutline} className="header-school-icon" />
+              )}
+              <span>{brandName || profile?.school.name || 'School'}</span>
             </div>
           </IonTitle>
           <IonButton slot="end" fill="clear" className="notification-btn">
@@ -253,14 +264,14 @@ const StudentDashboardScreen = () => {
         <div className="modern-footer">
           <div className="footer-content">
             <IonImg 
-              src={resolveMediaUrl(profile?.school.logoUrl)} 
+              src={brandLogo || resolveMediaUrl(profile?.school.logoUrl)} 
               className="footer-logo"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
             <div className="footer-text-content">
-              <p className="footer-school-name">{profile?.school.name || 'School'}</p>
+              <p className="footer-school-name">{brandName || profile?.school.name || 'School'}</p>
               <p className="footer-copyright">© 2024 School Management System</p>
             </div>
           </div>

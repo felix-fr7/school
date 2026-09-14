@@ -35,12 +35,14 @@ import {
   timeOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { adminAPI } from '../../services/api';
+import { adminAPI, resolveMediaUrl } from '../../services/api';
+import { useSchoolBranding } from '../../services/useSchoolBranding';
 import './DashboardScreen.css';
 
 const AdminDashboardScreen = () => {
   const history = useHistory();
   const { user, logout } = useAuth();
+  const { schoolName, resolvedLogoUrl } = useSchoolBranding();
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalClasses: 0,
@@ -188,14 +190,24 @@ const AdminDashboardScreen = () => {
         <IonToolbar className="ultra-light-nav-toolbar">
           <div className="light-nav-pill">
             <div className="nav-brand">
-              <div className="brand-logo-light">
-                <IonIcon icon={schoolOutline} />
-              </div>
+              {resolvedLogoUrl ? (
+                <img
+                  src={resolvedLogoUrl}
+                  alt={schoolName || 'School logo'}
+                  className="brand-logo-light brand-logo-img"
+                  style={{ width: 42, height: 42, borderRadius: 16, objectFit: 'cover' }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <div className="brand-logo-light">
+                  <IonIcon icon={schoolOutline} />
+                </div>
+              )}
               <div className="brand-text-container">
-                <span className="brand-title-light">ADMIN PORTAL</span>
+                <span className="brand-title-light">{schoolName || 'ADMIN PORTAL'}</span>
                 <span className="brand-badge-light">
                   <span className="mini-pulse-dot"></span>
-                  School Console
+                  {schoolName ? 'School Console' : 'School Console'}
                 </span>
               </div>
             </div>
@@ -232,6 +244,9 @@ const AdminDashboardScreen = () => {
                 SYSTEM OPERATIONAL
               </div>
               <h1 className="hero-title-light">Welcome back, {user?.name || 'Administrator'}</h1>
+              {schoolName && (
+                <p className="hero-school-name" style={{ fontWeight: 800, margin: '4px 0' }}>{schoolName}</p>
+              )}
               <p className="hero-subtitle-light">Manage school classes, faculty, and academic records easily.</p>
             </div>
 

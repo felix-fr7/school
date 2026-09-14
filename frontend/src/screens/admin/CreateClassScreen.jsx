@@ -364,7 +364,7 @@ const CreateClassScreen = () => {
           header="Class Created Successfully"
           message={
             generatedClassCode
-              ? `Generated Class Code: ${generatedClassCode}\n\nShare this code with students/parents for authentication.`
+              ? `Class Created Successfully!\n\nClass ID: ${generatedClassCode}\n\nNote: Intha ID-a students/parents ku share panna kudathu.`
               : 'Class has been created successfully.'
           }
           buttons={[{ text: 'Done', handler: handleSuccessDismiss }]}

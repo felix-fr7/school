@@ -186,16 +186,16 @@ const getClassStudents = async (req, res, next) => {
 
 /**
  * Get next available student ID (auto-generated sequentially)
+ * New format: ST<SCHOOL3><NUMBER> e.g. STGRE0001 (no dash)
  * GET /api/class-controller/students/next-id
  */
 const getNextStudentId = async (req, res, next) => {
   try {
-    // Get total count of students in the database
-    const totalCount = await User.countDocuments({ role: 'Student' });
-    
-    // Generate next sequential ID (STU-0001, STU-0002, etc.)
-    const nextNumber = totalCount + 1;
-    const nextStudentId = `STU-${String(nextNumber).padStart(4, '0')}`;
+    const tenantId = req.user.tenantId;
+    const { getSchoolPrefixById, generateUniqueStudentId } = require('../utils/idGenerator');
+    const { prefix } = await getSchoolPrefixById(tenantId);
+    // Peek next id without saving - find first unused number
+    const nextStudentId = await generateUniqueStudentId(User, tenantId, prefix);
 
     res.status(200).json({
       success: true,
@@ -250,10 +250,11 @@ const addClassStudent = async (req, res, next) => {
       });
     }
 
-    // Auto-generate student ID sequentially (internal use)
-    const totalCount = await User.countDocuments({ role: 'Student' });
-    const nextNumber = totalCount + 1;
-    const finalStudentId = `STU-${String(nextNumber).padStart(4, '0')}`;
+    // Auto-generate student ID: ST + SCHOOL_FIRST_3 + NUMBER (no dash, per-school unique)
+    // e.g. STGRE0001. Vera logic ethuvum mathala.
+    const { getSchoolPrefixById, generateUniqueStudentId } = require('../utils/idGenerator');
+    const { prefix: stuPrefix } = await getSchoolPrefixById(tenantId);
+    const finalStudentId = await generateUniqueStudentId(User, tenantId, stuPrefix);
 
     // Generate dummy email to satisfy DB NOT NULL constraint
     // Format: stu-{studentId}-{timestamp}@school.internal

@@ -68,31 +68,14 @@ ClassSchema.index({ tenantId: 1, name: 1 });
 ClassSchema.index({ tenantId: 1, section: 1 });
 
 // Generate class code before saving if not provided
+// New logic: <SCHOOL_FIRST_3_LETTERS><NUMBER> e.g. GRE001 (no dash)
+// Old logic CLS-001 still valid for existing records, but new records use school prefix
 ClassSchema.pre('save', async function() {
   if (!this.classCode) {
-    let proposedCode = '';
-    let attempt = 1;
-    let isUnique = false;
+    const { getSchoolPrefixById, generateUniqueClassCode } = require('../utils/idGenerator');
     const Class = mongoose.model('Class');
-    
-    while (!isUnique && attempt < 1000) {
-      proposedCode = `CLS-${String(attempt).padStart(3, '0')}`;
-      
-      // Check if this code already exists (globally unique, not per-tenant)
-      const existing = await Class.findOne({ classCode: proposedCode }).lean();
-      
-      if (!existing) {
-        this.classCode = proposedCode;
-        isUnique = true;
-      } else {
-        attempt++;
-      }
-    }
-    
-    // If we couldn't find a unique code after 1000 attempts, throw an error
-    if (!isUnique) {
-      throw new Error('Could not generate unique class code');
-    }
+    const { prefix } = await getSchoolPrefixById(this.tenantId);
+    this.classCode = await generateUniqueClassCode(Class, this.tenantId, prefix);
   }
   
   // Hash password if provided

@@ -310,9 +310,10 @@ router.get('/students', async (req, res, next) => {
 router.get('/students/next-id', async (req, res, next) => {
   try {
     const User = require('../models/User');
-    const count = await User.countDocuments({ role: 'Student' });
-    const nextNumber = count + 1;
-    const nextStudentId = `STU-${String(nextNumber).padStart(4, '0')}`;
+    const tenantId = req.user.tenantId || req.user.schoolId || null;
+    const { getSchoolPrefixById, generateUniqueStudentId } = require('../utils/idGenerator');
+    const { prefix } = await getSchoolPrefixById(tenantId);
+    const nextStudentId = await generateUniqueStudentId(User, tenantId, prefix);
 
     res.json({
       success: true,
@@ -366,10 +367,10 @@ router.post('/students', async (req, res, next) => {
       });
     }
 
-    // Generate student ID
-    const count = await User.countDocuments({ role: 'Student' });
-    const nextNumber = count + 1;
-    const studentId = `STU-${String(nextNumber).padStart(4, '0')}`;
+    // Generate student ID: ST + SCHOOL3 + NUMBER (no dash, per-school unique)
+    const { getSchoolPrefixById, generateUniqueStudentId } = require('../utils/idGenerator');
+    const { prefix: sidPrefix } = await getSchoolPrefixById(tenantId);
+    const studentId = await generateUniqueStudentId(User, tenantId, sidPrefix);
 
     // Generate dummy email
     const dummyEmail = `stu-${studentId}-${Date.now().toString().slice(-6)}@school.internal`;
