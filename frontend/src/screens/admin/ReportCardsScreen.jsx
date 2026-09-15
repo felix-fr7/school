@@ -58,6 +58,7 @@ import {
   checkmarkCircleOutline,
   closeCircleOutline,
   informationCircleOutline,
+  peopleOutline,
 } from 'ionicons/icons';
 import { adminAPI, classControllerAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';

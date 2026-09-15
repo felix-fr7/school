@@ -1,3 +1,28 @@
+const calculateGrade = (percentage) => {
+  if (percentage >= 90) return 'A1';
+  if (percentage >= 80) return 'A2';
+  if (percentage >= 70) return 'B1';
+  if (percentage >= 60) return 'B2';
+  if (percentage >= 50) return 'C1';
+  if (percentage >= 40) return 'C2';
+  if (percentage >= 33) return 'D';
+  return 'E';
+};
+
+const getGradeRemark = (grade) => {
+  const remarks = {
+    'A1': 'Excellent',
+    'A2': 'Very Good',
+    'B1': 'Good',
+    'B2': 'Above Average',
+    'C1': 'Average',
+    'C2': 'Below Average',
+    'D': 'Needs Improvement',
+    'E': 'Fail'
+  };
+  return remarks[grade] || '';
+};
+
 /**
  * Report Card Controller
  * Handles report card uploads and management for teachers/admins
@@ -497,6 +522,45 @@ exports.updateReportCard = async (req, res, next) => {
       });
     }
 
+    // Process subjects if provided to recalculate grades/percentages
+    if (updateData.subjects && updateData.subjects.length > 0) {
+      const processedSubjects = updateData.subjects.map(subject => {
+        const marksObtained = parseFloat(subject.marksObtained);
+        const totalMarks = parseFloat(subject.totalMarks);
+        
+        if (!totalMarks || totalMarks <= 0) {
+          throw new Error(`Total marks must be greater than 0 for ${subject.subjectName}`);
+        }
+        
+        if (marksObtained < 0 || marksObtained > totalMarks) {
+          throw new Error(`Marks obtained must be between 0 and ${totalMarks} for ${subject.subjectName}`);
+        }
+
+        const percentage = (marksObtained / totalMarks) * 100;
+        const grade = calculateGrade(percentage);
+        const remarks = getGradeRemark(grade);
+
+        return {
+          subjectName: subject.subjectName,
+          marksObtained,
+          totalMarks,
+          grade,
+          remarks
+        };
+      });
+
+      updateData.subjects = processedSubjects;
+
+      // Recalculate overall percentage and grade
+      const totalObtained = processedSubjects.reduce((sum, s) => sum + s.marksObtained, 0);
+      const totalMax = processedSubjects.reduce((sum, s) => sum + s.totalMarks, 0);
+      const overallPercentage = totalMax > 0 ? parseFloat(((totalObtained / totalMax) * 100).toFixed(2)) : 0;
+      const overallGrade = calculateGrade(overallPercentage);
+
+      updateData.totalPercentage = overallPercentage;
+      updateData.overallGrade = overallGrade;
+    }
+
     // Update fields
     Object.assign(reportCard, updateData);
     
@@ -508,6 +572,12 @@ exports.updateReportCard = async (req, res, next) => {
       data: reportCard
     });
   } catch (error) {
+    if (error.message && (error.message.includes('Marks obtained must be') || error.message.includes('Total marks must be'))) {
+       return res.status(400).json({
+         success: false,
+         error: { message: error.message }
+       });
+    }
     next(error);
   }
 };
@@ -965,40 +1035,8 @@ exports.getReportCardsByStudent = async (req, res, next) => {
 };
 
 /**
- * Calculate grade based on percentage
- */
-const calculateGrade = (percentage) => {
-  if (percentage >= 90) return 'A1';
-  if (percentage >= 80) return 'A2';
-  if (percentage >= 70) return 'B1';
-  if (percentage >= 60) return 'B2';
-  if (percentage >= 50) return 'C1';
-  if (percentage >= 40) return 'C2';
-  if (percentage >= 33) return 'D';
-  return 'E';
-};
-
-/**
- * Get grade remark based on grade
- */
-const getGradeRemark = (grade) => {
-  const remarks = {
-    'A1': 'Excellent',
-    'A2': 'Very Good',
-    'B1': 'Good',
-    'B2': 'Above Average',
-    'C1': 'Average',
-    'C2': 'Below Average',
-    'D': 'Needs Improvement',
-    'E': 'Fail'
-  };
-  return remarks[grade] || '';
-};
-
-/**
  * Bulk upload report cards via Excel file
  * POST /api/reportcards/bulk-upload
- * 
  * Excel format (two supported formats):
  * 
  * Format 1 - Marks Entry (Subject-wise):
