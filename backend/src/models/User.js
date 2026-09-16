@@ -109,6 +109,14 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // Who created this record (School Admin id, or the class id when the student
+  // was added from a class account). Used by the Super Admin "delete admin"
+  // flow to remove every student that admin created.
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
   classId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Class'

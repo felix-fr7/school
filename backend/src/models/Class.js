@@ -33,6 +33,14 @@ const ClassSchema = new mongoose.Schema({
     ref: 'Teacher',
     index: true
   },
+  // Who created this class (School Admin id, or the class/teacher id when a
+  // class account creates another class record). Used by the Super Admin
+  // "delete admin" flow to remove every class that admin created.
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
   password: {
     type: String,
     select: false

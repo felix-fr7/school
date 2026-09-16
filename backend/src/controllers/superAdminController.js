@@ -9,6 +9,7 @@ const User = require('../models/User');
 const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
 const { deleteFile } = require('../middleware/fileUpload');
+const { deleteAdminOwnedContent } = require('../utils/adminCascadeDelete');
 
 /**
  * Delete an uploaded file by its stored URL/path.
@@ -559,6 +560,13 @@ const updateSchoolAdmin = async (req, res, next) => {
  * Permanently removes the admin from BOTH the "Admin" and "User"
  * collections (admins may be mirrored in either), then verifies that
  * no record remains before responding.
+ *
+ * It also removes every record that this admin created - classes, students,
+ * albums (video/photo), news, circulars, report cards, exams, homework,
+ * timetables, weekly lessons, files... - plus everything that was created or
+ * published through the classes/students this admin created. Records that
+ * belong to any other admin are never touched (ownership is matched on the
+ * record's own createdBy/authorId/uploadedBy field).
  */
 const deleteSchoolAdmin = async (req, res, next) => {
   try {
@@ -631,6 +639,33 @@ const deleteSchoolAdmin = async (req, res, next) => {
       userDeleteFilters.push({ email: adminEmail.toLowerCase(), schoolId: schoolIdObj, role: 'School Admin' });
     }
 
+    // ------------------------------------------------------------------
+    // STEP 0: Cascade delete - remove everything this admin created
+    // (classes, students, albums, news, report cards, exams, homework, ...)
+    // and everything created/published through the classes & students this
+    // admin created. Other admins' records are left untouched.
+    // Runs BEFORE the admin account is removed so that every record can still
+    // be matched (by admin id and by mirrored email/id).
+    // ------------------------------------------------------------------
+    console.log('[Delete School Admin] STEP 0: Cascade delete of admin-created content...');
+    let cascadeResult;
+    try {
+      cascadeResult = await deleteAdminOwnedContent({
+        adminId: adminIdObj,
+        adminEmail
+      });
+    } catch (cascadeError) {
+      console.error('[Delete School Admin] Cascade delete failed:', cascadeError);
+      // The admin account is kept so the Super Admin can simply retry the
+      // delete - nothing is left half-deleted on purpose.
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Failed to delete the content created by this admin. The admin account was not deleted - please try again.'
+        }
+      });
+    }
+
     console.log('[Delete School Admin] STEP 1: Raw hard delete on Admin collection...');
     const adminDeleteResult = await Admin.collection.deleteMany({ $or: adminDeleteFilters });
     const adminDeletedCount = adminDeleteResult.deletedCount || 0;
@@ -697,7 +732,14 @@ const deleteSchoolAdmin = async (req, res, next) => {
         adminCollectionDeleted: adminDeletedCount,
         userCollectionDeleted: userDeletedCount,
         deletedFiles,
-        schoolLogoDeleted: deletedFiles.some(file => file.fileUrl === schoolLogoUrl && file.deleted)
+        schoolLogoDeleted: deletedFiles.some(file => file.fileUrl === schoolLogoUrl && file.deleted),
+        // Everything that was removed together with the admin
+        contentDeleted: cascadeResult?.counts || {},
+        contentFilesDeleted: cascadeResult?.filesDeleted || [],
+        contentFilesFailed: cascadeResult?.filesFailed || [],
+        contentRecordsDeleted: Object.entries(cascadeResult?.counts || {})
+          .filter(([key]) => key !== 'referencesCleaned')
+          .reduce((total, [, value]) => total + (value || 0), 0)
       },
       message: 'School admin permanently deleted from the database'
     });

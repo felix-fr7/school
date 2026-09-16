@@ -178,7 +178,10 @@ router.post('/classes', async (req, res, next) => {
       teacherId: assignedTeacherId || classTeacherId,
       roomNumber,
       capacity,
-      isActive: true
+      isActive: true,
+      // Owner tracking: the admin who created this class. Used when a Super Admin
+      // deletes an admin - every class created by that admin is removed.
+      createdBy: req.user.id
     };
 
     // Include password if provided
@@ -710,7 +713,10 @@ router.post('/students', async (req, res, next) => {
       rollNumber: rollNumber.trim(),
       studentId,
       classId: classId || null,
-      isActive: true
+      isActive: true,
+      // Owner tracking: the admin who created this student. Used when a Super Admin
+      // deletes an admin - every student created by that admin is removed.
+      createdBy: req.user.id
     };
 
     // Create the student (password will be hashed by User model's pre-save hook)

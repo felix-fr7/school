@@ -1070,6 +1070,12 @@ const deleteStudent = async (req, res, next) => {
 
     const existingStudent = checkResult.rows[0];
 
+    // Cascade delete: Remove student-related data before deleting the user
+    await db.query('DELETE FROM "StudentProfile" WHERE "userId" = $1', [id]);
+    await db.query('DELETE FROM "Mark" WHERE "studentId" = $1', [id]);
+    await db.query('DELETE FROM "ReportCard" WHERE "student" = $1', [id]);
+    await db.query('DELETE FROM "homework_submissions" WHERE "student_id" = $1', [id]);
+
     // Delete the student
     const deleteQuery = 'DELETE FROM "User" WHERE id = $1';
     await db.query(deleteQuery, [id]);

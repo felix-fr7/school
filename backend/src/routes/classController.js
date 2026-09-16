@@ -389,7 +389,11 @@ router.post('/students', async (req, res, next) => {
       rollNumber: rollNumber.trim(),
       classId: classId,
       admittedDate: admittedDate ? new Date(admittedDate) : new Date(),
-      isActive: true
+      isActive: true,
+      // Owner tracking: the class account (or admin) that added this student.
+      // Used when a Super Admin deletes an admin - the admin's classes and every
+      // student created through those classes are removed together.
+      createdBy: req.user.classId || req.user.id
     });
 
     res.status(201).json({

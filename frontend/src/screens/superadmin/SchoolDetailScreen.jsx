@@ -378,10 +378,16 @@ const SchoolDetailScreen = () => {
 
         const adminCount = response.data?.adminCollectionDeleted ?? 0;
         const userCount = response.data?.userCollectionDeleted ?? 0;
+        const contentCounts = response.data?.contentDeleted || {};
+        const contentSummary = Object.entries(contentCounts)
+          .filter(([key, value]) => key !== 'referencesCleaned' && value > 0)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ');
         setAlertHeader('Success');
         setAlertMessage(
           `${adminToDelete.name || 'Admin'} has been permanently deleted from the database` +
-          ` (Admin records removed: ${adminCount}, User records removed: ${userCount}).`
+          ` (Admin records removed: ${adminCount}, User records removed: ${userCount}).` +
+          (contentSummary ? ` Created content deleted -> ${contentSummary}.` : '')
         );
         setAlertSuccess(true);
         setShowAlert(true);
@@ -827,7 +833,7 @@ const SchoolDetailScreen = () => {
         header="Delete Admin"
         message={
           adminToDelete
-            ? `Are you sure you want to permanently delete "${adminToDelete.name}" (${adminToDelete.email})? This will remove the admin account from the database and cannot be undone.`
+            ? `Are you sure you want to permanently delete "${adminToDelete.name}" (${adminToDelete.email})? This will remove the admin account from the database, together with every class, student, album, news, report card and other content created by this admin (and everything published through those classes/students). Content created by other admins will not be affected. This action cannot be undone.`
             : ''
         }
         buttons={[
