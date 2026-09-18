@@ -195,7 +195,6 @@ const AdminDashboardScreen = () => {
                   src={resolvedLogoUrl}
                   alt={schoolName || 'School logo'}
                   className="brand-logo-light brand-logo-img"
-                  style={{ width: 42, height: 42, borderRadius: 16, objectFit: 'cover' }}
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               ) : (

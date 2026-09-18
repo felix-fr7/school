@@ -85,8 +85,27 @@ const EditClassScreen = () => {
         setClassData(data);
         setClassName(data.name);
         setSection(data.section || '');
-        if (data.teacherId) {
-          setTeacherId(data.teacherId);
+
+        // The API returns the assigned teacher as a populated object
+        // ({ _id, name, email, phone }) - normalize it so the currently
+        // assigned class teacher is displayed correctly.
+        const assignedTeacher = data.teacherId;
+        if (assignedTeacher) {
+          const assignedTeacherId = typeof assignedTeacher === 'object'
+            ? (assignedTeacher._id || assignedTeacher.id)
+            : assignedTeacher;
+
+          if (assignedTeacherId) {
+            setTeacherId(assignedTeacherId);
+          }
+
+          if (typeof assignedTeacher === 'object' && assignedTeacher.name) {
+            setSelectedTeacher({
+              id: assignedTeacherId,
+              name: assignedTeacher.name,
+              email: assignedTeacher.email || '',
+            });
+          }
         }
       }
     } catch (error) {
@@ -116,7 +135,9 @@ const EditClassScreen = () => {
 
   useEffect(() => {
     if (teacherId && teachers.length > 0) {
-      const teacher = teachers.find(t => t.id === teacherId);
+      const teacher = teachers.find(
+        (t) => t.id === teacherId || String(t.id) === String(teacherId)
+      );
       if (teacher) {
         setSelectedTeacher(teacher);
       }

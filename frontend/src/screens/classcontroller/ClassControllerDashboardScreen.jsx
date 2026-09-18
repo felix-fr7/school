@@ -231,7 +231,7 @@ const ClassControllerDashboardScreen = () => {
                 <img
                   src={brandSchoolLogo || resolveMediaUrl(currentClass?.schoolLogoUrl)}
                   alt={brandSchoolName || currentClass?.schoolName || 'School logo'}
-                  style={{ width: 30, height: 30, borderRadius: 8, objectFit: 'cover' }}
+                  className="class-brand-logo"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               ) : (

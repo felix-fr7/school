@@ -32,6 +32,7 @@ import {
   saveOutline,
   closeOutline,
   barcodeOutline,
+  keyOutline,
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
@@ -44,6 +45,8 @@ const EditStudentScreen = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [rollNumber, setRollNumber] = useState('');
+  const [loginId, setLoginId] = useState('');
   const [classId, setClassId] = useState(undefined);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +81,8 @@ const EditStudentScreen = () => {
         setName(student.name);
         setEmail(student.email || '');
         setPhone(student.phone || '');
+        setRollNumber(student.rollNumber || '');
+        setLoginId(student.studentId || '');
         setClassId(student.classId);
       }
 
@@ -112,6 +117,7 @@ const EditStudentScreen = () => {
         name: name.trim(),
         email: email.trim() || undefined,
         phone: phone.trim() || undefined,
+        rollNumber: rollNumber.trim() || undefined,
         classId: classId,
       };
       const response = await adminAPI.updateStudent(studentId, payload);
@@ -195,13 +201,31 @@ const EditStudentScreen = () => {
                   <IonIcon icon={barcodeOutline} className="input-icon" />
                   <IonInput
                     className="admin-input"
-                    value=""
-                    placeholder="Roll number (read-only)"
-                    disabled={true}
+                    value={rollNumber}
+                    onIonInput={(e) => setRollNumber(e.detail.value || '')}
+                    placeholder="Enter roll number (e.g. 001, A-01)"
+                    autocapitalize="none"
+                    autocomplete="off"
+                    disabled={saving}
                   />
                 </div>
                 <IonText color="medium" className="helper-text">
-                  Roll number cannot be modified after creation
+                  Roll numbers are unique per class
+                </IonText>
+              </div>
+
+              <div className="input-field-group">
+                <label className="admin-label">Login ID</label>
+                <div className="input-with-icon">
+                  <IonIcon icon={keyOutline} className="input-icon" />
+                  <IonInput
+                    className="admin-input"
+                    value={loginId || 'Not generated'}
+                    readonly={true}
+                  />
+                </div>
+                <IonText color="medium" className="helper-text">
+                  Login ID is auto-generated and cannot be modified
                 </IonText>
               </div>
             </IonCardContent>

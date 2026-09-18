@@ -162,7 +162,7 @@ const StudentDashboardScreen = () => {
                 <img
                   src={brandLogo || resolveMediaUrl(profile?.school.logoUrl)}
                   alt={brandName || profile?.school.name || 'School logo'}
-                  style={{ width: 26, height: 26, borderRadius: 8, objectFit: 'cover' }}
+                  className="student-brand-logo"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               ) : (

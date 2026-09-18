@@ -69,6 +69,47 @@
   animation: cardIn 0.55s ease-out 0.08s both;
 }
 
+/* Next Student ID Preview Card (same pattern as the class-controller add student screen) */
+.create-student-content .preview-card {
+  margin: 0 0 20px 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.22);
+  animation: cardIn 0.5s ease-out both;
+}
+
+.create-student-content .preview-card ion-card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.create-student-content .preview-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin-bottom: 6px;
+  color: #ffffff;
+}
+
+.create-student-content .preview-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+}
+
+.create-student-content .preview-note {
+  font-size: 0.8rem;
+  opacity: 0.92;
+  color: #ffffff;
+}
+
 /* Input groups */
 .create-student-content .input-group {
   display: flex;

@@ -450,6 +450,26 @@ router.get('/classes/:id/dashboard', async (req, res, next) => {
 // ============================================
 // Students Management
 // ============================================
+
+// Preview the next auto-generated Student ID (does not reserve/save anything)
+router.get('/students/next-id', async (req, res, next) => {
+  try {
+    // Use schoolId for User model queries (User model uses schoolId, not tenantId)
+    const schoolId = req.user.schoolId || req.user.tenantId;
+    const { getSchoolPrefixById, generateUniqueStudentId } = require('../utils/idGenerator');
+
+    const { prefix: schoolPrefix } = await getSchoolPrefixById(schoolId);
+    const nextStudentId = await generateUniqueStudentId(User, schoolId, schoolPrefix);
+
+    res.json({
+      success: true,
+      data: { nextStudentId }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/students', async (req, res, next) => {
   try {
     const { classId, search, page = 1, limit = 50 } = req.query;
@@ -682,17 +702,20 @@ router.post('/students', async (req, res, next) => {
       });
     }
 
-    // Check if roll number already exists
+    // Check if roll number already exists in the SAME class only.
+    // Roll numbers are unique per class, so different classes can reuse the
+    // same roll number independently (e.g. Class 1 -> Roll 1 and Class 2 -> Roll 1).
     const existingRollNumber = await User.findOne({
       rollNumber: rollNumber.trim(),
       schoolId,
-      role: 'Student'
+      role: 'Student',
+      classId: classId || null
     });
 
     if (existingRollNumber) {
       return res.status(409).json({
         success: false,
-        error: { message: 'Roll number already exists. Please use a unique roll number.' }
+        error: { message: 'Roll number already exists in this class. Please use a unique roll number.' }
       });
     }
 

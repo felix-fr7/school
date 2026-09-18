@@ -551,6 +551,11 @@ export const adminAPI = {
     return response.data;
   },
 
+  async getNextStudentId() {
+    const response = await api.get('/admin/students/next-id');
+    return response.data;
+  },
+
   async createStudent(data) {
     const response = await api.post('/admin/students', data);
     return response.data;

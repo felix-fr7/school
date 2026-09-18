@@ -358,12 +358,18 @@ router.post('/students', async (req, res, next) => {
 
     const User = require('../models/User');
 
-    // Check if roll number already exists
-    const existingRollNumber = await User.findOne({ rollNumber: rollNumber.trim(), role: 'Student' });
+    // Check if roll number already exists in this class only.
+    // Roll numbers are unique per class - different classes can reuse the same
+    // roll number independently (e.g. Class 1 -> Roll 1 and Class 2 -> Roll 1).
+    const existingRollNumber = await User.findOne({
+      rollNumber: rollNumber.trim(),
+      role: 'Student',
+      classId: classId
+    });
     if (existingRollNumber) {
       return res.status(409).json({
         success: false,
-        error: { message: 'Roll number already exists.' }
+        error: { message: 'Roll number already exists in this class.' }
       });
     }
 

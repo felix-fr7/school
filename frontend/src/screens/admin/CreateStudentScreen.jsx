@@ -19,6 +19,8 @@ import {
   IonAlert,
   IonSelect,
   IonSelectOption,
+  IonCard,
+  IonCardContent,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
@@ -34,6 +36,7 @@ const CreateStudentScreen = () => {
   const [password, setPassword] = useState('');
   const [classId, setClassId] = useState(null);
   const [classes, setClasses] = useState([]);
+  const [nextStudentId, setNextStudentId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingClasses, setFetchingClasses] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -42,7 +45,19 @@ const CreateStudentScreen = () => {
 
   useEffect(() => {
     fetchClasses();
+    fetchNextStudentId();
   }, []);
+
+  const fetchNextStudentId = async () => {
+    try {
+      const response = await adminAPI.getNextStudentId();
+      if (response.success && response.data) {
+        setNextStudentId(response.data.nextStudentId);
+      }
+    } catch (error) {
+      console.error('Error fetching next student ID:', error);
+    }
+  };
 
   const fetchClasses = async () => {
     try {
@@ -111,6 +126,7 @@ const CreateStudentScreen = () => {
         setPassword('');
         setRollNumber('');
         setClassId(null);
+        fetchNextStudentId();
       } else {
         setAlertMessage(response.error?.message || 'Failed to create student');
         setIsSuccess(false);
@@ -146,6 +162,17 @@ const CreateStudentScreen = () => {
       </IonHeader>
       <IonContent className="create-student-content" fullscreen>
         <div className="form-container">
+          {/* Next Student ID Preview */}
+          {nextStudentId && (
+            <IonCard className="preview-card">
+              <IonCardContent>
+                <span className="preview-label">NEXT GENERATED INTERNAL ID</span>
+                <h2 className="preview-value">{nextStudentId}</h2>
+                <span className="preview-note">An internal ID will be assigned. Students login with their roll number.</span>
+              </IonCardContent>
+            </IonCard>
+          )}
+
           <div className="form-card">
             <div className="input-group">
             <label className="input-label">Student Name *</label>

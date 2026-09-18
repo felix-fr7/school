@@ -77,20 +77,52 @@
 .modern-header ion-toolbar {
   --background: transparent;
   --border-width: 0;
+  --min-height: 80px;
+}
+
+/* --- School logo box --- */
+/* Uploaded school logo <img>: fills the box exactly (same size as the box) */
+.student-brand-logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: #f8fafc;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.18),
+              0 2px 5px -1px rgba(15, 23, 42, 0.08);
 }
 
 .header-title-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-weight: 700;
   color: #1e293b;
-  font-size: 16px;
+  font-size: 21px;
 }
 
+/* Fallback box (gradient + school icon) when no logo is uploaded */
 .header-school-icon {
-  color: #6366f1;
-  font-size: 20px;
+  box-sizing: border-box;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 13px;
+  flex: 0 0 auto;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-size: 26px;
+  box-shadow: 0 8px 18px -2px rgba(99, 102, 241, 0.35);
 }
 
 .notification-btn,
@@ -463,6 +495,35 @@
 
 /* --- Responsive Adjustments --- */
 @media (max-width: 480px) {
+  .student-brand-logo {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 5px;
+  }
+
+  .header-school-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 11px;
+    font-size: 22px;
+  }
+
+  .header-title-content {
+    font-size: 17px;
+    gap: 10px;
+  }
+
+  .header-title-content span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .hero-content {
     padding: 20px 16px;
   }

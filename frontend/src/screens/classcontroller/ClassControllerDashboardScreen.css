@@ -22,8 +22,9 @@
 .teacher-toolbar {
   --background: #ffffff;
   --border-color: #f1f5f9;
+  --min-height: 84px;
   border-bottom: 1px solid var(--border-color);
-  padding: 0 16px;
+  padding: 6px 18px;
 }
 
 .custom-nav-container {
@@ -31,22 +32,53 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 8px 0;
+  padding: 12px 0;
 }
 
 .brand-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
+/* --- School logo box --- */
+/* Uploaded school logo <img>: fills the box exactly (same size as the box) */
+.class-brand-logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: #f8fafc;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.18),
+              0 2px 5px -1px rgba(15, 23, 42, 0.08);
+}
+
+/* Fallback box (gradient + school icon) when no logo is uploaded */
 .toolbar-main-icon {
-  font-size: 1.4rem;
-  color: #2563eb;
+  box-sizing: border-box;
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
+  padding: 15px;
+  flex: 0 0 auto;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  color: #ffffff;
+  font-size: 28px;
+  box-shadow: 0 8px 18px -2px rgba(37, 99, 235, 0.35);
 }
 
 .brand-text {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #0f172a;
 }
@@ -456,4 +488,49 @@
   font-size: 0.78rem;
   color: #64748b;
   margin: 0;
+}
+
+/* ==========================================================================
+   Navbar Logo + School Name - Responsive (Mobile)
+   ========================================================================== */
+@media (max-width: 480px) {
+  .teacher-toolbar {
+    --min-height: 72px;
+    padding: 4px 12px;
+  }
+
+  .custom-nav-container {
+    padding: 8px 0;
+  }
+
+  .class-brand-logo {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+    padding: 0;
+    border-radius: 5px;
+  }
+
+  .toolbar-main-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+    padding: 12px;
+    font-size: 22px;
+  }
+
+  .brand-box {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .brand-text {
+    min-width: 0;
+    font-size: 1.2rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
