@@ -6,6 +6,7 @@
 
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
@@ -17,9 +18,52 @@ const News = require('../models/News');
 const LeaveRequest = require('../models/LeaveRequest');
 const StudentProfile = require('../models/StudentProfile');
 const { authenticate, isAdmin } = require('../middleware/auth');
+const { deleteFile } = require('../middleware/fileUpload');
 
 // All routes require authentication and admin role
 router.use(authenticate, isAdmin);
+
+/**
+ * Normalise an incoming classId for exam timetables.
+ * Returns { classId } on success (null = school-wide) or { error } when the
+ * value is not a usable class of the admin's own school.
+ */
+const resolveExamClassId = async (rawClassId, tenantId) => {
+  if (rawClassId === undefined || rawClassId === null || String(rawClassId).trim() === '') {
+    return { classId: null };
+  }
+
+  const value = String(rawClassId).trim();
+
+  // Must be a Mongo ObjectId - older clients used to forward UUID-ish values
+  // which used to crash the save with a 500 CastError.
+  if (!mongoose.Types.ObjectId.isValid(value)) {
+    return { error: 'Invalid class selected. Please pick a class from the list.' };
+  }
+
+  const filter = { _id: value };
+  if (tenantId) filter.tenantId = tenantId;
+
+  const classDoc = await Class.findOne(filter).select('_id');
+  if (!classDoc) {
+    return { error: 'Selected class was not found in your school.' };
+  }
+
+  return { classId: classDoc._id };
+};
+
+/**
+ * Extract the stored timetable file URL. New records keep it in `fileUrl`,
+ * older records only have it inside the description.
+ */
+const getExamFileUrl = (exam) => {
+  if (!exam) return null;
+  if (exam.fileUrl) return exam.fileUrl;
+  if (exam.description && exam.description.includes('Exam timetable file:')) {
+    return exam.description.replace('Exam timetable file: ', '').trim() || null;
+  }
+  return null;
+};
 
 // ============================================
 // Dashboard Stats
@@ -1326,12 +1370,9 @@ router.get('/exams', async (req, res, next) => {
     const total = await Exam.countDocuments({ tenantId });
 
     const examData = exams.map(exam => {
-      // Extract fileUrl from description if it exists
-      // Description format: "Exam timetable file: /uploads/exam/xxx.pdf"
-      let fileUrl = null;
-      if (exam.description && exam.description.includes('Exam timetable file:')) {
-        fileUrl = exam.description.replace('Exam timetable file: ', '').trim();
-      }
+      // fileUrl may live in its own field (new records) or inside the
+      // description: "Exam timetable file: /uploads/exam/xxx.pdf" (old records)
+      const fileUrl = getExamFileUrl(exam);
 
       return {
         id: exam._id,
@@ -1390,14 +1431,34 @@ router.post('/content/exams', async (req, res, next) => {
       });
     }
 
+    if (!tenantId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Tenant ID is required. Please ensure your admin account is linked to a school.' }
+      });
+    }
+
+    // Validate/normalise the target class (null = school-wide). This prevents
+    // the 500 CastError that used to surface as "Failed to upload timetable".
+    const classResolution = await resolveExamClassId(classId, tenantId);
+    if (classResolution.error) {
+      return res.status(400).json({
+        success: false,
+        error: { message: classResolution.error }
+      });
+    }
+    const resolvedClassId = classResolution.classId;
+
     const Exam = require('../models/Exam');
 
     const exam = new Exam({
       name: title.trim(),
-      classId: classId || null,
+      classId: resolvedClassId,
       tenantId,
       startDate: new Date(),
       endDate: new Date(),
+      // fileUrl is the source of truth; description is kept for old clients.
+      fileUrl: fileUrl || null,
       description: fileUrl ? `Exam timetable file: ${fileUrl}` : null,
       isPublished: true,
       academicYear: new Date().getFullYear().toString()
@@ -1412,7 +1473,7 @@ router.post('/content/exams', async (req, res, next) => {
         title: title.trim(),
         subject: 'Timetable',
         examId: exam._id,
-        classId: classId || null,
+        classId: resolvedClassId,
         tenantId,
         date: new Date(),
         startTime: '09:00',
@@ -1429,6 +1490,7 @@ router.post('/content/exams', async (req, res, next) => {
         id: exam._id,
         title: exam.name,
         classId: exam.classId,
+        fileUrl: exam.fileUrl,
         isPublished: exam.isPublished,
         createdAt: exam.createdAt
       },
@@ -1446,14 +1508,38 @@ router.post('/content/exams', async (req, res, next) => {
  */
 router.put('/content/exams/:id', async (req, res, next) => {
   try {
-    const { title, classId, isPublished } = req.body;
+    const { title, classId, isPublished, fileUrl } = req.body;
     const tenantId = req.user.tenantId || req.user.schoolId;
     const Exam = require('../models/Exam');
 
     const updates = {};
-    if (title !== undefined) updates.name = title;
-    if (classId !== undefined) updates.classId = classId || null;
+    if (title !== undefined) {
+      if (!String(title).trim()) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Exam title cannot be empty' }
+        });
+      }
+      updates.name = String(title).trim();
+    }
+
+    // classId: null/'' moves the timetable back to school-wide.
+    if (classId !== undefined) {
+      const classResolution = await resolveExamClassId(classId, tenantId);
+      if (classResolution.error) {
+        return res.status(400).json({
+          success: false,
+          error: { message: classResolution.error }
+        });
+      }
+      updates.classId = classResolution.classId;
+    }
+
     if (isPublished !== undefined) updates.isPublished = isPublished;
+    if (fileUrl !== undefined) {
+      updates.fileUrl = fileUrl || null;
+      updates.description = fileUrl ? `Exam timetable file: ${fileUrl}` : null;
+    }
 
     const exam = await Exam.findOneAndUpdate(
       { _id: req.params.id, tenantId },
@@ -1474,6 +1560,7 @@ router.put('/content/exams/:id', async (req, res, next) => {
         id: exam._id,
         title: exam.name,
         classId: exam.classId,
+        fileUrl: exam.fileUrl,
         isPublished: exam.isPublished,
         updatedAt: exam.updatedAt
       },
@@ -1486,7 +1573,7 @@ router.put('/content/exams/:id', async (req, res, next) => {
 
 /**
  * @route   DELETE /api/admin/content/exams/:id
- * @desc    Delete exam timetable
+ * @desc    Delete exam timetable (also removes the uploaded file)
  * @access  Admin only
  */
 router.delete('/content/exams/:id', async (req, res, next) => {
@@ -1509,6 +1596,16 @@ router.delete('/content/exams/:id', async (req, res, next) => {
 
     // Delete associated exam schedules
     await ExamSchedule.deleteMany({ examId: req.params.id });
+
+    // Remove the uploaded timetable file as well so no orphan files remain.
+    const storedFileUrl = getExamFileUrl(exam);
+    if (storedFileUrl) {
+      try {
+        await deleteFile(storedFileUrl);
+      } catch (fileError) {
+        console.warn('[ExamTimetable] Could not delete file:', storedFileUrl, fileError.message);
+      }
+    }
 
     res.json({
       success: true,

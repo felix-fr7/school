@@ -83,6 +83,51 @@ const getFullFileUrl = (fileUrl) => {
   return `${rawBaseUrl}${relativePath}`;
 };
 
+// Accepted timetable files. The backend (middleware/fileUpload.js) allows PDF and
+// common image types, so the client mirrors that list.
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'application/pdf',
+  'application/x-pdf'
+];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+// Keep this in sync with MAX_FILE_SIZE on the backend (10MB by default).
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+const getFileExtension = (fileName = '') => {
+  const parts = String(fileName).split('.');
+  return parts.length > 1 ? parts.pop().toLowerCase() : '';
+};
+
+/**
+ * Validate a picked file by MIME type OR extension. Mobile file pickers
+ * frequently report an empty or non-standard MIME type ('', 'image/jpg',
+ * 'application/x-pdf'), so relying on file.type alone blocks valid uploads.
+ */
+const isAllowedTimetableFile = (file) => {
+  if (!file) return false;
+  const mime = (file.type || '').toLowerCase();
+  const ext = getFileExtension(file.name);
+  if (ALLOWED_MIME_TYPES.includes(mime)) return true;
+  // Unknown/blank MIME type - trust the extension instead of blocking the admin.
+  return ALLOWED_EXTENSIONS.includes(ext);
+};
+
+// Class ids are Mongo ObjectIds (24 hex chars) - the classes endpoint returns
+// them as `id`/`_id`. Anything else must not be sent to the API.
+const isValidObjectId = (value) =>
+  typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value);
+
+// Surface the real backend message instead of a generic failure text.
+const apiErrorMessage = (error, fallback) =>
+  error?.response?.data?.error?.message ||
+  error?.response?.data?.message ||
+  error?.message ||
+  fallback;
+
 const ExamItem = ({ item, classes, onDelete, onEdit, onTogglePublish, showAlertMessage: parentShowAlert }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -90,7 +135,10 @@ const ExamItem = ({ item, classes, onDelete, onEdit, onTogglePublish, showAlertM
   const [schedules, setSchedules] = useState([]);
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [editTitle, setEditTitle] = useState(item.title);
-  const [editClassId, setEditClassId] = useState(item.classId || undefined);
+  const [editClassId, setEditClassId] = useState(item.classId || '');
+  // Optional replacement file for the uploaded timetable.
+  const [editFile, setEditFile] = useState(null);
+  const editFileInputRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isImageFile = (url) => {
@@ -104,14 +152,60 @@ const ExamItem = ({ item, classes, onDelete, onEdit, onTogglePublish, showAlertM
     return url.toLowerCase().endsWith('.pdf');
   };
 
+  const handleEditFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isAllowedTimetableFile(file)) {
+      if (parentShowAlert) {
+        parentShowAlert('Invalid File', 'Only JPG, JPEG, PNG, WEBP images and PDF files are allowed.');
+      }
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      if (parentShowAlert) {
+        parentShowAlert('File Too Large', `File size must be under ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))}MB.`);
+      }
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    setEditFile(file);
+  };
+
   const handleEditSubmit = async () => {
     if (!editTitle.trim()) return;
     setIsSubmitting(true);
     try {
-      await onEdit(item.id, editTitle.trim(), editClassId || null);
+      // Upload a replacement file first (kept optional).
+      let newFileUrl;
+      if (editFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', editFile);
+        const uploadResponse = await api.post('/admin-content/upload-exam', uploadFormData);
+        if (!uploadResponse.data?.success || !uploadResponse.data?.data?.url) {
+          throw new Error(uploadResponse.data?.error?.message || 'File upload failed');
+        }
+        newFileUrl = uploadResponse.data.data.url;
+      }
+
+      await onEdit(item.id, editTitle.trim(), editClassId || null, newFileUrl);
+      setEditFile(null);
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = '';
+      }
       setShowEditModal(false);
     } catch (error) {
       console.error('Edit failed:', error);
+      if (parentShowAlert) {
+        parentShowAlert('Error', apiErrorMessage(error, 'Failed to update timetable'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -440,13 +534,40 @@ const ExamItem = ({ item, classes, onDelete, onEdit, onTogglePublish, showAlertM
                   background: '#f9fafb'
                 }}
               >
-                <IonSelectOption value={undefined}>🏫 All Classes (School-wide)</IonSelectOption>
+                <IonSelectOption value="">🏫 All Classes (School-wide)</IonSelectOption>
                 {classes.map((cls) => (
-                  <IonSelectOption key={cls.id} value={cls.id}>
+                  <IonSelectOption key={cls.id || cls._id} value={cls.id || cls._id}>
                     Class {cls.name}{cls.section ? ` - ${cls.section}` : ''}
                   </IonSelectOption>
                 ))}
               </IonSelect>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
+                Replace Timetable File (optional)
+              </label>
+              <input
+                type="file"
+                ref={editFileInputRef}
+                onChange={handleEditFileSelect}
+                accept="image/png, image/jpeg, image/webp, application/pdf, .png, .jpg, .jpeg, .webp, .pdf"
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                  border: '1px dashed #d1d5db',
+                  background: '#f9fafb',
+                  color: '#111827',
+                  boxSizing: 'border-box',
+                  fontSize: '0.875rem'
+                }}
+              />
+              <span style={{ display: 'block', marginTop: '6px', fontSize: '0.75rem', color: '#6b7280' }}>
+                {editFile
+                  ? `New file selected: ${editFile.name}`
+                  : 'Leave empty to keep the current file. JPG, PNG, WEBP or PDF (Max 10MB).'}
+              </span>
             </div>
           </div>
 
@@ -478,11 +599,14 @@ const AdminExamsScreen = () => {
   const [examList, setExamList] = useState([]);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedClassId, setSelectedClassId] = useState(undefined);
+  const [selectedClassId, setSelectedClassId] = useState('');
   const [activeTab, setActiveTab] = useState('upload');
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  // URL returned by a previous successful file upload - allows the admin to
+  // retry creating the record without re-uploading the file.
+  const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
   const fileInputRef = useRef(null);
   const [title, setTitle] = useState('');
 
@@ -529,44 +653,50 @@ const AdminExamsScreen = () => {
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-      if (!allowedTypes.includes(file.type)) {
-        showAlertMessage('Invalid File', 'Only JPEG, PNG, WEBP images and PDF files are allowed.');
-        return;
-      }
+    if (!file) return;
 
-      if (file.size > 5 * 1024 * 1024) {
-        showAlertMessage('File Too Large', 'File size must be under 5MB.');
-        return;
+    if (!isAllowedTimetableFile(file)) {
+      showAlertMessage(
+        'Invalid File',
+        'Only JPG, JPEG, PNG, WEBP images and PDF files are allowed. Selected file: ' + (file.name || 'unknown')
+      );
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
+      return;
+    }
 
-      setSelectedFile(file);
-
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFilePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setFilePreview(null);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      showAlertMessage(
+        'File Too Large',
+        `File size must be under ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))}MB. Selected file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`
+      );
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
+      return;
+    }
+
+    setSelectedFile(file);
+
+    if ((file.type || '').startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
     }
   };
 
   const handleRemoveFile = () => {
     setSelectedFile(null);
     setFilePreview(null);
+    setUploadedFileUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  const isValidUUID = (value) => {
-    if (!value || typeof value !== 'string') return false;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(value);
   };
 
   const handleSubmit = async () => {
@@ -575,7 +705,7 @@ const AdminExamsScreen = () => {
       return;
     }
 
-    if (!selectedFile) {
+    if (!selectedFile && !uploadedFileUrl) {
       showAlertMessage('File Required', 'Please upload an image or PDF file of the exam timetable.');
       return;
     }
@@ -583,25 +713,33 @@ const AdminExamsScreen = () => {
     setSubmitting(true);
 
     try {
-      // First, upload the file to get a URL (saves to uploads/exam/)
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', selectedFile);
-      
-      // Upload file using the exam-specific upload endpoint
-      const uploadResponse = await api.post('/admin-content/upload-exam', uploadFormData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      // 1. Upload the file first (saved to uploads/exam/). Re-use the previous
+      // URL when only the record creation failed earlier.
+      let fileUrl = uploadedFileUrl;
 
-      if (!uploadResponse.data.success) {
-        throw new Error('File upload failed');
+      if (selectedFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', selectedFile);
+
+        // NOTE: no Content-Type header here on purpose - the browser/axios must
+        // set "multipart/form-data; boundary=..." itself, otherwise the file
+        // part is not parsed by the server.
+        const uploadResponse = await api.post('/admin-content/upload-exam', uploadFormData);
+
+        if (!uploadResponse.data?.success || !uploadResponse.data?.data?.url) {
+          throw new Error(uploadResponse.data?.error?.message || 'File upload failed');
+        }
+
+        fileUrl = uploadResponse.data.data.url;
+        setUploadedFileUrl(fileUrl);
       }
 
-      const fileUrl = uploadResponse.data.data.url;
-
-      // Then create the exam record with the file URL
+      // 2. Create the exam record with the uploaded file URL. classId is only
+      // sent when a real class (Mongo ObjectId) is selected - school-wide
+      // timetables are created with classId = null.
       const examData = {
         title: title.trim(),
-        classId: isValidUUID(selectedClassId) ? selectedClassId : undefined,
+        classId: isValidObjectId(selectedClassId) ? selectedClassId : null,
         fileUrl: fileUrl,
       };
 
@@ -610,14 +748,15 @@ const AdminExamsScreen = () => {
       if (response.data.success) {
         showAlertMessage('Success', 'Exam timetable published successfully!');
         handleRemoveFile();
-        setSelectedClassId(undefined);
+        setUploadedFileUrl(null);
+        setSelectedClassId('');
         setTitle('');
         fetchExams(); // Refresh the list to show the newly created exam
         setActiveTab('list');
       }
     } catch (error) {
       console.error('Error creating exam:', error);
-      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to upload timetable');
+      showAlertMessage('Error', apiErrorMessage(error, 'Failed to upload timetable'));
     } finally {
       setSubmitting(false);
     }
@@ -628,29 +767,35 @@ const AdminExamsScreen = () => {
       // Use the /admin/content/exams/:id endpoint (Exam table)
       const response = await api.delete(`/admin/content/exams/${id}`);
       if (response.data.success) {
-        setExamList(prev => prev.filter(item => item.id !== id));
+        setExamList(prev => prev.filter(item => String(item.id) !== String(id)));
         showAlertMessage('Success', 'Exam timetable deleted successfully');
       }
     } catch (error) {
       console.error('Error deleting exam:', error);
-      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to delete exam timetable');
+      showAlertMessage('Error', apiErrorMessage(error, 'Failed to delete exam timetable'));
     }
   };
 
-  const handleEdit = async (id, newTitle, newClassId) => {
+  const handleEdit = async (id, newTitle, newClassId, newFileUrl) => {
     try {
-      // Use the /admin/content/exams/:id endpoint (Exam table)
-      const response = await api.put(`/admin/content/exams/${id}`, {
+      const body = {
         title: newTitle,
-        classId: newClassId
-      });
+        // Always send classId (null = school-wide) so the admin can also move a
+        // timetable back to "All Classes".
+        classId: isValidObjectId(newClassId) ? newClassId : null
+      };
+      // Only replace the file when a new one was uploaded.
+      if (newFileUrl) body.fileUrl = newFileUrl;
+
+      // Use the /admin/content/exams/:id endpoint (Exam table)
+      const response = await api.put(`/admin/content/exams/${id}`, body);
       if (response.data.success) {
         showAlertMessage('Success', 'Exam timetable updated successfully');
         fetchExams();
       }
     } catch (error) {
       console.error('Error updating exam:', error);
-      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update timetable');
+      showAlertMessage('Error', apiErrorMessage(error, 'Failed to update timetable'));
     }
   };
 
@@ -668,7 +813,7 @@ const AdminExamsScreen = () => {
       }
     } catch (error) {
       console.error('Error toggling publish state:', error);
-      showAlertMessage('Error', error.response?.data?.error?.message || 'Failed to update publish state');
+      showAlertMessage('Error', apiErrorMessage(error, 'Failed to update publish state'));
     }
   };
 
@@ -771,9 +916,9 @@ const AdminExamsScreen = () => {
                         interface="popover"
                         className="admin-select"
                       >
-                        <IonSelectOption value={undefined}>🏫 All Classes (School-wide)</IonSelectOption>
+                        <IonSelectOption value="">🏫 All Classes (School-wide)</IonSelectOption>
                         {classes.map((cls) => (
-                          <IonSelectOption key={cls.id} value={cls.id}>
+                          <IonSelectOption key={cls.id || cls._id} value={cls.id || cls._id}>
                             Class {cls.name}{cls.section ? ` - ${cls.section}` : ''}
                           </IonSelectOption>
                         ))}
@@ -787,7 +932,7 @@ const AdminExamsScreen = () => {
                       type="file"
                       ref={fileInputRef}
                       onChange={handleFileSelect}
-                      accept="image/png, image/jpeg, image/webp, application/pdf"
+                      accept="image/png, image/jpeg, image/webp, application/pdf, .png, .jpg, .jpeg, .webp, .pdf"
                       style={{ display: 'none' }}
                     />
 
@@ -800,13 +945,13 @@ const AdminExamsScreen = () => {
                         <p className="upload-text-modern">
                           <strong>Click to upload</strong> or drag & drop
                         </p>
-                        <span className="upload-hint-modern">Supports: PNG, JPG, WEBP, PDF (Max 5MB)</span>
+                        <span className="upload-hint-modern">Supports: PNG, JPG, JPEG, WEBP, PDF (Max 10MB)</span>
                       </div>
                     ) : (
                       <div className="file-preview-card-modern">
                         <div className="file-info-row-modern">
                           <IonIcon 
-                            icon={selectedFile.type === 'application/pdf' ? documentTextOutline : imageOutline} 
+                            icon={getFileExtension(selectedFile.name) === 'pdf' ? documentTextOutline : imageOutline} 
                             className="file-type-icon-modern"
                           />
                           <div className="file-details-modern">
@@ -836,7 +981,7 @@ const AdminExamsScreen = () => {
                     expand="block"
                     className="primary-btn-modern"
                     onClick={handleSubmit}
-                    disabled={submitting || !selectedFile}
+                    disabled={submitting}
                   >
                     {submitting ? (
                       <IonSpinner name="crescent" />

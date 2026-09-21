@@ -45,6 +45,12 @@ const ExamSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // Uploaded timetable file (PDF/Image) served from /uploads/exam/...
+  fileUrl: {
+    type: String,
+    trim: true,
+    default: null
+  },
   academicYear: {
     type: String
   }

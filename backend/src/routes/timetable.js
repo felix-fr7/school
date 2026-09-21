@@ -24,7 +24,7 @@ const getTenantId = (req) =>
   req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId;
 
 const isAdminUser = (req) => {
-  const r = (req.user.role || '').toUpperCase();
+  const r = (req.user.role || '').toUpperCase().replace(/\s+/g, '_');
   return ['ADMIN', 'SCHOOL_ADMIN', 'TENANT_ADMIN', 'SUPER_ADMIN'].includes(r) || req.user.isAdmin === true;
 };
 
@@ -153,7 +153,6 @@ router.post('/', async (req, res, next) => {
   try {
     const tenantId = getTenantId(req);
     let classId = req.body.classId;
-    let createdByRole = 'OTHER';
 
     if (isClassUser(req)) {
       classId = req.user.classId;

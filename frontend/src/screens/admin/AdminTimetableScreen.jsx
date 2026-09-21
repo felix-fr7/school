@@ -199,9 +199,9 @@ const AdminTimetableScreen = () => {
         <IonToolbar>
           <IonButtons slot="start"><IonBackButton defaultHref="/admin/dashboard" /></IonButtons>
           <IonTitle>All Class Timetables</IonTitle>
-          <IonButtons slot="end">
-            <IonButton onClick={openCreate}><IonIcon icon={addCircleOutline} slot="start" />Create</IonButton>
-          </IonButtons>
+        <IonButtons slot="end">
+          <IonButton onClick={openCreate}><IonIcon icon={addCircleOutline} slot="start" />Create</IonButton>
+        </IonButtons>
         <HomeLogoutButtons />
         </IonToolbar>
       </IonHeader>
@@ -243,7 +243,7 @@ const AdminTimetableScreen = () => {
         <IonHeader>
           <IonToolbar>
             <IonButtons slot="start"><IonButton onClick={() => setShowForm(false)}><IonIcon icon={closeOutline} /></IonButton></IonButtons>
-            <IonTitle>{editingId ? 'Edit' : 'Create'} Timetable</IonTitle>
+            <IonTitle>{editingId ? "Edit" : "Create"} Timetable</IonTitle>
             <IonButtons slot="end"><IonButton strong disabled={saving} onClick={handleSave}>{saving ? <IonSpinner name="crescent" /> : 'Save'}</IonButton></IonButtons>
           </IonToolbar>
         </IonHeader>
