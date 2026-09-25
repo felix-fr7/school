@@ -37,6 +37,7 @@ import EditClassScreen from './screens/admin/EditClassScreen';
 import CreateCircularScreen from './screens/admin/CreateCircularScreen';
 import ClassDetailScreen from './screens/admin/ClassDetailScreen';
 import AdminAlbumsScreen from './screens/admin/AdminAlbumsScreen';
+import AlbumsScreen from './screens/AlbumsScreen';
 import CreateAlbumScreen from './screens/admin/CreateAlbumScreen';
 import EditAlbumScreen from './screens/admin/EditAlbumScreen';
 
@@ -144,6 +145,8 @@ const AppRoutes = () => {
             <Route exact path="/circulars" component={CircularsScreen} />
             <Route exact path="/gallery" component={GalleryScreen} />
             <Route exact path="/videos" component={VideosScreen} />
+            <Route exact path="/albums" component={AlbumsScreen} />
+            <Route exact path="/class-controller/albums" component={AlbumsScreen} />
             <Route exact path="/messages" component={MessagesScreen} />
             <Route exact path="/calendar" component={CalendarScreen} />
             <Route exact path="/contacts" component={ContactsScreen} />
