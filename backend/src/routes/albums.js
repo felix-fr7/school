@@ -410,7 +410,7 @@ router.put(
       const album = await Album.findOneAndUpdate(
         { _id: req.params.id, tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId },
         { $set: updates },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true, bypassDefaultFilter: true }
       ).populate('createdBy', 'name')
         .populate('targetClasses', 'name section');
       
@@ -450,10 +450,10 @@ router.post(
     try {
       const { title, url, thumbnailUrl } = req.body;
       
-      const album = await Album.findOne({
-        _id: req.params.id,
-        tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId
-      });
+      const album = await Album.findOne(
+        { _id: req.params.id, tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId },
+        { bypassDefaultFilter: true }
+      );
       
       if (!album) {
         return res.status(404).json({
@@ -498,10 +498,10 @@ router.delete(
   ],
   async (req, res, next) => {
     try {
-      const album = await Album.findOne({
-        _id: req.params.id,
-        tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId
-      });
+      const album = await Album.findOne(
+        { _id: req.params.id, tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId },
+        { bypassDefaultFilter: true }
+      );
       
       if (!album) {
         return res.status(404).json({
