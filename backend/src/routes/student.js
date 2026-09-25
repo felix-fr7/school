@@ -12,7 +12,6 @@ const ExamSchedule = require('../models/ExamSchedule');
 const Exam = require('../models/Exam');
 const Timetable = require('../models/Timetable');
 const Mark = require('../models/Mark');
-const LeaveRequest = require('../models/LeaveRequest');
 const StudentProfile = require('../models/StudentProfile');
 const { authenticate } = require('../middleware/authMiddleware');
 
@@ -20,7 +19,8 @@ router.use(authenticate);
 
 // Middleware to ensure user is a student
 router.use((req, res, next) => {
-  if (req.user.role !== 'Student') {
+  const role = (req.user.role || '').replace(/_/g, ' ').trim().toUpperCase();
+  if (role !== 'STUDENT') {
     return res.status(403).json({
       success: false,
       error: { message: 'Access denied. Students only.' }
@@ -271,56 +271,46 @@ router.get('/marks', async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const tenantId = req.user.tenantId;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 100);
+    const filter = { tenantId, studentId, isPublished: true };
 
-    const marks = await Mark.find({ tenantId, studentId })
-      .populate('examId', 'name type startDate')
-      .sort({ 'examId.startDate': -1 });
+    if (req.query.subject) filter.subject = req.query.subject;
+    if (req.query.examType) filter.examType = req.query.examType;
 
-    res.json({ success: true, data: marks });
-  } catch (error) {
-    next(error);
-  }
-});
+    const [marks, total] = await Promise.all([
+      Mark.find(filter)
+        .sort({ examDate: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      Mark.countDocuments(filter),
+    ]);
 
-// Leave requests
-router.get('/leave', async (req, res, next) => {
-  try {
-    const studentId = req.user.id;
-    const tenantId = req.user.tenantId;
+    const marksData = marks.map((mark) => mark.toObject());
+    const totalMarksObtained = marksData.reduce((sum, mark) => sum + Number(mark.marksObtained || 0), 0);
+    const totalMaxMarks = marksData.reduce((sum, mark) => sum + Number(mark.totalMarks || 0), 0);
+    const overallPercentage = totalMaxMarks > 0
+      ? Math.round(((totalMarksObtained / totalMaxMarks) * 100) * 100) / 100
+      : 0;
 
-    const leaves = await LeaveRequest.find({ tenantId, studentId })
-      .sort({ createdAt: -1 })
-      .populate('approvedBy', 'name');
-
-    res.json({ success: true, data: leaves });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/leave', async (req, res, next) => {
-  try {
-    const { leaveType, startDate, endDate, reason, attachmentUrl } = req.body;
-    const studentId = req.user.id;
-    const classId = req.user.classId;
-    const tenantId = req.user.tenantId;
-
-    const leaveRequest = new LeaveRequest({
-      tenantId,
-      studentId,
-      classId,
-      leaveType,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      reason,
-      attachmentUrl,
-      appliedBy: studentId,
-      status: 'pending'
+    res.json({
+      success: true,
+      data: {
+        marks: marksData,
+        statistics: {
+          totalSubjects: marksData.length,
+          totalMarksObtained,
+          totalMaxMarks,
+          overallPercentage,
+        },
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      },
     });
-
-    await leaveRequest.save();
-
-    res.status(201).json({ success: true, data: { id: leaveRequest._id } });
   } catch (error) {
     next(error);
   }

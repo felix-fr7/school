@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MACVEL School Management Mobile App
  * Smart. Secure. Connected.
  */
@@ -12,6 +12,7 @@ import './theme.css';
 
 // Screens
 import LoginScreen from './screens/LoginScreen';
+import StudentLoginScreen from '../../mobile/student/auth/StudentLoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 
 // Admin Screens
@@ -47,16 +48,14 @@ import TeacherHomework from './screens/teacher/TeacherHomeworkScreen';
 import TeacherStudents from './screens/teacher/TeacherStudentsScreen';
 
 // Student Screens
-import StudentDashboard from './screens/student/StudentDashboardScreen';
-import StudentHomework from './screens/student/StudentHomeworkScreen';
-import StudentExams from './screens/student/ExamSchedulesScreen';
-import StudentExamDetail from './screens/student/StudentExamDetailScreen';
-import StudentTimetable from './screens/student/StudentTimetableScreen';
-import StudentAttendance from './screens/student/StudentAttendanceScreen';
-import StudentMarks from './screens/student/StudentMarksScreen';
-import StudentLeave from './screens/student/StudentLeaveScreen';
-import StudentProfile from './screens/student/StudentProfileScreen';
-import ReportCardsScreen from './screens/student/ReportCardsScreen';
+import StudentDashboard from '../../mobile/student/dashboard/StudentDashboardScreen';
+import StudentHomework from '../../mobile/student/homework/StudentHomeworkScreen';
+import StudentExams from '../../mobile/student/exams/StudentExamsScreen';
+import StudentExamDetail from '../../mobile/student/exams/StudentExamDetailScreen';
+import StudentTimetable from '../../mobile/student/timetable/StudentTimetableScreen';
+import StudentMarks from '../../mobile/student/marks/StudentMarksScreen';
+import StudentProfile from '../../mobile/student/profile/StudentProfileScreen';
+import ReportCardsScreen from '../../mobile/student/report-cards/ReportCardsScreen';
 
 // Shared Screens
 import NewsScreen from './screens/NewsScreen';
@@ -70,12 +69,12 @@ import ContactsScreen from './screens/ContactsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 
 // Student Screens
-import StudentNewsListScreen from './screens/student/NewsListScreen';
+import StudentNewsListScreen from '../../mobile/student/news/NewsListScreen';
 
 // Components
 import AdminMenu from './components/AdminMenu';
 import TeacherMenu from './components/TeacherMenu';
-import StudentMenu from './components/StudentMenu';
+import StudentMenu from '../../mobile/student/navigation/StudentMenu';
 
 setupIonicReact();
 
@@ -120,6 +119,7 @@ const AppRoutes = () => {
         <IonReactRouter>
           <IonRouterOutlet>
             <Route exact path="/login" component={LoginScreen} />
+            <Route exact path="/student/login" component={StudentLoginScreen} />
             <Route exact path="/register" component={RegisterScreen} />
             <Redirect from="/" to="/login" />
           </IonRouterOutlet>
@@ -191,9 +191,7 @@ const AppRoutes = () => {
             <Route exact path="/student/exams" component={StudentExams} />
             <Route exact path="/student/exams/:examId" component={StudentExamDetail} />
             <Route exact path="/student/timetable" component={StudentTimetable} />
-            <Route exact path="/student/attendance" component={StudentAttendance} />
             <Route exact path="/student/marks" component={StudentMarks} />
-            <Route exact path="/student/leave" component={StudentLeave} />
             <Route exact path="/student/profile" component={StudentProfile} />
             <Route exact path="/student/report-cards" component={ReportCardsScreen} />
 

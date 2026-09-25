@@ -14,6 +14,7 @@ import ErrorBoundary from './src/components/ErrorBoundary.jsx';
 
 // Auth Screens
 import LoginScreen from './src/screens/LoginScreen.jsx';
+import StudentLoginScreen from '../mobile/student/auth/StudentLoginScreen.jsx';
 import RegisterScreen from './src/screens/RegisterScreen.jsx';
 
 // Super Admin Screens (Lazy loaded)
@@ -56,22 +57,22 @@ const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminC
   const AlbumsScreen = React.lazy(() => import('./src/screens/AlbumsScreen.jsx'));
 
 // Student Screens (Lazy loaded)
-const StudentDashboardScreen = React.lazy(() => import('./src/screens/student/DashboardScreen'));
-const StudentHomeworkListScreen = React.lazy(() => import('./src/screens/student/HomeworkListScreen'));
-const StudentHomeworkDetailScreen = React.lazy(() => import('./src/screens/student/HomeworkDetailScreen'));
-const StudentMarksListScreen = React.lazy(() => import('./src/screens/student/MarksListScreen'));
-const StudentNewsListScreen = React.lazy(() => import('./src/screens/student/NewsListScreen'));
-const StudentNewsDetailScreen = React.lazy(() => import('./src/screens/student/NewsDetailScreen'));
-const StudentCircularsListScreen = React.lazy(() => import('./src/screens/student/CircularsListScreen'));
-const StudentCircularDetailScreen = React.lazy(() => import('./src/screens/student/CircularDetailScreen'));
-const StudentReportCardsScreen = React.lazy(() => import('./src/screens/student/ReportCardsScreen'));
-const StudentExamSchedulesScreen = React.lazy(() => import('./src/screens/student/ExamSchedulesScreen'));
-const StudentProfileScreen = React.lazy(() => import('./src/screens/student/ProfileScreen'));
-const WeeklyLessonViewScreen = React.lazy(() => import('./src/screens/student/WeeklyLessonViewScreen'));
-const StudentTimetableScreen = React.lazy(() => import('./src/screens/student/StudentTimetableScreen.jsx'));
-const StudentExamDetailScreen = React.lazy(() => import('./src/screens/student/StudentExamDetailScreen'));
-const StudentCalendarScreen = React.lazy(() => import('./src/screens/student/CalendarScreen'));
-const StudentCalendarEventDetailScreen = React.lazy(() => import('./src/screens/student/CalendarEventDetailScreen'));
+const StudentDashboardScreen = React.lazy(() => import('../mobile/student/dashboard/DashboardScreen'));
+const StudentHomeworkListScreen = React.lazy(() => import('../mobile/student/homework/HomeworkListScreen'));
+const StudentHomeworkDetailScreen = React.lazy(() => import('../mobile/student/homework/HomeworkDetailScreen'));
+const StudentMarksListScreen = React.lazy(() => import('../mobile/student/marks/MarksListScreen'));
+const StudentNewsListScreen = React.lazy(() => import('../mobile/student/news/NewsListScreen'));
+const StudentNewsDetailScreen = React.lazy(() => import('../mobile/student/news/NewsDetailScreen'));
+const StudentCircularsListScreen = React.lazy(() => import('../mobile/student/circulars/CircularsListScreen'));
+const StudentCircularDetailScreen = React.lazy(() => import('../mobile/student/circulars/CircularDetailScreen'));
+const StudentReportCardsScreen = React.lazy(() => import('../mobile/student/report-cards/ReportCardsScreen'));
+const StudentExamSchedulesScreen = React.lazy(() => import('../mobile/student/exams/ExamSchedulesScreen'));
+const StudentProfileScreen = React.lazy(() => import('../mobile/student/profile/ProfileScreen'));
+const WeeklyLessonViewScreen = React.lazy(() => import('../mobile/student/weekly-lessons/WeeklyLessonViewScreen'));
+const StudentTimetableScreen = React.lazy(() => import('../mobile/student/timetable/StudentTimetableScreen.jsx'));
+const StudentExamDetailScreen = React.lazy(() => import('../mobile/student/exams/StudentExamDetailScreen'));
+const StudentCalendarScreen = React.lazy(() => import('../mobile/student/calendar/CalendarScreen'));
+const StudentCalendarEventDetailScreen = React.lazy(() => import('../mobile/student/calendar/CalendarEventDetailScreen'));
 
 
 // Class Controller Screens (Lazy loaded)
@@ -208,6 +209,7 @@ const AppContent = () => {
       <Switch>
         {/* Auth Routes */}
         <Route exact path="/login" component={LoginScreen} />
+        <Route exact path="/student/login" component={StudentLoginScreen} />
         <Route exact path="/register" component={RegisterScreen} />
 
         {/* Root path redirect */}

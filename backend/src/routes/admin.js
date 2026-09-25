@@ -15,7 +15,6 @@ const Class = require('../models/Class');
 const Subject = require('../models/Subject');
 const SchoolContact = require('../models/SchoolContact');
 const News = require('../models/News');
-const LeaveRequest = require('../models/LeaveRequest');
 const StudentProfile = require('../models/StudentProfile');
 const { authenticate, isAdmin } = require('../middleware/auth');
 const { deleteFile } = require('../middleware/fileUpload');
@@ -130,12 +129,6 @@ router.get('/dashboard', async (req, res, next) => {
       .limit(5)
       .select('title type isPublished createdAt');
 
-    // Get pending leaves
-    const pendingLeaves = await LeaveRequest.countDocuments({
-      tenantId,
-      status: 'pending'
-    });
-
     res.json({
       success: true,
       data: {
@@ -143,8 +136,7 @@ router.get('/dashboard', async (req, res, next) => {
         totalTeachers,
         totalClasses,
         todayAttendance,
-        recentNews,
-        pendingLeaves
+        recentNews
       }
     });
   } catch (error) {

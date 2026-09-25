@@ -12,7 +12,6 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../../config/db');
 const { authenticate } = require('../../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
 
 // Import module-specific middleware
 const studentMiddleware = require('./student.middleware');
@@ -27,11 +26,6 @@ router.get('/dashboard', async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const classId = req.user.classId;
-
-    const [todayAttendance] = await query(
-      `SELECT status FROM attendance WHERE student_id = $1 AND attendance_date = CURRENT_DATE`,
-      [studentId]
-    );
 
     const [pendingHomework] = await query(
       `SELECT COUNT(*) as count FROM homework_submissions hs
@@ -65,7 +59,6 @@ router.get('/dashboard', async (req, res, next) => {
     res.json({
       success: true,
       data: {
-        todayAttendance: todayAttendance?.status || null,
         pendingHomework: pendingHomework.count,
         upcomingExams: exams,
         recentHomework: homework
@@ -195,80 +188,6 @@ router.get('/marks', async (req, res, next) => {
     );
 
     res.json({ success: true, data: marks });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// ============================================
-// Attendance history
-// ============================================
-router.get('/attendance', async (req, res, next) => {
-  try {
-    const studentId = req.user.id;
-    const { month, year } = req.query;
-
-    let whereClause = 'a.student_id = $1';
-    let params = [studentId];
-
-    if (month && year) {
-      whereClause += ` AND EXTRACT(MONTH FROM a.attendance_date) = $${params.length + 1} AND EXTRACT(YEAR FROM a.attendance_date) = $${params.length + 2}`;
-      params.push(parseInt(month), parseInt(year));
-    }
-
-    const attendance = await query(
-      `SELECT a.*, u.name as marked_by_name
-       FROM attendance a
-       JOIN users u ON a.marked_by = u.id
-       WHERE ${whereClause}
-       ORDER BY a.attendance_date DESC, a.created_at DESC`,
-      params
-    );
-
-    res.json({ success: true, data: attendance });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// ============================================
-// Leave requests
-// ============================================
-router.get('/leave', async (req, res, next) => {
-  try {
-    const studentId = req.user.id;
-
-    const leaves = await query(
-      `SELECT l.*, u.name as approved_by_name
-       FROM leave_requests l
-       LEFT JOIN users u ON l.approved_by = u.id
-       WHERE l.student_id = $1
-       ORDER BY l.created_at DESC`,
-      [studentId]
-    );
-
-    res.json({ success: true, data: leaves });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/leave', async (req, res, next) => {
-  try {
-    const { leaveType, startDate, endDate, reason, attachmentUrl } = req.body;
-    const studentId = req.user.id;
-    const classId = req.user.classId;
-
-    const leaveId = uuidv4();
-
-    await query(
-      `INSERT INTO leave_requests (id, tenant_id, student_id, class_id, leave_type, start_date, end_date, 
-              reason, attachment_url, applied_by, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')`,
-      [leaveId, req.user.tenantId, studentId, classId, leaveType, startDate, endDate, reason, attachmentUrl, studentId]
-    );
-
-    res.status(201).json({ success: true, data: { id: leaveId } });
   } catch (error) {
     next(error);
   }

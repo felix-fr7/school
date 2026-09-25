@@ -70,13 +70,6 @@ router.get('/dashboard', async (req, res, next) => {
       [tenantId]
     );
 
-    const [pendingLeaves] = await query(
-      `SELECT COUNT(*) as count FROM leave_requests 
-       WHERE class_id IN (SELECT id FROM classes WHERE tenant_id = $1) 
-       AND status = 'pending'`,
-      [tenantId]
-    );
-
     res.json({
       success: true,
       data: {
@@ -84,8 +77,7 @@ router.get('/dashboard', async (req, res, next) => {
         totalTeachers: totalTeachers.count,
         totalClasses: totalClasses.count,
         todayAttendance: todayAttendance,
-        recentNews,
-        pendingLeaves: pendingLeaves.count
+        recentNews
       }
     });
   } catch (error) {

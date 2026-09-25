@@ -14,6 +14,54 @@ const { requireAdmin, requireTeacher, requireStudent } = require('../middleware/
 // All routes require authentication
 router.use(authenticate);
 
+const WeeklyLessonLog = require('../models/WeeklyLessonLog');
+
+// Mobile app compatibility endpoint. The student mobile screen requests
+// GET /api/weekly-lessons, while older clients use role-specific paths.
+router.get('/', async (req, res, next) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const role = (req.user.role || '').replace(/_/g, ' ').trim().toUpperCase();
+    const { startDate, endDate, type } = req.query;
+    let classId = req.user.classId;
+
+    if (role === 'TEACHER' && !classId) {
+      const teacherClass = await require('../models/Class').findOne({
+        teacherId: req.user.id,
+        tenantId,
+      }).select('_id');
+      classId = teacherClass?._id;
+    }
+
+    if ((role === 'STUDENT' || role === 'TEACHER') && !classId) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'No class is assigned to this user' },
+      });
+    }
+
+    const filter = { tenantId };
+    if (classId) filter.classId = classId;
+    if (type) filter.type = type;
+    if (startDate || endDate) {
+      filter.lessonDate = {};
+      if (startDate) filter.lessonDate.$gte = new Date(startDate);
+      if (endDate) filter.lessonDate.$lte = new Date(endDate);
+    }
+
+    const lessons = await WeeklyLessonLog.find(filter)
+      .populate('createdBy', 'name email')
+      .sort({ lessonDate: -1, subject: 1 });
+
+    res.json({
+      success: true,
+      data: { lessons },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ============================================
 // Teacher Routes
 // ============================================

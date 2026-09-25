@@ -853,109 +853,7 @@ export const adminAPI = {
   },
 };
 
-// ============================================
-// Student API
-// ============================================
-
-export const studentAPI = {
-  async getDashboard() {
-    const response = await api.get('/student/dashboard');
-    return response.data;
-  },
-
-  async getHomework(page = 1, limit = 10, subject = '') {
-    const response = await api.get('/student/homework', {
-      params: { page, limit, subject },
-    });
-    return response.data;
-  },
-
-  async getHomeworkById(id) {
-    const response = await api.get(`/student/homework/${id}`);
-    return response.data;
-  },
-
-  async getMarks(page = 1, limit = 10, subject = '', examType = '') {
-    const response = await api.get('/student/marks', {
-      params: { page, limit, subject, examType },
-    });
-    return response.data;
-  },
-
-  async getMarkById(id) {
-    const response = await api.get(`/student/marks/${id}`);
-    return response.data;
-  },
-
-  async getNews(page = 1, limit = 10, category = '') {
-    const response = await api.get('/content/news', {
-      params: { page, limit, category },
-    });
-    return response.data;
-  },
-
-  async getNewsById(id) {
-    const response = await api.get(`/content/news/${id}`);
-    return response.data;
-  },
-
-  async getCirculars(page = 1, limit = 10) {
-    const response = await api.get('/content/circulars', {
-      params: { page, limit },
-    });
-    return response.data;
-  },
-
-  async getCircularById(id) {
-    const response = await api.get(`/content/circulars/${id}`);
-    return response.data;
-  },
-
-  async getExamSchedules(page = 1, limit = 10) {
-    const response = await api.get('/student/exams', {
-      params: { page, limit },
-    });
-    return response.data;
-  },
-
-  async getExamScheduleById(id) {
-    const response = await api.get(`/content/exam-schedules/${id}`);
-    return response.data;
-  },
-
-  async getDashboardProfile() {
-    const response = await api.get('/profile');
-    return response.data;
-  },
-
-  async getProfile() {
-    const response = await api.get('/student/profile');
-    return response.data;
-  },
-
-  async getReportCards() {
-    const response = await api.get('/reportcards/student/my-report-cards');
-    return response.data;
-  },
-
-  async getReportCard(id) {
-    const response = await api.get(`/reportcards/student/${id}`);
-    return response.data;
-  },
-
-  async acknowledgeReportCard(id, parentSignature) {
-    const response = await api.put(`/reportcards/student/${id}/acknowledge`, {
-      parentSignature,
-    });
-    return response.data;
-  },
-
-  // Calendar Events
-  async getCalendarEvents(params = {}) {
-    const response = await api.get('/calendar/student/calendar-events', { params });
-    return response.data;
-  },
-};
+// Student-specific API methods are maintained in D:/School/mobile/src/services/api.js.
 
 // ============================================
 // Teacher API
@@ -1178,42 +1076,6 @@ export const classControllerAPI = {
 // Weekly Lessons API
 // ============================================
 
-export const weeklyLessonsAPI = {
-  async getWeeklyLessons(classId, startDate, endDate) {
-    const response = await api.get(`/weekly-lessons`, {
-      params: { classId, startDate, endDate },
-    });
-    return response.data;
-  },
-
-  async createWeeklyLesson(classId, data) {
-    const response = await api.post(`/weekly-lessons?classId=${classId}`, data);
-    return response.data;
-  },
-
-  async updateWeeklyLesson(id, data) {
-    const response = await api.put(`/weekly-lessons/${id}`, data);
-    return response.data;
-  },
-
-  async deleteWeeklyLesson(id) {
-    const response = await api.delete(`/weekly-lessons/${id}`);
-    return response.data;
-  },
-
-  async uploadAttachment(lessonId, file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await api.post(`/weekly-lessons/${lessonId}/attachments`, formData);
-    return response.data;
-  },
-
-  async deleteAttachment(lessonId, attachmentId) {
-    const response = await api.delete(`/weekly-lessons/${lessonId}/attachments/${attachmentId}`);
-    return response.data;
-  },
-};
-
 // ============================================
 // Products API
 // ============================================
@@ -1359,11 +1221,6 @@ export const timetableAPI = {
 
   async getMyTimetables() {
     const response = await api.get('/timetable');
-    return response.data;
-  },
-
-  async getStudentTimetable() {
-    const response = await api.get('/student/timetable');
     return response.data;
   },
 
