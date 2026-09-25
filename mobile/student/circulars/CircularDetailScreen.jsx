@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Circular Detail Screen
  * Displays a single circular with full content for students
  */
@@ -31,7 +31,7 @@ import {
 } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './CircularDetailScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 // Get API base URL for constructing attachment URLs
 const API_BASE_URL = 

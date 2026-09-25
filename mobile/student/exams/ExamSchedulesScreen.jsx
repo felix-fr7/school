@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Exam Schedules Screen (Ionic React Version)
  * View upcoming exam schedules
  * Click on an exam to view details and attached files
@@ -27,7 +27,7 @@ import {
 import { refreshOutline, calendarOutline, timeOutline, locationOutline, chevronForwardOutline, documentTextOutline } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './ExamSchedulesScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentExamSchedulesScreen = () => {
   const history = useHistory();

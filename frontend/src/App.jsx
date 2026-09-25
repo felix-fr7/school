@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MACVEL School Management Mobile App
  * Smart. Secure. Connected.
  */
@@ -62,7 +62,6 @@ import NewsScreen from './screens/NewsScreen';
 import CircularsScreen from './screens/CircularsScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import VideosScreen from './screens/VideosScreen';
-import AlbumsScreen from './screens/AlbumsScreen';
 import MessagesScreen from './screens/MessagesScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import ContactsScreen from './screens/ContactsScreen';
@@ -88,7 +87,7 @@ const AppRoutes = () => {
 
   // Debugging user and role
   const userRole = user?.role ? user.role.toUpperCase().trim() : '';
-  
+
   // Broader check to catch any variant of admin role
   const isAdmin = userRole.includes('ADMIN') || userRole.includes('SUPER') || userRole === 'PRINCIPAL' || userRole === 'MANAGEMENT';
 
@@ -96,11 +95,11 @@ const AppRoutes = () => {
   if (isLoading) {
     console.log('[AppRoutes] Loading - showing test div');
     return (
-      <div style={{ 
-        background: '#FFD700', 
-        color: 'black', 
-        padding: '40px', 
-        fontSize: '24px', 
+      <div style={{
+        background: '#FFD700',
+        color: 'black',
+        padding: '40px',
+        fontSize: '24px',
         fontWeight: 'bold',
         minHeight: '100vh',
         display: 'flex',
@@ -145,7 +144,6 @@ const AppRoutes = () => {
             <Route exact path="/circulars" component={CircularsScreen} />
             <Route exact path="/gallery" component={GalleryScreen} />
             <Route exact path="/videos" component={VideosScreen} />
-            <Route exact path="/albums" component={AlbumsScreen} />
             <Route exact path="/messages" component={MessagesScreen} />
             <Route exact path="/calendar" component={CalendarScreen} />
             <Route exact path="/contacts" component={ContactsScreen} />
@@ -196,15 +194,15 @@ const AppRoutes = () => {
             <Route exact path="/student/report-cards" component={ReportCardsScreen} />
 
             {/* Fallback Redirection */}
-            <Redirect 
-              from="/" 
+            <Redirect
+              from="/"
               to={
-                isAdmin 
-                  ? '/admin' 
-                  : userRole === 'TEACHER' 
-                    ? '/teacher' 
+                isAdmin
+                  ? '/admin'
+                  : userRole === 'TEACHER'
+                    ? '/teacher'
                     : '/student'
-              } 
+              }
             />
           </IonRouterOutlet>
         </IonSplitPane>

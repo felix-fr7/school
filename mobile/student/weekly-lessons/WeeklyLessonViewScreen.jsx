@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Weekly Lesson View Screen (Ionic React Version)
  * Read-only view of date-based timetable with classwork, homework, and attachments
  */
@@ -37,7 +37,7 @@ import {
 } from 'ionicons/icons';
 import { weeklyLessonsAPI } from '../../src/services/api';
 import './WeeklyLessonViewScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 // Helper to format date as "DD Month YYYY" (e.g., "06 July 2026")
 const formatDisplayDate = (dateStr) => {

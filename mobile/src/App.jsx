@@ -3,7 +3,7 @@ import { IonApp, IonPage, IonContent, IonSpinner, IonText, IonRouterOutlet } fro
 import { IonReactRouter } from '@ionic/react-router';
 import { Route, Redirect, Switch, useHistory } from 'react-router-dom';
 
-import { AuthProvider, useAuth } from '../../frontend/src/contexts/AuthContext.jsx';
+import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import ErrorBoundary from '../../frontend/src/components/ErrorBoundary.jsx';
 import StudentLoginScreen from '../student/auth/StudentLoginScreen.jsx';
 
@@ -23,6 +23,7 @@ const StudentTimetableScreen = React.lazy(() => import('../student/timetable/Stu
 const StudentWeeklyLessonsScreen = React.lazy(() => import('../student/weekly-lessons/WeeklyLessonViewScreen.jsx'));
 const StudentCalendarScreen = React.lazy(() => import('../student/calendar/CalendarScreen.jsx'));
 const StudentCalendarEventDetailScreen = React.lazy(() => import('../student/calendar/CalendarEventDetailScreen.jsx'));
+const StudentAlbumsScreen = React.lazy(() => import('../student/albums/AlbumsScreen.jsx'));
 
 const Loading = () => (
   <IonPage>
@@ -89,6 +90,7 @@ const MobileRoutes = () => {
             <ProtectedRoute exact path="/student/weekly-lessons" component={StudentWeeklyLessonsScreen} isAuthenticated={isAuthenticated} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/calendar" component={StudentCalendarScreen} isAuthenticated={isAuthenticated} isLoading={isLoading} />
             <ProtectedRoute exact path="/student/calendar/:eventId" component={StudentCalendarEventDetailScreen} isAuthenticated={isAuthenticated} isLoading={isLoading} />
+            <ProtectedRoute exact path="/albums" component={StudentAlbumsScreen} isAuthenticated={isAuthenticated} isLoading={isLoading} />
           </>
         )}
 

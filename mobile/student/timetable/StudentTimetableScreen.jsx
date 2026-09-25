@@ -1,4 +1,4 @@
-﻿/** Student — view-only published weekly timetable for their class */
+/** Student — view-only published weekly timetable for their class */
 import React, { useEffect, useState } from 'react';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
@@ -9,7 +9,7 @@ import { calendarOutline, schoolOutline } from 'ionicons/icons';
 import { timetableAPI } from '../../src/services/api';
 import { DAYS, classLabel } from '../../../frontend/src/utils/timetableGrid';
 import '../../../frontend/src/screens/shared/TimetableGrid.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentTimetableScreen = () => {
   const [list, setList] = useState([]);
@@ -119,4 +119,3 @@ const StudentTimetableScreen = () => {
 };
 
 export default StudentTimetableScreen;
-

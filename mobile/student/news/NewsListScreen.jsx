@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student News Screen (Ionic React Version)
  * View school news and announcements
  */
@@ -31,7 +31,7 @@ import { useHistory } from 'react-router-dom';
 import { newspaperOutline, calendarOutline, personOutline, imageOutline, refreshOutline } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './NewsListScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';

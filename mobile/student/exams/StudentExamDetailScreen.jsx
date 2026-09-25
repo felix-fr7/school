@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Exam Detail Screen
  * Displays exam details with PDF/Image viewer and "View Document Fullscreen" button
  * Uses Capacitor Browser plugin for PDFs, and IonModal for full-screen image preview
@@ -43,7 +43,7 @@ import {
   expandOutline,
 } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 import './StudentExamDetailScreen.css';
 
 // API Base URL - same as in api.js but without /api suffix for file access

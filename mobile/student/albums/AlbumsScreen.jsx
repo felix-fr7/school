@@ -39,10 +39,10 @@ import {
   playCircleOutline,
   closeOutline,
 } from 'ionicons/icons';
-import { useAuth } from '../contexts/AuthContext';
-import { albumsAPI } from '../services/api';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { albumsAPI } from '../../src/services/api';
 import './AlbumsScreen.css';
-import HomeLogoutButtons from '../components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const AlbumsScreen = () => {
   const { isClass, isStudent } = useAuth();
@@ -231,7 +231,7 @@ const AlbumsScreen = () => {
           {selectedAlbum && (
             <>
               <p className="album-detail-description">{selectedAlbum.description}</p>
-              
+
               <div className="album-detail-meta">
                 <IonBadge color="primary">{selectedAlbum.category}</IonBadge>
                 {selectedAlbum.tags && selectedAlbum.tags.map((tag, idx) => (
@@ -246,8 +246,8 @@ const AlbumsScreen = () => {
               {selectedAlbum.links && selectedAlbum.links.length > 0 ? (
                 <IonList>
                   {selectedAlbum.links.map((link, idx) => (
-                    <IonItem 
-                      key={idx} 
+                    <IonItem
+                      key={idx}
                       className="album-link-item"
                       button
                       onClick={() => openLink(link.url)}

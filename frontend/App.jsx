@@ -53,8 +53,7 @@ const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminC
   const CreateAlbumScreen = React.lazy(() => import('./src/screens/admin/CreateAlbumScreen.jsx'));
   const EditAlbumScreen = React.lazy(() => import('./src/screens/admin/EditAlbumScreen.jsx'));
   const AdminVideosScreen = React.lazy(() => import('./src/screens/admin/AdminVideosScreen.jsx'));
-  const AdminTimetableScreen = React.lazy(() => import('./src/screens/admin/AdminTimetableScreen.jsx'));
-  const AlbumsScreen = React.lazy(() => import('./src/screens/AlbumsScreen.jsx'));
+const AdminTimetableScreen = React.lazy(() => import('./src/screens/admin/AdminTimetableScreen.jsx'));
 
 // Student Screens (Lazy loaded)
 const StudentDashboardScreen = React.lazy(() => import('../mobile/student/dashboard/DashboardScreen'));
@@ -97,13 +96,13 @@ const ClassControllerCalendarScreen = React.lazy(() => import('./src/screens/cla
 const ClassControllerCalendarEventDetailScreen = React.lazy(() => import('./src/screens/classcontroller/CalendarEventDetailScreen'));
 const ClassTimetableScreen = React.lazy(() => import('./src/screens/classcontroller/ClassTimetableScreen.jsx'));
 
-const ProtectedRoute = ({ 
-  component: Component, 
-  isAuthenticated, 
+const ProtectedRoute = ({
+  component: Component,
+  isAuthenticated,
   isClass,
   isLoading,
   redirectPath = '/login',
-  ...rest 
+  ...rest
 }) => {
   return (
     <Route
@@ -167,9 +166,9 @@ const AuthRedirect = () => {
     if (isLoading) {
       return;
     }
-    
+
     const currentPath = window.location.pathname;
-    
+
     if (isAuthenticated || isClass) {
       if (currentPath === '/login' || currentPath === '/register') {
         if (isSuperAdmin) {
@@ -205,7 +204,7 @@ const AppContent = () => {
   return (
     <Suspense fallback={<RouteLoadingFallback />}>
       <AuthRedirect />
-      
+
       <Switch>
         {/* Auth Routes */}
         <Route exact path="/login" component={LoginScreen} />
@@ -216,9 +215,6 @@ const AppContent = () => {
         <Route exact path="/">
           <Redirect to="/login" />
         </Route>
-
-        {/* Shared Albums viewing route (students & any authenticated role) */}
-        <ProtectedRoute exact path="/albums" component={AlbumsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
 
         {/* Super Admin Routes */}
         {isSuperAdmin && (
@@ -310,7 +306,7 @@ const AppContent = () => {
             <ProtectedRoute exact path="/class-controller/exams/:examId" component={ClassExamDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/calendar" component={ClassControllerCalendarScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/calendar/:eventId" component={ClassControllerCalendarEventDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
-            <ProtectedRoute exact path="/class-controller/albums" component={AlbumsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+
             <ProtectedRoute exact path="/class-controller/report-cards" component={AdminReportCardsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/timetable" component={ClassTimetableScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>

@@ -2,7 +2,7 @@ import React from 'react';
 import { IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel, IonMenuToggle } from '@ionic/react';
 import { homeOutline, bookOutline, calendarOutline, timeOutline, statsChartOutline, documentOutline, personOutline, logOutOutline, imagesOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
-import { useAuth } from '../../../frontend/src/contexts/AuthContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 const StudentMenu = () => {
   const history = useHistory();

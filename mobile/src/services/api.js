@@ -6,8 +6,13 @@ const defaultBrowserApiUrl = 'http://localhost:3000/api';
 const defaultEmulatorApiUrl = 'http://10.0.2.2:3000/api';
 const API_BASE_URL = configuredApiUrl || (isNative ? defaultEmulatorApiUrl : defaultBrowserApiUrl);
 const storage = {
-  getToken: () => localStorage.getItem('authToken'),
+  getToken: () => localStorage.getItem('authToken') || localStorage.getItem('token'),
   getTenantId: () => localStorage.getItem('tenantId'),
+  saveSession: (token, user, tenant) => {
+    if (token) localStorage.setItem('authToken', token);
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+    if (tenant?.id) localStorage.setItem('tenantId', tenant.id);
+  },
 };
 
 const api = axios.create({
@@ -85,6 +90,12 @@ export const weeklyLessonsAPI = {
   },
 };
 
+export const albumsAPI = {
+  async getAlbums(page = 1, limit = 20, category = '') {
+    return (await api.get('/albums', { params: { page, limit, category: category || undefined } })).data;
+  },
+};
+
 export const schoolContextAPI = {
   async getMySchool() {
     return (await api.get('/school-context/me')).data;
@@ -93,4 +104,3 @@ export const schoolContextAPI = {
 
 export { api };
 export default api;
-

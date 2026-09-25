@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Homework List Screen (Ionic React Version)
  * Displays all homework assignments for the student's class
  */
@@ -30,7 +30,7 @@ import { useHistory } from 'react-router-dom';
 import { bookOutline, calendarOutline, timeOutline, refreshOutline } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './HomeworkListScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentHomeworkListScreen = () => {
   const history = useHistory();

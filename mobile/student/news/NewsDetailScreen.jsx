@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student News Detail Screen (Ionic React Version)
  * Displays full news article with content, images, and PDF attachments
  */
@@ -24,7 +24,7 @@ import { useParams } from 'react-router-dom';
 import { documentOutline, imageOutline, personOutline, calendarOutline, downloadOutline } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './NewsDetailScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 // Get API base URL from environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';

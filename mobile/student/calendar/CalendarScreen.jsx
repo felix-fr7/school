@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Calendar Screen
  * View school events, holidays, and important dates
  */
@@ -27,7 +27,7 @@ import {
 import { useHistory } from 'react-router-dom';
 import { studentAPI } from '../../src/services/api';
 import './CalendarScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentCalendarScreen = () => {
   const history = useHistory();

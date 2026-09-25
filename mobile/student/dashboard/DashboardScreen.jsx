@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Dashboard Screen - Premium Redesign
  * Modern, attractive design for students and parents
  * Features: Glass-morphism, gradient accents, smooth animations
@@ -42,7 +42,7 @@ import {
   timeOutline,
   notificationsOutline,
 } from 'ionicons/icons';
-import { useAuth } from '../../../frontend/src/contexts/AuthContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { studentAPI, resolveMediaUrl } from '../../src/services/api';
 import { useSchoolBranding } from '../../src/services/useSchoolBranding';
 import './DashboardScreen.css';
@@ -67,8 +67,8 @@ const StudentDashboardScreen = () => {
           setProfile({
             student: {
               name: data.name || user?.name || 'Student',
-              classSection: data.classId 
-                ? `${data.classId.name || ''}${data.classId.section ? ' - ' + data.classId.section : ''}` 
+              classSection: data.classId
+                ? `${data.classId.name || ''}${data.classId.section ? ' - ' + data.classId.section : ''}`
                 : (user?.classSection || 'Not Assigned')
             },
             school: {
@@ -204,7 +204,7 @@ const StudentDashboardScreen = () => {
               <div className="avatar-ring"></div>
             </div>
           </div>
-          
+
         </div>
 
         {/* Quick Actions - Horizontal Scroll */}
@@ -263,8 +263,8 @@ const StudentDashboardScreen = () => {
         {/* Footer */}
         <div className="modern-footer">
           <div className="footer-content">
-            <IonImg 
-              src={brandLogo || resolveMediaUrl(profile?.school.logoUrl)} 
+            <IonImg
+              src={brandLogo || resolveMediaUrl(profile?.school.logoUrl)}
               className="footer-logo"
               onError={(e) => {
                 e.target.style.display = 'none';
@@ -272,7 +272,7 @@ const StudentDashboardScreen = () => {
             />
             <div className="footer-text-content">
               <p className="footer-school-name">{brandName || profile?.school.name || 'School'}</p>
-              <p className="footer-copyright">Â© 2024 School Management System</p>
+              <p className="footer-copyright">Ã‚Â© 2024 School Management System</p>
             </div>
           </div>
         </div>

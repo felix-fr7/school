@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Profile Screen (Ionic React Version)
  * Displays student profile information
  */
@@ -22,10 +22,10 @@ import {
   IonItem,
 } from '@ionic/react';
 import { personOutline, schoolOutline, bookOutline, businessOutline, layersOutline } from 'ionicons/icons';
-import { useAuth } from '../../../frontend/src/contexts/AuthContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { studentAPI } from '../../src/services/api';
 import './ProfileScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentProfileScreen = () => {
   const { user: currentUser } = useAuth();

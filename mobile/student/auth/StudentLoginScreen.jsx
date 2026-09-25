@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { IonPage, IonContent, IonButton, IonInput, IonSpinner, IonImg } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
-import { useAuth } from '../../../frontend/src/contexts/AuthContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 import './StudentLoginScreen.css';
 import logoImage from '../../../frontend/src/logo/Macvel.jpg';
 

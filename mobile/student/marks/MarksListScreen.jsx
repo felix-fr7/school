@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Marks List Screen (Ionic React Version)
  * Displays all marks/grades for the student
  */
@@ -26,7 +26,7 @@ import {
 import { refreshOutline, statsChartOutline } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './MarksListScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentMarksListScreen = () => {
   const [marks, setMarks] = useState([]);

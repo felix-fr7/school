@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Homework Detail Screen (Ionic React Version)
  * Displays full homework details with sent date, due date, subject, and description
  */
@@ -25,7 +25,7 @@ import { useParams } from 'react-router-dom';
 import { calendarOutline, personOutline, bookOutline, alertCircleOutline } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './HomeworkDetailScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentHomeworkDetailScreen = () => {
   const { homeworkId } = useParams();

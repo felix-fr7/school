@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Circulars Screen (Ionic React Version)
  * View school circulars and official notices
  */
@@ -27,7 +27,7 @@ import { useHistory } from 'react-router-dom';
 import { refreshOutline, clipboardOutline, chevronForwardOutline } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './CircularsListScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const StudentCircularsListScreen = () => {
   const history = useHistory();

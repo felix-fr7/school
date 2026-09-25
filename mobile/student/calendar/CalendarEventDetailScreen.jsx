@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Calendar Event Detail Screen
  * Shows detailed view of a calendar event
  */
@@ -28,7 +28,7 @@ import {
 import { useParams, useHistory } from 'react-router-dom';
 import { studentAPI } from '../../src/services/api';
 import './CalendarEventDetailScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const CalendarEventDetailScreen = () => {
   const { eventId } = useParams();

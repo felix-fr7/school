@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Student Report Cards Screen (Simplified Table View)
  * Displays all published report cards for the student in a clean table format
  */
@@ -26,7 +26,7 @@ import {
 } from 'ionicons/icons';
 import { studentAPI } from '../../src/services/api';
 import './ReportCardsScreen.css';
-import HomeLogoutButtons from '../../../frontend/src/components/HomeLogoutButtons';
+import HomeLogoutButtons from '../../src/components/HomeLogoutButtons';
 
 const ReportCardsScreen = () => {
   const [reportCards, setReportCards] = useState([]);

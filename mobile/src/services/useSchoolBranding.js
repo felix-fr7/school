@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../frontend/src/contexts/AuthContext';
+import { useAuth } from '../../src/contexts/AuthContext';
 import { resolveMediaUrl, schoolContextAPI } from './api';
 
 export const useSchoolBranding = () => {
