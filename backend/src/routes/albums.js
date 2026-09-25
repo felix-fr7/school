@@ -452,6 +452,7 @@ router.post(
       
       const album = await Album.findOne(
         { _id: req.params.id, tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId },
+        {},
         { bypassDefaultFilter: true }
       );
       
@@ -460,6 +461,10 @@ router.post(
           success: false,
           error: { message: 'Album not found' }
         });
+      }
+      
+      if (!Array.isArray(album.links)) {
+        album.links = [];
       }
       
       album.links.push({
@@ -500,6 +505,7 @@ router.delete(
     try {
       const album = await Album.findOne(
         { _id: req.params.id, tenantId: req.headers['x-tenant-id'] || req.user.tenantId || req.user.schoolId },
+        {},
         { bypassDefaultFilter: true }
       );
       
@@ -511,7 +517,7 @@ router.delete(
       }
       
       const linkIndex = parseInt(req.params.linkIndex);
-      if (linkIndex >= album.links.length) {
+      if (!Array.isArray(album.links) || linkIndex >= album.links.length) {
         return res.status(404).json({
           success: false,
           error: { message: 'Link not found in album' }
