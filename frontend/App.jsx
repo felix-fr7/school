@@ -55,6 +55,9 @@ const AdminCircularsScreen = React.lazy(() => import('./src/screens/admin/AdminC
   const AdminVideosScreen = React.lazy(() => import('./src/screens/admin/AdminVideosScreen.jsx'));
 const AdminTimetableScreen = React.lazy(() => import('./src/screens/admin/AdminTimetableScreen.jsx'));
 
+// Shared Album viewer (used by class-controller and students)
+const AlbumsScreen = React.lazy(() => import('./src/screens/AlbumsScreen.jsx'));
+
 // Student Screens (Lazy loaded)
 const StudentDashboardScreen = React.lazy(() => import('../mobile/student/dashboard/DashboardScreen'));
 const StudentHomeworkListScreen = React.lazy(() => import('../mobile/student/homework/HomeworkListScreen'));
@@ -309,6 +312,7 @@ const AppContent = () => {
 
             <ProtectedRoute exact path="/class-controller/report-cards" component={AdminReportCardsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/class-controller/timetable" component={ClassTimetableScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/class-controller/albums" component={AlbumsScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>
         )}
 
