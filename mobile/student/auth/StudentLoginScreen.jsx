@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import { IonPage, IonContent, IonButton, IonInput, IonSpinner, IonImg } from '@ionic/react';
+import React, { useState, useEffect } from 'react';
+import { IonPage, IonContent, IonButton, IonInput, IonSpinner } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../src/contexts/AuthContext';
 import './StudentLoginScreen.css';
 import logoImage from '../../../frontend/src/logo/Macvel.jpg';
+import { fetchPortalBranding, resolveMediaUrl } from '../../src/services/api';
+
+// Fallback text - only used if the branding API is unreachable
+const DEFAULT_HEADING = 'STUDENT PORTAL';
+const DEFAULT_SUB_HEADING = 'Login with your class roll number';
 
 const StudentLoginScreen = () => {
   const history = useHistory();
@@ -12,6 +17,47 @@ const StudentLoginScreen = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Login page branding (Super Admin edit pannathu, DB la irukura logo + heading + sub heading)
+  // Fallback chain: mobile override -> staff value -> built-in default
+  const [branding, setBranding] = useState({
+    logoUrl: null,
+    showLogo: true,
+    heading: DEFAULT_HEADING,
+    subHeading: DEFAULT_SUB_HEADING,
+  });
+  const [brandingFailed, setBrandingFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchBranding = async () => {
+      try {
+        const res = await fetchPortalBranding();
+        const data = res?.data || {};
+        if (cancelled) return;
+        setBrandingFailed(false);
+        setBranding({
+          logoUrl: data.mobileLogoUrl || data.logoUrl || null,
+          showLogo: data.showMobileLogo !== false,
+          heading: data.mobileHeading || data.heading || DEFAULT_HEADING,
+          subHeading: data.mobileSubHeading || data.subHeading || DEFAULT_SUB_HEADING,
+        });
+      } catch (e) {
+        if (cancelled) return;
+        // API fail ana default logo + text aathu use pannu - vera logic mathala
+        setBrandingFailed(true);
+        console.warn(
+          '[Student Login] Failed to load portal branding, using defaults:',
+          e?.response?.status || e?.message
+        );
+      }
+    };
+
+    fetchBranding();
+
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -45,9 +91,18 @@ const StudentLoginScreen = () => {
         <div className="luxury-login-wrapper">
           <div className="luxury-login-card">
             <div className="brand-header">
-              <div className="brand-logo-image-wrapper"><IonImg src={logoImage} alt="Macvel Software Solutions Logo" className="brand-logo-image" /></div>
-              <h1 className="brand-title">STUDENT PORTAL</h1>
-              <p className="brand-subtitle">Login with your class roll number</p>
+              {branding.showLogo && <div className="brand-logo-image-wrapper"><img
+                src={branding.logoUrl ? resolveMediaUrl(branding.logoUrl) : logoImage}
+                alt="Portal Logo"
+                className="brand-logo-image"
+              /></div>}
+              {branding.heading && <h1 className="brand-title">{branding.heading}</h1>}
+              {branding.subHeading && <p className="brand-subtitle">{branding.subHeading}</p>}
+              {brandingFailed && (
+                <p className="branding-warning">
+                  Could not load the portal branding - showing defaults. Please check your connection.
+                </p>
+              )}
             </div>
             {error && <div className="luxury-error-box"><span className="error-icon">⚠️</span><p>{error}</p></div>}
             <form onSubmit={handleSubmit} className="luxury-form">

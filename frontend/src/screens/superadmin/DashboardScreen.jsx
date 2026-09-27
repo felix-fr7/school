@@ -28,6 +28,7 @@ import {
   logOutOutline,
   flashOutline,
   chevronForwardOutline,
+  colorPaletteOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -177,6 +178,17 @@ const SuperAdminDashboardScreen = () => {
                 <IonCardContent>
                   <IonIcon icon={listOutline} className="action-icon-gold" />
                   <span className="action-text">View All Schools</span>
+                </IonCardContent>
+              </IonCard>
+
+              <IonCard
+                className="luxury-action-card"
+                button
+                onClick={() => history.push('/superadmin/branding')}
+              >
+                <IonCardContent>
+                  <IonIcon icon={colorPaletteOutline} className="action-icon-gold" />
+                  <span className="action-text">Login Page Branding</span>
                 </IonCardContent>
               </IonCard>
             </div>

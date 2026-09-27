@@ -48,6 +48,7 @@ const productsRoutes = require('./routes/products');
 const classControllerRoutes = require('./routes/classController');
 const reportCardsRoutes = require('./routes/reportcards');
 const schoolContextRoutes = require('./routes/schoolContext');
+const portalBrandingRoutes = require('./routes/portalBranding');
 
 // Import error handler
 const errorHandler = require('./middleware/errorHandler');
@@ -133,6 +134,11 @@ app.use('/api/superadmin', superAdminRoutes);
 
 // Auth Routes (public/login)
 app.use('/api/auth', authRoutes);
+
+// Portal Branding - the GET endpoint is PUBLIC (login page reads it before login).
+// Registered BEFORE the global authenticate middleware; the router itself protects
+// all write endpoints with authenticate + isSuperAdmin.
+app.use('/api/portal-branding', portalBrandingRoutes);
 
 // All routes below require authentication
 app.use(authenticate);

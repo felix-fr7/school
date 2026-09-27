@@ -1253,5 +1253,63 @@ export const schoolContextAPI = {
   },
 };
 
+// ============================================
+// Portal Branding API (Login page logo + heading + sub heading)
+// GET is public (login page), everything else is Super Admin only
+// ============================================
+
+export const portalBrandingAPI = {
+  async getBranding() {
+    const response = await api.get('/portal-branding');
+    return response.data;
+  },
+
+  async updateBranding(data) {
+    const response = await api.put('/portal-branding', data);
+    return response.data;
+  },
+
+  async uploadLogo(logoFile) {
+    const formData = new FormData();
+    formData.append('logo', logoFile);
+    const response = await api.put('/portal-branding/logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  async deleteLogo() {
+    const response = await api.delete('/portal-branding/logo');
+    return response.data;
+  },
+
+  // ---- Mobile (student) login page branding ----
+
+  async uploadMobileLogo(logoFile) {
+    const formData = new FormData();
+    formData.append('logo', logoFile);
+    const response = await api.put('/portal-branding/mobile-logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  async deleteMobileLogo() {
+    const response = await api.delete('/portal-branding/mobile-logo');
+    return response.data;
+  },
+
+  // Removes ALL mobile overrides (logo + heading + sub heading + toggle)
+  async deleteMobileBranding() {
+    const response = await api.delete('/portal-branding/mobile');
+    return response.data;
+  },
+
+  async resetBranding() {
+    const response = await api.post('/portal-branding/reset');
+    return response.data;
+  },
+};
+
 export default api;
 

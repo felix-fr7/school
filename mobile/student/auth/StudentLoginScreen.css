@@ -101,13 +101,20 @@
   margin-bottom: 24px;
 }
 
+/* Logo box auto-sizes to the uploaded image, so ANY aspect ratio fits nicely:
+   - square logo   -> renders at the full max height (looks like before)
+   - wide banner   -> renders at the full max width, no squish / no cropping
+   - tall logo     -> renders at the full max height
+   The white plate shrinks to hug the image instead of forcing letterboxing. */
 .brand-logo-image-wrapper {
-  width: 75px;
-  height: 75px;
+  max-width: 260px;
+  max-height: 130px;
+  width: fit-content;
+  height: fit-content;
   margin: 0 auto 16px auto;
   border-radius: 18px;
   background: #ffffff;
-  padding: 8px;
+  padding: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,8 +128,12 @@
 }
 
 .brand-logo-image {
-  width: 100%;
-  height: 100%;
+  display: block;
+  /* Never upscale a tiny logo, never distort a wide one. */
+  width: auto;
+  height: auto;
+  max-width: 240px;
+  max-height: 110px;
   object-fit: contain;
   border-radius: 10px;
 }
@@ -143,6 +154,14 @@
   color: #94a3b8;
   margin: 0;
   letter-spacing: 0.5px;
+}
+
+/* Shown only when the Super Admin branding could not be fetched from the API */
+.branding-warning {
+  margin: 10px 0 0;
+  font-size: 0.72rem;
+  color: #fbbf24;
+  letter-spacing: 0.3px;
 }
 
 /* Segment Styling */

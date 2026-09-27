@@ -22,6 +22,7 @@ const SuperAdminDashboardScreen = React.lazy(() => import('./src/screens/superad
 const SchoolsListScreen = React.lazy(() => import('./src/screens/superadmin/SchoolsListScreen.jsx'));
 const CreateSchoolScreen = React.lazy(() => import('./src/screens/superadmin/CreateSchoolScreen.jsx'));
 const SchoolDetailScreen = React.lazy(() => import('./src/screens/superadmin/SchoolDetailScreen.jsx'));
+const PortalBrandingScreen = React.lazy(() => import('./src/screens/superadmin/PortalBrandingScreen.jsx'));
 
 // Admin Screens (Lazy loaded)
 const AdminDashboardScreen = React.lazy(() => import('./src/screens/admin/DashboardScreen.jsx'));
@@ -226,6 +227,7 @@ const AppContent = () => {
             <ProtectedRoute exact path="/superadmin/schools" component={SchoolsListScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/superadmin/schools/create" component={CreateSchoolScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
             <ProtectedRoute exact path="/superadmin/schools/:tenantId" component={SchoolDetailScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
+            <ProtectedRoute exact path="/superadmin/branding" component={PortalBrandingScreen} isAuthenticated={isAuthenticated} isClass={isClass} isLoading={isLoading} />
           </>
         )}
 

@@ -1,10 +1,42 @@
 import axios from 'axios';
 
 const isNative = typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.();
-const configuredApiUrl = import.meta.env.VITE_API_URL || '';
 const defaultBrowserApiUrl = 'http://localhost:3000/api';
 const defaultEmulatorApiUrl = 'http://10.0.2.2:3000/api';
-const API_BASE_URL = configuredApiUrl || (isNative ? defaultEmulatorApiUrl : defaultBrowserApiUrl);
+const defaultIosSimulatorApiUrl = 'http://localhost:3000/api';
+
+/**
+ * API base URL resolution order
+ * ---------------------------
+ * 1. `VITE_API_URL`          - the deployed API (used by production/native builds)
+ * 2. `VITE_DEV_API_URL`      - local backend used while running `npm run dev`
+ * 3. platform fallback       - localhost for browser / iOS sim, 10.0.2.2 for Android emu
+ *
+ * NOTE: `VITE_API_URL` points at the live Render backend, so in `npm run dev`
+ * we must prefer the LOCAL backend, otherwise features that only exist on the
+ * new backend (e.g. portal branding) will 401 and silently fall back to defaults.
+ */
+const resolveApiBaseUrl = () => {
+  const configured = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  const devOverride = (import.meta.env.VITE_DEV_API_URL || '').replace(/\/+$/, '');
+
+  // Vite dev server running in a browser -> always talk to the local backend.
+  if (!isNative && import.meta.env.DEV) {
+    return devOverride || defaultBrowserApiUrl;
+  }
+
+  // Native app: the emulator/simulator cannot reach "localhost" on the host
+  // unless a dev override is set, so prefer the configured (deployed) URL.
+  if (isNative) {
+    if (devOverride) return devOverride;
+    if (configured) return configured;
+    return /android/i.test(navigator.userAgent) ? defaultEmulatorApiUrl : defaultIosSimulatorApiUrl;
+  }
+
+  return configured || defaultBrowserApiUrl;
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 const storage = {
   getToken: () => localStorage.getItem('authToken') || localStorage.getItem('token'),
   getTenantId: () => localStorage.getItem('tenantId'),
@@ -35,7 +67,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    // The branding endpoint is PUBLIC - a 401/403 there is a config problem
+    // (wrong API host), not an expired session. Never log the user out for it.
+    const isPublicBranding = error.config?.url?.includes('/portal-branding');
+
+    if (error.response?.status === 401 && !isPublicBranding) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
     }
@@ -100,6 +136,45 @@ export const schoolContextAPI = {
   async getMySchool() {
     return (await api.get('/school-context/me')).data;
   },
+};
+
+// ============================================
+// Portal Branding API (Login page logo + heading + sub heading)
+// Same values the Super Admin edits on the web admin screen.
+// GET is public, so this works on the login page before the user has a token.
+// ============================================
+
+export const portalBrandingAPI = {
+  async getBranding() {
+    return (await api.get('/portal-branding')).data;
+  },
+};
+
+// Hosts to retry against when the primary API host does not serve
+// /portal-branding (e.g. the deployed backend has not been redeployed yet).
+const BRANDING_FALLBACK_HOSTS = [
+  'http://localhost:3000/api',
+  'http://10.0.2.2:3000/api',
+];
+
+export const fetchPortalBranding = async () => {
+  try {
+    return await portalBrandingAPI.getBranding();
+  } catch (primaryError) {
+    const status = primaryError?.response?.status;
+    // Only worth retrying on another host when the route is missing/blocked.
+    if (![401, 403, 404, 502, 503].includes(status)) throw primaryError;
+
+    for (const host of BRANDING_FALLBACK_HOSTS) {
+      if (host === API_BASE_URL) continue;
+      try {
+        return (await api.get(`${host}/portal-branding`, { timeout: 8000 })).data;
+      } catch {
+        // try the next host
+      }
+    }
+    throw primaryError;
+  }
 };
 
 export { api };
