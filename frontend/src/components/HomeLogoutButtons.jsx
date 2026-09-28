@@ -38,10 +38,10 @@ const HomeLogoutButtons = () => {
 
   return (
     <IonButtons slot="end">
-      <IonButton onClick={handleHome} title="Home">
+      <IonButton onClick={handleHome} title="Home" className="app-nav-home">
         <IonIcon slot="icon-only" icon={homeOutline} />
       </IonButton>
-      <IonButton onClick={handleLogout} title="Logout">
+      <IonButton onClick={handleLogout} title="Logout" className="app-nav-signout">
         <IonIcon slot="icon-only" icon={logOutOutline} />
       </IonButton>
     </IonButtons>

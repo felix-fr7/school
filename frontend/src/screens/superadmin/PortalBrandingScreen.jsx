@@ -38,7 +38,6 @@ import {
   phonePortraitOutline,
 } from 'ionicons/icons';
 import { portalBrandingAPI, resolveMediaUrl } from '../../services/api';
-import defaultLogo from '../../logo/Macvel.jpg';
 import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 import './PortalBrandingScreen.css';
 
@@ -205,10 +204,12 @@ const PortalBrandingScreen = () => {
     }
   };
 
-  const previewLogo = branding?.logoUrl ? resolveMediaUrl(branding.logoUrl) : defaultLogo;
+  // There is NO built-in default logo. The login page only shows a logo when the
+  // Super Admin has uploaded one, so an empty URL means "no logo block at all".
+  const previewLogo = branding?.logoUrl ? resolveMediaUrl(branding.logoUrl) : null;
 
   // Mobile preview mirrors the real fallback chain the mobile login page uses:
-  //   mobile override  ->  staff value  ->  built-in default
+  //   mobile override  ->  staff value  ->  no logo
   const mobilePreviewLogo = branding?.mobileLogoUrl
     ? resolveMediaUrl(branding.mobileLogoUrl)
     : previewLogo;
@@ -347,7 +348,7 @@ const PortalBrandingScreen = () => {
                 <IonIcon icon={imageOutline} /> Live Preview
               </h2>
               <div className="preview-brand-header">
-                {form.showLogo && (
+                {form.showLogo && previewLogo && (
                   <div className="preview-logo-wrapper">
                     <img src={previewLogo} alt="Preview logo" className="preview-logo" />
                   </div>
@@ -367,7 +368,14 @@ const PortalBrandingScreen = () => {
 
               <div className="logo-row">
                 <div className="logo-preview-box">
-                  <img src={previewLogo} alt="Current login logo" className="logo-preview-img" />
+                  {previewLogo ? (
+                    <img src={previewLogo} alt="Current login logo" className="logo-preview-img" />
+                  ) : (
+                    <div className="logo-preview-empty">
+                      <IonIcon icon={imageOutline} />
+                      <span>No logo</span>
+                    </div>
+                  )}
                 </div>
                 <div className="logo-actions">
                   <input
@@ -404,6 +412,13 @@ const PortalBrandingScreen = () => {
                 {branding?.logoUrl
                   ? 'A custom logo is saved in the database and is used on the login page.'
                   : 'No custom logo uploaded yet - the built-in default logo is shown.'}
+              </p>
+
+              <p className="branding-hint branding-hint-strong">
+                Recommended: upload a <strong>SQUARE image (1:1)</strong> &mdash; PNG with a
+                transparent background works best. Any image you upload is shown at the
+                same size on the login page, so a square logo fills the box perfectly
+                without cropping.
               </p>
             </IonCardContent>
           </IonCard>
@@ -458,7 +473,7 @@ const PortalBrandingScreen = () => {
 
               {/* Live mobile preview */}
               <div className="preview-brand-header mobile-preview">
-                {mobileForm.showMobileLogo && (
+                {mobileForm.showMobileLogo && mobilePreviewLogo && (
                   <div className="preview-logo-wrapper">
                     <img src={mobilePreviewLogo} alt="Mobile preview logo" className="preview-logo" />
                   </div>
@@ -470,7 +485,14 @@ const PortalBrandingScreen = () => {
               {/* Mobile logo management */}
               <div className="logo-row" style={{ marginTop: '16px' }}>
                 <div className="logo-preview-box">
-                  <img src={mobilePreviewLogo} alt="Current mobile logo" className="logo-preview-img" />
+                  {mobilePreviewLogo ? (
+                    <img src={mobilePreviewLogo} alt="Current mobile logo" className="logo-preview-img" />
+                  ) : (
+                    <div className="logo-preview-empty">
+                      <IonIcon icon={imageOutline} />
+                      <span>No logo</span>
+                    </div>
+                  )}
                 </div>
                 <div className="logo-actions">
                   <input
@@ -511,6 +533,11 @@ const PortalBrandingScreen = () => {
                 {branding?.mobileLogoUrl
                   ? 'The mobile page uses its own logo.'
                   : 'No separate mobile logo - the mobile page uses the staff logo above.'}
+              </p>
+
+              <p className="branding-hint branding-hint-strong">
+                Use a <strong>SQUARE image (1:1)</strong> here too. It is displayed at the
+                same size as the staff logo on the mobile login page.
               </p>
 
               <IonItem className="branding-field" lines="none" style={{ marginTop: '12px' }}>

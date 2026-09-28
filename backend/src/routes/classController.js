@@ -14,6 +14,9 @@ const fs = require('fs');
 // Import authentication middleware
 const { authenticate } = require('../middleware/auth');
 
+// Import bulk student import controller (Excel / CSV / Google Sheets)
+const { uploadBulkSheet, bulkImportStudents, getBulkTemplate } = require('../controllers/classBulkImportController');
+
 // Apply authentication middleware to all routes
 router.use(authenticate);
 
@@ -266,7 +269,9 @@ router.get('/students', async (req, res, next) => {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
-        { studentId: { $regex: search, $options: 'i' } }
+        { studentId: { $regex: search, $options: 'i' } },
+        { rollNumber: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
       ];
     }
 
@@ -285,6 +290,10 @@ router.get('/students', async (req, res, next) => {
           id: s._id,
           name: s.name,
           email: s.email,
+          // Auto-generated placeholders are hidden so the UI shows a blank
+          // optional field instead of a fake address.
+          emailProvided: !String(s.email || '').endsWith('@school.internal'),
+          phone: s.phone || null,
           studentId: s.studentId,
           rollNumber: s.rollNumber,
           admittedDate: s.admittedDate,
@@ -327,7 +336,8 @@ router.get('/students/next-id', async (req, res, next) => {
 /**
  * POST /api/class-controller/students
  * Add a new student to the class
- * Requires: name, rollNumber, password
+ * Requires: name, rollNumber
+ * Optional: password, admittedDate, phone, email
  */
 router.post('/students', async (req, res, next) => {
   try {
@@ -340,7 +350,7 @@ router.post('/students', async (req, res, next) => {
 
     const classId = req.user.classId;
     const tenantId = req.user.tenantId;
-    const { name, rollNumber, password, admittedDate } = req.body;
+    const { name, rollNumber, password, admittedDate, phone, email } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({
@@ -378,21 +388,39 @@ router.post('/students', async (req, res, next) => {
     const { prefix: sidPrefix } = await getSchoolPrefixById(tenantId);
     const studentId = await generateUniqueStudentId(User, tenantId, sidPrefix);
 
-    // Generate dummy email
-    const dummyEmail = `stu-${studentId}-${Date.now().toString().slice(-6)}@school.internal`;
+    // Email is optional for the class form (students log in with their roll
+    // number), but the column is required + unique in the DB. Use the supplied
+    // email when it is free, otherwise fall back to an internal placeholder.
+    const cleanEmail = email && email.trim() ? email.trim().toLowerCase() : null;
+    if (cleanEmail && !/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'Please enter a valid email address.' }
+      });
+    }
+    if (cleanEmail && await User.exists({ email: cleanEmail })) {
+      return res.status(409).json({
+        success: false,
+        error: { message: 'This email is already used by another user.' }
+      });
+    }
+
+    const finalEmail = cleanEmail
+      || `stu-${studentId}-${Date.now().toString().slice(-6)}@school.internal`;
 
     // Use provided password or default temporary password
     // Note: Password will be hashed by User model's pre-save hook
     const finalPassword = password || 'Student@123';
 
     const student = await User.create({
-      email: dummyEmail,
+      email: finalEmail,
       password: finalPassword, // Plain password - will be hashed by model
       name: name.trim(),
       role: 'Student',
       schoolId: tenantId,
       studentId: studentId,
       rollNumber: rollNumber.trim(),
+      phone: phone && phone.trim() ? phone.trim() : undefined,
       classId: classId,
       admittedDate: admittedDate ? new Date(admittedDate) : new Date(),
       isActive: true,
@@ -409,6 +437,9 @@ router.post('/students', async (req, res, next) => {
         name: student.name,
         studentId: student.studentId,
         rollNumber: student.rollNumber,
+        phone: student.phone || null,
+        email: student.email,
+        emailProvided: Boolean(cleanEmail),
         admittedDate: student.admittedDate,
         created_at: student.createdAt,
         password: finalPassword
@@ -420,9 +451,26 @@ router.post('/students', async (req, res, next) => {
   }
 });
 
+// ============================================
+// Student Bulk Import (Excel / CSV / Google Sheets)
+// ============================================
+
+/**
+ * GET /api/class-controller/students/bulk-import/template
+ * Download the Excel template
+ */
+router.get('/students/bulk-import/template', getBulkTemplate);
+
+/**
+ * POST /api/class-controller/students/bulk-import
+ * Add many students to the class from an Excel/CSV file, a Google Sheets
+ * link, or inline JSON rows. Every created student joins this class.
+ */
+router.post('/students/bulk-import', uploadBulkSheet, bulkImportStudents);
+
 /**
  * PUT /api/class-controller/students/:id
- * Update a student
+ * Update a student (name, phone, email, roll number, admitted date)
  */
 router.put('/students/:id', async (req, res, next) => {
   try {
@@ -435,7 +483,7 @@ router.put('/students/:id', async (req, res, next) => {
 
     const classId = req.user.classId;
     const { id } = req.params;
-    const { name, email, studentId, rollNumber, admittedDate } = req.body;
+    const { name, email, phone, studentId, rollNumber, admittedDate } = req.body;
 
     const User = require('../models/User');
 
@@ -455,21 +503,103 @@ router.put('/students/:id', async (req, res, next) => {
     }
 
     const updateData = {};
-    if (name !== undefined) updateData.name = name.trim();
-    if (email !== undefined) updateData.email = email.trim();
+
+    if (name !== undefined) {
+      if (!name || !name.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Student name cannot be empty.' }
+        });
+      }
+      updateData.name = name.trim();
+    }
+
+    // Phone is optional - an empty value clears it.
+    if (phone !== undefined) {
+      updateData.phone = phone && phone.trim() ? phone.trim() : null;
+    }
+
+    // Email is optional in the UI but unique + required in the DB. An empty
+    // value restores the internal placeholder instead of writing an empty string.
+    if (email !== undefined) {
+      const cleanEmail = email && email.trim() ? email.trim().toLowerCase() : null;
+
+      if (cleanEmail) {
+        if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+          return res.status(400).json({
+            success: false,
+            error: { message: 'Please enter a valid email address.' }
+          });
+        }
+        const taken = await User.exists({ email: cleanEmail, _id: { $ne: id } });
+        if (taken) {
+          return res.status(409).json({
+            success: false,
+            error: { message: 'This email is already used by another user.' }
+          });
+        }
+        updateData.email = cleanEmail;
+      } else if (String(existingStudent.email || '').endsWith('@school.internal')) {
+        // Clearing an auto-generated placeholder: generate a fresh one
+        updateData.email = `stu-${existingStudent.studentId || 'stu'}-${Date.now().toString().slice(-6)}@school.internal`;
+      }
+      // else: a real email stays untouched when the field is left blank
+    }
+
     if (studentId !== undefined) updateData.studentId = studentId;
-    if (rollNumber !== undefined) updateData.rollNumber = rollNumber.trim();
+
+    if (rollNumber !== undefined) {
+      const newRoll = rollNumber.trim();
+      if (!newRoll) {
+        return res.status(400).json({
+          success: false,
+          error: { message: 'Roll number cannot be empty.' }
+        });
+      }
+      // Roll numbers stay unique within the class
+      const rollTaken = await User.exists({
+        rollNumber: newRoll,
+        role: 'Student',
+        classId: classId,
+        _id: { $ne: id }
+      });
+      if (rollTaken) {
+        return res.status(409).json({
+          success: false,
+          error: { message: 'Roll number already exists in this class.' }
+        });
+      }
+      updateData.rollNumber = newRoll;
+    }
+
     if (admittedDate !== undefined) updateData.admittedDate = admittedDate ? new Date(admittedDate) : null;
 
     const updatedStudent = await User.findOneAndUpdate(
       { _id: id, classId: classId, role: 'Student' },
       { ...updateData, updatedAt: new Date() },
-      { new: true }
+      { new: true, runValidators: true }
     ).select('-password');
+
+    if (!updatedStudent) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Student not found in your class.' }
+      });
+    }
 
     res.json({
       success: true,
-      data: updatedStudent,
+      data: {
+        id: updatedStudent._id,
+        name: updatedStudent.name,
+        studentId: updatedStudent.studentId,
+        rollNumber: updatedStudent.rollNumber,
+        phone: updatedStudent.phone || null,
+        email: updatedStudent.email,
+        admittedDate: updatedStudent.admittedDate,
+        created_at: updatedStudent.createdAt,
+        updated_at: updatedStudent.updatedAt,
+      },
       message: 'Student updated successfully.'
     });
   } catch (error) {

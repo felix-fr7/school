@@ -1,3 +1,26 @@
+/* Hint text under an input */
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* "Optional" pill next to a field label */
+.optional-tag {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 /* ==========================================================================
    Class Edit Student Screen - Modern Clean Theme (Responsive)
    ========================================================================== */

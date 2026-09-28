@@ -8,18 +8,42 @@
   border-bottom: 1px solid var(--border-color);
 }
 
-.brand-header {
+/* Ionic centres the title only when the start/end slots are equal width.
+   ion-title lives in the shadow DOM, so it is targeted from the light DOM. */
+.light-toolbar ion-buttons[slot='start'],
+.light-toolbar ion-buttons[slot='end'] {
+  min-width: 92px;
+  flex: 0 0 auto;
+}
+
+.light-toolbar ion-buttons[slot='end'] {
+  justify-content: flex-end;
+}
+
+.light-toolbar ion-title {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Scoped to this toolbar so the login screen's .brand-header is untouched */
+.light-toolbar .brand-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   font-weight: 600;
   font-size: 1.1rem;
+  line-height: 1.4;
   color: #1a1a1a;
+  white-space: nowrap;
 }
 
-.brand-icon {
+.light-toolbar .brand-icon {
   font-size: 1.3rem;
   color: var(--ion-color-primary, #3880ff);
+  flex-shrink: 0;
 }
 
 .add-student-content {
@@ -188,6 +212,161 @@
   letter-spacing: 0.5px;
   height: 48px;
   margin: 0;
+}
+
+/* ==========================================================================
+   Bulk Upload (Single / Bulk mode switcher + import panel)
+   ========================================================================== */
+.mode-segment {
+  margin-bottom: 20px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.mode-segment ion-segment-button {
+  --color: #64748b;
+  --color-checked: #1d4ed8;
+  --indicator-color: #ffffff;
+  --border-radius: 10px;
+  min-height: 42px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* "Optional" pill next to a field label */
+.optional-tag {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.upload-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.upload-dropzone:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  color: #3b82f6;
+}
+
+.upload-dropzone p {
+  margin: 8px 0 4px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.upload-dropzone span {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.template-button {
+  --border-radius: 12px;
+  height: 44px;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.2px;
+}
+
+.bulk-result {
+  margin-top: 20px;
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid;
+}
+
+.bulk-result.is-success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.bulk-result.is-error {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.bulk-result-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.bulk-result.is-success .bulk-result-head {
+  color: #15803d;
+}
+
+.bulk-result.is-error .bulk-result-head {
+  color: #b91c1c;
+}
+
+.bulk-result-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.bulk-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0 0;
+}
+
+.bulk-stats .stat {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.bulk-error-list {
+  margin: 12px 0 0 0;
+  padding-left: 18px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.bulk-error-list li {
+  font-size: 0.78rem;
+  color: #b91c1c;
+  line-height: 1.5;
 }
 
 /* ==========================================================================

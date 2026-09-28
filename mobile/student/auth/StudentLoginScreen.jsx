@@ -3,10 +3,11 @@ import { IonPage, IonContent, IonButton, IonInput, IonSpinner } from '@ionic/rea
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../src/contexts/AuthContext';
 import './StudentLoginScreen.css';
-import logoImage from '../../../frontend/src/logo/Macvel.jpg';
 import { fetchPortalBranding, resolveMediaUrl } from '../../src/services/api';
 
 // Fallback text - only used if the branding API is unreachable
+// NOTE: there is NO built-in default logo anymore. The mobile login page shows
+// a logo ONLY if the Super Admin uploaded one (mobile logo, else the staff logo).
 const DEFAULT_HEADING = 'STUDENT PORTAL';
 const DEFAULT_SUB_HEADING = 'Login with your class roll number';
 
@@ -91,8 +92,8 @@ const StudentLoginScreen = () => {
         <div className="luxury-login-wrapper">
           <div className="luxury-login-card">
             <div className="brand-header">
-              {branding.showLogo && <div className="brand-logo-image-wrapper"><img
-                src={branding.logoUrl ? resolveMediaUrl(branding.logoUrl) : logoImage}
+              {branding.showLogo && branding.logoUrl && <div className="brand-logo-image-wrapper"><img
+                src={resolveMediaUrl(branding.logoUrl)}
                 alt="Portal Logo"
                 className="brand-logo-image"
               /></div>}

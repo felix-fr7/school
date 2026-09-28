@@ -103,12 +103,12 @@ const SuperAdminDashboardScreen = () => {
       <IonHeader className="luxury-header">
         <IonToolbar className="luxury-toolbar">
           <IonButtons slot="start">
-            <IonButton onClick={handleLogout} className="luxury-icon-btn logout-btn">
+            <IonButton onClick={handleLogout} className="luxury-icon-btn logout-btn app-nav-signout">
               <IonIcon icon={logOutOutline} slot="icon-only" />
             </IonButton>
           </IonButtons>
 
-          <IonTitle className="luxury-title">
+          <IonTitle>
             SUPER ADMIN <span className="gold-text">HUB</span>
           </IonTitle>
 

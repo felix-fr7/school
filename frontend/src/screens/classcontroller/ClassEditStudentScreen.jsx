@@ -35,6 +35,8 @@ import {
   saveOutline,
   trashOutline,
   warningOutline,
+  callOutline,
+  mailOutline,
 } from 'ionicons/icons';
 import { useParams, useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
@@ -48,6 +50,10 @@ const ClassEditStudentScreen = () => {
   const [student, setStudent] = useState(null);
   const [originalName, setOriginalName] = useState('');
   const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [originalPhone, setOriginalPhone] = useState('');
+  const [originalEmail, setOriginalEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -87,18 +93,27 @@ const ClassEditStudentScreen = () => {
         const foundStudent = response.data.students.find(s => s.id === routeStudentId);
         
         if (foundStudent) {
+          // Auto-generated placeholder emails are not shown as real contact info
+          const realEmail = foundStudent.emailProvided ? (foundStudent.email || '') : '';
+          const currentPhone = foundStudent.phone || '';
+
           const studentData = {
             id: foundStudent.id,
             name: foundStudent.name,
             rollNumber: foundStudent.rollNumber || foundStudent.studentId || `STU-${foundStudent.id.slice(-4).toUpperCase()}`,
             studentId: foundStudent.studentId,
-            email: foundStudent.email,
+            email: realEmail,
+            phone: currentPhone,
             createdAt: foundStudent.createdAt,
             admittedDate: foundStudent.admittedDate || foundStudent.createdAt,
           };
           setStudent(studentData);
           setEditName(studentData.name);
           setOriginalName(studentData.name);
+          setEditPhone(currentPhone);
+          setOriginalPhone(currentPhone);
+          setEditEmail(realEmail);
+          setOriginalEmail(realEmail);
           setEditAdmittedDate(toDateInputValue(studentData.admittedDate));
         } else {
           setAlertHeader('Error');
@@ -124,7 +139,30 @@ const ClassEditStudentScreen = () => {
       return;
     }
 
-    if (editName.trim() === originalName) {
+    if (editPhone.trim() && !/^[\d\s\-()+]{6,20}$/.test(editPhone.trim())) {
+      setAlertHeader('Validation Error');
+      setAlertMessage('Enter a valid mobile number (digits only, 6-20 characters).');
+      setShowAlert(true);
+      return;
+    }
+
+    if (editEmail.trim() && !/^\S+@\S+\.\S+$/.test(editEmail.trim())) {
+      setAlertHeader('Validation Error');
+      setAlertMessage('Please enter a valid email address.');
+      setShowAlert(true);
+      return;
+    }
+
+    const newName = editName.trim();
+    const newPhone = editPhone.trim();
+    const newEmail = editEmail.trim();
+
+    const nothingChanged =
+      newName === originalName &&
+      newPhone === originalPhone &&
+      newEmail === originalEmail;
+
+    if (nothingChanged) {
       setAlertHeader('No Changes');
       setAlertMessage('No changes were made.');
       setShowAlert(true);
@@ -134,12 +172,21 @@ const ClassEditStudentScreen = () => {
     setSaving(true);
     try {
       const response = await classControllerAPI.updateStudent(student.id, {
-        name: editName.trim(),
+        name: newName,
+        phone: newPhone,
+        email: newEmail,
       });
 
       if (response.success) {
-        setStudent(prev => ({ ...prev, name: editName.trim() }));
-        setOriginalName(editName.trim());
+        setStudent(prev => ({
+          ...prev,
+          name: newName,
+          phone: response.data?.phone ?? newPhone,
+          email: newEmail,
+        }));
+        setOriginalName(newName);
+        setOriginalPhone(newPhone);
+        setOriginalEmail(newEmail);
         setToastMessage('Student updated successfully.');
         setToastColor('success');
         setShowToast(true);
@@ -325,7 +372,48 @@ const ClassEditStudentScreen = () => {
               </div>
             </div>
 
-            {editName !== originalName && (
+            {/* Mobile Number */}
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={callOutline} className="label-icon" />
+                Mobile Number
+                <span className="optional-tag">Optional</span>
+              </label>
+              <div className="custom-input-box">
+                <IonInput
+                  type="tel"
+                  inputmode="numeric"
+                  value={editPhone}
+                  onIonInput={(e) => setEditPhone(e.detail.value || '')}
+                  placeholder="Enter mobile number"
+                  autoComplete="tel"
+                  autoCorrect="off"
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={mailOutline} className="label-icon" />
+                Email Address
+                <span className="optional-tag">Optional</span>
+              </label>
+              <div className="custom-input-box">
+                <IonInput
+                  type="email"
+                  inputmode="email"
+                  value={editEmail}
+                  onIonInput={(e) => setEditEmail(e.detail.value || '')}
+                  placeholder="student@example.com"
+                  autoComplete="email"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                />
+              </div>
+            </div>
+
+            {(editName !== originalName || editPhone !== originalPhone || editEmail !== originalEmail) && (
               <IonButton
                 expand="block"
                 color="primary"
@@ -365,6 +453,26 @@ const ClassEditStudentScreen = () => {
                   <p>{student?.rollNumber}</p>
                 </IonLabel>
               </IonItem>
+
+              {student?.phone && (
+                <IonItem>
+                  <IonIcon icon={callOutline} slot="start" className="info-icon" />
+                  <IonLabel>
+                    <small>Mobile Number</small>
+                    <p>{student.phone}</p>
+                  </IonLabel>
+                </IonItem>
+              )}
+
+              {student?.email && (
+                <IonItem>
+                  <IonIcon icon={mailOutline} slot="start" className="info-icon" />
+                  <IonLabel>
+                    <small>Email Address</small>
+                    <p>{student.email}</p>
+                  </IonLabel>
+                </IonItem>
+              )}
 
               <IonItem>
                 <IonIcon icon={ribbonOutline} slot="start" className="info-icon" />

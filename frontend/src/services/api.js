@@ -925,6 +925,31 @@ export const classControllerAPI = {
     return response.data;
   },
 
+  // Bulk import students into the logged-in class.
+  // Accepts an Excel/CSV File, a Google Sheets URL, or an array of row objects.
+  async bulkImportStudents({ file, sheetUrl, rows, defaultPassword } = {}) {
+    const formData = new FormData();
+    if (file) formData.append('file', file);
+    if (sheetUrl) formData.append('sheetUrl', sheetUrl);
+    if (rows) formData.append('rows', JSON.stringify(rows));
+    if (defaultPassword) formData.append('defaultPassword', defaultPassword);
+
+    const response = await api.post('/class-controller/students/bulk-import', formData, {
+      // The shared axios instance defaults to 'application/json', which strips the
+      // multipart boundary and leaves the backend with no file. Axios adds the
+      // boundary itself for FormData bodies, so this matches the other uploads.
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  async downloadBulkTemplate() {
+    const response = await api.get('/class-controller/students/bulk-import/template', {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
   async updateStudent(id, data) {
     const response = await api.put(`/class-controller/students/${id}`, data);
     return response.data;

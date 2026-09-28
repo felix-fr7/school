@@ -27,6 +27,25 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Ionic centres the title only when the start/end slots are equal width.
+   ion-title lives in the shadow DOM, so it is targeted from the light DOM. */
+.light-toolbar ion-buttons[slot='start'],
+.light-toolbar ion-buttons[slot='end'] {
+  min-width: 92px;
+  flex: 0 0 auto;
+}
+
+.light-toolbar ion-buttons[slot='end'] {
+  justify-content: flex-end;
+}
+
+.light-toolbar ion-title {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
 /* Searchbar Customization */
 .student-searchbar {
   --background: #f1f5f9;

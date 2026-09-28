@@ -38,42 +38,68 @@
 }
 
 /* ============================================
-   2. HEADER & TOOLBAR (Bright Text & Unified Background)
+   2. HEADER & TOOLBAR (White Navbar / Black Content)
    ============================================ */
-ion-header,
-.ion-header,
 .create-school-header,
-.premium-toolbar,
-ion-toolbar {
-  --background: #070A10 !important;
-  background: #070A10 !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.25) !important;
-  --color: #FFFFFF !important; /* Fully bright white text */
+.create-school-header ion-toolbar,
+.premium-toolbar {
+  --background: #ffffff !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  --color: #000000 !important;
+  /* Same height/padding on every super admin screen for identical alignment */
+  padding: 6px 12px;
+  min-height: 56px;
 }
 
-ion-toolbar::part(background) {
-  background: #070A10 !important;
+.create-school-header ion-toolbar::part(background),
+.premium-toolbar::part(background) {
+  background: #ffffff !important;
 }
 
-/* Toolbar text, buttons, and titles override to ensure visibility */
-ion-toolbar ion-title,
-ion-toolbar ion-buttons,
-ion-toolbar ion-button,
-ion-toolbar span,
-ion-toolbar a,
-.create-school-header ion-title {
-  color: #FFFFFF !important;
+/* Title and text: black */
+.create-school-header ion-title,
+.premium-toolbar ion-title,
+.create-school-header ion-back-button,
+.premium-toolbar ion-back-button {
+  color: #000000 !important;
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
 }
 
-/* Make Dashboard back link / button pop out in Gold */
-ion-toolbar ion-button {
+/* Ionic only centres the title when the start/end slots are the same width.
+   Reserve a fixed width on both sides so every page lines up identically. */
+.premium-toolbar ion-buttons[slot='start'],
+.premium-toolbar ion-buttons[slot='end'] {
+  min-width: 92px;
+  flex: 0 0 auto;
+}
+
+.premium-toolbar ion-buttons[slot='end'] {
+  justify-content: flex-end;
+}
+
+.premium-toolbar ion-title {
+  width: 100%;
+}
+
+/* Home / back icons: black (signout keeps its gold colour) */
+.premium-toolbar ion-button:not(.app-nav-signout),
+.premium-toolbar ion-back-button {
+  --color: #000000 !important;
+  color: #000000 !important;
+}
+
+/* Signout keeps its original gold colour */
+.premium-toolbar .app-nav-signout {
   --color: var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
 }
 
 .gold-back-btn {
-  --color: var(--gold-primary) !important;
+  --color: #000000 !important;
+  color: #000000 !important;
 }
 
 .header-section {

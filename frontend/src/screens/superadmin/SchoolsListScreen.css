@@ -37,33 +37,67 @@
 }
 
 /* ============================================
-   2. TOP TOOLBAR
+   2. TOP TOOLBAR (White Navbar / Black Content)
    ============================================ */
 .premium-header ion-toolbar {
-  --background: rgba(10, 15, 26, 0.95);
-  --color: #FFFFFF;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+  --background: #ffffff !important;
+  --color: #000000 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  /* Same height/padding on every super admin screen for identical alignment */
+  padding: 6px 12px;
+  min-height: 56px;
+}
+
+.premium-header ion-toolbar::part(background) {
+  background: #ffffff !important;
 }
 
 .premium-header ion-title {
-  color: #f59e0b !important;
-  font-weight: 800;
-  font-size: 17px;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  color: #000000 !important;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  text-align: center;
 }
 
+/* Ionic only centres the title when the start/end slots are the same width.
+   Reserve a fixed width on both sides so every page lines up identically. */
+.premium-header ion-buttons[slot='start'],
+.premium-header ion-buttons[slot='end'],
+.premium-header ion-button[slot='start'] {
+  min-width: 92px;
+  flex: 0 0 auto;
+}
+
+.premium-header ion-buttons[slot='end'] {
+  justify-content: flex-end;
+}
+
+.premium-header ion-title {
+  width: 100%;
+}
+
+/* Home / back icons: black (signout keeps its gold colour) */
 .premium-header ion-toolbar ion-icon {
-  color: #f59e0b !important;
+  color: #000000 !important;
 }
 
-.premium-header ion-button {
-  --color: #f59e0b !important;
+.premium-header ion-toolbar ion-button:not(.app-nav-signout),
+.premium-header ion-back-button {
+  --color: #000000 !important;
+  color: #000000 !important;
+}
+
+/* Signout keeps its original gold colour */
+.premium-header .app-nav-signout {
+  --color: var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
 }
 
 .gold-back-btn {
-  --color: var(--gold-primary);
+  --color: #000000 !important;
+  color: #000000 !important;
 }
 
 /* ============================================

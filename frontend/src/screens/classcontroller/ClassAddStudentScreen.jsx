@@ -24,6 +24,9 @@ import {
   IonCardContent,
   IonModal,
   IonAlert,
+  IonSegment,
+  IonSegmentButton,
+  IonTextarea,
 } from '@ionic/react';
 import {
   eyeOutline,
@@ -36,6 +39,14 @@ import {
   keyOutline,
   personOutline,
   calendarOutline,
+  cloudUploadOutline,
+  documentTextOutline,
+  downloadOutline,
+  linkOutline,
+  closeCircleOutline,
+  refreshOutline,
+  callOutline,
+  mailOutline,
 } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { classControllerAPI } from '../../services/api';
@@ -48,6 +59,8 @@ const ClassAddStudentScreen = () => {
   const [name, setName] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [admittedDate, setAdmittedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -56,6 +69,14 @@ const ClassAddStudentScreen = () => {
   const [createdStudent, setCreatedStudent] = useState(null);
   const [showValidationError, setShowValidationError] = useState(false);
   const [validationErrorMessage, setValidationErrorMessage] = useState('');
+
+  // Bulk upload state
+  const [activeMode, setActiveMode] = useState('single');
+  const [bulkFile, setBulkFile] = useState(null);
+  const [sheetUrl, setSheetUrl] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const bulkFileInputRef = React.useRef(null);
 
   useEffect(() => {
     fetchNextStudentId();
@@ -81,6 +102,18 @@ const ClassAddStudentScreen = () => {
 
     if (!rollNumber.trim()) {
       setValidationErrorMessage('Roll number is required');
+      setShowValidationError(true);
+      return false;
+    }
+
+    if (phone.trim() && !/^[\d\s\-()+]{6,20}$/.test(phone.trim())) {
+      setValidationErrorMessage('Enter a valid mobile number (digits only, 6-20 characters)');
+      setShowValidationError(true);
+      return false;
+    }
+
+    if (email.trim() && !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setValidationErrorMessage('Enter a valid email address');
       setShowValidationError(true);
       return false;
     }
@@ -113,6 +146,8 @@ const ClassAddStudentScreen = () => {
         rollNumber: rollNumber.trim(),
         password: password.trim(),
         admittedDate: admittedDate || undefined,
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
       });
 
       if (response.success && response.data) {
@@ -121,6 +156,8 @@ const ClassAddStudentScreen = () => {
         setName('');
         setRollNumber('');
         setPassword('');
+        setPhone('');
+        setEmail('');
         setAdmittedDate(new Date().toISOString().split('T')[0]);
         fetchNextStudentId();
       }
@@ -146,6 +183,71 @@ const ClassAddStudentScreen = () => {
         setValidationErrorMessage(`Password: ${createdStudent.password}\n\nPlease save this password securely!`);
         setShowValidationError(true);
       });
+    }
+  };
+
+  // ---------- Bulk upload handlers ----------
+
+  const handleBulkFileSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBulkFile(file);
+      setBulkResult(null);
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const blob = await classControllerAPI.downloadBulkTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'student-bulk-import-template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      setValidationErrorMessage('Failed to download the template');
+      setShowValidationError(true);
+    }
+  };
+
+  const handleBulkImport = async () => {
+    if (!bulkFile && !sheetUrl.trim()) {
+      setValidationErrorMessage('Choose an Excel/CSV file or paste a Google Sheets link first.');
+      setShowValidationError(true);
+      return;
+    }
+
+    setBulkLoading(true);
+    setBulkResult(null);
+
+    try {
+      // No defaultPassword is sent - the backend applies its own default
+      // password (Student@123) for rows without a password column.
+      const response = await classControllerAPI.bulkImportStudents({
+        file: bulkFile,
+        sheetUrl: bulkFile ? undefined : sheetUrl.trim(),
+      });
+
+      setBulkResult(response);
+      setBulkFile(null);
+      setSheetUrl('');
+      if (bulkFileInputRef.current) bulkFileInputRef.current.value = '';
+      fetchNextStudentId();
+    } catch (error) {
+      console.error('Error during bulk import:', error);
+      const payload = error?.response?.data;
+      setBulkResult({
+        success: false,
+        data: { createdCount: 0, failedCount: payload?.errors?.length || 0 },
+        errors: payload?.errors,
+        message: payload?.error?.message || 'Bulk import failed',
+      });
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -178,8 +280,24 @@ const ClassAddStudentScreen = () => {
             </div>
           </div>
 
+          {/* Mode Switcher: single entry vs bulk upload */}
+          <IonSegment
+            value={activeMode}
+            onIonChange={(e) => setActiveMode(e.detail.value)}
+            className="mode-segment"
+          >
+            <IonSegmentButton value="single">
+              <IonIcon icon={personAddOutline} slot="start" />
+              Single Student
+            </IonSegmentButton>
+            <IonSegmentButton value="bulk">
+              <IonIcon icon={cloudUploadOutline} slot="start" />
+              Bulk Upload
+            </IonSegmentButton>
+          </IonSegment>
+
           {/* Next Student ID Preview */}
-          {nextStudentId && (
+          {activeMode === 'single' && nextStudentId && (
             <IonCard className="preview-card">
               <IonCardContent>
                 <span className="preview-label">NEXT GENERATED INTERNAL ID</span>
@@ -190,6 +308,7 @@ const ClassAddStudentScreen = () => {
           )}
 
           {/* Form */}
+          {activeMode === 'single' && (
           <div className="form-card">
             {/* Student Name */}
             <div className="input-group">
@@ -223,6 +342,51 @@ const ClassAddStudentScreen = () => {
                   autoCorrect="off"
                 />
               </div>
+            </div>
+
+            {/* Mobile Number */}
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={callOutline} className="label-icon" />
+                Mobile Number
+                <span className="optional-tag">Optional</span>
+              </label>
+              <div className="custom-input-box">
+                <IonInput
+                  type="tel"
+                  inputmode="numeric"
+                  value={phone}
+                  onIonInput={(e) => setPhone(e.detail.value || '')}
+                  placeholder="Enter 10-digit mobile number"
+                  autoComplete="tel"
+                  autoCorrect="off"
+                />
+              </div>
+              <span className="field-hint">Parent or student contact number.</span>
+            </div>
+
+            {/* Email */}
+            <div className="input-group">
+              <label className="input-label">
+                <IonIcon icon={mailOutline} className="label-icon" />
+                Email Address
+                <span className="optional-tag">Optional</span>
+              </label>
+              <div className="custom-input-box">
+                <IonInput
+                  type="email"
+                  inputmode="email"
+                  value={email}
+                  onIonInput={(e) => setEmail(e.detail.value || '')}
+                  placeholder="student@example.com"
+                  autoComplete="email"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                />
+              </div>
+              <span className="field-hint">
+                Leave blank and one will be generated automatically.
+              </span>
             </div>
 
             {/* Admitted Date */}
@@ -288,6 +452,128 @@ const ClassAddStudentScreen = () => {
               {loading ? <IonSpinner name="crescent" /> : 'Confirm & Create Student'}
             </IonButton>
           </div>
+          )}
+
+          {/* Bulk Upload */}
+          {activeMode === 'bulk' && (
+            <div className="form-card">
+              <div className="info-box">
+                <IonIcon icon={informationCircleOutline} className="info-icon" />
+                <p>
+                  Every valid row becomes a student in <strong className="id-highlight">this class</strong>.
+                  The sheet's first row must be a header with at least{' '}
+                  <strong>Name</strong> and <strong>Roll Number</strong>. Students log in with their
+                  roll number and the default password <strong>Student@123</strong>.
+                </p>
+              </div>
+
+              {/* Excel / CSV file */}
+              <div className="input-group">
+                <label className="input-label">
+                  <IonIcon icon={documentTextOutline} className="label-icon" />
+                  Excel / CSV File
+                </label>
+                <div
+                  className="upload-dropzone"
+                  onClick={() => bulkFileInputRef.current?.click()}
+                >
+                  <IonIcon icon={cloudUploadOutline} className="upload-icon" />
+                  <p>{bulkFile ? bulkFile.name : 'Tap to choose a file'}</p>
+                  <span>.xlsx, .xls or .csv (max 5 MB)</span>
+                </div>
+                <input
+                  ref={bulkFileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleBulkFileSelect}
+                  style={{ display: 'none' }}
+                />
+              </div>
+
+              {/* Google Sheets link */}
+              <div className="input-group">
+                <label className="input-label">
+                  <IonIcon icon={linkOutline} className="label-icon" />
+                  Google Sheets Link
+                </label>
+                <div className="custom-input-box">
+                  <IonInput
+                    value={sheetUrl}
+                    onIonInput={(e) => setSheetUrl(e.detail.value || '')}
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    autoComplete="off"
+                    autoCorrect="off"
+                  />
+                </div>
+                <span className="field-hint">
+                  Used when no file is selected. Share the sheet as &quot;Anyone with the link - Viewer&quot;.
+                </span>
+              </div>
+
+              {/* Default password is applied automatically (Student@123) for
+                  rows without a password column in the sheet. */}
+
+              <IonButton
+                expand="block"
+                fill="outline"
+                className="template-button"
+                onClick={handleDownloadTemplate}
+              >
+                <IonIcon icon={downloadOutline} slot="start" />
+                Download Excel Template
+              </IonButton>
+
+              <IonButton
+                expand="block"
+                className="submit-button"
+                onClick={handleBulkImport}
+                disabled={bulkLoading || (!bulkFile && !sheetUrl.trim())}
+              >
+                {bulkLoading ? <IonSpinner name="crescent" /> : 'Import Students'}
+              </IonButton>
+
+              {/* Result summary */}
+              {bulkResult && (
+                <div className={`bulk-result ${bulkResult.success ? 'is-success' : 'is-error'}`}>
+                  <div className="bulk-result-head">
+                    <IonIcon
+                      icon={bulkResult.success ? checkmarkCircleOutline : closeCircleOutline}
+                      className="bulk-result-icon"
+                    />
+                    <span>{bulkResult.message}</span>
+                  </div>
+
+                  <div className="bulk-stats">
+                    <span className="stat success">Added: {bulkResult.data?.createdCount ?? 0}</span>
+                    <span className="stat failed">Skipped: {bulkResult.data?.failedCount ?? 0}</span>
+                    <span className="stat total">Rows read: {bulkResult.data?.totalRows ?? 0}</span>
+                  </div>
+
+                  {bulkResult.errors?.length > 0 && (
+                    <ul className="bulk-error-list">
+                      {bulkResult.errors.map((err, index) => (
+                        <li key={index}>
+                          Row {err.row}: {err.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {bulkResult.success && (
+                    <IonButton
+                      expand="block"
+                      fill="clear"
+                      size="small"
+                      onClick={() => history.push('/class-controller/students')}
+                    >
+                      <IonIcon icon={refreshOutline} slot="start" />
+                      View Students List
+                    </IonButton>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Success Modal */}
@@ -321,6 +607,20 @@ const ClassAddStudentScreen = () => {
                   <span className="detail-label">Full Name</span>
                   <span className="detail-value">{createdStudent.name}</span>
                 </div>
+
+                {createdStudent.phone && (
+                  <div className="detail-row">
+                    <span className="detail-label">Mobile Number</span>
+                    <span className="detail-value">{createdStudent.phone}</span>
+                  </div>
+                )}
+
+                {createdStudent.emailProvided && createdStudent.email && (
+                  <div className="detail-row">
+                    <span className="detail-label">Email</span>
+                    <span className="detail-value">{createdStudent.email}</span>
+                  </div>
+                )}
 
                 <div className="detail-row">
                   <span className="detail-label">Admitted Date</span>
@@ -365,6 +665,8 @@ const ClassAddStudentScreen = () => {
                   setName('');
                   setRollNumber('');
                   setPassword('');
+                  setPhone('');
+                  setEmail('');
                   setAdmittedDate(new Date().toISOString().split('T')[0]);
                   setCreatedStudent(null);
                   fetchNextStudentId();

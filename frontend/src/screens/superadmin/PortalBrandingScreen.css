@@ -34,25 +34,61 @@
 }
 
 /* ============================================
-   1. HEADER TOOLBAR
+   1. HEADER TOOLBAR (White Navbar / Black Content)
    ============================================ */
 .branding-header ion-toolbar {
-  --background: rgba(10, 15, 26, 0.9);
-  --color: var(--text-main);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-glass);
+  --background: #ffffff !important;
+  --color: #000000 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  /* Same height/padding on every super admin screen for identical alignment */
+  padding: 6px 12px;
+  min-height: 56px;
+}
+
+.branding-header ion-toolbar::part(background) {
+  background: #ffffff !important;
 }
 
 .branding-header ion-title {
-  color: #fbbf24;
+  color: #000000 !important;
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* Ionic only centres the title when the start/end slots are the same width.
+   Reserve a fixed width on both sides so every page lines up identically. */
+.branding-header ion-buttons[slot='start'],
+.branding-header ion-buttons[slot='end'] {
+  min-width: 92px;
+  flex: 0 0 auto;
+}
+
+.branding-header ion-buttons[slot='end'] {
+  justify-content: flex-end;
+}
+
+.branding-header ion-title {
+  width: 100%;
+}
+
+/* Home / back icons: black (signout keeps its gold colour) */
+.branding-header ion-toolbar ion-button:not(.app-nav-signout),
+.branding-header ion-back-button {
+  --color: #000000 !important;
+  color: #000000 !important;
+}
+
+.branding-header .app-nav-signout {
+  --color: var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
 }
 
 .gold-back-btn {
-  --color: var(--gold-primary);
+  --color: #000000 !important;
+  color: #000000 !important;
 }
 
 /* ============================================
@@ -99,6 +135,10 @@
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold-primary);
+  margin: 0 0 16px 0;
+}
 
 /* ============================================
    3. LIVE PREVIEW
@@ -111,9 +151,13 @@
   border: 1px dashed rgba(212, 175, 55, 0.35);
 }
 
+/* Mirrors the real login page logo box exactly (see
+   mobile/student/auth/StudentLoginScreen.css -> --login-logo-size),
+   so the preview here matches what visitors actually see. */
 .preview-logo-wrapper {
-  width: 75px;
-  height: 75px;
+  width: calc(56px + 8px * 2);
+  height: calc(56px + 8px * 2);
+  box-sizing: border-box;
   margin: 0 auto 16px auto;
   border-radius: 18px;
   background: #ffffff;
@@ -121,13 +165,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   box-shadow: 0 0 25px rgba(212, 175, 55, 0.35);
 }
 
 .preview-logo {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* Must match .brand-logo-image on the real login page (object-fit: cover),
+     so this preview is a true 1:1 representation of the live result. */
+  object-fit: cover;
   border-radius: 10px;
 }
 
@@ -164,6 +211,14 @@
   flex-shrink: 0;
   border-radius: 18px;
   background: #ffffff;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 0 22px rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+}
 
 /* ============================================
    5. FORM FIELDS
@@ -206,6 +261,18 @@
   color: var(--text-subtle);
   margin: 8px 0 0 0;
   line-height: 1.5;
+}
+
+/* Slightly stronger hint used for the "how to upload your logo" guidance */
+.branding-hint-strong {
+  color: var(--text-muted);
+  border-left: 2px solid var(--gold-primary);
+  padding-left: 10px;
+}
+
+.branding-hint-strong strong {
+  color: var(--gold-light);
+  font-weight: 700;
 }
 
 .save-actions {
@@ -294,22 +361,36 @@
 
   .logo-actions {
     width: 100%;
+    min-width: 0;
   }
-}
-
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 22px rgba(212, 175, 55, 0.3);
-  border: 1px solid rgba(212, 175, 55, 0.35);
 }
 
 .logo-preview-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* Matches the live login page (object-fit: cover) so the admin sees
+     exactly how the logo will look before saving. */
+  object-fit: cover;
   border-radius: 10px;
+}
+
+/* Shown in the upload card when no logo has been uploaded yet */
+.logo-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  color: var(--text-subtle);
+  font-size: 11px;
+  text-align: center;
+}
+
+.logo-preview-empty ion-icon {
+  font-size: 28px;
+  opacity: 0.6;
 }
 
 .logo-actions {
@@ -320,11 +401,220 @@
   gap: 10px;
 }
 
-  letter-spacing: 0.08em;
-  color: var(--gold-primary);
-  margin: 0 0 16px 0;
-}
-
 .branding-section-title ion-icon {
   font-size: 18px;
 }
+
+/* ============================================
+   12. UI POLISH
+   Appended overrides that improve the look without changing any
+   class names or behaviour. Safe to remove if not wanted.
+   ============================================ */
+
+/* Soft gold glow behind the whole page */
+.branding-content {
+  background:
+    radial-gradient(900px 420px at 50% -12%, rgba(212, 175, 55, 0.10) 0%, transparent 62%),
+    var(--bg-app);
+}
+
+.branding-container {
+  max-width: 880px;
+  gap: 20px;
+  padding-top: 24px;
+}
+
+/* --- Cards: deeper shadow, softer corners --- */
+.branding-card,
+.branding-preview-card {
+  border-radius: 20px;
+  border-color: rgba(212, 175, 55, 0.26);
+  box-shadow: 0 18px 42px -24px rgba(0, 0, 0, 0.9);
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.branding-preview-card {
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 18px 46px -22px rgba(212, 175, 55, 0.35);
+}
+
+/* --- Section title: icon inside a small chip --- */
+.branding-section-title {
+  gap: 10px;
+  font-size: 12.5px;
+  letter-spacing: 0.09em;
+  margin-bottom: 18px;
+}
+
+.branding-section-title ion-icon {
+  font-size: 15px;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 175, 55, 0.14);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  color: var(--gold-primary);
+}
+
+.branding-card-mobile .branding-section-title ion-icon {
+  background: rgba(96, 165, 250, 0.14);
+  border-color: rgba(96, 165, 250, 0.28);
+  color: #60a5fa;
+}
+
+/* --- Live preview: "LIVE PREVIEW" chip + nicer frame --- */
+.preview-brand-header {
+  position: relative;
+  padding: 30px 18px 22px;
+  border-radius: 16px;
+  background:
+    radial-gradient(520px 200px at 50% 0%, rgba(37, 99, 235, 0.20) 0%, transparent 70%),
+    rgba(3, 7, 18, 0.72);
+}
+
+.preview-brand-header::before {
+  content: "LIVE PREVIEW";
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--gold-light);
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.preview-logo-wrapper {
+  margin-top: 8px;
+}
+
+/* --- Mobile preview: phone-frame look --- */
+.mobile-preview {
+  max-width: 340px;
+  margin: 0 auto;
+  border-radius: 24px;
+  border-style: solid;
+  border-width: 1px;
+  background:
+    radial-gradient(420px 180px at 50% 0%, rgba(37, 99, 235, 0.24) 0%, transparent 70%),
+    rgba(3, 7, 18, 0.72);
+}
+
+.mobile-preview::before {
+  content: "MOBILE PREVIEW";
+  color: #bfdbfe;
+  background: rgba(96, 165, 250, 0.14);
+  border-color: rgba(96, 165, 250, 0.32);
+}
+
+/* --- Logo upload area: framed panel --- */
+.logo-row {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(3, 7, 18, 0.45);
+  border: 1px solid var(--border-glass);
+}
+
+/* --- Inputs: clearer focus ring --- */
+.branding-field {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.branding-field:focus-within {
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.10);
+}
+
+.branding-field ion-label {
+  font-weight: 600;
+}
+
+.branding-field ion-input,
+.branding-field ion-textarea {
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+}
+
+/* --- Hint box --- */
+.branding-hint-strong {
+  padding: 9px 11px;
+  background: rgba(212, 175, 55, 0.06);
+  border-radius: 0 10px 10px 0;
+}
+
+/* --- Buttons --- */
+.gold-btn {
+  --min-height: 46px;
+  margin: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gold-btn:hover {
+  transform: translateY(-1px);
+}
+
+.outline-btn,
+.danger-outline-btn {
+  --min-height: 44px;
+  margin: 0;
+}
+
+.danger-outline-btn:hover {
+  --background: rgba(239, 68, 68, 0.12);
+  --border-color: #f87171;
+}
+
+/* --- Toggle --- */
+.luxury-gold-toggle {
+  --handle-background-checked: var(--gold-primary);
+  --track-background-checked: rgba(212, 175, 55, 0.32);
+  --handle-background: #ffffff;
+  --track-background: rgba(255, 255, 255, 0.16);
+  flex-shrink: 0;
+}
+
+/* --- Alert colours --- */
+.branding-alert-success .alert-message {
+  color: #86efac;
+}
+
+.branding-alert-error .alert-message {
+  color: #fca5a5;
+}
+
+/* --- Loading --- */
+.branding-loading {
+  padding: 90px 16px;
+  gap: 16px;
+}
+
+.gold-spinner {
+  width: 44px;
+  height: 44px;
+}
+
+/* --- Mobile --- */
+@media (max-width: 768px) {
+  .branding-card,
+  .branding-preview-card {
+    border-radius: 16px;
+  }
+
+  .logo-row {
+    padding: 14px;
+  }
+
+  .mobile-preview {
+    max-width: 100%;
+  }
+}
+

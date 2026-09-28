@@ -252,7 +252,7 @@ const CreateSchoolScreen = () => {
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader className="create-school-header">
         <IonToolbar className="premium-toolbar">
           <IonButtons slot="start">
             <IonBackButton 

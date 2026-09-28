@@ -36,18 +36,60 @@
 }
 
 /* ============================================
-   2. HEADER TOOLBAR
+   2. HEADER TOOLBAR (White Navbar / Black Content)
    ============================================ */
 .detail-header ion-toolbar {
-  --background: rgba(10, 15, 26, 0.9);
-  --color: var(--text-main);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-glass);
+  --background: #ffffff !important;
+  --color: #000000 !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  /* Same height/padding on every super admin screen for identical alignment */
+  padding: 6px 12px;
+  min-height: 56px;
+}
+
+.detail-header ion-toolbar::part(background) {
+  background: #ffffff !important;
+}
+
+.detail-header ion-title {
+  color: #000000 !important;
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Ionic only centres the title when the start/end slots are the same width.
+   Reserve a fixed width on both sides so every page lines up identically. */
+.detail-header ion-buttons[slot='start'],
+.detail-header ion-buttons[slot='end'] {
+  min-width: 92px;
+  flex: 0 0 auto;
+}
+
+.detail-header ion-buttons[slot='end'] {
+  justify-content: flex-end;
+}
+
+.detail-header ion-title {
+  width: 100%;
+}
+
+/* Home / back icons: black (signout keeps its gold colour) */
+.detail-header ion-toolbar ion-button:not(.app-nav-signout),
+.detail-header ion-back-button {
+  --color: #000000 !important;
+  color: #000000 !important;
+}
+
+.detail-header .app-nav-signout {
+  --color: var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
 }
 
 .gold-back-btn {
-  --color: var(--gold-primary);
+  --color: #000000 !important;
+  color: #000000 !important;
 }
 
 /* ============================================
