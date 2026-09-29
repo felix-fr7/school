@@ -208,13 +208,22 @@ const ClassHomeworkListScreen = () => {
 
         {homework.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">ðŸ“š</div>
+            <IonIcon icon={bookOutline} className="empty-icon" />
             <IonText>
               <h3>No homework assigned yet</h3>
               <p className="empty-subtext">
-                Tap the '+' button below to create a new homework assignment for your class.
+                Create your first homework assignment for this class.
               </p>
             </IonText>
+            <IonButton
+              expand="block"
+              color="primary"
+              className="empty-state-button"
+              onClick={() => history.push('/class-controller/homework/create')}
+            >
+              <IonIcon icon={addOutline} slot="start" />
+              Create Homework
+            </IonButton>
           </div>
         ) : (
           <div className="homework-container">

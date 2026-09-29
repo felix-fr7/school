@@ -96,6 +96,11 @@
 .empty-icon {
   font-size: 3rem;
   margin-bottom: 16px;
+  /* Centred so the icon replaces the old emoji box cleanly. */
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  color: #94a3b8;
 }
 
 .empty-state h3 {
@@ -110,6 +115,16 @@
   color: #64748b;
   margin: 0;
   line-height: 1.4;
+}
+
+.empty-state-button {
+  margin-top: 22px;
+  --border-radius: 12px;
+  font-weight: 600;
+  height: 46px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 260px;
 }
 
 /* Homework Container & Cards */
