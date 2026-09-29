@@ -14,6 +14,8 @@ export default defineConfig({
       'ionicons': fileURLToPath(new URL('./node_modules/ionicons', import.meta.url)),
       'react-dom': fileURLToPath(new URL('./node_modules/react-dom', import.meta.url)),
       'react': fileURLToPath(new URL('./node_modules/react', import.meta.url)),
+      'axios': fileURLToPath(new URL('./node_modules/axios', import.meta.url)),
+      '@ionic/react-router': fileURLToPath(new URL('./node_modules/@ionic/react-router', import.meta.url)),
     },
   },
   server: {
