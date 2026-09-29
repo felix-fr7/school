@@ -87,6 +87,7 @@ const ReportCardsScreen = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showPublishAlert, setShowPublishAlert] = useState(false);
+  const [showPublishAllAlert, setShowPublishAllAlert] = useState(false);
   const [selectedReportCards, setSelectedReportCards] = useState([]);
   const [bulkUploadFile, setBulkUploadFile] = useState(null);
   const [bulkUploadResult, setBulkUploadResult] = useState(null);
@@ -591,15 +592,44 @@ const ReportCardsScreen = () => {
     return studentName.includes(searchLower);
   });
 
-  // Get unpublished count
+  // Count the drafts for the class/term/year currently shown on screen.
   const unpublishedCount = reportCards.filter(rc => !rc.isPublished).length;
   const publishedCount = reportCards.filter(rc => rc.isPublished).length;
+
+  const handlePublishAllDrafts = async () => {
+    await presentLoading();
+    try {
+      const response = await adminAPI.publishAllReportCardsForClass(
+        selectedClassId,
+        term,
+        academicYear
+      );
+      if (response.success) {
+        showToast(response.message, 'success');
+        setShowPublishAllAlert(false);
+        fetchReportCards();
+      } else {
+        showToast(response.error?.message || 'Failed to send drafts', 'danger');
+      }
+    } catch (error) {
+      showToast(
+        error?.response?.data?.error?.message || 'Failed to send drafts',
+        'danger'
+      );
+    } finally {
+      await dismissLoading();
+    }
+  };
 
   // Selected class display name
   const selectedClassName = classes.find(c => (c.id || c._id) === selectedClassId)?.name || '';
   const selectedClassSection = classes.find(c => (c.id || c._id) === selectedClassId)?.section || '';
+  // Some classes are already stored as "class 10", so blindly prefixing "Class "
+  // produced "Class class 10". Only prefix when the name doesn't already say it.
+  const withClassPrefix = (name) =>
+    /^\s*class\b/i.test(name) ? name : `Class ${name}`;
   const selectedClassLabel =
-    (selectedClassName ? `Class ${selectedClassName}` : 'Select a class') +
+    (selectedClassName ? withClassPrefix(selectedClassName) : 'Select a class') +
     (selectedClassName && selectedClassSection ? ` - ${selectedClassSection}` : '');
 
   const publishPercent = reportCards.length > 0 ? Math.round((publishedCount / reportCards.length) * 100) : 0;
@@ -648,7 +678,7 @@ const ReportCardsScreen = () => {
           </div>
           <div className="report-hero-percent">
             <div className="percent-circle" style={{ '--p': `${publishPercent * 3.6}deg` }}>
-              <span>{publishPercent}%</span>
+              <span className={publishPercent >= 100 ? 'is-wide' : undefined}>{publishPercent}%</span>
             </div>
             <p>Published</p>
           </div>
@@ -682,7 +712,7 @@ const ReportCardsScreen = () => {
                     >
                       {classes.map((cls) => (
                         <IonSelectOption key={cls._id} value={cls._id}>
-                          Class {cls.name} {cls.section ? `(${cls.section})` : ''}
+                          {withClassPrefix(cls.name)} {cls.section ? `(${cls.section})` : ''}
                         </IonSelectOption>
                       ))}
                     </IonSelect>
@@ -743,7 +773,7 @@ const ReportCardsScreen = () => {
                       <IonIcon icon={selectedClassId && term && academicYear ? checkmarkCircleOutline : informationCircleOutline} />
                       <span>
                         {selectedClassId && term && academicYear
-                          ? `Showing report cards for Class ${classes.find(c => c.id === selectedClassId)?.name || ''} | ${term} | ${academicYear}`
+                          ? `Showing report cards for ${selectedClassName ? withClassPrefix(selectedClassName) + (selectedClassSection ? ` - ${selectedClassSection}` : '') : ''} | ${term} | ${academicYear}`
                           : 'Please select all filters above to view report cards'}
                       </span>
                     </div>
@@ -765,23 +795,14 @@ const ReportCardsScreen = () => {
             Bulk Upload
           </IonButton>
           {unpublishedCount > 0 && (
-            <IonButton color="success" onClick={async () => {
-              await presentLoading();
-              try {
-                const response = await adminAPI.publishAllReportCardsForClass(selectedClassId);
-                if (response.success) {
-                  showToast(response.message, 'success');
-                  fetchReportCards();
-                }
-              } catch (error) {
-                showToast('Failed to publish all', 'danger');
-              } finally {
-                await dismissLoading();
-              }
-            }} disabled={!selectedClassId || !term || !academicYear}>
-            <IonIcon icon={sendOutline} slot="start" />
-            Send All ({unpublishedCount})
-          </IonButton>
+            <IonButton
+              color="success"
+              onClick={() => setShowPublishAllAlert(true)}
+              disabled={!selectedClassId || !term || !academicYear}
+            >
+              <IonIcon icon={sendOutline} slot="start" />
+              Send All Drafts ({unpublishedCount})
+            </IonButton>
           )}
         </div>
 
@@ -1184,6 +1205,14 @@ const ReportCardsScreen = () => {
                           Not Found: {bulkUploadResult.notFoundCount}
                         </div>
                       </IonCol>
+                      {bulkUploadResult.mismatchedCount > 0 && (
+                        <IonCol>
+                          <div className="result-stat failed">
+                            <IonIcon icon={closeCircleOutline} />
+                            Name Mismatch: {bulkUploadResult.mismatchedCount}
+                          </div>
+                        </IonCol>
+                      )}
                     </IonRow>
                   </IonGrid>
                 </div>
@@ -1325,6 +1354,23 @@ const ReportCardsScreen = () => {
               text: 'Send',
               handler: () => {
                 handlePublish(selectedReportCard._id || selectedReportCard.id);
+              },
+            },
+          ]}
+        />
+
+        {/* Publish All Drafts Alert */}
+        <IonAlert
+          isOpen={showPublishAllAlert}
+          onDidDismiss={() => setShowPublishAllAlert(false)}
+          header="Send All Drafts"
+          message={`This will send ${unpublishedCount} draft report card(s) to students for ${selectedClassName} - ${term} - ${academicYear}. Students will be able to view them in their portal. Only the drafts listed on this screen will be sent.`}
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Send All Drafts',
+              handler: () => {
+                handlePublishAllDrafts();
               },
             },
           ]}

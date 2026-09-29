@@ -9,6 +9,15 @@ const calculateGrade = (percentage) => {
   return 'E';
 };
 
+// Normalises a name for comparison: lowercased, non-alphanumerics collapsed to a
+// single space. Lets "  john   doe " and "John Doe" match, and ignores the extra
+// spaces/dots that Excel files usually pick up from manual typing.
+const normalizeName = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
 const getGradeRemark = (grade) => {
   const remarks = {
     'A1': 'Excellent',
@@ -824,14 +833,21 @@ exports.publishReportCard = async (req, res, next) => {
 };
 
 /**
- * Publish all unpublished report cards for a specific class
- * This sends report cards to all students in the class at once
- * PUT /api/reportcards/class/:classId/publish-all
+ * Publish all DRAFT (unpublished) report cards for a class.
+ *
+ * The screen already filters the list by class + term + academic year, so this
+ * endpoint MUST honour the same filters. Without them it would publish drafts
+ * from every other term/year too - the admin would only ever see (say) 3 drafts
+ * on screen, click "Send All", and silently send 40 cards from other terms.
+ *
+ * PUT /api/reportcards/class/:classId/publish-all?term=Term 1&academicYear=2024-2025
  */
 exports.publishAllReportCardsForClass = async (req, res, next) => {
   try {
     const { classId } = req.params;
+    const { term, academicYear } = req.query;
     const tenantId = req.user.tenantId;
+    const currentUserId = req.user.id;
 
     if (!classId) {
       return res.status(400).json({
@@ -840,25 +856,36 @@ exports.publishAllReportCardsForClass = async (req, res, next) => {
       });
     }
 
-    // Get all students in this class
-    const StudentProfile = require('../models/StudentProfile');
-    const studentProfiles = await StudentProfile.find({ 
-      tenantId, 
-      classId, 
-      isActive: true 
-    }).select('userId');
-    
+    // Scope the publish to exactly what the admin is looking at.
+    const filter = {};
+    if (term) filter.term = term;
+    if (academicYear) filter.academicYear = academicYear;
+
+    // Get all students in this class.
+    // NOTE: StudentProfile stores the school as `schoolId` (there is no `tenantId`
+    // field on that model) and has no `isActive` field, so querying by
+    // { tenantId, isActive } always returns zero rows.
+    const schoolId = mongoose.Types.ObjectId.isValid(tenantId)
+      ? new mongoose.Types.ObjectId(tenantId)
+      : tenantId;
+
+    const studentProfiles = await StudentProfile.find({ schoolId, classId }).select('userId');
+
     // Fallback: class-created students may not have StudentProfile records
     let studentIds;
-    if (studentProfiles.length === 0) {
+    let totalStudentsInClass;
+    if (studentProfiles.length > 0) {
+      studentIds = studentProfiles.map(sp => sp.userId);
+      totalStudentsInClass = studentIds.length;
+    } else {
       const classStudents = await User.find({
+        schoolId,
         classId,
         role: 'Student',
         isActive: true
       }).select('_id');
       studentIds = classStudents.map(s => s._id);
-    } else {
-      studentIds = studentProfiles.map(sp => sp.userId);
+      totalStudentsInClass = studentIds.length;
     }
 
     if (studentIds.length === 0) {
@@ -868,36 +895,48 @@ exports.publishAllReportCardsForClass = async (req, res, next) => {
       });
     }
 
-    // Find all unpublished report cards for students in this class
-    const unpublishedReportCards = await ReportCard.find({
+    // Find DRAFT report cards only, for the selected class/term/year.
+    const draftQuery = {
       student: { $in: studentIds },
       schoolId: tenantId,
-      isPublished: false
-    });
+      isPublished: false,
+      ...filter
+    };
+    const draftReportCards = await ReportCard.find(draftQuery);
 
-    if (unpublishedReportCards.length === 0) {
+    if (draftReportCards.length === 0) {
       return res.status(404).json({
         success: false,
-        error: { message: 'No unpublished report cards found for this class' }
+        error: { message: 'No draft report cards found for this class' }
       });
     }
 
-    // Publish all found report cards
-    const updatePromises = unpublishedReportCards.map(reportCard => {
-      reportCard.isPublished = true;
-      reportCard.publishedAt = new Date();
-      reportCard.issuedDate = new Date();
-      return reportCard.save();
-    });
+    // Publish all found draft report cards in one update (no per-doc save loop).
+    const now = new Date();
+    const result = await ReportCard.updateMany(
+      { _id: { $in: draftReportCards.map(rc => rc._id) } },
+      {
+        $set: {
+          isPublished: true,
+          publishedAt: now,
+          issuedDate: now,
+          sentBy: currentUserId
+        }
+      }
+    );
 
-    await Promise.all(updatePromises);
+    const scopeLabel = [
+      `Class ${classId}`,
+      term,
+      academicYear
+    ].filter(Boolean).join(', ');
 
     res.json({
       success: true,
-      message: `Successfully sent ${unpublishedReportCards.length} report card(s) to students in this class`,
+      message: `Successfully sent ${result.modifiedCount} draft report card(s) to students (${scopeLabel})`,
       data: {
-        publishedCount: unpublishedReportCards.length,
-        studentCount: studentProfiles.length
+        publishedCount: result.modifiedCount,
+        studentCount: totalStudentsInClass
       }
     });
   } catch (error) {
@@ -1090,39 +1129,81 @@ exports.bulkUploadReportCards = async (req, res, next) => {
     const hasMaxMarksColumn = headerRow.includes('max marks') || headerRow.includes('total marks');
     const hasPdfFilename = headerRow.includes('pdf filename') || headerRow.includes('filename');
 
-    // Get all students in the specified class with their roll numbers
+    // Get all students in the specified class with their roll numbers.
+    // NOTE: StudentProfile stores the school as `schoolId` (there is no `tenantId`
+    // field on that model), so we must query by schoolId or we always get zero rows.
+    const schoolId = mongoose.Types.ObjectId.isValid(tenantId)
+      ? new mongoose.Types.ObjectId(tenantId)
+      : tenantId;
+
     const studentProfiles = await StudentProfile.find({
-      tenantId,
-      classId,
-      isActive: true
+      schoolId,
+      classId
     }).populate('userId', 'name rollNumber');
 
-    // Create a map of rollNumber -> student data
+    // Create a map of rollNumber -> student data.
+    // Also build a name -> rollNumber index so we can detect a name/roll mismatch
+    // (e.g. Excel says roll 005 belongs to "Ravi" but the DB says roll 005 is "Anita").
     const studentMap = {};
+    const rollToName = {};
     studentProfiles.forEach(profile => {
       if (profile.userId && profile.userId.rollNumber) {
-        studentMap[String(profile.userId.rollNumber).trim()] = profile.userId;
+        const roll = String(profile.userId.rollNumber).trim();
+        studentMap[roll] = profile.userId;
+        rollToName[roll] = normalizeName(profile.userId.name);
       }
     });
 
     // Fallback: class-created students may not have StudentProfile records
     if (Object.keys(studentMap).length === 0) {
       const classStudents = await User.find({
+        schoolId,
         classId,
         role: 'Student',
         isActive: true
       }).select('name rollNumber');
       classStudents.forEach(student => {
         if (student.rollNumber) {
-          studentMap[String(student.rollNumber).trim()] = student;
+          const roll = String(student.rollNumber).trim();
+          studentMap[roll] = student;
+          rollToName[roll] = normalizeName(student.name);
         }
       });
     }
 
+    // A row is only accepted when BOTH the name and the roll number point at the
+    // same student. Returns an error string when the row must be rejected.
+    const resolveStudent = (rollNumber, studentName) => {
+      const roll = String(rollNumber || '').trim();
+      const student = studentMap[roll];
+
+      if (!student) {
+        return { error: 'Student not found in this class' };
+      }
+
+      // No name in the Excel? The roll number alone is unambiguous, so allow it.
+      const excelName = normalizeName(studentName);
+      if (!excelName) {
+        return { student };
+      }
+
+      const dbName = rollToName[roll];
+      if (excelName !== dbName) {
+        return {
+          error: dbName
+            ? `Name mismatch: Excel has "${String(studentName).trim()}" but roll number ${roll} belongs to "${student.name}"`
+            : `Name mismatch for roll number ${roll}`
+        };
+      }
+
+      return { student };
+    };
+
     const results = {
       success: [],
       failed: [],
-      notFound: []
+      notFound: [],
+      mismatched: []
     };
 
     // Format 1: Marks Entry (Subject-wise)
@@ -1170,13 +1251,16 @@ exports.bulkUploadReportCards = async (req, res, next) => {
 
       // Create/update report cards for each student
       for (const [rollNumber, studentData] of Object.entries(studentMarksMap)) {
-        const student = studentMap[rollNumber];
-        
-        if (!student) {
-          results.notFound.push({
+        const { student, error } = resolveStudent(rollNumber, studentData.studentName);
+
+        if (error) {
+          // "Not found" and "name mismatch" are different problems for the admin,
+          // so report them separately.
+          const isNotFound = error === 'Student not found in this class';
+          (isNotFound ? results.notFound : results.mismatched).push({
             rollNumber,
             studentName: studentData.studentName,
-            reason: 'Student not found in this class'
+            reason: error
           });
           continue;
         }
@@ -1262,13 +1346,14 @@ exports.bulkUploadReportCards = async (req, res, next) => {
           continue;
         }
 
-        const student = studentMap[rollNumber];
-        if (!student) {
-          results.notFound.push({
+        const { student, error } = resolveStudent(rollNumber, studentName);
+        if (error) {
+          const isNotFound = error === 'Student not found in this class';
+          (isNotFound ? results.notFound : results.mismatched).push({
             row: i + 1,
             rollNumber,
             studentName,
-            reason: 'Student not found in this class'
+            reason: error
           });
           continue;
         }
@@ -1353,6 +1438,8 @@ exports.bulkUploadReportCards = async (req, res, next) => {
         successCount: results.success.length,
         failedCount: results.failed.length,
         notFoundCount: results.notFound.length,
+        // Rows rejected because the name does not belong to that roll number.
+        mismatchedCount: results.mismatched.length,
         results
       }
     });

@@ -134,6 +134,19 @@
   white-space: nowrap;
 }
 
+/* Only the class-code badge can grow long and collide with its neighbour. */
+.report-hero-code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.report-hero-code span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .report-hero-badge ion-icon,
 .report-hero-code ion-icon {
   color: var(--rc-brass-light);
@@ -188,6 +201,11 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  /* The class-code badge is absolutely positioned in the top-right corner of the
+     hero, so a vertically-centred ring can slide up underneath it. Pin the ring to
+     the bottom and reserve the same top offset the title uses to clear the badge. */
+  align-self: flex-end;
+  margin-top: 38px;
 }
 
 .report-hero-percent p {
@@ -223,6 +241,19 @@
   font-weight: 600;
   font-size: 1.3rem;
   color: var(--rc-text-on-ink);
+  /* Keep the label inside the ring. "100%" is wider than "0%", so without this
+     the text spills over the circle edge on high published rates. */
+  max-width: 78px;
+  line-height: 1.1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Three-digit values (100%) need a slightly smaller size to clear the ring. */
+.percent-circle span.is-wide {
+  font-size: 1.1rem;
 }
 
 /* -------------------------------------------------------------------------
@@ -1177,6 +1208,8 @@ ion-toast {
 
   .report-hero-percent {
     align-self: flex-end;
+    /* Hero switches to a column on mobile, so the reserved badge offset no
+       longer applies - keep only a small gap. */
     margin-top: 4px;
   }
 
@@ -1187,6 +1220,12 @@ ion-toast {
 
   .percent-circle span {
     font-size: 1.05rem;
+    /* Inner area of the 76px ring is smaller, so the label needs a tighter cap. */
+    max-width: 58px;
+  }
+
+  .percent-circle span.is-wide {
+    font-size: 0.95rem;
   }
 
   .filter-section,

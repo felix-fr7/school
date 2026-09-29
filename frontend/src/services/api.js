@@ -830,8 +830,13 @@ export const adminAPI = {
     return response.data;
   },
 
-  async publishAllReportCardsForClass(classId) {
-    const response = await api.put(`/reportcards/class/${classId}/publish-all`);
+  // `term` / `academicYear` scope the publish to the drafts currently shown on
+  // screen, so "Send All" never touches drafts from other terms/years.
+  async publishAllReportCardsForClass(classId, term, academicYear) {
+    const params = {};
+    if (term) params.term = term;
+    if (academicYear) params.academicYear = academicYear;
+    const response = await api.put(`/reportcards/class/${classId}/publish-all`, null, { params });
     return response.data;
   },
 
@@ -1086,8 +1091,11 @@ export const classControllerAPI = {
     return response.data;
   },
 
-  async publishAllReportCards(classId) {
-    const response = await api.put(`/reportcards/class/${classId}/publish-all`);
+  async publishAllReportCards(classId, term, academicYear) {
+    const params = {};
+    if (term) params.term = term;
+    if (academicYear) params.academicYear = academicYear;
+    const response = await api.put(`/reportcards/class/${classId}/publish-all`, null, { params });
     return response.data;
   },
 
