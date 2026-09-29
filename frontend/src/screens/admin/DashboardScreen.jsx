@@ -50,6 +50,22 @@ const AdminDashboardScreen = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // The admin endpoints are inconsistent: /admin/classes returns a plain array
+  // under `data`, while /admin/students and /admin-content/news return
+  // `pagination.total` at the TOP level (sibling of `data`), not inside it.
+  // Reading `res.data.pagination.total` therefore always yielded undefined and
+  // the dashboard showed 0 students. This helper accepts either shape.
+  const getTotal = (res) => {
+    if (!res?.success) return 0;
+    // Preferred: an explicit total count from the endpoint.
+    const total = res.pagination?.total ?? res.data?.pagination?.total;
+    if (typeof total === 'number' && !Number.isNaN(total)) return total;
+    // Fallback: the endpoint returned a bare list, so count it.
+    if (Array.isArray(res.data)) return res.data.length;
+    if (Array.isArray(res.data?.students)) return res.data.students.length;
+    return 0;
+  };
+
   const fetchDashboardData = async () => {
     try {
       const [classesRes, studentsRes, newsRes] = await Promise.all([
@@ -59,9 +75,9 @@ const AdminDashboardScreen = () => {
       ]);
 
       setStats({
-        totalStudents: studentsRes.success ? studentsRes.data?.pagination?.total || 0 : 0,
-        totalClasses: classesRes.success ? classesRes.data?.length || 0 : 0,
-        totalNews: newsRes.success ? newsRes.data?.pagination?.total || 0 : 0,
+        totalStudents: getTotal(studentsRes),
+        totalClasses: getTotal(classesRes),
+        totalNews: getTotal(newsRes),
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

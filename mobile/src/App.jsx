@@ -1,7 +1,8 @@
-import React, { Suspense, useEffect } from 'react';
-import { IonApp, IonPage, IonContent, IonSpinner, IonText, IonRouterOutlet } from '@ionic/react';
+import React, { Suspense, useEffect, useState } from 'react';
+import { IonApp, IonPage, IonContent, IonSpinner, IonText, IonRouterOutlet, IonAlert } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { Route, Redirect, Switch, useHistory } from 'react-router-dom';
+import { App as CapApp } from '@capacitor/app';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import ErrorBoundary from '../../frontend/src/components/ErrorBoundary.jsx';
@@ -59,12 +60,85 @@ const AuthRedirect = () => {
 };
 
 
+/**
+ * Android's hardware / gesture back button closes the app by default unless the
+ * web view is told to handle it. Registering a `backButton` listener lets us
+ * pop the React Router history instead, so the student returns to the previous
+ * screen.
+ *
+ * On the two entry screens - the dashboard and the login page - there is no
+ * meaningful page to go back to, so instead of closing the app silently we ask
+ * the student what they want: stay on the screen, or exit the app.
+ */
+const CONFIRM_EXIT_PATHS = ['/student/dashboard', '/login', '/student/login'];
+
+const BackButtonHandler = () => {
+  const history = useHistory();
+  const [showExitAlert, setShowExitAlert] = useState(false);
+
+  useEffect(() => {
+    // The listener resolves asynchronously, so hold it in a local and remove it on
+    // cleanup - otherwise the handler leaks on every re-render / remount.
+    let handler;
+
+    const register = async () => {
+      handler = await CapApp.addListener('backButton', () => {
+        const path = window.location.pathname;
+        const isEntryScreen = CONFIRM_EXIT_PATHS.includes(path);
+
+        // Ask before leaving from the dashboard / login pages.
+        if (isEntryScreen) {
+          setShowExitAlert(true);
+          return;
+        }
+
+        // Detail / list screens: go back one step in the app's own history.
+        if (window.history.length > 1) {
+          history.goBack();
+        } else {
+          CapApp.exitApp();
+        }
+      });
+    };
+
+    register();
+
+    return () => {
+      if (handler) handler.remove();
+    };
+  }, [history]);
+
+  return (
+    <>
+      <IonAlert
+        isOpen={showExitAlert}
+        onDidDismiss={() => setShowExitAlert(false)}
+        header="Exit App?"
+        message="Are you sure you want to close the app?"
+        buttons={[
+          {
+            text: 'Stay',
+            role: 'cancel',
+            handler: () => setShowExitAlert(false),
+          },
+          {
+            text: 'Exit',
+            role: 'destructive',
+            handler: () => CapApp.exitApp(),
+          },
+        ]}
+      />
+    </>
+  );
+};
+
 const MobileRoutes = () => {
   const { isAuthenticated, isLoading, isStudent } = useAuth();
 
   return (
     <Suspense fallback={<Loading />}>
       <AuthRedirect />
+      <BackButtonHandler />
       <Switch>
         <Route exact path="/login" component={StudentLoginScreen} />
         <Route exact path="/student/login" component={StudentLoginScreen} />

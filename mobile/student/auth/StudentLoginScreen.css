@@ -254,9 +254,43 @@
 }
 
 .luxury-input {
+  /* `ion-input` renders a real <input> inside its shadow root, so setting `--color`
+     on the host alone is not enough on mobile webviews - the native input keeps the
+     browser default (black) and becomes unreadable on the dark card.
+     `::part(native)` reaches that inner input directly. */
   --color: #ffffff;
-  --placeholder-color: #64748b;
+  --placeholder-color: #94a3b8;
   font-size: 0.95rem;
+  color: #ffffff;
+}
+
+/* The actual typed text. `!important` beats Ionic's internal host styles. */
+.luxury-input::part(native) {
+  color: #ffffff !important;
+  caret-color: #ffffff;
+  background: transparent;
+}
+
+/* Placeholder text (the "Enter your roll number" hint). */
+.luxury-input::part(native)::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1;
+}
+
+/* Older WebKit (iOS Safari / Capacitor WKWebView) sometimes falls back to its own
+   -webkit-text-fill-color, which renders the text near-black. Force it too. */
+.luxury-input::part(native),
+.luxury-input {
+  -webkit-text-fill-color: #ffffff;
+}
+
+.luxury-input::part(native)::placeholder {
+  -webkit-text-fill-color: #94a3b8;
+}
+
+/* Tells the OS to render form controls in dark mode so it stops auto-inverting. */
+.luxury-login-page {
+  color-scheme: dark;
 }
 
 /* Gold Accent Submit Button */

@@ -33,6 +33,9 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+// Layout + card styling for this screen (centred wrapper, card grid, search bar)
+// lives here. Without this import the list renders edge-to-edge with no padding.
+import './StudentsListScreen.css';
 import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const StudentsListScreen = () => {
@@ -133,7 +136,7 @@ const StudentsListScreen = () => {
         <IonHeader className="students-list-header">
           <IonToolbar>
             <IonButtons slot="start">
-              <IonBackButton defaultHref="/admin/dashboard" />
+              <IonBackButton defaultHref="/admin/dashboard" className="students-back-btn" />
             </IonButtons>
             <IonTitle className="admin-page-title">Students</IonTitle>
             <IonButton slot="end" onClick={() => history.push('/admin/students/create')}>
@@ -158,7 +161,7 @@ const StudentsListScreen = () => {
       <IonHeader className="students-list-header">
         <IonToolbar>
           <IonButtons slot="start">
-            <IonBackButton defaultHref="/admin/dashboard" />
+            <IonBackButton defaultHref="/admin/dashboard" className="students-back-btn" />
           </IonButtons>
           <IonTitle className="admin-page-title">Students</IonTitle>
           <IonButton slot="end" onClick={() => history.push('/admin/students/create')}>
@@ -174,8 +177,12 @@ const StudentsListScreen = () => {
           <IonRefresherContent pullingIcon={refreshOutline} refreshingSpinner="crescent" />
         </IonRefresher>
 
-        {/* Search Bar */}
-        <div className="filter-bar-modern">
+        {/* The centred wrapper (max-width + side padding) lives in
+            StudentsListScreen.css as `.students-container-wrapper`; the markup
+            below must sit inside it or the list stretches edge to edge. */}
+        <div className="students-container-wrapper">
+          {/* Search Bar */}
+          <div className="filter-bar-modern">
           <div className="search-container-modern">
             <IonIcon icon={searchOutline} className="search-icon-slot" />
             <IonInput
@@ -213,11 +220,11 @@ const StudentsListScreen = () => {
                 <div key={item.id} className="student-item-modern">
                   <div 
                     className="student-card-modern"
-                    onClick={() => history.push(`/admin/students/${item.id}`)}
+                    onClick={() => history.push(`/admin/students/edit/${item.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="student-card-content-modern">
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <div className="student-card-left">
                         <div className="student-avatar-modern">
                           {item.name.charAt(0).toUpperCase()}
                         </div>
@@ -308,6 +315,8 @@ const StudentsListScreen = () => {
             </div>
           </div>
         )}
+
+        </div>
 
         <IonAlert
           isOpen={showDeleteAlert}

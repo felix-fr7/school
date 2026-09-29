@@ -260,19 +260,13 @@ const StudentDashboardScreen = () => {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer - keeps the school name and the "School Management System"
+            line. The logo image is intentionally omitted. */}
         <div className="modern-footer">
           <div className="footer-content">
-            <IonImg
-              src={brandLogo || resolveMediaUrl(profile?.school.logoUrl)}
-              className="footer-logo"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
             <div className="footer-text-content">
               <p className="footer-school-name">{brandName || profile?.school.name || 'School'}</p>
-              <p className="footer-copyright">Ã‚Â© 2024 School Management System</p>
+              <p className="footer-copyright">School Management System</p>
             </div>
           </div>
         </div>

@@ -36,6 +36,9 @@ import {
 } from 'ionicons/icons';
 import { adminAPI } from '../../services/api';
 import './AdminTheme.css';
+// The toolbar colours live here; without this import the page falls back to the
+// shared navy `.admin-toolbar` rule from AdminTheme.css.
+import './EditStudentScreen.css';
 import HomeLogoutButtons from '../../components/HomeLogoutButtons';
 
 const EditStudentScreen = () => {
@@ -140,7 +143,7 @@ const EditStudentScreen = () => {
     return (
       <IonPage>
         <IonHeader className="ion-no-border">
-          <IonToolbar className="admin-toolbar">
+          <IonToolbar className="admin-toolbar edit-student-toolbar">
             <IonButtons slot="start">
               <IonBackButton defaultHref="/admin/students" className="admin-back-btn" />
             </IonButtons>
@@ -159,7 +162,7 @@ const EditStudentScreen = () => {
   return (
     <IonPage>
       <IonHeader className="ion-no-border">
-        <IonToolbar className="admin-toolbar">
+        <IonToolbar className="admin-toolbar edit-student-toolbar">
           <IonButtons slot="start">
             <IonBackButton defaultHref="/admin/students" className="admin-back-btn" />
           </IonButtons>

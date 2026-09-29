@@ -5,8 +5,14 @@
 
 /* ============================================================================
    CSS VARIABLES - ROYAL LIGHT COLOR PALETTE
+
+   Scoped to this screen's own elements rather than `:root`. AdminTheme.css
+   already defines the same palette globally (with a different --royal-navy),
+   so a bare `:root` block here would silently repaint every other admin
+   screen that imports AdminTheme.css.
    ============================================================================ */
-:root {
+.students-list-content,
+.students-list-header {
   --royal-bg-main: #f8fafc;
   --royal-bg-card: #ffffff;
   --royal-navy: #1e293b;
@@ -36,27 +42,45 @@
   background: var(--royal-bg-main);
 }
 
+/* The toolbar is white on this screen (to match the Edit Student page), so the
+   title and the back arrow must be dark, not white. `ion-title` /
+   `ion-back-button` render inside their own shadow root, so the colour has to be
+   set on the elements themselves via the classes applied in the JSX. */
 .students-list-header,
 .students-list-header .admin-toolbar {
-  --background: var(--royal-navy) !important;
-  --border-color: transparent !important;
+  --background: #ffffff !important;
+  --border-color: var(--royal-border-light) !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--royal-border-light);
 }
 
-.students-list-header ion-title {
-  --color: #ffffff !important;
-  color: #ffffff !important;
+.students-list-header ion-title.admin-page-title,
+.students-list-header .admin-page-title {
+  --color: var(--royal-text-primary) !important;
+  color: var(--royal-text-primary) !important;
   font-weight: 700 !important;
   font-size: 18px !important;
   text-align: center;
 }
 
-.students-list-header ion-back-button {
-  --color: #ffffff !important;
-  --icon-color: #ffffff !important;
+.students-list-header ion-back-button.students-back-btn,
+.students-list-header .students-back-btn {
+  --color: var(--royal-text-primary) !important;
+  --icon-color: var(--royal-text-primary) !important;
+  --shadow-color: transparent !important;
+  color: var(--royal-text-primary) !important;
+}
+
+/* The shared Home / Logout buttons need dark icons on the white bar too. */
+.students-list-header ion-button.app-nav-home,
+.students-list-header ion-button.app-nav-signout {
+  --color: var(--royal-text-secondary) !important;
+  --icon-color: var(--royal-text-secondary) !important;
+  color: var(--royal-text-secondary) !important;
 }
 
 .add-header-btn {
-  --color: #ffffff !important;
+  --color: var(--royal-blue-primary) !important;
   font-weight: 600 !important;
   font-size: 13px !important;
 }
@@ -65,9 +89,12 @@
    2. CONTAINER WRAPPER
    ============================================================================ */
 .students-container-wrapper {
-  max-width: 800px;
+  /* Wide enough to use the space on a laptop/desktop, while still capping the
+     line length so cards do not stretch across an ultrawide monitor. */
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 20px 24px;
+  box-sizing: border-box;
 }
 
 /* ============================================================================
@@ -220,6 +247,19 @@
 
 .student-info-modern {
   flex: 1;
+  /* Without min-width:0 a long email forces the flex item to overflow and the
+     text slides under the avatar. */
+  min-width: 0;
+}
+
+.student-email-modern {
+  font-size: 13px;
+  color: var(--royal-text-secondary);
+  margin: 0 0 2px 0;
+  /* Long emails must wrap instead of stretching the card. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .student-name-modern {
@@ -233,6 +273,24 @@
   font-size: 12px;
   color: var(--royal-text-muted);
   margin: 0 0 8px 0;
+}
+
+.student-class-badge-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--royal-blue-primary);
+  background: #eff6ff;
+  padding: 3px 10px;
+  border-radius: 10px;
+  /* Aligns the badge with the text block instead of sitting on its own line. */
+  margin-top: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .student-class-badge {

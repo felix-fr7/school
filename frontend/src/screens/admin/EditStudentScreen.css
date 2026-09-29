@@ -36,22 +36,65 @@
   background: var(--royal-bg-main);
 }
 
-.admin-toolbar {
-  --background: var(--royal-navy) !important;
-  --border-color: transparent !important;
+/* ---------------------------------------------------------------------------
+   WHITE NAVBAR (this screen only)
+
+   `admin-toolbar` is shared by ~13 toolbars across the admin section and
+   AdminTheme.css paints those deep navy, so overriding it here would turn every
+   other admin screen white too. Instead this screen opts in with its own
+   `edit-student-toolbar` class, which is more specific than the shared rule.
+   --------------------------------------------------------------------------- */
+.admin-toolbar.edit-student-toolbar {
+  --background: #ffffff !important;
+  --border-color: var(--royal-border-light) !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--royal-border-light);
+  color: var(--royal-text-primary) !important;
 }
 
-.admin-toolbar ion-title {
-  --color: #ffffff !important;
-  color: #ffffff !important;
+/* Title and back button flip from white-on-navy to dark-on-white. */
+.admin-toolbar.edit-student-toolbar ion-title.admin-title,
+.admin-toolbar.edit-student-toolbar .admin-title {
+  --color: var(--royal-text-primary) !important;
+  color: var(--royal-text-primary) !important;
+}
+
+.admin-toolbar.edit-student-toolbar ion-back-button.admin-back-btn,
+.admin-toolbar.edit-student-toolbar .admin-back-btn {
+  --color: var(--royal-text-primary) !important;
+  --icon-color: var(--royal-text-primary) !important;
+}
+
+/* The shared Home / Logout buttons also need dark icons on the white bar. */
+.admin-toolbar.edit-student-toolbar ion-button.app-nav-home,
+.admin-toolbar.edit-student-toolbar ion-button.app-nav-signout {
+  --color: var(--royal-text-secondary) !important;
+  --icon-color: var(--royal-text-secondary) !important;
+  color: var(--royal-text-secondary) !important;
+}
+
+.admin-toolbar.edit-student-toolbar ion-button.app-nav-home:hover,
+.admin-toolbar.edit-student-toolbar ion-button.app-nav-signout:hover {
+  --color: var(--royal-blue-primary) !important;
+  color: var(--royal-blue-primary) !important;
+}
+
+/* `ion-title` / `ion-back-button` render inside their own shadow root, so a
+   `.admin-toolbar ion-title` selector from the light DOM never matches. These
+   classes are applied to the elements themselves, which is what actually styles
+   them (mirrors the pattern already used in ClassStudentsListScreen.css).
+   Colours come from the `.edit-student-toolbar` block above; only the shared
+   typography lives here. */
+.admin-toolbar ion-title.admin-title,
+.admin-title {
   font-weight: 700 !important;
   font-size: 18px !important;
   text-align: center;
 }
 
-.admin-toolbar ion-back-button {
-  --color: #ffffff !important;
-  --icon-color: #ffffff !important;
+.admin-toolbar ion-back-button.admin-back-btn,
+.admin-back-btn {
+  --shadow-color: transparent !important;
 }
 
 /* Loading container */
