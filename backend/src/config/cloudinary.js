@@ -60,6 +60,7 @@ function resourceTypeForMimeType(mimetype = '') {
   if (mimetype.startsWith('image/')) return 'image';
   if (mimetype.startsWith('video/')) return 'video';
   return 'image';
+}
 
 /**
  * Upload a Buffer to Cloudinary.
@@ -75,20 +76,19 @@ async function uploadBuffer(buffer, { originalname = 'file', mimetype = 'applica
     throw new Error('Cloudinary is not configured (CLOUDINARY_URL missing)');
   }
 
-  const uploaded = await new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: folder || folderForMimeType(mimetype),
-        resource_type: resourceTypeForMimeType(mimetype),
-        public_id: Date.now().toString(),
-        use_filename: false,
-        unique_filename: false,
-        overwrite: false,
-      },
-      (error, result) => (error ? reject(error) : resolve(result))
-    );
+  // NOTE: we deliberately use the non-streaming uploader with an inline data
+  // URI. cloudinary's upload_stream() stalls indefinitely in some Node/network
+  // environments (the callback never fires), whereas upload() completes
+  // reliably. MAX_FILE_SIZE caps the payload at 10MB, so buffering is safe.
+  const dataUri = `data:${mimetype};base64,${buffer.toString('base64')}`;
 
-    stream.end(buffer);
+  const uploaded = await cloudinary.uploader.upload(dataUri, {
+    folder: folder || folderForMimeType(mimetype),
+    resource_type: resourceTypeForMimeType(mimetype),
+    public_id: `${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+    use_filename: false,
+    unique_filename: false,
+    overwrite: false,
   });
 
   return {
@@ -179,5 +179,3 @@ module.exports = {
   deleteByUrl,
 };
 
-
-}

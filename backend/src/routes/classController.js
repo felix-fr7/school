@@ -32,21 +32,12 @@ if (!fs.existsSync(homeworkUploadDir)) {
 
 // Configure multer for homework attachments.
 // Cloudinary -> uploaded straight to the homework/ folder; local -> uploads/homework/
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const { isCloudinaryEnabled, deleteByUrl, parseCloudinaryUrl } = require('../config/cloudinary');
+// Reuses the shared Cloudinary storage engine (the third-party multer adapter
+// hangs here because it relies on cloudinary's upload_stream()).
+const { isCloudinaryEnabled, deleteByUrl, parseCloudinaryUrl, cloudinaryStorageFor } = require('../middleware/fileUpload');
 
 const homeworkStorage = isCloudinaryEnabled()
-  ? new CloudinaryStorage({
-      cloudinary: { cloudinary_url: process.env.CLOUDINARY_URL.trim() },
-      params: {
-        folder: 'homework',
-        resource_type: 'auto',
-        public_id: () => `homework-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
-        use_filename: false,
-        unique_filename: false,
-        overwrite: false,
-      },
-    })
+  ? cloudinaryStorageFor('homework')
   : multer.diskStorage({
       destination: (req, file, cb) => {
         cb(null, homeworkUploadDir);

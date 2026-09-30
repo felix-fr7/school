@@ -7,8 +7,19 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+/**
+ * Multer storage engine that uploads straight to Cloudinary.
+ *
+ * We implement this ourselves instead of using multer-storage-cloudinary
+ * because that library relies on cloudinary's upload_stream(), which hangs
+ * indefinitely in this environment (the callback never fires, so the HTTP
+ * request never completes). Multer gives us the file as a stream, so we
+ * buffer it and use the reliable non-streaming upload() API instead.
+ * MAX_FILE_SIZE caps the buffered payload at 10MB.
+ */
+
 const {
+  cloudinary,
   isCloudinaryEnabled,
   folderForMimeType,
   resourceTypeForMimeType,
@@ -32,24 +43,59 @@ const reportcardDir = path.join(uploadDir, 'reportcard');
 });
 
 /**
- * Build a Cloudinary multer storage engine scoped to a fixed folder.
- * When Cloudinary is enabled, files never touch the local disk.
+ * Custom multer storage engine that pushes each file to Cloudinary.
+ *
+ * @param {string} [fixedFolder] - force a folder, otherwise derive from mimetype
+ * @returns {object} a multer storage engine
  */
 const cloudinaryStorageFor = (fixedFolder) => {
-  return new CloudinaryStorage({
-    cloudinary: { cloudinary_url: process.env.CLOUDINARY_URL.trim() },
-    params: {
-      resource_type: 'auto',
-      type: 'upload',
-      folder: fixedFolder || undefined,
-      // Timestamped public_id keeps every upload unique (upload = insert, never overwrite).
-      public_id: () => `${Date.now()}-${uuidv4()}`,
-      use_filename: false,
-      unique_filename: false,
-      overwrite: false,
-      tags: fixedFolder ? [`folder:${fixedFolder}`] : undefined,
+  return {
+    _handleFile(req, file, callback) {
+      const chunks = [];
+
+      file.stream.on('data', (chunk) => chunks.push(chunk));
+      file.stream.on('error', (error) => callback(error));
+
+      file.stream.on('end', async () => {
+        try {
+          const buffer = Buffer.concat(chunks);
+
+          const uploaded = await cloudinary.uploader.upload(
+            `data:${file.mimetype};base64,${buffer.toString('base64')}`,
+            {
+              resource_type: resourceTypeForMimeType(file.mimetype),
+              type: 'upload',
+              folder: fixedFolder || folderForMimeType(file.mimetype),
+              // Unique public_id => every upload is a new asset, never an overwrite.
+              public_id: `${Date.now()}-${uuidv4()}`,
+              use_filename: false,
+              unique_filename: false,
+              overwrite: false,
+            }
+          );
+
+          // Mirror multer-storage-cloudinary's shape: path = URL, filename = public_id.
+          callback(null, {
+            path: uploaded.secure_url,
+            size: uploaded.bytes,
+            filename: uploaded.public_id,
+            destination: uploaded.folder || fixedFolder || '',
+            mimetype: file.mimetype,
+            originalname: file.originalname,
+            encoding: file.encoding,
+          });
+        } catch (error) {
+          callback(error);
+        }
+      });
     },
-  });
+
+    _removeFile(req, file, callback) {
+      deleteByUrl(file.path)
+        .then(() => callback(null))
+        .catch((error) => callback(error));
+    },
+  };
 };
 
 // Storage configuration
@@ -352,6 +398,7 @@ module.exports = {
   resolveFileUrl,
   attachFileUrls,
   isCloudinaryEnabled,
+  cloudinaryStorageFor,
   uploadDir,
   examDir,
   reportcardDir
