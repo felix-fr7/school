@@ -6,31 +6,9 @@
 
 const News = require('../models/News');
 const Class = require('../models/Class');
+const { deleteFile } = require('../middleware/fileUpload');
 const fs = require('fs');
 const path = require('path');
-
-/**
- * Helper function to delete a file from the filesystem
- * @param {string} filePath - The URL path of the file (e.g., '/uploads/news/file.pdf')
- */
-const deleteFile = (filePath) => {
-  if (!filePath) return;
-  
-  try {
-    // Convert URL path to filesystem path
-    // Remove leading slash if present
-    const relativePath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-    const fullPath = path.join(__dirname, '../../', relativePath);
-    
-    // Check if file exists before deleting
-    if (fs.existsSync(fullPath)) {
-      fs.unlinkSync(fullPath);
-      console.log('[deleteFile] Deleted file:', fullPath);
-    }
-  } catch (error) {
-    console.error('[deleteFile] Error deleting file:', filePath, error.message);
-  }
-};
 
 // ============================================
 // News Management with Visibility (MongoDB)
@@ -353,12 +331,12 @@ const deleteNews = async (req, res, next) => {
       });
     }
 
-    // Delete associated files (image and PDF)
+    // Delete associated files (image and PDF) - Cloudinary or local disk
     if (news.imageUrl) {
-      deleteFile(news.imageUrl);
+      await deleteFile(news.imageUrl).catch(() => {});
     }
     if (news.attachmentUrl) {
-      deleteFile(news.attachmentUrl);
+      await deleteFile(news.attachmentUrl).catch(() => {});
     }
 
     // Now delete the document from database

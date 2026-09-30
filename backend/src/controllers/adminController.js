@@ -6,6 +6,7 @@
 const bcrypt = require('bcryptjs');
 const xlsx = require('xlsx');
 const db = require('../config/db');
+const { resolveFileUrl } = require('../middleware/fileUpload');
 
 /**
  * Get all classes for admin's school
@@ -2196,9 +2197,8 @@ const createExamScheduleWithFile = async (req, res, next) => {
 
     title = title.trim();
 
-    // Get file info from memory storage (originalname is available, filename is not)
-    const fileName = req.file.originalname;
-    const fileUrl = `/uploads/${fileName}`;
+    // Store the Cloudinary URL (or legacy local path) as the file link
+    const fileUrl = resolveFileUrl(req.file);
 
     // Validate classId - must be a valid UUID or null/empty for school-wide
     const isValidUUID = (value) => {

@@ -10,7 +10,7 @@ const School = require('../models/School'); // Ungaloda School Mongoose Model
 const User = require('../models/User');     // Ungaloda User Mongoose Model
 const Admin = require('../models/Admin');   // Ungaloda Admin Mongoose Model
 const Class = require('../models/Class');   // Ungaloda Class Mongoose Model
-const { deleteFile } = require('../middleware/fileUpload');
+const { deleteFile, resolveFileUrl } = require('../middleware/fileUpload');
 
 /**
  * Generate JWT token for user
@@ -183,7 +183,7 @@ const getTenantById = async (req, res, next) => {
 const createTenant = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  const uploadedLogoUrl = req.file ? `/uploads/images/${req.file.filename}` : null;
+  const uploadedLogoUrl = req.file ? resolveFileUrl(req.file, 'images') : null;
 
   try {
     const {
@@ -227,7 +227,7 @@ const createTenant = async (req, res, next) => {
       address,
       contactPhone,
       contactEmail,
-      schoolLogoUrl: req.file ? `/uploads/images/${req.file.filename}` : undefined,
+      schoolLogoUrl: req.file ? resolveFileUrl(req.file, 'images') : undefined,
     });
     await newSchool.save({ session });
 
@@ -476,7 +476,7 @@ const uploadSchoolLogo = async (req, res, next) => {
 
     // Delete the old logo file (if any) before saving the new one
     const oldLogoUrl = school.schoolLogoUrl;
-    school.schoolLogoUrl = `/uploads/images/${req.file.filename}`;
+    school.schoolLogoUrl = resolveFileUrl(req.file, 'images');
     await school.save();
 
     if (oldLogoUrl) {

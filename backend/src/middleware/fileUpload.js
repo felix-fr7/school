@@ -7,8 +7,16 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const {
+  isCloudinaryEnabled,
+  folderForMimeType,
+  resourceTypeForMimeType,
+  parseCloudinaryUrl,
+  deleteByUrl,
+} = require('../config/cloudinary');
 
-// Ensure upload directories exist
+// Ensure local upload directories exist (used only in the local fallback mode)
 const uploadDir = path.join(__dirname, '../../uploads');
 const imageDir = path.join(uploadDir, 'images');
 const documentDir = path.join(uploadDir, 'documents');
@@ -23,53 +31,81 @@ const reportcardDir = path.join(uploadDir, 'reportcard');
   }
 });
 
+/**
+ * Build a Cloudinary multer storage engine scoped to a fixed folder.
+ * When Cloudinary is enabled, files never touch the local disk.
+ */
+const cloudinaryStorageFor = (fixedFolder) => {
+  return new CloudinaryStorage({
+    cloudinary: { cloudinary_url: process.env.CLOUDINARY_URL.trim() },
+    params: {
+      resource_type: 'auto',
+      type: 'upload',
+      folder: fixedFolder || undefined,
+      // Timestamped public_id keeps every upload unique (upload = insert, never overwrite).
+      public_id: () => `${Date.now()}-${uuidv4()}`,
+      use_filename: false,
+      unique_filename: false,
+      overwrite: false,
+      tags: fixedFolder ? [`folder:${fixedFolder}`] : undefined,
+    },
+  });
+};
+
 // Storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let targetDir = uploadDir;
-    
-    if (file.mimetype.startsWith('image/')) {
-      targetDir = imageDir;
-    } else if (file.mimetype.startsWith('audio/')) {
-      targetDir = audioDir;
-    } else if (file.mimetype.startsWith('video/')) {
-      targetDir = videoDir;
-    } else {
-      targetDir = documentDir;
-    }
-    
-    cb(null, targetDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = `${uuidv4()}${ext}`;
-    cb(null, filename);
-  }
-});
+// With Cloudinary enabled, files stream straight to Cloudinary (no disk write).
+const storage = isCloudinaryEnabled()
+  ? cloudinaryStorageFor(null)
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        let targetDir = uploadDir;
 
-// Exam-specific storage configuration (saves to uploads/exam/)
-const examStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, examDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = `${uuidv4()}${ext}`;
-    cb(null, filename);
-  }
-});
+        if (file.mimetype.startsWith('image/')) {
+          targetDir = imageDir;
+        } else if (file.mimetype.startsWith('audio/')) {
+          targetDir = audioDir;
+        } else if (file.mimetype.startsWith('video/')) {
+          targetDir = videoDir;
+        } else {
+          targetDir = documentDir;
+        }
 
-// Report Card-specific storage configuration (saves to uploads/reportcard/)
-const reportcardStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, reportcardDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = `${uuidv4()}${ext}`;
-    cb(null, filename);
-  }
-});
+        cb(null, targetDir);
+      },
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const filename = `${uuidv4()}${ext}`;
+        cb(null, filename);
+      }
+    });
+
+// Exam-specific storage configuration (Cloudinary folder: exam/ | local: uploads/exam/)
+const examStorage = isCloudinaryEnabled()
+  ? cloudinaryStorageFor('exam')
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, examDir);
+      },
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const filename = `${uuidv4()}${ext}`;
+        cb(null, filename);
+      }
+    });
+
+// Report Card-specific storage configuration (Cloudinary: reportcard/ | local: uploads/reportcard/)
+const reportcardStorage = isCloudinaryEnabled()
+  ? cloudinaryStorageFor('reportcard')
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, reportcardDir);
+      },
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const filename = `${uuidv4()}${ext}`;
+        cb(null, filename);
+      }
+    });
 
 // File filter
 const fileFilter = (req, file, cb) => {
@@ -115,10 +151,19 @@ const uploadFields = (fields) => {
 };
 
 // File deletion helper
+// Works for both Cloudinary URLs and legacy local /uploads/... paths.
 const deleteFile = (filePath) => {
   return new Promise((resolve, reject) => {
     if (!filePath) {
       resolve(true);
+      return;
+    }
+
+    // 1) Cloudinary-hosted asset -> destroy it in the cloud.
+    if (parseCloudinaryUrl(filePath)) {
+      deleteByUrl(filePath)
+        .then((deleted) => resolve(deleted))
+        .catch((error) => reject(error));
       return;
     }
 
@@ -170,9 +215,65 @@ const deleteFile = (filePath) => {
 // File URL helper
 const getFileUrl = (filename, subfolder = '') => {
   const baseUrl = `${process.env.API_URL || 'http://localhost:3000'}/uploads`;
-  return subfolder 
+  return subfolder
     ? `${baseUrl}/${subfolder}/${filename}`
     : `${baseUrl}/${filename}`;
+};
+
+/**
+ * Resolve the final stored URL for an uploaded multer file.
+ * With Cloudinary this is the remote secure_url; in local mode it builds
+ * the legacy /uploads/<subfolder>/<filename> path.
+ *
+ * @param {object} file - req.file from multer
+ * @param {string} [subfolder] - local subfolder (images, documents, exam...)
+ * @returns {string} URL to store in the database
+ */
+const resolveFileUrl = (file, subfolder = '') => {
+  if (!file) return null;
+
+  // multer-storage-cloudinary sets file.path = secure_url and file.filename = public_id.
+  if (isCloudinaryEnabled() && file.path && /^https?:\/\//i.test(file.path)) {
+    return file.path;
+  }
+
+  if (subfolder) {
+    return `/uploads/${subfolder}/${file.filename}`;
+  }
+
+  // Generic mode: derive the subfolder from where multer placed the file.
+  const destination = file.destination || '';
+  const marker = 'uploads';
+  const idx = destination.replace(/\\/g, '/').lastIndexOf(marker);
+  const derived = idx !== -1 ? destination.replace(/\\/g, '/').slice(idx + marker.length).replace(/^\//, '') : '';
+
+  return derived
+    ? `/uploads/${derived}/${file.filename}`
+    : `/uploads/${file.filename}`;
+};
+
+/**
+ * Attach the resolved URL onto each uploaded file so controllers can simply
+ * read `file.url`. Works for req.file and every entry in req.files.
+ */
+const attachFileUrls = (req) => {
+  if (req.file) {
+    req.file.url = resolveFileUrl(req.file);
+  }
+  if (Array.isArray(req.files)) {
+    req.files.forEach((file) => {
+      file.url = resolveFileUrl(file);
+    });
+  } else if (req.files && typeof req.files === 'object') {
+    Object.values(req.files).forEach((group) => {
+      if (Array.isArray(group)) {
+        group.forEach((file) => {
+          file.url = resolveFileUrl(file);
+        });
+      }
+    });
+  }
+  return req;
 };
 
 // Exam-specific upload configuration
@@ -203,17 +304,9 @@ const uploadReportCardSingle = (fieldName) => {
   return uploadReportCard.single(fieldName);
 };
 
-// Excel-specific storage configuration (saves to uploads/documents/)
-const excelStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, documentDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const filename = `${uuidv4()}${ext}`;
-    cb(null, filename);
-  }
-});
+// Excel sheets are only parsed in memory, never persisted.
+// Using memoryStorage keeps import files off both disk and Cloudinary.
+const excelStorage = multer.memoryStorage();
 
 // Excel file filter
 const excelFileFilter = (req, file, cb) => {
@@ -256,6 +349,9 @@ module.exports = {
   uploadExcelSingle,
   deleteFile,
   getFileUrl,
+  resolveFileUrl,
+  attachFileUrls,
+  isCloudinaryEnabled,
   uploadDir,
   examDir,
   reportcardDir

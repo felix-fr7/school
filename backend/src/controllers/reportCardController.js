@@ -48,7 +48,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const XLSX = require('xlsx');
-const { uploadSingle } = require('../middleware/fileUpload');
+const { uploadSingle, resolveFileUrl } = require('../middleware/fileUpload');
 
 // ============================================
 // ADMIN/TEACHER ENDPOINTS
@@ -90,8 +90,8 @@ exports.uploadReportCard = async (req, res, next) => {
     // Determine file type
     const fileType = req.file.mimetype.startsWith('image/') ? 'image' : 'pdf';
     
-    // Build file URL
-    const fileUrl = `${process.env.API_URL || 'http://localhost:3000'}/uploads/${req.file.filename}`;
+    // Build file URL (Cloudinary secure_url, or local /uploads path)
+    const fileUrl = resolveFileUrl(req.file);
 
     // Get student's class information
     let studentClassId = null;

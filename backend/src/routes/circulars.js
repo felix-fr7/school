@@ -10,32 +10,9 @@ const Circular = require('../models/Circular');
 const Class = require('../models/Class');
 const { authenticate } = require('../middleware/authMiddleware');
 const { requireAdmin } = require('../middleware/rbacMiddleware');
-const { uploadFields } = require('../middleware/fileUpload');
+const { uploadFields, deleteFile } = require('../middleware/fileUpload');
 const path = require('path');
 const fs = require('fs');
-
-/**
- * Helper function to delete a file from the filesystem
- * @param {string} filePath - The URL path of the file (e.g., '/uploads/circulars/file.pdf')
- */
-const deleteFile = (filePath) => {
-  if (!filePath) return;
-  
-  try {
-    // Convert URL path to filesystem path
-    // Remove leading slash if present
-    const relativePath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
-    const fullPath = path.join(__dirname, '../', relativePath);
-    
-    // Check if file exists before deleting
-    if (fs.existsSync(fullPath)) {
-      fs.unlinkSync(fullPath);
-      console.log('[deleteFile] Deleted file:', fullPath);
-    }
-  } catch (error) {
-    console.error('[deleteFile] Error deleting file:', filePath, error.message);
-  }
-};
 
 // All routes require authentication
 router.use(authenticate);
@@ -209,31 +186,31 @@ router.post('/',
     // Handle file uploads
     let imageUrl = null;
     let pdfUrl = null;
-    
-    // Ensure uploads/circulars directory exists
+
+    // Cloudinary: the asset is already remote (req.file.path = secure_url).
+    // Local mode: move it into uploads/circulars/.
     const uploadDir = path.join(__dirname, '../../uploads/circulars');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
+
+    const resolveCircularFileUrl = (file) => {
+      if (/^https?:\/\//i.test(file.path || '')) {
+        return file.path;
+      }
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      const fileName = `${Date.now()}-${file.originalname}`;
+      fs.renameSync(file.path, path.join(uploadDir, fileName));
+      return `/uploads/circulars/${fileName}`;
+    };
+
     // Process image file
     if (req.files && req.files.image && req.files.image.length > 0) {
-      const imageFile = req.files.image[0];
-      const fileName = `${Date.now()}-${imageFile.originalname}`;
-      const filePath = path.join(uploadDir, fileName);
-      
-      fs.renameSync(imageFile.path, filePath);
-      imageUrl = `/uploads/circulars/${fileName}`;
+      imageUrl = resolveCircularFileUrl(req.files.image[0]);
     }
-    
+
     // Process PDF file
     if (req.files && req.files.pdf && req.files.pdf.length > 0) {
-      const pdfFile = req.files.pdf[0];
-      const fileName = `${Date.now()}-${pdfFile.originalname}`;
-      const filePath = path.join(uploadDir, fileName);
-      
-      fs.renameSync(pdfFile.path, filePath);
-      pdfUrl = `/uploads/circulars/${fileName}`;
+      pdfUrl = resolveCircularFileUrl(req.files.pdf[0]);
     }
     
     // Validate classId if SPECIFIC_CLASSES visibility is selected
@@ -350,12 +327,12 @@ router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
       });
     }
     
-    // Delete associated files (image and PDF)
+    // Delete associated files (image and PDF) - Cloudinary or local disk
     if (circular.imageUrl) {
-      deleteFile(circular.imageUrl);
+      await deleteFile(circular.imageUrl).catch(() => {});
     }
     if (circular.attachmentUrl) {
-      deleteFile(circular.attachmentUrl);
+      await deleteFile(circular.attachmentUrl).catch(() => {});
     }
     
     // Now delete the document from database

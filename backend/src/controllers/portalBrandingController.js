@@ -13,7 +13,7 @@
  */
 
 const PortalBranding = require('../models/PortalBranding');
-const { deleteFile } = require('../middleware/fileUpload');
+const { deleteFile, resolveFileUrl } = require('../middleware/fileUpload');
 
 // Factory defaults (single source of truth = the schema defaults)
 const getDefaults = () => ({
@@ -185,7 +185,7 @@ const uploadPortalLogo = async (req, res, next) => {
     const current = await PortalBranding.getSingleton();
     const oldLogoUrl = current.logoUrl;
 
-    const logoUrl = `/uploads/images/${req.file.filename}`;
+    const logoUrl = resolveFileUrl(req.file, 'images');
 
     const branding = await PortalBranding.findOneAndUpdate(
       { key: 'default' },
@@ -257,7 +257,7 @@ const uploadMobilePortalLogo = async (req, res, next) => {
     const current = await PortalBranding.getSingleton();
     const oldLogoUrl = current.mobileLogoUrl;
 
-    const logoUrl = `/uploads/images/${req.file.filename}`;
+    const logoUrl = resolveFileUrl(req.file, 'images');
 
     const branding = await PortalBranding.findOneAndUpdate(
       { key: 'default' },

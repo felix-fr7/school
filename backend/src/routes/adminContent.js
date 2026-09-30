@@ -129,19 +129,31 @@ router.post(
         });
       }
 
-      // Read file from disk (since multer uses diskStorage) and upload to storage
-      const fileBuffer = fs.readFileSync(req.file.path);
-      const uploadResult = await storageService.uploadFile(
-        fileBuffer,
-        req.file.originalname,
-        tenantId,
-        null,
-        null,
-        req.file.mimetype
-      );
-      
-      // Delete the temporary file created by multer
-      fs.unlinkSync(req.file.path);
+      // With Cloudinary the file is already remote (req.file.path = secure_url),
+      // so skip the disk round-trip entirely.
+      let uploadResult;
+      if (/^https?:\/\//i.test(req.file.path || '')) {
+        uploadResult = {
+          url: req.file.path,
+          name: req.file.originalname,
+          type: req.file.mimetype,
+          size: req.file.size,
+        };
+      } else {
+        // Read file from disk (local diskStorage) and upload to storage
+        const fileBuffer = fs.readFileSync(req.file.path);
+        uploadResult = await storageService.uploadFile(
+          fileBuffer,
+          req.file.originalname,
+          tenantId,
+          null,
+          null,
+          req.file.mimetype
+        );
+
+        // Delete the temporary file created by multer
+        fs.unlinkSync(req.file.path);
+      }
 
       res.status(200).json({
         success: true,
@@ -175,8 +187,10 @@ router.post(
         });
       }
 
-      // Save to uploads/exam/ folder and return local URL
-      const fileUrl = `/uploads/exam/${req.file.filename}`;
+      // Cloudinary stores under the exam/ folder; local mode under uploads/exam/
+      const fileUrl = /^https?:\/\//i.test(req.file.path || '')
+        ? req.file.path
+        : `/uploads/exam/${req.file.filename}`;
 
       res.status(200).json({
         success: true,
@@ -257,32 +271,30 @@ router.post(
       let imageUrl = null;
       let pdfUrl = null;
 
-      // Ensure uploads/news directory exists
+      // With Cloudinary the asset is already remote; req.file.path holds the secure_url.
+      // In local mode the file is moved into uploads/news/.
       const uploadDir = path.join(__dirname, '../../uploads/news');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+
+      const resolveNewsFileUrl = (file) => {
+        if (/^https?:\/\//i.test(file.path || '')) {
+          return file.path;
+        }
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        const fileName = `${Date.now()}-${file.originalname}`;
+        fs.renameSync(file.path, path.join(uploadDir, fileName));
+        return `/uploads/news/${fileName}`;
+      };
 
       // Process image file
       if (req.files && req.files.image && req.files.image.length > 0) {
-        const imageFile = req.files.image[0];
-        const fileName = `${Date.now()}-${imageFile.originalname}`;
-        const filePath = path.join(uploadDir, fileName);
-        
-        // Move file to uploads/news directory
-        fs.renameSync(imageFile.path, filePath);
-        imageUrl = `/uploads/news/${fileName}`;
+        imageUrl = resolveNewsFileUrl(req.files.image[0]);
       }
 
       // Process PDF file
       if (req.files && req.files.pdf && req.files.pdf.length > 0) {
-        const pdfFile = req.files.pdf[0];
-        const fileName = `${Date.now()}-${pdfFile.originalname}`;
-        const filePath = path.join(uploadDir, fileName);
-        
-        // Move file to uploads/news directory
-        fs.renameSync(pdfFile.path, filePath);
-        pdfUrl = `/uploads/news/${fileName}`;
+        pdfUrl = resolveNewsFileUrl(req.files.pdf[0]);
       }
 
       // Validate classId if SPECIFIC_CLASSES visibility is selected

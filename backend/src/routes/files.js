@@ -6,9 +6,15 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, isAdmin } = require('../middleware/auth');
-const { uploadSingle, uploadArray } = require('../middleware/fileUpload');
+const { uploadSingle, uploadArray, deleteFile, isCloudinaryEnabled } = require('../middleware/fileUpload');
 const path = require('path');
 const fs = require('fs');
+
+// Resolve the stored URL for an uploaded file (Cloudinary secure_url or local /uploads path)
+const storedUrlFor = (file) =>
+  /^https?:\/\//i.test(file.path || '')
+    ? file.path
+    : `/uploads/${file.destination.replace(path.join(__dirname, '../../'), '')}/${file.filename}`;
 
 // Upload single file
 router.post('/upload', authenticate, isAdmin, uploadSingle('file'), async (req, res, next) => {
@@ -17,7 +23,7 @@ router.post('/upload', authenticate, isAdmin, uploadSingle('file'), async (req, 
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const fileUrl = `/uploads/${req.file.destination.replace(path.join(__dirname, '../../'), '')}/${req.file.filename}`;
+    const fileUrl = storedUrlFor(req.file);
 
     res.status(201).json({
       success: true,
@@ -42,7 +48,7 @@ router.post('/upload-multiple', authenticate, isAdmin, uploadArray('files', 10),
     }
 
     const uploadedFiles = files.map(file => ({
-      url: `/uploads/${file.destination.replace(path.join(__dirname, '../../'), '')}/${file.filename}`,
+      url: storedUrlFor(file),
       filename: file.filename,
       size: file.size,
       mimetype: file.mimetype
@@ -61,6 +67,15 @@ router.post('/upload-multiple', authenticate, isAdmin, uploadArray('files', 10),
 router.delete('/:filename', authenticate, isAdmin, async (req, res, next) => {
   try {
     const filename = req.params.filename;
+
+    // Cloudinary: the param carries the asset URL -> destroy it remotely.
+    if (isCloudinaryEnabled()) {
+      const target = decodeURIComponent(filename);
+      if (target.includes('res.cloudinary.com')) {
+        await deleteFile(target);
+        return res.json({ success: true });
+      }
+    }
     
     // Find file in uploads directory
     const uploadsDir = path.join(__dirname, '../../uploads');

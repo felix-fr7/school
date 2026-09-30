@@ -30,16 +30,32 @@ if (!fs.existsSync(homeworkUploadDir)) {
   fs.mkdirSync(homeworkUploadDir, { recursive: true });
 }
 
-// Configure multer for homework attachments
-const homeworkStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, homeworkUploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'homework-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for homework attachments.
+// Cloudinary -> uploaded straight to the homework/ folder; local -> uploads/homework/
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { isCloudinaryEnabled, deleteByUrl, parseCloudinaryUrl } = require('../config/cloudinary');
+
+const homeworkStorage = isCloudinaryEnabled()
+  ? new CloudinaryStorage({
+      cloudinary: { cloudinary_url: process.env.CLOUDINARY_URL.trim() },
+      params: {
+        folder: 'homework',
+        resource_type: 'auto',
+        public_id: () => `homework-${Date.now()}-${Math.round(Math.random() * 1E9)}`,
+        use_filename: false,
+        unique_filename: false,
+        overwrite: false,
+      },
+    })
+  : multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, homeworkUploadDir);
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'homework-' + uniqueSuffix + path.extname(file.originalname));
+      }
+    });
 
 const homeworkUpload = multer({
   storage: homeworkStorage,
@@ -82,7 +98,10 @@ router.post('/upload-homework-files', homeworkUpload.array('files', 5), async (r
       originalName: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
-      url: `/uploads/homework/${file.filename}`,
+      // Cloudinary: file.path is the remote secure_url. Local: /uploads/homework/<filename>
+      url: /^https?:\/\//i.test(file.path || '')
+        ? file.path
+        : `/uploads/homework/${file.filename}`,
       path: file.path
     }));
 
@@ -111,6 +130,16 @@ router.delete('/homework-files/:filename', async (req, res, next) => {
     }
 
     const { filename } = req.params;
+
+    // Cloudinary: destroy the remote asset by URL / public_id.
+    if (parseCloudinaryUrl(filename)) {
+      await deleteByUrl(filename);
+      return res.json({
+        success: true,
+        message: 'File deleted successfully.'
+      });
+    }
+
     const filePath = path.join(homeworkUploadDir, filename);
 
     // Check if file exists

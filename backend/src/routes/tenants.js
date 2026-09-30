@@ -11,7 +11,7 @@ const express = require('express');
 const { body, param, validationResult } = require('express-validator');
 const tenantController = require('../controllers/tenantController');
 const { authenticate, isSuperAdmin } = require('../middleware/auth');
-const { uploadSingle, deleteFile } = require('../middleware/fileUpload');
+const { uploadSingle, deleteFile, resolveFileUrl } = require('../middleware/fileUpload');
 
 // Validation error handler middleware
 const handleValidationErrors = async (req, res, next) => {
@@ -19,7 +19,7 @@ const handleValidationErrors = async (req, res, next) => {
   if (!errors.isEmpty()) {
     if (req.file) {
       try {
-        await deleteFile(`/uploads/images/${req.file.filename}`);
+        await deleteFile(resolveFileUrl(req.file, 'images'));
         console.log(`[Tenant Validation] Deleted uploaded file after validation error: ${req.file.filename}`);
       } catch (error) {
         console.error('[Tenant Validation] Failed to delete uploaded file after validation error:', error.message);

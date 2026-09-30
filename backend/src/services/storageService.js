@@ -1,12 +1,13 @@
 /**
  * Storage Service
- * Handles file operations with local file storage
- * Files are stored in the uploads/ directory
+ * Uploads to Cloudinary when CLOUDINARY_URL is set; otherwise falls back to
+ * the local uploads/ directory.
  */
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { isCloudinaryEnabled, uploadBuffer, deleteByUrl, parseCloudinaryUrl } = require('../config/cloudinary');
 
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
 
@@ -49,6 +50,30 @@ function generateStoragePath(tenantId, classId, lessonLogId, fileName) {
  * @returns {Promise<Object>} Attachment metadata
  */
 async function uploadFile(fileBuffer, fileName, tenantId, classId, lessonLogId, mimeType) {
+  // ---- Cloudinary path -------------------------------------------------
+  if (isCloudinaryEnabled()) {
+    const folder = [tenantId, classId, lessonLogId]
+      .filter(Boolean)
+      .join('/');
+
+    const result = await uploadBuffer(fileBuffer, {
+      originalname: fileName,
+      mimetype: mimeType,
+      folder: folder || undefined,
+    });
+
+    return {
+      path: result.publicId,
+      url: result.url,
+      name: result.name,
+      originalName: fileName,
+      type: result.type,
+      size: result.size,
+      uploadedAt: new Date().toISOString(),
+    };
+  }
+
+  // ---- Local disk path (fallback) --------------------------------------
   // Create directory structure
   const uniqueFileName = generateUniqueFileName(fileName);
   let relativePath;
@@ -89,6 +114,12 @@ async function uploadFile(fileBuffer, fileName, tenantId, classId, lessonLogId, 
  * @param {string} filePath - The relative storage path to delete
  */
 async function deleteFile(filePath) {
+  // Cloudinary-hosted asset -> destroy it remotely.
+  if (parseCloudinaryUrl(filePath)) {
+    await deleteByUrl(filePath);
+    return;
+  }
+
   const fullPath = path.join(UPLOADS_DIR, filePath);
   
   if (fs.existsSync(fullPath)) {
@@ -121,7 +152,8 @@ function getFileUrl(filePath) {
  * Check if storage service is configured
  */
 function isConfigured() {
-  return fs.existsSync(UPLOADS_DIR);
+  // Cloudinary needs no local directory; otherwise the uploads dir must exist.
+  return isCloudinaryEnabled() || fs.existsSync(UPLOADS_DIR);
 }
 
 /**
