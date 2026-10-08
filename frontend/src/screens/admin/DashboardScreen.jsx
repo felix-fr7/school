@@ -11,11 +11,11 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonIcon,
   IonSpinner,
   IonRefresher,
   IonRefresherContent,
-  IonIcon,
-} from '@ionic/react';
+} from '@components/ui';
 import { useHistory } from 'react-router-dom';
 import {
   bookOutline,
@@ -33,7 +33,7 @@ import {
   pulseOutline,
   imagesOutline,
   timeOutline,
-} from 'ionicons/icons';
+} from '@components/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminAPI, resolveMediaUrl } from '../../services/api';
 import { useSchoolBranding } from '../../services/useSchoolBranding';

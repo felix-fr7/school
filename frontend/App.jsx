@@ -5,16 +5,14 @@
  */
 
 import React, { Suspense, useEffect } from 'react';
-import { IonApp, IonSpinner, IonPage, IonRouterOutlet } from '@ionic/react';
-import { IonReactRouter } from '@ionic/react-router';
-import { Route, Redirect, Switch, useHistory } from 'react-router-dom';
+import { BrowserRouter, Route, Redirect, Switch, useHistory } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './src/contexts/AuthContext.jsx';
 import ErrorBoundary from './src/components/ErrorBoundary.jsx';
 
 // Auth Screens
 import LoginScreen from './src/screens/LoginScreen.jsx';
-import StudentLoginScreen from '../mobile/student/auth/StudentLoginScreen.jsx';
+import StudentMobileNotice from './src/screens/StudentMobileNotice.jsx';
 import RegisterScreen from './src/screens/RegisterScreen.jsx';
 
 // Super Admin Screens (Lazy loaded)
@@ -59,23 +57,24 @@ const AdminTimetableScreen = React.lazy(() => import('./src/screens/admin/AdminT
 // Shared Album viewer (used by class-controller and students)
 const AlbumsScreen = React.lazy(() => import('./src/screens/AlbumsScreen.jsx'));
 
-// Student Screens (Lazy loaded)
-const StudentDashboardScreen = React.lazy(() => import('../mobile/student/dashboard/DashboardScreen'));
-const StudentHomeworkListScreen = React.lazy(() => import('../mobile/student/homework/HomeworkListScreen'));
-const StudentHomeworkDetailScreen = React.lazy(() => import('../mobile/student/homework/HomeworkDetailScreen'));
-const StudentMarksListScreen = React.lazy(() => import('../mobile/student/marks/MarksListScreen'));
-const StudentNewsListScreen = React.lazy(() => import('../mobile/student/news/NewsListScreen'));
-const StudentNewsDetailScreen = React.lazy(() => import('../mobile/student/news/NewsDetailScreen'));
-const StudentCircularsListScreen = React.lazy(() => import('../mobile/student/circulars/CircularsListScreen'));
-const StudentCircularDetailScreen = React.lazy(() => import('../mobile/student/circulars/CircularDetailScreen'));
-const StudentReportCardsScreen = React.lazy(() => import('../mobile/student/report-cards/ReportCardsScreen'));
-const StudentExamSchedulesScreen = React.lazy(() => import('../mobile/student/exams/ExamSchedulesScreen'));
-const StudentProfileScreen = React.lazy(() => import('../mobile/student/profile/ProfileScreen'));
-const WeeklyLessonViewScreen = React.lazy(() => import('../mobile/student/weekly-lessons/WeeklyLessonViewScreen'));
-const StudentTimetableScreen = React.lazy(() => import('../mobile/student/timetable/StudentTimetableScreen.jsx'));
-const StudentExamDetailScreen = React.lazy(() => import('../mobile/student/exams/StudentExamDetailScreen'));
-const StudentCalendarScreen = React.lazy(() => import('../mobile/student/calendar/CalendarScreen'));
-const StudentCalendarEventDetailScreen = React.lazy(() => import('../mobile/student/calendar/CalendarEventDetailScreen'));
+// Student Screens (Mobile Notice on Web)
+const StudentMobileNoticeScreen = React.lazy(() => import('./src/screens/StudentMobileNotice.jsx'));
+const StudentDashboardScreen = StudentMobileNoticeScreen;
+const StudentHomeworkListScreen = StudentMobileNoticeScreen;
+const StudentHomeworkDetailScreen = StudentMobileNoticeScreen;
+const StudentMarksListScreen = StudentMobileNoticeScreen;
+const StudentNewsListScreen = StudentMobileNoticeScreen;
+const StudentNewsDetailScreen = StudentMobileNoticeScreen;
+const StudentCircularsListScreen = StudentMobileNoticeScreen;
+const StudentCircularDetailScreen = StudentMobileNoticeScreen;
+const StudentReportCardsScreen = StudentMobileNoticeScreen;
+const StudentExamSchedulesScreen = StudentMobileNoticeScreen;
+const StudentProfileScreen = StudentMobileNoticeScreen;
+const WeeklyLessonViewScreen = StudentMobileNoticeScreen;
+const StudentTimetableScreen = StudentMobileNoticeScreen;
+const StudentExamDetailScreen = StudentMobileNoticeScreen;
+const StudentCalendarScreen = StudentMobileNoticeScreen;
+const StudentCalendarEventDetailScreen = StudentMobileNoticeScreen;
 
 
 // Class Controller Screens (Lazy loaded)
@@ -114,9 +113,9 @@ const ProtectedRoute = ({
       render={(props) => {
         if (isLoading) {
           return (
-            <div className="ion-page ion-padding ion-text-center">
-              <IonSpinner name="crescent" />
-              <p>Loading...</p>
+            <div className="web-page ion-padding" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+              <div className="web-spinner" />
+              <p style={{ marginTop: '12px', color: '#64748b' }}>Loading...</p>
             </div>
           );
         }
@@ -131,26 +130,26 @@ const ProtectedRoute = ({
 
 // Loading component for lazy-loaded routes
 const RouteLoadingFallback = () => (
-  <IonPage>
+  <div className="web-page">
     <div style={{
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
       width: '100vw',
-      backgroundColor: '#f5f5f5',
+      backgroundColor: '#f8fafc',
       flexDirection: 'column',
-      fontFamily: 'sans-serif',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
       <div style={{
         width: '40px',
         height: '40px',
-        border: '4px solid #ddd',
-        borderTop: '4px solid #007AFF',
+        border: '4px solid #e2e8f0',
+        borderTop: '4px solid #3b82f6',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite',
       }} />
-      <p style={{ marginTop: '16px', color: '#666', fontSize: '14px' }}>Loading...</p>
+      <p style={{ marginTop: '16px', color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Loading...</p>
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -158,7 +157,7 @@ const RouteLoadingFallback = () => (
         }
       `}</style>
     </div>
-  </IonPage>
+  </div>
 );
 
 // Auth Redirect component
@@ -212,7 +211,7 @@ const AppContent = () => {
       <Switch>
         {/* Auth Routes */}
         <Route exact path="/login" component={LoginScreen} />
-        <Route exact path="/student/login" component={StudentLoginScreen} />
+        <Route exact path="/student/login" component={StudentMobileNotice} />
         <Route exact path="/register" component={RegisterScreen} />
 
         {/* Root path redirect */}
@@ -329,11 +328,11 @@ const AppContent = () => {
 const App = () => {
   return (
     <ErrorBoundary>
-      <IonApp>
+      <div className="web-app-root">
         <AuthProvider>
           <AppWithAuth />
         </AuthProvider>
-      </IonApp>
+      </div>
     </ErrorBoundary>
   );
 };
@@ -347,11 +346,11 @@ const AppWithAuth = () => {
   }
 
   return (
-    <IonReactRouter>
-      <IonRouterOutlet>
+    <BrowserRouter>
+      <div className="web-router-outlet">
         <AppContent />
-      </IonRouterOutlet>
-    </IonReactRouter>
+      </div>
+    </BrowserRouter>
   );
 };
 

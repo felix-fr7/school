@@ -1,9 +1,9 @@
-﻿/**
+/**
  * API Service
  * Centralized API client with Axios
  * Multi-Tenant School Management System
  * 
- * Ionic React / Web Version (JavaScript Version)
+ * Pure React Web Version (JavaScript Version)
  */
 
 import axios from 'axios';

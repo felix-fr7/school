@@ -1,19 +1,9 @@
 /**
- * Error Boundary Component
- * Catches runtime errors in child components and displays a fallback UI
- * Prevents entire app from crashing due to unexpected errors
+ * Error Boundary Component - Pure React Web
+ * Catches runtime errors in child components and displays a clean fallback UI.
  */
 
 import React, { Component } from 'react';
-import {
-  IonApp,
-  IonPage,
-  IonContent,
-  IonText,
-  IonButton,
-  IonIcon,
-} from '@ionic/react';
-import { refreshOutline, homeOutline } from 'ionicons/icons';
 
 export class ErrorBoundary extends Component {
   constructor(props) {
@@ -26,12 +16,10 @@ export class ErrorBoundary extends Component {
   }
 
   static getDerivedStateFromError(error) {
-    // Update state indicating an error occurred
     return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    // ALWAYS log errors to console - never swallow silently
     console.error('═══════════════════════════════════════════');
     console.error('ErrorBoundary caught an error:');
     console.error('  Error:', error);
@@ -39,149 +27,132 @@ export class ErrorBoundary extends Component {
     console.error('  Component stack:', errorInfo.componentStack);
     console.error('═══════════════════════════════════════════');
 
-    // In production, you might want to send errors to a monitoring service
-    // if (process.env.NODE_ENV === 'production') {
-    //   logErrorToService(error, errorInfo);
-    // }
-
-    // Store error info for display
     this.setState({ errorInfo });
   }
 
   handleRetry = () => {
-    // Clear error state and reload the page
     this.setState({ hasError: false, error: null, errorInfo: null });
     window.location.reload();
   };
 
   handleGoHome = () => {
-    // Navigate to home page
     window.location.href = '/';
   };
 
   render() {
-    // If there's an error, show the error UI
     if (this.state.hasError) {
-      // Use custom fallback if provided
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Default error UI with Ionic components
       return (
-        <IonApp>
-          <IonPage>
-            <IonContent className="ion-padding ion-text-center">
+        <div
+          className="web-page error-boundary-page"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+            padding: '24px',
+            backgroundColor: '#f8fafc',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          }}
+        >
+          <div
+            style={{
+              maxWidth: '480px',
+              width: '100%',
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              padding: '36px 28px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
+              textAlign: 'center',
+              border: '1px solid #e2e8f0',
+            }}
+          >
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+
+            <h1
+              style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: '#0f172a',
+                margin: '0 0 10px 0',
+              }}
+            >
+              Something went wrong
+            </h1>
+
+            <p
+              style={{
+                color: '#64748b',
+                fontSize: '14px',
+                lineHeight: 1.6,
+                margin: '0 0 24px 0',
+              }}
+            >
+              An unexpected error occurred. Please try reloading the page or return to the home page.
+            </p>
+
+            {import.meta.env.DEV && this.state.error && (
               <div
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100vh',
-                  padding: '20px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  padding: '12px',
+                  marginBottom: '20px',
+                  textAlign: 'left',
+                  fontSize: '12px',
+                  color: '#991b1b',
+                  overflow: 'auto',
+                  maxHeight: '180px',
                 }}
               >
-                {/* Error Icon */}
-                <IonIcon
-                  icon={refreshOutline}
-                  style={{
-                    fontSize: '64px',
-                    color: '#f04e23',
-                    marginBottom: '20px',
-                  }}
-                />
-
-                {/* Error Title */}
-                <h1
-                  style={{
-                    fontSize: '24px',
-                    fontWeight: '700',
-                    marginBottom: '12px',
-                    color: '#333',
-                  }}
-                >
-                  Something went wrong
-                </h1>
-
-                {/* Error Message */}
-                <IonText color="medium">
-                  <p
-                    style={{
-                      marginBottom: '20px',
-                      maxWidth: '400px',
-                      lineHeight: '1.5',
-                    }}
-                  >
-                    An unexpected error occurred. Please try again or return to
-                    the home page.
-                  </p>
-                </IonText>
-
-                {/* Error Details (Development mode only) */}
-                {import.meta.env.DEV && this.state.error && (
-                    <div
-                      style={{
-                        backgroundColor: '#f5f5f5',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        marginBottom: '20px',
-                        textAlign: 'left',
-                        maxWidth: '100%',
-                        overflow: 'auto',
-                        fontSize: '12px',
-                        border: '1px solid #e0e0e0',
-                      }}
-                    >
-                      <strong style={{ color: '#d32f2f' }}>Error:</strong>{' '}
-                      {this.state.error.toString()}
-
-                      {this.state.errorInfo && (
-                        <details style={{ marginTop: '8px' }}>
-                          <summary
-                            style={{
-                              cursor: 'pointer',
-                              color: '#666',
-                              marginTop: '8px',
-                            }}
-                          >
-                            Component Stack Trace
-                          </summary>
-                          <pre
-                            style={{
-                              whiteSpace: 'pre-wrap',
-                              marginTop: '8px',
-                              fontSize: '11px',
-                              color: '#666',
-                            }}
-                          >
-                            {this.state.errorInfo.componentStack}
-                          </pre>
-                        </details>
-                      )}
-                    </div>
-                  )}
-
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                  <IonButton onClick={this.handleRetry} color="primary">
-                    <IonIcon icon={refreshOutline} slot="start" />
-                    Retry
-                  </IonButton>
-                  <IonButton onClick={this.handleGoHome} color="medium">
-                    <IonIcon icon={homeOutline} slot="start" />
-                    Home
-                  </IonButton>
-                </div>
+                <strong>Error:</strong> {this.state.error.toString()}
               </div>
-            </IonContent>
-          </IonPage>
-        </IonApp>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={this.handleRetry}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  backgroundColor: '#3b82f6',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 Retry
+              </button>
+              <button
+                type="button"
+                onClick={this.handleGoHome}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  backgroundColor: '#f1f5f9',
+                  color: '#334155',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                }}
+              >
+                🏠 Home
+              </button>
+            </div>
+          </div>
+        </div>
       );
     }
 
-    // If no error, render children normally
-    // Add a debug wrapper to catch render-time issues
     return this.props.children;
   }
 }

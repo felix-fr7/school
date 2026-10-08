@@ -1,8 +1,8 @@
-﻿/**
+/**
  * Stable Timetable grid — defined outside parent so inputs keep focus while typing
+ * Pure React Web Table
  */
 import React, { memo } from 'react';
-import { IonButton } from '@ionic/react';
 import { DAYS } from '../../utils/timetableGrid';
 import './TimetableGrid.css';
 
@@ -38,47 +38,56 @@ function TimetableGridTable({ dataRows, editable, onUpdateCell, onUpdateSubject,
                     onChange={(e) => onUpdateSubject(ri, e.target.value)}
                   />
                 ) : (
-                  row.subject
+                  <span className="tt-sub-text">{row.subject || '—'}</span>
                 )}
               </td>
               {DAYS.map((d) => (
-                <React.Fragment key={d + '-' + ri}>
+                <React.Fragment key={d}>
                   <td className="tt-cell tt-cw-cell">
                     {editable ? (
                       <textarea
-                        className="tt-cell-ta"
+                        className="tt-inline-input tt-cell-input"
                         rows={2}
-                        value={(row[d] && row[d].classwork) || ''}
+                        value={row[d]?.classwork || ''}
                         onChange={(e) => onUpdateCell(ri, d, 'classwork', e.target.value)}
                       />
                     ) : (
-                      (row[d] && row[d].classwork) || ''
+                      <div className="tt-cell-text">{row[d]?.classwork || '—'}</div>
                     )}
                   </td>
                   <td className="tt-cell tt-hw-cell">
                     {editable ? (
                       <textarea
-                        className="tt-cell-ta"
+                        className="tt-inline-input tt-cell-input"
                         rows={2}
-                        value={(row[d] && row[d].homework) || ''}
+                        value={row[d]?.homework || ''}
                         onChange={(e) => onUpdateCell(ri, d, 'homework', e.target.value)}
                       />
                     ) : (
-                      (row[d] && row[d].homework) || ''
+                      <div className="tt-cell-text">{row[d]?.homework || '—'}</div>
                     )}
                   </td>
                 </React.Fragment>
               ))}
               {editable ? (
                 <td>
-                  <IonButton
-                    size="small"
-                    fill="clear"
-                    color="danger"
+                  <button
+                    type="button"
+                    className="tt-remove-btn"
                     onClick={() => onRemoveRow && onRemoveRow(ri)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      padding: '4px 8px',
+                      fontSize: '14px',
+                    }}
+                    title="Remove row"
                   >
-                    X
-                  </IonButton>
+                    ✕
+                  </button>
                 </td>
               ) : null}
             </tr>

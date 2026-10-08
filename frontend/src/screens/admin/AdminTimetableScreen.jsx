@@ -1,4 +1,4 @@
-﻿/** Admin Timetable — manage all class weekly grids (edit/delete/publish) */
+/** Admin Timetable — manage all class weekly grids (edit/delete/publish) */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
@@ -6,11 +6,11 @@ import {
   IonCardSubtitle, IonCardContent, IonBadge, IonModal, IonInput, IonTextarea,
   IonItem, IonLabel, IonList, IonToast, IonAlert, IonRefresher, IonRefresherContent,
   IonSelect, IonSelectOption,
-} from '@ionic/react';
+} from '@components/ui';
 import {
   createOutline, trashOutline, eyeOutline, eyeOffOutline, closeOutline,
   calendarOutline, schoolOutline, addCircleOutline,
-} from 'ionicons/icons';
+} from '@components/icons';
 import { adminAPI, timetableAPI } from '../../services/api';
 import { DAYS, blankTemplateRows, classLabel, emptyRow } from '../../utils/timetableGrid';
 import TimetableGridTable from '../shared/TimetableGridTable';

@@ -27,7 +27,7 @@ import {
   IonSearchbar,
   IonChip,
   IonBadge,
-} from '@ionic/react';
+} from './ui';
 import {
   addOutline,
   createOutline,
@@ -37,7 +37,7 @@ import {
   searchOutline,
   checkmarkCircleOutline,
   alertCircleOutline,
-} from 'ionicons/icons';
+} from './icons';
 import { classControllerAPI } from '../services/api';
 import './SubjectManager.css';
 

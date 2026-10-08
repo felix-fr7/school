@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>MACVEL School Management System — Project Documentation</title>
+<style>
+@page { size: A4; margin: 18mm 14mm 18mm 14mm; }
+* { box-sizing: border-box; }
+body { font-family: "Segoe UI", "Nirmala UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1c2733; margin: 0; }
+.cover { page-break-after: always; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90vh; text-align: center; }
+.cover .badge { background: #123a5f; color: #ffd700; padding: 6px 18px; border-radius: 30px; letter-spacing: 3px; font-size: 10pt; }
+.cover h1 { font-size: 30pt; color: #123a5f; margin: 24px 0 6px; }
+.cover h2 { font-size: 16pt; color: #333; font-weight: 600; margin: 0 0 30px; }
+.cover .meta { margin-top: 34px; font-size: 10.5pt; color: #444; line-height: 2; }
+.cover .line { width: 180px; height: 4px; background: #ffd700; margin: 18px auto; border-radius: 2px; }
+.toc-page { page-break-after: always; }
+.toc-page h1 { color: #123a5f; border: none; page-break-before: avoid; }
+.toc-page ol { font-size: 11.5pt; line-height: 2.1; }
+h1.section-title { color: #123a5f; font-size: 17pt; border-bottom: 3px solid #ffd700; padding-bottom: 6px; margin: 0 0 14px; page-break-before: always; }
+h2 { font-size: 13.5pt; color: #123a5f; margin: 18px 0 8px; border-left: 4px solid #ffd700; padding-left: 8px; page-break-after: avoid; }
+h3 { font-size: 11.5pt; color: #1b4f72; margin: 14px 0 6px; page-break-after: avoid; }
+h4 { font-size: 10.8pt; color: #1b4f72; margin: 12px 0 6px; page-break-after: avoid; }
+p { margin: 6px 0; }
+ul, ol { margin: 6px 0 10px; padding-left: 22px; }
+li { margin: 3px 0; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 9.2pt; }
+th { background: #123a5f; color: #fff; text-align: left; padding: 5px 7px; border: 1px solid #9fb3c8; font-weight: 600; }
+td { padding: 4px 7px; border: 1px solid #c5d0db; vertical-align: top; }
+tr.alt td { background: #f3f6f9; }
+tr { page-break-inside: avoid; }
+code { background: #eef2f6; padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; font-size: 9.2pt; color: #0b4f6c; }
+pre { background: #12232f; color: #e8f1f8; padding: 10px 12px; border-radius: 6px; white-space: pre-wrap; font-family: Consolas, monospace; font-size: 9pt; page-break-inside: avoid; }
+pre code { background: none; color: inherit; padding: 0; }
+strong { color: #123a5f; }
+hr { border: none; border-top: 2px solid #e2c044; margin: 16px 0; }
+a { color: #1b4f72; text-decoration: none; }
+</style>
+</head>
+<body>
+<section class="cover">
+  <div class="badge">PROJECT DOCUMENTATION</div>
+  <h1>MACVEL School Management System</h1>
+  <div class="line"></div>
+  <h2>Smart. Secure. Connected.</h2>
+  <div class="meta">
+    Multi-Tenant SaaS School Management Platform<br/>
+    Document Version 1.0 &nbsp;&middot;&nbsp; 2026-10-06<br/>
+    Prepared by MACVEL Development Team
+  </div>
+</section>
+<section class="toc-page">
+  <h1>Table of Contents</h1>
+  <ol>
+    <li><a href="#01-project-overview">01 Project Overview</a></li>
+    <li><a href="#02-requirements">02 Requirements</a></li>
+    <li><a href="#03-ui-ux">03 UI / UX</a></li>
+    <li><a href="#04-technical-documentation">04 Technical Documentation</a></li>
+    <li><a href="#05-api-documentation">05 API Documentation</a></li>
+    <li><a href="#06-database">06 Database</a></li>
+    <li><a href="#07-testing">07 Testing</a></li>
+    <li><a href="#08-deployment">08 Deployment</a></li>
+    <li><a href="#09-development-log">09 Development Log</a></li>
+    <li><a href="#10-release-notes">10 Release Notes</a></li>
+  </ol>
+</section>
+<h1 id="01-project-overview" class="section-title">01 Project Overview</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-project-purpose">1. Project Purpose</h3>
+<p>MACVEL School Management System is a multi-tenant SaaS platform that digitises the day-to-day operations of schools. It connects every stakeholder of a school — Super Admin, School Admin, Teachers, Students and Class Monitors — through role-specific portals in a single ecosystem.</p>
+<p><strong>Tagline:</strong> *Smart. Secure. Connected.*</p>
+<p>The application combines:</p>
+<ul>
+<li>Secure role-based authentication (Email / Student ID / Class Code login)</li>
+<li>Multi-school (multi-tenant) data isolation</li>
+<li>Class, Student and Teacher management</li>
+<li>Homework assignment, submission and grading</li>
+<li>Exams, Exam Schedules, Marks and Report Cards</li>
+<li>Weekly lesson planning (classwork / homework diary)</li>
+<li>Timetable grid (subject × day)</li>
+<li>News, Circulars, Gallery, Albums, Videos and Messages</li>
+<li>Academic calendar and school contacts</li>
+<li>File uploads (PDF / images) with Cloudinary storage</li>
+<li>Custom portal branding (logo, headings for web and mobile)</li>
+</ul>
+<h3 id="2-project-objective">2. Project Objective</h3>
+<p>The main objective of MACVEL is to replace registers, notice boards and scattered spreadsheets with one secure digital system that helps schools:</p>
+<ul>
+<li>Manage multiple schools from a single Super Admin console</li>
+<li>Give each school a fully isolated data workspace (tenant isolation)</li>
+<li>Let admins manage classes, students, teachers and subjects quickly</li>
+<li>Let teachers publish homework, circulars and lesson plans instantly</li>
+<li>Let students view homework, exams, marks, timetable and report cards anywhere</li>
+<li>Let class monitors (class-code login) maintain their own class records</li>
+<li>Publish school news and circulars to everyone in real time</li>
+<li>Keep a secure, auditable record of academic performance</li>
+</ul>
+<h3 id="3-users-roles">3. Users &amp; Roles</h3>
+<table><thead><tr><th>#</th><th>Role</th><th>Access Level</th><th>Portal</th></tr></thead><tbody>
+<tr><td>1</td><td>Super Admin</td><td>All schools (tenants), platform stats, branding</td><td>Web (Admin portal)</td></tr>
+<tr class="alt"><td>2</td><td>School Admin</td><td>Single school — classes, students, teachers, content</td><td>Web (Admin portal)</td></tr>
+<tr><td>3</td><td>Teacher</td><td>Assigned classes — homework, circulars, submissions</td><td>Web / Mobile</td></tr>
+<tr class="alt"><td>4</td><td>Student</td><td>Own data — homework, exams, marks, timetable, report cards</td><td>Web / Mobile</td></tr>
+<tr><td>5</td><td>Class Monitor (Class Login)</td><td>One class via class code — class records, bulk student import</td><td>Web / Mobile</td></tr>
+</tbody></table>
+<h3 id="4-functional-modules">4. Functional Modules</h3>
+<table><thead><tr><th>#</th><th>Module</th><th>Description</th></tr></thead><tbody>
+<tr><td>1</td><td>Authentication &amp; Profiles</td><td>Register, login (email or student ID), class-code login, JWT sessions, password change, profile update</td></tr>
+<tr class="alt"><td>2</td><td>Super Admin Console</td><td>School (tenant) CRUD, subscription/status control, admins per school, platform statistics</td></tr>
+<tr><td>3</td><td>School Admin Portal</td><td>Dashboard, classes, students, teachers, subjects, contacts, exams, report cards, albums, calendar</td></tr>
+<tr class="alt"><td>4</td><td>Teacher Portal</td><td>Dashboard, my classes, students, homework + grading, circulars</td></tr>
+<tr><td>5</td><td>Student Portal</td><td>Dashboard, homework submission, exams, marks, timetable, profile, report cards, news</td></tr>
+<tr class="alt"><td>6</td><td>Class Controller</td><td>Class dashboard, student CRUD with bulk import, homework, exams, schedules, subjects</td></tr>
+<tr><td>7</td><td>Content &amp; Communication</td><td>News, circulars, gallery, albums, videos, messages, posts</td></tr>
+<tr class="alt"><td>8</td><td>Academics</td><td>Exams, exam schedules, marks, report cards (manual + PDF/image upload), weekly lessons</td></tr>
+<tr><td>9</td><td>Timetable</td><td>Weekly subject × day grid with classwork/homework cells, publish workflow</td></tr>
+<tr class="alt"><td>10</td><td>Calendar &amp; Contacts</td><td>Academic calendar events per role, school contact directory</td></tr>
+<tr><td>11</td><td>Media &amp; Files</td><td>Multer uploads with Cloudinary storage (local <code>./uploads</code> fallback)</td></tr>
+<tr class="alt"><td>12</td><td>Portal Branding</td><td>Logo, heading and mobile branding customisation (public GET before login)</td></tr>
+</tbody></table>
+<h3 id="5-supported-platforms">5. Supported Platforms</h3>
+<ul>
+<li><strong>Web Browsers</strong> — Chrome, Edge, Firefox, Safari (responsive layout), deployed on Vercel</li>
+<li><strong>Android</strong> — Capacitor native wrapper (<code>mobile/</code> project)</li>
+<li><strong>iOS</strong> — Capacitor native wrapper (<code>mobile/</code> project)</li>
+<li><strong>Backend API</strong> — REST API accessible from any HTTP client (port 3000)</li>
+</ul>
+<h3 id="6-document-index">6. Document Index</h3>
+<table><thead><tr><th>Section</th><th>Document</th></tr></thead><tbody>
+<tr><td>01</td><td>Project Overview</td></tr>
+<tr class="alt"><td>02</td><td>Requirements</td></tr>
+<tr><td>03</td><td>UI / UX</td></tr>
+<tr class="alt"><td>04</td><td>Technical Documentation</td></tr>
+<tr><td>05</td><td>API Documentation</td></tr>
+<tr class="alt"><td>06</td><td>Database</td></tr>
+<tr><td>07</td><td>Testing</td></tr>
+<tr class="alt"><td>08</td><td>Deployment</td></tr>
+<tr><td>09</td><td>Development Log</td></tr>
+<tr class="alt"><td>10</td><td>Release Notes</td></tr>
+</tbody></table>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Prepared by:</strong> MACVEL Development Team<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="02-requirements" class="section-title">02 Requirements</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-functional-requirements">1. Functional Requirements</h3>
+<h4 id="1-1-authentication-profiles">1.1 Authentication &amp; Profiles</h4>
+<ul>
+<li>User registration and login with <strong>email OR student ID</strong> (<code>POST /api/auth/login</code>)</li>
+<li><strong>Class-code login</strong> for class monitors (<code>POST /api/auth/class-login</code>)</li>
+<li>JWT session persistence with role and tenant claims</li>
+<li>Password change (<code>PUT /api/auth/password</code>) and logout (<code>POST /api/auth/logout</code>)</li>
+<li>Profile view / update for every role (<code>GET|PUT /api/profile</code>)</li>
+<li>Bcrypt password hashing (10 salt rounds) and account-lock fields for admins</li>
+</ul>
+<h4 id="1-2-multi-tenancy-super-admin">1.2 Multi-Tenancy &amp; Super Admin</h4>
+<ul>
+<li>Create, update, suspend and soft-delete schools (tenants)</li>
+<li>Unique school <code>code</code> and <code>domainSlug</code> per tenant</li>
+<li>Subscription plans (FREE / BASIC / PREMIUM / ENTERPRISE) and user limits</li>
+<li>Per-school admin management (create, edit, reset password, delete)</li>
+<li>Platform statistics, system config and DB latency monitoring</li>
+<li>Super-admin-only cleanup utility (stats / execute / verify)</li>
+</ul>
+<h4 id="1-3-school-admin-portal">1.3 School Admin Portal</h4>
+<ul>
+<li>Dashboard with school metrics</li>
+<li>Class management: create/update/delete, auto-generated class code, class password reset</li>
+<li>Student management: CRUD, next-ID generation, pagination and search</li>
+<li>Teacher management: CRUD, available-teacher listing</li>
+<li>Subject and contact directory CRUD</li>
+<li>Exam content management (create / publish / delete with file URL)</li>
+<li>Report card management: create, publish, bulk publish, PDF/image upload</li>
+<li>Album management (photos + external links), calendar events</li>
+<li>Portal branding: web logo/heading and mobile logo/heading</li>
+</ul>
+<h4 id="1-4-teacher-portal">1.4 Teacher Portal</h4>
+<ul>
+<li>Dashboard, list of assigned classes and students</li>
+<li>Homework: create, edit, delete, publish; view submissions; grade with marks + feedback</li>
+<li>Circulars: create and list for the school</li>
+</ul>
+<h4 id="1-5-student-portal">1.5 Student Portal</h4>
+<ul>
+<li>Dashboard, timetable (published only), homework list with submission (file upload)</li>
+<li>Exams, marks and profile</li>
+<li>Report cards (view + parent acknowledgment)</li>
+<li>News list and weekly lessons (by date)</li>
+</ul>
+<h4 id="1-6-class-controller-class-monitor">1.6 Class Controller (Class Monitor)</h4>
+<ul>
+<li>Class dashboard with class code display</li>
+<li>Student CRUD with <strong>next student ID</strong> and <strong>bulk import</strong> (CSV/XLSX template + upload)</li>
+<li>Student password reset</li>
+<li>Homework CRUD with homework file upload/delete</li>
+<li>Exams and exam schedules (view), subjects CRUD</li>
+<li>Class timetable authoring (subject × Mon–Sat grid, classwork/homework cells) with publish</li>
+</ul>
+<h4 id="1-7-content-communication">1.7 Content &amp; Communication</h4>
+<ul>
+<li>News and Circulars: CRUD, image/attachment upload, visibility (all / teachers / specific class), publish flags</li>
+<li>Gallery and Albums: CRUD, album links, category listing</li>
+<li>Videos: CRUD with category, visibility and publish flags</li>
+<li>Messages: inbox listing, send, delete with read receipts</li>
+<li>Posts: create/edit/delete own posts, post statistics</li>
+</ul>
+<h4 id="1-8-media-file-uploads">1.8 Media &amp; File Uploads</h4>
+<ul>
+<li>Single and multiple file uploads (<code>/api/files/upload</code>, <code>/upload-multiple</code>)</li>
+<li>Dedicated uploads: homework files, exam files, news images, report card PDFs</li>
+<li><strong>Cloudinary</strong> primary storage; automatic local <code>./uploads</code> fallback when unconfigured</li>
+<li>Public static serving of <code>/uploads</code> with 1-year cache headers</li>
+</ul>
+<h3 id="2-non-functional-requirements">2. Non-Functional Requirements</h3>
+<table><thead><tr><th>#</th><th>Requirement</th><th>Implementation</th></tr></thead><tbody>
+<tr><td>1</td><td>Security</td><td>Helmet headers, CORS allow-list, bcrypt hashing, JWT, RBAC middleware, tenant isolation middleware</td></tr>
+<tr class="alt"><td>2</td><td>Data Isolation</td><td>Every query scoped by <code>tenantId</code> / <code>schoolId</code> (<code>enforceSchoolIsolation</code>)</td></tr>
+<tr><td>3</td><td>Availability</td><td>Health check endpoint (<code>/health</code>), graceful DB connect/disconnect handling</td></tr>
+<tr class="alt"><td>4</td><td>Performance</td><td>In-memory cache utilities, DB indexes on tenant + foreign keys, pagination on list APIs</td></tr>
+<tr><td>5</td><td>Validation</td><td>express-validator rules on protected routes; Mongoose schema validation</td></tr>
+<tr class="alt"><td>6</td><td>Compatibility</td><td>Responsive web (Vite build), Android + iOS via Capacitor</td></tr>
+<tr><td>7</td><td>Limits</td><td>10 MB JSON body limit, configurable <code>MAX_FILE_SIZE</code> (default 10 MB)</td></tr>
+<tr class="alt"><td>8</td><td>Extensibility</td><td>Modular route/controller/model structure, feature flags in tenant settings</td></tr>
+</tbody></table>
+<h3 id="3-core-modules-summary">3. Core Modules Summary</h3>
+<table><thead><tr><th>Module Name</th><th>Purpose</th><th>Key Functions</th><th>Status</th></tr></thead><tbody>
+<tr><td>Auth &amp; Profile</td><td>Identity &amp; sessions</td><td>Register, Login (email/ID/class code), password change, profile</td><td>Completed</td></tr>
+<tr class="alt"><td>Super Admin</td><td>Platform oversight</td><td>School CRUD, stats, admins, branding, cleanup</td><td>Completed</td></tr>
+<tr><td>Admin Portal</td><td>School management</td><td>Classes, students, teachers, subjects, contacts, exams</td><td>Completed</td></tr>
+<tr class="alt"><td>Teacher Portal</td><td>Classroom management</td><td>Homework CRUD + grading, circulars, class/student lists</td><td>Completed</td></tr>
+<tr><td>Student Portal</td><td>Learning access</td><td>Homework submit, exams, marks, timetable, report cards</td><td>Completed</td></tr>
+<tr class="alt"><td>Class Controller</td><td>Class self-service</td><td>Student bulk import, homework, exams, subjects, timetable</td><td>Completed</td></tr>
+<tr><td>Academics</td><td>Assessment</td><td>Exams, schedules, marks, report cards (manual + file), weekly lessons</td><td>Completed</td></tr>
+<tr class="alt"><td>Content</td><td>Communication</td><td>News, circulars, gallery, albums, videos, messages, posts</td><td>Completed</td></tr>
+<tr><td>Timetable</td><td>Weekly plan</td><td>Subject × day grid, publish/unpublish, CSV sample</td><td>Completed</td></tr>
+<tr class="alt"><td>Calendar &amp; Contacts</td><td>School events</td><td>Role-based calendar events, contact directory</td><td>Completed</td></tr>
+<tr><td>Media Storage</td><td>File pipeline</td><td>Multer → Cloudinary (fallback: local disk), delete APIs</td><td>Completed</td></tr>
+<tr class="alt"><td>Portal Branding</td><td>White-label login</td><td>Web/mobile logo + headings, public GET before login</td><td>Completed</td></tr>
+</tbody></table>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="03-ui-ux" class="section-title">03 UI / UX</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-design-framework">1. Design Framework</h3>
+<table><thead><tr><th>Aspect</th><th>Choice</th></tr></thead><tbody>
+<tr><td>UI Library</td><td>Ionic 7 (React) components — IonApp, IonSplitPane, IonRouterOutlet, IonPage</td></tr>
+<tr class="alt"><td>Icons</td><td>Ionicons 7</td></tr>
+<tr><td>Styling</td><td>Global <code>theme.css</code> + per-screen <code>.css</code> files, CSS variables, gradient cards</td></tr>
+<tr class="alt"><td>Routing</td><td>react-router-dom v5 via <code>@ionic/react-router</code></td></tr>
+<tr><td>State</td><td><code>AuthContext</code> (AuthProvider / useAuth) for session, role and loading states</td></tr>
+<tr class="alt"><td>Branding</td><td><code>useSchoolBranding</code> hook — school logo/heading pulled from portal branding API</td></tr>
+</tbody></table>
+<h3 id="2-navigation-model">2. Navigation Model</h3>
+<ul>
+<li><strong>Side menu (<code>IonSplitPane</code>)</strong> — shown after login, differs per role:</li>
+</ul>
+<p>- <code>AdminMenu</code> for admin / super-admin roles<br/>- <code>TeacherMenu</code> for TEACHER role<br/>- <code>StudentMenu</code> for STUDENT role</p>
+<ul>
+<li><strong>Route guards</strong> — unauthenticated users are redirected to <code>/login</code> (or <code>/student/login</code>); authenticated users land on their role home (<code>/admin</code>, <code>/teacher</code>, <code>/student</code>)</li>
+<li><strong>Loading state</strong> — a full-screen loading indicator is shown while the auth context initialises (prevents blank-screen flashes)</li>
+<li><strong>Role detection</strong> — normalised Title-Case role strings (<code>Student</code>, <code>Teacher</code>, <code>School Admin</code>, <code>Super Admin</code>) drive menu and route access</li>
+</ul>
+<h3 id="3-screen-inventory">3. Screen Inventory</h3>
+<h4 id="3-1-authentication-screens">3.1 Authentication Screens</h4>
+<table><thead><tr><th>Screen</th><th>Route</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>LoginScreen</td><td><code>/login</code></td><td>Admin / Teacher / Employee login with branded header</td></tr>
+<tr class="alt"><td>StudentLoginScreen</td><td><code>/student/login</code></td><td>Student login</td></tr>
+<tr><td>RegisterScreen</td><td><code>/register</code></td><td>New account registration</td></tr>
+</tbody></table>
+<h4 id="3-2-admin-screens-frontend-src-screens-admin">3.2 Admin Screens (<code>frontend/src/screens/admin/</code>)</h4>
+<table><thead><tr><th>Screen</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>AdminDashboardScreen</td><td>School metrics dashboard</td></tr>
+<tr class="alt"><td>AdminStudentsScreen + Create/EditStudentScreen</td><td>Student list &amp; forms</td></tr>
+<tr><td>AdminTeachersScreen + Create/EditTeacherScreen</td><td>Teacher list &amp; forms</td></tr>
+<tr class="alt"><td>AdminClassesScreen + Create/EditClassScreen, ClassDetailScreen</td><td>Class management</td></tr>
+<tr><td>AdminNewsScreen, AdminCircularsScreen + CreateCircularScreen</td><td>Content publishing</td></tr>
+<tr class="alt"><td>CalendarScreen (admin)</td><td>Academic calendar events</td></tr>
+<tr><td>AdminExamsScreen</td><td>Exam management</td></tr>
+<tr class="alt"><td>ReportCardsScreen, ReportCardViewScreen, StudentReportCardSearchScreen</td><td>Report cards</td></tr>
+<tr><td>AdminAlbumsScreen + Create/EditAlbumScreen</td><td>Photo albums</td></tr>
+<tr class="alt"><td>AdminSettingsScreen</td><td>Settings</td></tr>
+</tbody></table>
+<h4 id="3-3-super-admin-screens-frontend-src-screens-superadmin">3.3 Super Admin Screens (<code>frontend/src/screens/superadmin/</code>)</h4>
+<p>DashboardScreen, SchoolsListScreen, SchoolDetailScreen, CreateSchoolScreen, PortalBrandingScreen</p>
+<h4 id="3-4-teacher-screens-frontend-src-screens-teacher">3.4 Teacher Screens (<code>frontend/src/screens/teacher/</code>)</h4>
+<p>TeacherDashboardScreen, TeacherClassesScreen, TeacherAttendanceScreen, TeacherHomeworkScreen, TeacherStudentsScreen</p>
+<h4 id="3-5-student-screens-mobile-student">3.5 Student Screens (<code>mobile/student/</code>)</h4>
+<p>StudentDashboardScreen, StudentHomeworkScreen, StudentExamsScreen, StudentExamDetailScreen, StudentTimetableScreen, StudentMarksScreen, StudentProfileScreen, ReportCardsScreen, NewsListScreen</p>
+<h4 id="3-6-class-controller-screens-frontend-src-screens-classcontroller">3.6 Class Controller Screens (<code>frontend/src/screens/classcontroller/</code>)</h4>
+<p>ClassStudentsListScreen, ClassHomeworkList/Detail/EditScreen, ClassExamSchedulesListScreen, ClassExamDetailScreen, ClassNewsList/DetailScreen, ClassProfileScreen, ClassTimetableScreen</p>
+<h4 id="3-7-shared-screens-frontend-src-screens">3.7 Shared Screens (<code>frontend/src/screens/</code>)</h4>
+<p>NewsScreen, CircularsScreen, GalleryScreen, AlbumsScreen, VideosScreen, MessagesScreen, CalendarScreen, ContactsScreen, SettingsScreen + shared <code>TimetableGridTable</code></p>
+<h3 id="4-ux-principles-applied">4. UX Principles Applied</h3>
+<ol>
+<li><strong>Role-first design</strong> — every user sees only the menu and screens relevant to their role; no dead-end navigation</li>
+<li><strong>Consistent visual language</strong> — gradient cards, emoji/ Ionicon cues, uniform list rows and detail pages across modules</li>
+<li><strong>Feedback &amp; safety</strong> — confirmation dialogs before destructive actions (delete), toast/alert feedback on success and error, disabled states while saving</li>
+<li><strong>Responsive layout</strong> — Ionic responsive components; split-pane collapses to a hamburger menu on small screens</li>
+<li><strong>Fast, forgiving forms</strong> — inline validation messages, next-ID auto-fill for students, bulk import template download</li>
+<li><strong>Brand customisation</strong> — school logo and headings appear on login and dashboards via portal branding (works before login)</li>
+<li><strong>Empty &amp; loading states</strong> — loading guards during auth init; empty-state messages when lists have no data</li>
+</ol>
+<h3 id="5-ui-screen-flow-typical">5. UI Screen Flow (Typical)</h3>
+<pre><code>
+Login → Role detection → Role side menu + Home dashboard
+   ├─ Admin: Classes → Students / Teachers / Exams / Report cards / Content
+   ├─ Teacher: My classes → Homework → Submissions → Circulars
+   ├─ Student: Dashboard → Homework / Exams / Marks / Timetable / Report cards
+   └─ Class monitor: Class dashboard → Students (bulk import) / Homework / Timetable
+</code></pre>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="04-technical-documentation" class="section-title">04 Technical Documentation</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-system-architecture">1. System Architecture</h3>
+<pre><code>
+┌──────────────────────────────────────────────────────────────┐
+│                       CLIENT LAYER                           │
+│  React 18 + Ionic 7 + Vite 5 (Web)  │  Capacitor (Android/iOS)│
+└────────────────────────┬─────────────────────────────────────┘
+                         │  HTTPS  ·  JSON  ·  Bearer JWT
+┌────────────────────────▼─────────────────────────────────────┐
+│                    BACKEND API LAYER                         │
+│  Node.js 18+ / Express 4  ·  Helmet  ·  CORS  ·  RBAC        │
+│  JWT Auth  ·  express-validator  ·  Multer uploads           │
+└────────────────────────┬─────────────────────────────────────┘
+                         │  Mongoose ODM
+┌────────────────────────▼─────────────────────────────────────┐
+│                      DATABASE LAYER                          │
+│         MongoDB (local or Atlas) — macvel_school             │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+┌────────────────────────▼─────────────────────────────────────┐
+│                   EXTERNAL SERVICES                          │
+│     Cloudinary (media storage)  ·  Local ./uploads           │
+└──────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="2-client-layer">2. Client Layer</h3>
+<p><strong>Technology:</strong> React 18 + Ionic 7 + Vite 5 (JavaScript/JSX)</p>
+<p><strong>Responsibilities:</strong></p>
+<ul>
+<li>Cross-platform UI rendering (web + hybrid mobile)</li>
+<li>Role-based routing and guard logic (<code>AuthContext</code>)</li>
+<li>REST API consumption via <strong>axios</strong> (<code>src/services/api.js</code>)</li>
+<li>Forms, lists, dashboards, timetable grid rendering</li>
+<li>School branding application (<code>useSchoolBranding</code>)</li>
+</ul>
+<p><strong>Key directories:</strong> <code>frontend/src/screens/</code> (admin, teacher, superadmin, classcontroller, shared), <code>frontend/src/components/</code>, <code>frontend/src/contexts/</code>, <code>frontend/src/services/</code></p>
+<h3 id="3-mobile-layer">3. Mobile Layer</h3>
+<p><strong>Technology:</strong> Capacitor 8 (<code>@capacitor/core</code>, <code>@capacitor/android</code>, <code>@capacitor/ios</code>)</p>
+<ul>
+<li>Wraps the built web assets (<code>webDir: build</code>) into native Android/iOS shells (<code>mobile/android</code>, <code>mobile/ios</code>)</li>
+<li>App ID: <code>com.school.app</code> · App Name: <code>School</code></li>
+<li>Shared React/Ionic codebase with the web client; student screens live in <code>mobile/student/</code></li>
+</ul>
+<h3 id="4-backend-api-layer">4. Backend API Layer</h3>
+<p><strong>Technology:</strong> Node.js 18+ / Express 4 (<code>backend/src/server.js</code>)</p>
+<p><strong>Middleware pipeline (in order):</strong></p>
+<table><thead><tr><th>#</th><th>Middleware</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>1</td><td>Helmet</td><td>Security headers (CSP relaxed for API use)</td></tr>
+<tr class="alt"><td>2</td><td>CORS</td><td>Reflects request origin, credentials allowed, preflight 204 handling; allowed headers include <code>Authorization</code>, <code>x-tenant-id</code></td></tr>
+<tr><td>3</td><td>Body parsers</td><td><code>express.json</code> / <code>urlencoded</code> with 10 MB limit</td></tr>
+<tr class="alt"><td>4</td><td>Static <code>/uploads</code></td><td>Public file serving with 1-year cache</td></tr>
+<tr><td>5</td><td><code>connectDB()</code></td><td>MongoDB connection at startup (exits on failure)</td></tr>
+<tr class="alt"><td>6</td><td>Public routes</td><td><code>/health</code>, <code>/api/super-admin</code>, <code>/api/auth</code>, <code>/api/portal-branding</code></td></tr>
+<tr><td>7</td><td><code>authenticate</code></td><td>JWT verification for all remaining routes</td></tr>
+<tr class="alt"><td>8</td><td><code>verifyRole</code> / <code>enforceSchoolIsolation</code></td><td>RBAC + tenant scoping (per route)</td></tr>
+<tr><td>9</td><td>404 handler</td><td>JSON <code>Endpoint not found</code></td></tr>
+<tr class="alt"><td>10</td><td><code>errorHandler</code></td><td>Centralised JSON error responses</td></tr>
+</tbody></table>
+<p><strong>Structure:</strong></p>
+<pre><code>
+backend/src/
+├── server.js          # App wiring, middleware, route mounts
+├── config/            # db.js (Mongoose), cloudinary.js
+├── controllers/       # Business logic (23 controllers)
+├── routes/            # 32 route files (router definitions)
+├── models/            # 35 Mongoose models
+├── middleware/        # auth, rbac, tenant, errorHandler, fileUpload, maintenanceGuard
+├── services/          # storageService (Cloudinary/local abstraction)
+└── utils/             # idGenerator, cache, adminCascadeDelete, cleanup scripts
+</code></pre>
+<h3 id="5-database-layer">5. Database Layer</h3>
+<p><strong>DBMS:</strong> MongoDB via <strong>Mongoose 9</strong> ODM<br/><strong>Default URI:</strong> <code>mongodb://localhost:27017/macvel_school</code> (overridable with <code>MONGODB_URI</code>, supports Atlas)<br/><strong>Connection features:</strong> 5 s server-selection timeout, 45 s socket timeout, connection reuse, error/disconnect event handling, graceful SIGINT shutdown<br/><strong>Schema design:</strong> 35 collections; all tenant-scoped documents carry <code>tenantId</code> or <code>schoolId</code> with compound indexes</p>
+<h3 id="6-external-cloud-services">6. External Cloud Services</h3>
+<ul>
+<li><strong>Cloudinary</strong> — primary media asset storage (images, PDFs, exam/report files) configured via <code>CLOUDINARY_URL</code></li>
+<li><strong>Local disk fallback</strong> — <code>backend/uploads/</code> (<code>images</code>, <code>news</code>, <code>circulars</code>, <code>homework</code>, <code>exam</code>, <code>reportcard</code>, <code>audio</code>, <code>videos</code>, <code>documents</code>) when Cloudinary is unset</li>
+<li><strong>Vercel</strong> — production hosting for the web frontend</li>
+</ul>
+<h3 id="7-authentication-authorization">7. Authentication &amp; Authorization</h3>
+<p><strong>Token:</strong> JWT (HS256), expiry <code>JWT_EXPIRES_IN</code> (default 7d), sent as <code>Authorization: Bearer &lt;token&gt;</code></p>
+<p><strong>Claims:</strong> <code>id</code>, <code>email</code>, <code>role</code>, <code>tenantId</code>/<code>schoolId</code>, <code>classId</code> (class login)</p>
+<table><thead><tr><th>Role</th><th>Scope</th></tr></thead><tbody>
+<tr><td>Super Admin</td><td>All tenants</td></tr>
+<tr class="alt"><td>School Admin</td><td>One school</td></tr>
+<tr><td>Teacher</td><td>Assigned classes</td></tr>
+<tr class="alt"><td>Student</td><td>Own records only</td></tr>
+<tr><td>Class login</td><td>Single class (class code + password)</td></tr>
+</tbody></table>
+<p><strong>Password security:</strong> bcrypt hashing (10 rounds, configurable <code>BCRYPT_SALT_ROUNDS</code>), <code>select: false</code> on password fields, login-attempt/lock fields on Admin accounts.</p>
+<h3 id="8-request-lifecycle-example-create-homework">8. Request Lifecycle (Example: create homework)</h3>
+<ol>
+<li>Teacher logs in → <code>POST /api/auth/login</code> → JWT issued</li>
+<li>Client calls <code>POST /api/homework</code> with Bearer token</li>
+<li><code>authenticate</code> decodes JWT → <code>req.user</code> populated</li>
+<li>Route-level <code>verifyRole('Teacher', ...)</code> validates role</li>
+<li>Controller validates body (express-validator / Mongoose)</li>
+<li>Document saved with <code>schoolId</code>/<code>tenantId</code> of the requester</li>
+<li>JSON response <code>{ success: true, ... }</code>; errors funnel to <code>errorHandler</code></li>
+</ol>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="05-api-documentation" class="section-title">05 API Documentation</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-api-overview">1. API Overview</h3>
+<table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody>
+<tr><td>Base URL (dev)</td><td><code>http://localhost:3000/api</code></td></tr>
+<tr class="alt"><td>Health check</td><td><code>GET /health</code> (outside <code>/api</code>)</td></tr>
+<tr><td>Format</td><td>JSON (UTF-8)</td></tr>
+<tr class="alt"><td>Authentication</td><td><code>Authorization: Bearer &lt;JWT&gt;</code></td></tr>
+<tr><td>Optional header</td><td><code>x-tenant-id</code> — tenant context for scoped requests</td></tr>
+<tr class="alt"><td>Success shape</td><td><code>{ "success": true, ... }</code></td></tr>
+<tr><td>Error shape</td><td><code>{ "success": false, "error": { "message", "path", "method" } }</code></td></tr>
+</tbody></table>
+<p><strong>Public routes (no token):</strong> <code>/health</code>, <code>/api/auth/*</code> (login, register, class-login), <code>/api/super-admin/*</code>, <code>/api/superadmin/*</code>, <code>GET /api/portal-branding</code>. All other routes pass through the global <code>authenticate</code> middleware.</p>
+<h3 id="2-authentication-api-auth">2. Authentication — <code>/api/auth</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead><tbody>
+<tr><td>POST</td><td><code>/login</code></td><td>No</td><td>Login with email, username or student ID + password</td></tr>
+<tr class="alt"><td>POST</td><td><code>/register</code></td><td>No</td><td>Register a new user</td></tr>
+<tr><td>POST</td><td><code>/class-login</code></td><td>No</td><td>Login with class code + class password</td></tr>
+<tr class="alt"><td>GET</td><td><code>/me</code></td><td>Yes</td><td>Current user profile from token</td></tr>
+<tr><td>PUT</td><td><code>/password</code></td><td>Yes</td><td>Change password</td></tr>
+<tr class="alt"><td>POST</td><td><code>/logout</code></td><td>Yes</td><td>Client-side logout</td></tr>
+</tbody></table>
+<p><strong>Sample request:</strong></p>
+<pre><code>
+POST /api/auth/login
+{
+  "usernameOrEmailOrId": "admin@school.com",
+  "password": "password123"
+}
+</code></pre>
+<p><strong>Sample response:</strong></p>
+<pre><code>
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": { "id": "...", "name": "...", "role": "School Admin", "schoolId": "..." }
+}
+</code></pre>
+<h3 id="3-super-admin-api-super-admin-alias-api-superadmin">3. Super Admin — <code>/api/super-admin</code> (alias <code>/api/superadmin</code>)</h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/stats</code></td><td>Platform-wide statistics</td></tr>
+<tr class="alt"><td>POST</td><td><code>/schools</code></td><td>Create a school (tenant)</td></tr>
+<tr><td>GET</td><td><code>/schools</code></td><td>List all schools</td></tr>
+<tr class="alt"><td>GET</td><td><code>/schools/:id</code></td><td>School details</td></tr>
+<tr><td>PUT</td><td><code>/schools/:id</code></td><td>Update school</td></tr>
+<tr class="alt"><td>PATCH</td><td><code>/schools/:id/status</code></td><td>Activate / suspend school</td></tr>
+<tr><td>DELETE</td><td><code>/schools/:id</code></td><td>Soft-delete school</td></tr>
+<tr class="alt"><td>GET</td><td><code>/schools/:schoolId/admins</code></td><td>List admins of a school</td></tr>
+<tr><td>PUT</td><td><code>/schools/:schoolId/admins/:adminId</code></td><td>Update school admin</td></tr>
+<tr class="alt"><td>DELETE</td><td><code>/schools/:schoolId/admins/:adminId</code></td><td>Remove school admin</td></tr>
+<tr><td>POST</td><td><code>/schools/:schoolId/admins/:adminId/reset-password</code></td><td>Reset admin password</td></tr>
+</tbody></table>
+<h3 id="4-portal-branding-api-portal-branding">4. Portal Branding — <code>/api/portal-branding</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/</code></td><td>No</td><td>Branding for login page (public)</td></tr>
+<tr class="alt"><td>PUT</td><td><code>/</code></td><td>Super Admin</td><td>Update heading / sub-heading</td></tr>
+<tr><td>PUT</td><td><code>/logo</code></td><td>Super Admin</td><td>Upload web logo</td></tr>
+<tr class="alt"><td>DELETE</td><td><code>/logo</code></td><td>Super Admin</td><td>Remove web logo</td></tr>
+<tr><td>PUT</td><td><code>/mobile-logo</code></td><td>Super Admin</td><td>Upload mobile logo</td></tr>
+<tr class="alt"><td>DELETE</td><td><code>/mobile-logo</code></td><td>Super Admin</td><td>Remove mobile logo</td></tr>
+<tr><td>POST</td><td><code>/reset</code></td><td>Super Admin</td><td>Reset branding to defaults</td></tr>
+<tr class="alt"><td>DELETE</td><td><code>/mobile</code></td><td>Super Admin</td><td>Clear mobile branding</td></tr>
+</tbody></table>
+<h3 id="5-school-admin-api-admin">5. School Admin — <code>/api/admin</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/dashboard</code></td><td>Admin dashboard metrics</td></tr>
+<tr class="alt"><td>GET</td><td><code>/classes</code> · <code>/classes/:id</code> · <code>/classes/:id/dashboard</code></td><td>Class list / details / dashboard</td></tr>
+<tr><td>POST</td><td><code>/classes</code></td><td>Create class (auto class code)</td></tr>
+<tr class="alt"><td>PUT · DELETE</td><td><code>/classes/:id</code></td><td>Update / delete class</td></tr>
+<tr><td>POST</td><td><code>/classes/:id/reset-password</code></td><td>Reset class login password</td></tr>
+<tr class="alt"><td>POST</td><td><code>/reset-class-code-counter</code></td><td>Reset class code sequence (password guarded)</td></tr>
+<tr><td>GET</td><td><code>/students</code> · <code>/students/:id</code> · <code>/students/next-id</code></td><td>Student list / details / next ID</td></tr>
+<tr class="alt"><td>POST · PUT · DELETE</td><td><code>/students</code> · <code>/students/:id</code></td><td>Student CRUD</td></tr>
+<tr><td>GET</td><td><code>/teachers</code> · <code>/teachers/:id</code> · <code>/teachers/available</code></td><td>Teacher list / details / unassigned</td></tr>
+<tr class="alt"><td>POST · PUT · DELETE</td><td><code>/teachers</code> · <code>/teachers/:id</code></td><td>Teacher CRUD</td></tr>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/subjects</code> · <code>/subjects/:id</code></td><td>Subject CRUD</td></tr>
+<tr class="alt"><td>GET · POST · PUT · DELETE</td><td><code>/contacts</code> · <code>/contacts/:id</code></td><td>Contact directory CRUD</td></tr>
+<tr><td>GET</td><td><code>/exams</code></td><td>Exam content list</td></tr>
+<tr class="alt"><td>POST · PUT · DELETE</td><td><code>/content/exams</code> · <code>/content/exams/:id</code></td><td>Exam content CRUD</td></tr>
+</tbody></table>
+<h3 id="6-teacher-api-teacher">6. Teacher — <code>/api/teacher</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/dashboard</code></td><td>Teacher dashboard</td></tr>
+<tr class="alt"><td>GET</td><td><code>/classes</code></td><td>Assigned classes</td></tr>
+<tr><td>GET</td><td><code>/students</code></td><td>Students of assigned classes</td></tr>
+<tr class="alt"><td>GET · POST · PUT · DELETE</td><td><code>/homework</code> · <code>/homework/:id</code></td><td>Homework CRUD</td></tr>
+<tr><td>GET</td><td><code>/homework/:id/submissions</code></td><td>Submissions for a homework</td></tr>
+<tr class="alt"><td>PUT</td><td><code>/homework/:id/submissions/:studentId</code></td><td>Grade a submission (marks + feedback)</td></tr>
+<tr><td>GET · POST</td><td><code>/circulars</code></td><td>School circulars</td></tr>
+</tbody></table>
+<h3 id="7-student-api-student">7. Student — <code>/api/student</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/dashboard</code></td><td>Student dashboard</td></tr>
+<tr class="alt"><td>GET</td><td><code>/timetable</code></td><td>Published timetable</td></tr>
+<tr><td>GET</td><td><code>/homework</code></td><td>Homework list with submission status</td></tr>
+<tr class="alt"><td>POST</td><td><code>/homework/:id/submit</code></td><td>Submit homework (file URL)</td></tr>
+<tr><td>GET</td><td><code>/exams</code></td><td>Exam list</td></tr>
+<tr class="alt"><td>GET</td><td><code>/marks</code></td><td>Marks list</td></tr>
+<tr><td>GET</td><td><code>/profile</code></td><td>Student profile</td></tr>
+</tbody></table>
+<h3 id="8-class-controller-api-class-controller">8. Class Controller — <code>/api/class-controller</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/dashboard</code></td><td>Class dashboard (class code, counts)</td></tr>
+<tr class="alt"><td>GET · POST · PUT · DELETE</td><td><code>/students</code> · <code>/students/:id</code></td><td>Class student CRUD</td></tr>
+<tr><td>GET</td><td><code>/students/next-id</code></td><td>Next auto student ID</td></tr>
+<tr class="alt"><td>PUT</td><td><code>/students/:id/reset-password</code></td><td>Reset student password</td></tr>
+<tr><td>GET</td><td><code>/students/bulk-import/template</code></td><td>Download import template</td></tr>
+<tr class="alt"><td>POST</td><td><code>/students/bulk-import</code></td><td>Bulk import students (CSV/XLSX)</td></tr>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/homework</code> · <code>/homework/:id</code></td><td>Class homework CRUD</td></tr>
+<tr class="alt"><td>POST · DELETE</td><td><code>/upload-homework-files</code> · <code>/homework-files/:filename</code></td><td>Homework file upload / delete</td></tr>
+<tr><td>GET</td><td><code>/exams</code> · <code>/exams/:id</code></td><td>Class exams</td></tr>
+<tr class="alt"><td>GET</td><td><code>/exam-schedules</code> · <code>/exam-schedules/:id</code></td><td>Exam schedules</td></tr>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/subjects</code> · <code>/subjects/:id</code></td><td>Class subjects CRUD</td></tr>
+</tbody></table>
+<h3 id="9-homework-api-homework">9. Homework — <code>/api/homework</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Homework CRUD (published only by default)</td></tr>
+<tr class="alt"><td>POST</td><td><code>/:id/submit</code></td><td>Student submission</td></tr>
+<tr><td>POST</td><td><code>/:id/check</code></td><td>Teacher grading action</td></tr>
+</tbody></table>
+<h3 id="10-exams-api-exams">10. Exams — <code>/api/exams</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Exam CRUD</td></tr>
+<tr class="alt"><td>GET</td><td><code>/schedule/:classId</code></td><td>Schedule for a class</td></tr>
+<tr><td>POST</td><td><code>/:id/schedule</code></td><td>Add exam schedule</td></tr>
+<tr class="alt"><td>PUT · DELETE</td><td><code>/schedule/:id</code></td><td>Update / delete schedule</td></tr>
+</tbody></table>
+<h3 id="11-timetable-api-timetable">11. Timetable — <code>/api/timetable</code></h3>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/template</code></td><td>Timetable template</td></tr>
+<tr class="alt"><td>GET</td><td><code>/admin/all</code> · <code>/admin/:id</code></td><td>Admin list / detail</td></tr>
+<tr><td>GET</td><td><code>/</code></td><td>Timetable for current class/school</td></tr>
+<tr class="alt"><td>POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Timetable CRUD</td></tr>
+<tr><td>PATCH</td><td><code>/:id/publish</code></td><td>Publish / unpublish</td></tr>
+</tbody></table>
+<h3 id="12-content-apis">12. Content APIs</h3>
+<p><strong>News — <code>/api/news</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>News CRUD</td></tr>
+</tbody></table>
+<p><strong>Circulars — <code>/api/circulars</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Circular CRUD</td></tr>
+</tbody></table>
+<p><strong>Gallery — <code>/api/gallery</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Gallery item CRUD</td></tr>
+</tbody></table>
+<p><strong>Videos — <code>/api/videos</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/</code> · <code>/:id</code> · <code>/categories/list</code></td><td>Video list / detail / categories</td></tr>
+<tr class="alt"><td>GET</td><td><code>/admin/all</code></td><td>Admin video list</td></tr>
+<tr><td>POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Video CRUD</td></tr>
+</tbody></table>
+<p><strong>Albums — <code>/api/albums</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/</code> · <code>/:id</code> · <code>/categories/list</code></td><td>Album list / detail / categories</td></tr>
+<tr class="alt"><td>GET</td><td><code>/admin/all</code> · <code>/admin/:id</code></td><td>Admin album list / detail</td></tr>
+<tr><td>POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Album CRUD</td></tr>
+<tr class="alt"><td>POST · DELETE</td><td><code>/:id/links</code> · <code>/:id/links/:linkIndex</code></td><td>External links in album</td></tr>
+</tbody></table>
+<p><strong>Public content — <code>/api/content</code></strong> (read-only)</p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/news</code> · <code>/news/:id</code></td><td>Published news</td></tr>
+<tr class="alt"><td>GET</td><td><code>/circulars</code> · <code>/circulars/:id</code></td><td>Published circulars</td></tr>
+<tr><td>GET</td><td><code>/exams</code> · <code>/exams/:id</code></td><td>Published exams</td></tr>
+<tr class="alt"><td>GET</td><td><code>/exam-schedules</code> · <code>/exam-schedules/:id</code></td><td>Published schedules</td></tr>
+</tbody></table>
+<p><strong>Admin content — <code>/api/admin-content</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/news</code> · <code>/news/:id</code></td><td>News management with visibility rules</td></tr>
+<tr class="alt"><td>POST</td><td><code>/upload</code></td><td>Generic file upload</td></tr>
+<tr><td>POST</td><td><code>/upload-exam</code></td><td>Exam file upload (PDF/image)</td></tr>
+</tbody></table>
+<p><strong>Posts — <code>/api/posts</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/</code> · <code>/my-posts</code> · <code>/:id</code></td><td>Post feeds</td></tr>
+<tr class="alt"><td>POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Post CRUD (own posts)</td></tr>
+</tbody></table>
+<p><strong>Messages — <code>/api/messages</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/</code> · <code>/:id</code></td><td>Inbox / message detail</td></tr>
+<tr class="alt"><td>POST · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Send / delete message</td></tr>
+</tbody></table>
+<h3 id="13-academics-apis">13. Academics APIs</h3>
+<p><strong>Weekly Lessons — <code>/api/weekly-lessons</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/</code></td><td>All lessons (school scope)</td></tr>
+<tr class="alt"><td>GET · POST · DELETE</td><td><code>/teacher/weekly-lessons</code> · <code>/:id</code></td><td>Teacher lesson plans</td></tr>
+<tr><td>GET</td><td><code>/student/weekly-lessons</code> · <code>/student/weekly-lessons/by-date</code></td><td>Student view (by date)</td></tr>
+</tbody></table>
+<p><strong>Report Cards — <code>/api/reportcards</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>POST</td><td><code>/upload</code> · <code>/bulk-upload</code></td><td>Report card file upload (single/bulk)</td></tr>
+<tr class="alt"><td>POST · GET · PUT · DELETE</td><td><code>/</code> · <code>/:id</code></td><td>Report card CRUD</td></tr>
+<tr><td>GET</td><td><code>/school-info</code></td><td>School details for report header</td></tr>
+<tr class="alt"><td>GET</td><td><code>/by-student</code></td><td>Filter by student</td></tr>
+<tr><td>PUT</td><td><code>/:id/publish</code></td><td>Publish report card</td></tr>
+<tr class="alt"><td>PUT</td><td><code>/class/:classId/publish-all</code></td><td>Publish all for a class</td></tr>
+<tr><td>GET</td><td><code>/student/my-report-cards</code></td><td>Student's own report cards</td></tr>
+<tr class="alt"><td>GET · PUT</td><td><code>/student/:id</code> · <code>/student/:id/acknowledge</code></td><td>View / parent acknowledgment</td></tr>
+</tbody></table>
+<p><strong>Calendar — <code>/api/calendar</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET · POST · PUT · DELETE</td><td><code>/admin/calendar-events</code> · <code>/:id</code></td><td>Admin event CRUD</td></tr>
+<tr class="alt"><td>GET</td><td><code>/student/calendar-events</code></td><td>Student events</td></tr>
+<tr><td>GET</td><td><code>/class-controller/calendar-events</code></td><td>Class monitor events</td></tr>
+</tbody></table>
+<p><strong>Contacts — <code>/api/contacts</code></strong></p>
+<table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td>GET</td><td><code>/</code></td><td>School contact directory</td></tr>
+</tbody></table>
+<h3 id="14-profile-files-misc">14. Profile, Files &amp; Misc</h3>
+<table><thead><tr><th>Mount</th><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>/api/profile</code></td><td>GET · PUT</td><td><code>/</code></td><td>View / update own profile</td></tr>
+<tr class="alt"><td><code>/api/files</code></td><td>POST</td><td><code>/upload</code> · <code>/upload-multiple</code></td><td>Upload files (multer → Cloudinary/local)</td></tr>
+<tr><td><code>/api/files</code></td><td>DELETE</td><td><code>/:filename</code></td><td>Delete uploaded file</td></tr>
+<tr class="alt"><td><code>/api/school-context</code></td><td>GET</td><td><code>/me</code></td><td>School name + logo for dashboards</td></tr>
+<tr><td><code>/api/tenants</code></td><td>GET · POST</td><td><code>/</code></td><td>Tenant list / create</td></tr>
+<tr class="alt"><td><code>/api/tenants</code></td><td>GET · PUT · DELETE</td><td><code>/:id</code></td><td>Tenant CRUD</td></tr>
+<tr><td><code>/api/tenants</code></td><td>PUT · DELETE</td><td><code>/:id/logo</code></td><td>Tenant logo upload / remove</td></tr>
+<tr class="alt"><td><code>/api/tenants</code></td><td>GET</td><td><code>/:id/stats</code></td><td>Tenant statistics</td></tr>
+<tr><td><code>/api/cleanup</code></td><td>GET · POST</td><td><code>/stats</code> · <code>/execute</code></td><td>Super-admin cleanup (guarded)</td></tr>
+<tr class="alt"><td><code>/api/cleanup</code></td><td>GET</td><td><code>/verify</code></td><td>Verify cleanup results</td></tr>
+<tr><td><code>/api/products</code></td><td>GET · POST · PUT · DELETE</td><td><code>/</code> · <code>/:id</code> (legacy/demo)</td><td>Product CRUD + <code>/stats</code></td></tr>
+</tbody></table>
+<h3 id="15-status-codes">15. Status Codes</h3>
+<table><thead><tr><th>Code</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>200</td><td>Success</td></tr>
+<tr class="alt"><td>201</td><td>Resource created</td></tr>
+<tr><td>204</td><td>Success, no content (OPTIONS preflight)</td></tr>
+<tr class="alt"><td>400</td><td>Validation error</td></tr>
+<tr><td>401</td><td>Missing / invalid token</td></tr>
+<tr class="alt"><td>403</td><td>Role or tenant access denied</td></tr>
+<tr><td>404</td><td>Endpoint or resource not found</td></tr>
+<tr class="alt"><td>500</td><td>Server error (via <code>errorHandler</code>)</td></tr>
+</tbody></table>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="06-database" class="section-title">06 Database</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-database-overview">1. Database Overview</h3>
+<table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody>
+<tr><td>DBMS</td><td>MongoDB (document store)</td></tr>
+<tr class="alt"><td>ODM</td><td>Mongoose 9 (<code>backend/src/config/db.js</code>)</td></tr>
+<tr><td>Default database name</td><td><code>macvel_school</code></td></tr>
+<tr class="alt"><td>Connection URI</td><td><code>MONGODB_URI</code> env (local <code>mongodb://localhost:27017/macvel_school</code> or MongoDB Atlas)</td></tr>
+<tr><td>Timeouts</td><td>Server selection 5000 ms · Socket 45000 ms</td></tr>
+<tr class="alt"><td>Unicode</td><td>MongoDB UTF-8 by default — full Tamil/name support</td></tr>
+<tr><td>Total collections</td><td><strong>35</strong> Mongoose models</td></tr>
+</tbody></table>
+<p><strong>Design principles</strong></p>
+<ul>
+<li><strong>Tenant isolation</strong> — every school-scoped document carries <code>tenantId</code> or <code>schoolId</code> (ObjectId → Tenant/School) and queries are filtered by it</li>
+<li><strong>Soft delete</strong> — <code>deletedAt</code> / <code>isActive</code> / <code>isPublished</code> flags instead of hard deletes where audit matters</li>
+<li><strong>Compound indexes</strong> — <code>(tenantId, ...)</code>, <code>(schoolId, role)</code>, <code>(student, academicYear, term)</code> etc. for list performance</li>
+<li><strong>Password hygiene</strong> — <code>select: false</code> on password fields; bcrypt pre-save hashing (10 salt rounds)</li>
+<li><strong>Default filters</strong> — <code>pre(/^find/)</code> hooks auto-filter inactive users, deleted tenants, unpublished homework</li>
+</ul>
+<h3 id="2-master-collection-summary-all-35">2. Master Collection Summary (All 35)</h3>
+<table><thead><tr><th>#</th><th>Collection</th><th>Category</th><th>Key References</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>1</td><td><code>users</code></td><td>Users</td><td>schoolId, classId, createdBy</td><td>All user accounts (students, teachers, parents) with roles</td></tr>
+<tr class="alt"><td>2</td><td><code>admins</code></td><td>Users</td><td>schoolId, tenantId</td><td>Super Admin &amp; School Admin accounts (separate for isolation)</td></tr>
+<tr><td>3</td><td><code>teachers</code></td><td>Users</td><td>tenantId</td><td>Teacher records: qualification, subjects, teacherId</td></tr>
+<tr class="alt"><td>4</td><td><code>studentprofiles</code></td><td>Users</td><td>userId, schoolId, classId</td><td>Admission no., roll no., parent details, medical notes</td></tr>
+<tr><td>5</td><td><code>tenants</code></td><td>Tenancy</td><td>—</td><td>Schools/organizations: code, slug, plan, limits, status</td></tr>
+<tr class="alt"><td>6</td><td><code>schools</code></td><td>Tenancy</td><td>—</td><td>School profile: name, code, address, logo, subscription</td></tr>
+<tr><td>7</td><td><code>classes</code></td><td>Academics</td><td>tenantId, teacherId, createdBy</td><td>Class/section with auto class code + login password</td></tr>
+<tr class="alt"><td>8</td><td><code>classsubjects</code></td><td>Academics</td><td>tenantId, classId, subjectId, teacherId</td><td>Subject-teacher mapping per class</td></tr>
+<tr><td>9</td><td><code>subjects</code></td><td>Academics</td><td>tenantId</td><td>Subject master (name, code)</td></tr>
+<tr class="alt"><td>10</td><td><code>exams</code></td><td>Academics</td><td>classId, tenantId</td><td>Exam header: name, type, dates, file</td></tr>
+<tr><td>11</td><td><code>examschedules</code></td><td>Academics</td><td>examId, classId, tenantId</td><td>Per-subject date/time/duration/room</td></tr>
+<tr class="alt"><td>12</td><td><code>marks</code></td><td>Academics</td><td>studentId, tenantId</td><td>Marks, percentage, grade per exam type</td></tr>
+<tr><td>13</td><td><code>reportcards</code></td><td>Academics</td><td>student, schoolId, classId</td><td>Term report cards (marks grid or uploaded file)</td></tr>
+<tr class="alt"><td>14</td><td><code>timetables</code></td><td>Academics</td><td>tenantId, classId</td><td>Subject × Mon–Sat grid with classwork/homework</td></tr>
+<tr><td>15</td><td><code>weeklylessons</code></td><td>Academics</td><td>tenantId, classId, subjectId, teacherId</td><td>Weekly lesson plans (objectives, content, status)</td></tr>
+<tr class="alt"><td>16</td><td><code>weeklylessonlogs</code></td><td>Academics</td><td>tenantId, classId</td><td>Daily diary log: classwork/homework text</td></tr>
+<tr><td>17</td><td><code>homeworks</code></td><td>Homework</td><td>schoolId, classId, teacher</td><td>Assignments with embedded submissions</td></tr>
+<tr class="alt"><td>18</td><td><code>homeworksubmissions</code></td><td>Homework</td><td>homeworkId, studentId, tenantId</td><td>Standalone submission records with grade/remarks</td></tr>
+<tr><td>19</td><td><code>news</code></td><td>Content</td><td>tenantId, authorId, classId</td><td>School news with priority/visibility/publish</td></tr>
+<tr class="alt"><td>20</td><td><code>circulars</code></td><td>Content</td><td>tenantId, authorId</td><td>Official circulars with attachments</td></tr>
+<tr><td>21</td><td><code>classcirculars</code></td><td>Content</td><td>tenantId, classId, createdBy</td><td>Class-specific circulars (circular no., issue date)</td></tr>
+<tr class="alt"><td>22</td><td><code>announcements</code></td><td>Content</td><td>tenantId, authorId</td><td>Pinned announcements with expiry &amp; view count</td></tr>
+<tr><td>23</td><td><code>posts</code></td><td>Content</td><td>userId, tenantId</td><td>User posts feed</td></tr>
+<tr class="alt"><td>24</td><td><code>messages</code></td><td>Content</td><td>tenantId, senderId, classId</td><td>Internal messages with read receipts</td></tr>
+<tr><td>25</td><td><code>mediagalleries</code></td><td>Media</td><td>schoolId, uploadedBy</td><td>Gallery items (image/video) with order</td></tr>
+<tr class="alt"><td>26</td><td><code>photoalbums</code></td><td>Media</td><td>tenantId, createdBy</td><td>Album containers with cover image</td></tr>
+<tr><td>27</td><td><code>photos</code></td><td>Media</td><td>albumId, tenantId</td><td>Photos inside albums</td></tr>
+<tr class="alt"><td>28</td><td><code>albums</code></td><td>Media</td><td>tenantId, createdBy</td><td>Content albums with external links + visibility</td></tr>
+<tr><td>29</td><td><code>videos</code></td><td>Media</td><td>tenantId, uploadedBy</td><td>Video catalogue with category/visibility/views</td></tr>
+<tr class="alt"><td>30</td><td><code>files</code></td><td>Media</td><td>tenantId, uploadedBy</td><td>Uploaded file registry (name, mime, size, URL)</td></tr>
+<tr><td>31</td><td><code>calendarevents</code></td><td>Calendar</td><td>schoolId, classId, createdBy</td><td>Events with visibility, recurrence, timing</td></tr>
+<tr class="alt"><td>32</td><td><code>academiccalendars</code></td><td>Calendar</td><td>tenantId</td><td>Academic calendar entries by event type/audience</td></tr>
+<tr><td>33</td><td><code>schoolcontacts</code></td><td>Misc</td><td>tenantId</td><td>Staff contact directory (department, phone, email)</td></tr>
+<tr class="alt"><td>34</td><td><code>portalbrandings</code></td><td>Misc</td><td>updatedBy</td><td>Web/mobile logo + heading white-label settings</td></tr>
+<tr><td>35</td><td><code>products</code></td><td>Misc</td><td>tenantId, createdBy</td><td>Legacy/demo product catalogue with stock</td></tr>
+</tbody></table>
+<h3 id="3-detailed-collection-schemas">3. Detailed Collection Schemas</h3>
+<h4 id="3-1-collection-users">3.1 Collection: <code>users</code></h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Constraints / Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>_id</code></td><td>ObjectId</td><td>Auto</td><td>Unique user ID</td></tr>
+<tr class="alt"><td><code>name</code></td><td>String</td><td>required, 2–100 chars, trim</td><td>Full name</td></tr>
+<tr><td><code>email</code></td><td>String</td><td>required, unique, lowercase</td><td>Login email</td></tr>
+<tr class="alt"><td><code>password</code></td><td>String</td><td>required, min 6, <code>select: false</code></td><td>Bcrypt hash (never returned)</td></tr>
+<tr><td><code>phone</code></td><td>String</td><td>optional, pattern-validated</td><td>Contact number</td></tr>
+<tr class="alt"><td><code>profileImage</code></td><td>String</td><td>optional</td><td>Avatar URL/path</td></tr>
+<tr><td><code>role</code></td><td>String</td><td>enum: Super Admin / School Admin / Teacher / Student / Parent; default <code>Student</code></td><td>Role (auto Title-Cased)</td></tr>
+<tr class="alt"><td><code>schoolId</code></td><td>ObjectId → <code>schools</code></td><td>required except Super Admin</td><td>Tenant scope</td></tr>
+<tr><td><code>isActive</code></td><td>Boolean</td><td>default <code>true</code></td><td>Soft-disable flag</td></tr>
+<tr class="alt"><td><code>dateOfBirth</code></td><td>Date</td><td>optional</td><td>DOB</td></tr>
+<tr><td><code>gender</code></td><td>String</td><td>enum: Male / Female / Other / ''</td><td>Gender</td></tr>
+<tr class="alt"><td><code>age</code></td><td>Number</td><td>0–150</td><td>Age</td></tr>
+<tr><td><code>qualification</code></td><td>String</td><td>optional</td><td>For teachers/parents</td></tr>
+<tr class="alt"><td><code>address</code></td><td>Object</td><td>street, city, state, zipCode, country</td><td>Address block</td></tr>
+<tr><td><code>studentId</code></td><td>String</td><td>optional, indexed</td><td>Student roll/ID number</td></tr>
+<tr class="alt"><td><code>createdBy</code></td><td>ObjectId → <code>users</code></td><td>indexed</td><td>Admin/class that created the record</td></tr>
+<tr><td><code>classId</code></td><td>ObjectId → <code>classes</code></td><td>optional</td><td>Assigned class (students)</td></tr>
+<tr class="alt"><td><code>rollNumber</code></td><td>String</td><td>optional</td><td>Class roll number</td></tr>
+<tr><td><code>admittedDate</code></td><td>Date</td><td>optional</td><td>Admission date</td></tr>
+<tr class="alt"><td><code>parentOf</code></td><td>[ObjectId] → <code>users</code></td><td>optional</td><td>Parent's children links</td></tr>
+<tr><td><code>emergencyContact</code></td><td>Object</td><td>name, phone, relationship</td><td>Emergency contact</td></tr>
+<tr class="alt"><td><code>createdAt</code> / <code>updatedAt</code></td><td>Date</td><td>timestamps</td><td>Audit timestamps</td></tr>
+</tbody></table>
+<p><strong>Indexes:</strong> <code>email</code> (unique) · <code>(schoolId, role)</code> · <code>(schoolId, studentId)</code> · <code>(role, isActive)</code><br/><strong>Hooks:</strong> bcrypt pre-save hashing · <code>pre-find</code> hides inactive users by default</p>
+<h4 id="3-2-collection-classes">3.2 Collection: <code>classes</code></h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Constraints / Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>name</code></td><td>String</td><td>required, trim</td><td>Class name (e.g., "Grade 6")</td></tr>
+<tr class="alt"><td><code>section</code></td><td>String</td><td>trim</td><td>Section (A/B/…)</td></tr>
+<tr><td><code>classCode</code></td><td>String</td><td>unique, uppercase, auto-generated</td><td>Class login code (e.g., <code>GRE001</code>)</td></tr>
+<tr class="alt"><td><code>tenantId</code></td><td>ObjectId → <code>tenants</code></td><td>required, indexed</td><td>School scope</td></tr>
+<tr><td><code>teacherId</code></td><td>ObjectId → <code>teachers</code></td><td>indexed</td><td>Class teacher</td></tr>
+<tr class="alt"><td><code>createdBy</code></td><td>ObjectId → <code>users</code></td><td>indexed</td><td>Creator (admin/teacher)</td></tr>
+<tr><td><code>password</code></td><td>String</td><td><code>select: false</code>, bcrypt pre-save</td><td>Class login password</td></tr>
+<tr class="alt"><td><code>gradeLevel</code></td><td>Number</td><td>1–12</td><td>Grade level</td></tr>
+<tr><td><code>roomNumber</code></td><td>String</td><td>optional</td><td>Room</td></tr>
+<tr class="alt"><td><code>capacity</code></td><td>Number</td><td>default <code>30</code></td><td>Max students</td></tr>
+<tr><td><code>academicYear</code></td><td>String</td><td>optional</td><td>e.g., 2026-2027</td></tr>
+<tr class="alt"><td><code>isActive</code></td><td>Boolean</td><td>default <code>true</code></td><td>Active flag</td></tr>
+<tr><td><code>createdAt</code> / <code>updatedAt</code></td><td>Date</td><td>timestamps</td><td>Audit timestamps</td></tr>
+</tbody></table>
+<p><strong>Indexes:</strong> <code>(tenantId, name)</code> · <code>(tenantId, section)</code> · <code>classCode</code> (unique)<br/><strong>Virtuals:</strong> <code>teacher</code>, <code>studentCount</code>, <code>homeworkCount</code>, <code>examCount</code></p>
+<h4 id="3-3-collection-tenants">3.3 Collection: <code>tenants</code></h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Constraints / Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>name</code></td><td>String</td><td>required, trim</td><td>School name</td></tr>
+<tr class="alt"><td><code>domainSlug</code></td><td>String</td><td>required, unique, lowercase</td><td>URL slug</td></tr>
+<tr><td><code>code</code></td><td>String</td><td>required, unique, uppercase</td><td>School code</td></tr>
+<tr class="alt"><td><code>address</code> · <code>phone</code> · <code>email</code></td><td>String</td><td>optional</td><td>Contact details</td></tr>
+<tr><td><code>schoolLogoUrl</code></td><td>String</td><td>optional</td><td>Logo URL</td></tr>
+<tr class="alt"><td><code>subscriptionPlan</code></td><td>String</td><td>enum FREE/BASIC/PREMIUM/ENTERPRISE; default <code>FREE</code></td><td>Plan</td></tr>
+<tr><td><code>maxUsers</code></td><td>Number</td><td>default <code>100</code></td><td>User limit</td></tr>
+<tr class="alt"><td><code>maxStudents</code></td><td>Number</td><td>default <code>1000</code></td><td>Student limit</td></tr>
+<tr><td><code>status</code></td><td>String</td><td>enum ACTIVE/SUSPENDED/INACTIVE; default <code>ACTIVE</code></td><td>Tenant status</td></tr>
+<tr class="alt"><td><code>settings</code></td><td>Object</td><td>academicYear, timezone, language, currency, dateFormat, features</td><td>Feature flags</td></tr>
+<tr><td><code>deletedAt</code></td><td>Date</td><td>soft delete</td><td>Deletion marker</td></tr>
+<tr class="alt"><td><code>createdAt</code> / <code>updatedAt</code></td><td>Date</td><td>timestamps</td><td>Audit timestamps</td></tr>
+</tbody></table>
+<p><strong>Indexes:</strong> <code>(domainSlug, deletedAt)</code> · <code>(status)</code> · <code>pre-find</code> excludes soft-deleted tenants</p>
+<h4 id="3-4-collection-admins">3.4 Collection: <code>admins</code></h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Constraints / Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>name</code></td><td>String</td><td>required, 2–100 chars</td><td>Admin full name</td></tr>
+<tr class="alt"><td><code>email</code></td><td>String</td><td>required, unique index, lowercase</td><td>Login email</td></tr>
+<tr><td><code>password</code></td><td>String</td><td>required, min 6, <code>select: false</code></td><td>Bcrypt hash</td></tr>
+<tr class="alt"><td><code>phone</code> · <code>profileImage</code></td><td>String</td><td>optional</td><td>Contact / avatar</td></tr>
+<tr><td><code>role</code></td><td>String</td><td>enum: Super Admin / School Admin</td><td>Admin role (Title-Case setter)</td></tr>
+<tr class="alt"><td><code>schoolId</code></td><td>ObjectId → <code>schools</code></td><td>required for School Admin</td><td>Tenant scope</td></tr>
+<tr><td><code>tenantId</code></td><td>ObjectId → <code>tenants</code></td><td>optional</td><td>Alternate tenant link</td></tr>
+<tr class="alt"><td><code>isActive</code></td><td>Boolean</td><td>default <code>true</code></td><td>Active flag</td></tr>
+<tr><td><code>dateOfBirth</code> · <code>gender</code> · <code>address</code> · <code>emergencyContact</code></td><td>Date / String / Object</td><td>optional</td><td>Profile extras</td></tr>
+<tr class="alt"><td><code>lastLogin</code></td><td>Date</td><td>audit</td><td>Last login time</td></tr>
+<tr><td><code>passwordChangedAt</code></td><td>Date</td><td>set on hash</td><td>Password rotation</td></tr>
+<tr class="alt"><td><code>loginAttempts</code></td><td>Number</td><td>default <code>0</code></td><td>Failed-attempt counter</td></tr>
+<tr><td><code>lockUntil</code></td><td>Date</td><td>optional</td><td>Account lock window</td></tr>
+<tr class="alt"><td><code>createdAt</code> / <code>updatedAt</code></td><td>Date</td><td>timestamps</td><td>Audit timestamps</td></tr>
+</tbody></table>
+<p><strong>Indexes:</strong> <code>email</code> (unique) · <code>(schoolId, role)</code> · <code>(role, isActive)</code> · methods: <code>comparePassword()</code>, <code>isLocked()</code></p>
+<h4 id="3-5-collection-homeworks">3.5 Collection: <code>homeworks</code></h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Constraints / Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>title</code></td><td>String</td><td>required, 2–200 chars</td><td>Homework title</td></tr>
+<tr class="alt"><td><code>subject</code></td><td>String</td><td>required</td><td>Subject</td></tr>
+<tr><td><code>classGrade</code></td><td>String</td><td>required</td><td>Class/grade label</td></tr>
+<tr class="alt"><td><code>description</code></td><td>String</td><td>max 2000 chars</td><td>Instructions</td></tr>
+<tr><td><code>givenDate</code></td><td>Date</td><td>required, default <code>Date.now</code></td><td>Assigned on</td></tr>
+<tr class="alt"><td><code>dueDate</code></td><td>Date</td><td>required</td><td>Deadline</td></tr>
+<tr><td><code>attachments</code></td><td>[String]</td><td>URL or <code>/uploads/...</code> path</td><td>Attachment files</td></tr>
+<tr class="alt"><td><code>teacher</code></td><td>ObjectId → <code>users</code></td><td>required</td><td>Assigning teacher</td></tr>
+<tr><td><code>schoolId</code></td><td>ObjectId → <code>schools</code></td><td>required</td><td>Tenant scope</td></tr>
+<tr class="alt"><td><code>classId</code></td><td>ObjectId → <code>classes</code></td><td>optional</td><td>Target class</td></tr>
+<tr><td><code>submissions</code></td><td>[Sub-document]</td><td>embedded, default <code>[]</code></td><td>Per-student submission</td></tr>
+<tr class="alt"><td><code>— student</code></td><td>ObjectId → <code>users</code></td><td>required</td><td>Submitter</td></tr>
+<tr><td><code>— submissionFile</code></td><td>String</td><td>valid URL</td><td>Submitted file</td></tr>
+<tr class="alt"><td><code>— status</code></td><td>String</td><td>enum Submitted/Pending/Checked; default <code>Pending</code></td><td>Status</td></tr>
+<tr><td><code>— submittedAt</code> / <code>— checkedAt</code></td><td>Date</td><td>auto on status change</td><td>Timestamps</td></tr>
+<tr class="alt"><td><code>— marks</code> / <code>— maxMarks</code></td><td>Number</td><td>≥ 0 / ≥ 1</td><td>Grading</td></tr>
+<tr><td><code>— feedback</code></td><td>String</td><td>max 500 chars</td><td>Teacher feedback</td></tr>
+<tr class="alt"><td><code>isPublished</code></td><td>Boolean</td><td>default <code>false</code></td><td>Students see only published</td></tr>
+<tr><td><code>maxMarks</code></td><td>Number</td><td>default <code>100</code></td><td>Total marks</td></tr>
+<tr class="alt"><td><code>createdAt</code> / <code>updatedAt</code></td><td>Date</td><td>timestamps</td><td>Audit timestamps</td></tr>
+</tbody></table>
+<p><strong>Hooks:</strong> <code>pre-find</code> returns published homework only (bypass option for admins)<br/><strong>Methods:</strong> <code>addSubmission()</code>, <code>checkSubmission()</code>, <code>findByClass/Teacher/Student()</code>, <code>findUpcoming/Overdue()</code></p>
+<h4 id="3-6-collection-reportcards">3.6 Collection: <code>reportcards</code></h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Constraints / Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>student</code></td><td>ObjectId → <code>users</code></td><td>required, indexed</td><td>Student</td></tr>
+<tr class="alt"><td><code>schoolId</code></td><td>ObjectId → <code>schools</code></td><td>required</td><td>Tenant scope</td></tr>
+<tr><td><code>classId</code></td><td>ObjectId → <code>classes</code></td><td>optional</td><td>Class</td></tr>
+<tr class="alt"><td><code>className</code> · <code>classSection</code></td><td>String</td><td>optional</td><td>Denormalised class info</td></tr>
+<tr><td><code>createdBy</code> · <code>sentBy</code></td><td>ObjectId → <code>users</code></td><td>optional</td><td>Audit refs</td></tr>
+<tr class="alt"><td><code>term</code></td><td>String</td><td>enum: Term 1–3, Half Yearly, Annual, Unit Test 1–3; required</td><td>Exam term</td></tr>
+<tr><td><code>academicYear</code></td><td>String</td><td>required, <code>YYYY-YYYY</code> format</td><td>Academic year</td></tr>
+<tr class="alt"><td><code>subjects</code></td><td>[Sub-doc]</td><td>subjectName, marksObtained, totalMarks, grade, remarks</td><td>Per-subject marks</td></tr>
+<tr><td><code>totalPercentage</code></td><td>Number</td><td>required, 0–100</td><td>Overall %</td></tr>
+<tr class="alt"><td><code>overallGrade</code></td><td>String</td><td>required</td><td>Overall grade</td></tr>
+<tr><td><code>rank</code></td><td>Number</td><td>≥ 1, default <code>null</code></td><td>Class rank</td></tr>
+<tr class="alt"><td><code>totalStudents</code></td><td>Number</td><td>optional</td><td>Batch size</td></tr>
+<tr><td><code>attendance</code></td><td>Object</td><td>present, total, percentage</td><td>Attendance summary</td></tr>
+<tr class="alt"><td><code>pdfReportUrl</code></td><td>String</td><td>valid URL</td><td>Generated PDF link</td></tr>
+<tr><td><code>reportCardFileUrl</code></td><td>String</td><td>valid URL</td><td>Uploaded PDF/image</td></tr>
+<tr class="alt"><td><code>reportCardFileType</code></td><td>String</td><td>enum pdf/image/null</td><td>Uploaded file type</td></tr>
+<tr><td><code>teacherRemarks</code> · <code>principalRemarks</code></td><td>String</td><td>max 500 chars</td><td>Remarks</td></tr>
+<tr class="alt"><td><code>parentAcknowledgment</code></td><td>Boolean</td><td>default <code>false</code></td><td>Parent confirmation</td></tr>
+<tr><td><code>parentSignature</code></td><td>String</td><td>optional</td><td>Signature value</td></tr>
+<tr class="alt"><td><code>isPublished</code></td><td>Boolean</td><td>default <code>false</code></td><td>Visibility flag</td></tr>
+<tr><td><code>publishedAt</code> · <code>issuedDate</code></td><td>Date</td><td>optional</td><td>Publish/issue dates</td></tr>
+<tr class="alt"><td><code>createdAt</code> / <code>updatedAt</code></td><td>Date</td><td>timestamps</td><td>Audit timestamps</td></tr>
+</tbody></table>
+<p><strong>Indexes:</strong> <code>(student, academicYear, term)</code> · <code>(schoolId, academicYear, term)</code> · <code>(schoolId, isPublished)</code> · <code>(student, isPublished, issuedDate)</code><br/><strong>Rule:</strong> either <code>subjects[]</code> OR <code>reportCardFileUrl</code> must exist (schema validator)</p>
+<h4 id="3-7-collection-timetables">3.7 Collection: <code>timetables</code></h4>
+<table><thead><tr><th>Field</th><th>Type</th><th>Constraints / Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>title</code></td><td>String</td><td>required, max 200</td><td>Timetable title</td></tr>
+<tr class="alt"><td><code>weekLabel</code></td><td>String</td><td>max 100, default <code>''</code></td><td>Week label</td></tr>
+<tr><td><code>description</code></td><td>String</td><td>max 1000, default <code>''</code></td><td>Notes</td></tr>
+<tr class="alt"><td><code>tenantId</code></td><td>ObjectId → <code>tenants</code></td><td>required, indexed</td><td>School scope</td></tr>
+<tr><td><code>classId</code></td><td>ObjectId → <code>classes</code></td><td>required, indexed</td><td>Class scope</td></tr>
+<tr class="alt"><td><code>createdBy</code></td><td>Mixed</td><td>optional</td><td>Creator id</td></tr>
+<tr><td><code>createdByRole</code></td><td>String</td><td>enum ADMIN/CLASS/TEACHER/OTHER; default <code>CLASS</code></td><td>Author role</td></tr>
+<tr class="alt"><td><code>rows</code></td><td>[Row]</td><td>default <code>[]</code></td><td>Grid rows</td></tr>
+<tr><td><code>— subject</code></td><td>String</td><td>required, max 80</td><td>Row subject</td></tr>
+<tr class="alt"><td><code>— Monday…Saturday</code></td><td>Day cell</td><td><code>{ classwork: String, homework: String }</code></td><td>Per-day cells</td></tr>
+<tr><td><code>isPublished</code></td><td>Boolean</td><td>default <code>false</code>, indexed</td><td>Student visibility</td></tr>
+<tr class="alt"><td><code>isActive</code></td><td>Boolean</td><td>default <code>true</code></td><td>Active flag</td></tr>
+<tr><td><code>createdAt</code> / <code>updatedAt</code></td><td>Date</td><td>timestamps</td><td>Audit timestamps</td></tr>
+</tbody></table>
+<p><strong>Indexes:</strong> <code>(tenantId, classId, isPublished)</code> · <code>(tenantId, updatedAt)</code> · collection name: <code>timetables</code></p>
+<h3 id="4-remaining-collections-key-fields-catalog">4. Remaining Collections — Key Fields Catalog</h3>
+<table><thead><tr><th>#</th><th>Collection</th><th>Key Fields</th></tr></thead><tbody>
+<tr><td>1</td><td><code>teachers</code></td><td>email, password, name, phone, profileImage, tenantId, teacherId, qualification, experienceYears, specialization[], dateOfBirth, gender, address, isActive, loginAttempts, lockUntil</td></tr>
+<tr class="alt"><td>2</td><td><code>studentprofiles</code></td><td>userId, schoolId, classId, admissionNumber, rollNumber, parentName, parentPhone, bloodGroup, medicalHistory</td></tr>
+<tr><td>3</td><td><code>schools</code></td><td>schoolName, schoolCode, address, contactEmail, contactPhone, schoolLogoUrl, status, subscriptionExpiry, settings</td></tr>
+<tr class="alt"><td>4</td><td><code>classsubjects</code></td><td>tenantId, classId, subjectId, teacherId</td></tr>
+<tr><td>5</td><td><code>subjects</code></td><td>name, code, description, tenantId, isActive</td></tr>
+<tr class="alt"><td>6</td><td><code>exams</code></td><td>name, type, classId, tenantId, startDate, endDate, isPublished, description, fileUrl, academicYear</td></tr>
+<tr><td>7</td><td><code>examschedules</code></td><td>title, subject, examId, classId, tenantId, date, startTime, endTime, duration, roomNo, isPublished, fileUrl</td></tr>
+<tr class="alt"><td>8</td><td><code>marks</code></td><td>studentId, subject, subjectId, tenantId, marksObtained, totalMarks, percentage, grade, examType, examDate, remarks, isPublished</td></tr>
+<tr><td>9</td><td><code>weeklylessons</code></td><td>tenantId, classId, subjectId, teacherId, weekStartDate, title, objectives, content, status</td></tr>
+<tr class="alt"><td>10</td><td><code>weeklylessonlogs</code></td><td>tenantId, classId, subject, lessonDate, classworkText, homeworkText, createdBy, updatedBy</td></tr>
+<tr><td>11</td><td><code>homeworksubmissions</code></td><td>homeworkId, studentId, tenantId, submissionText, attachmentUrl, status, grade, remarks, gradedBy, submittedAt</td></tr>
+<tr class="alt"><td>12</td><td><code>news</code></td><td>title, content, type, tenantId, authorId, isPublished, publishedAt, imageUrl, attachmentUrl, priority, visibility, classId</td></tr>
+<tr><td>13</td><td><code>circulars</code></td><td>title, content, tenantId, authorId, isPublished, publishedAt, imageUrl, attachmentUrl, visibility, classId, expiryDate</td></tr>
+<tr class="alt"><td>14</td><td><code>classcirculars</code></td><td>tenantId, classId, title, content, circularNo, createdBy, isPublished, issueDate</td></tr>
+<tr><td>15</td><td><code>announcements</code></td><td>title, content, type, tenantId, authorId, targetAudience, isPublished, publishedAt, expiryDate, imageUrl, priority, isPinned, viewCount</td></tr>
+<tr class="alt"><td>16</td><td><code>posts</code></td><td>title, content, userId, tenantId, isPublished</td></tr>
+<tr><td>17</td><td><code>messages</code></td><td>tenantId, senderId, recipientType, recipientId, classId, subject, message, attachmentUrl, isImportant, isRead, readAt</td></tr>
+<tr class="alt"><td>18</td><td><code>mediagalleries</code></td><td>title, category, mediaType, url, description, eventDate, schoolId, uploadedBy, isPublished, thumbnailUrl, order</td></tr>
+<tr><td>19</td><td><code>photoalbums</code></td><td>tenantId, title, description, coverImageUrl, eventDate, isPublished, createdBy, isActive</td></tr>
+<tr class="alt"><td>20</td><td><code>photos</code></td><td>albumId, tenantId, imageUrl, caption, sortOrder, isActive</td></tr>
+<tr><td>21</td><td><code>albums</code></td><td>title, description, tenantId, createdBy, visibility, isPublished, isActive, category</td></tr>
+<tr class="alt"><td>22</td><td><code>videos</code></td><td>title, description, videoUrl, thumbnailUrl, category, duration, tenantId, uploadedBy, visibility, isPublished, isActive, views</td></tr>
+<tr><td>23</td><td><code>files</code></td><td>tenantId, fileName, originalName, mimeType, size, url, uploadedBy, isActive</td></tr>
+<tr class="alt"><td>24</td><td><code>calendarevents</code></td><td>title, description, date, endDate, eventType, color, schoolId, visibility, classId, createdBy, isPublished, isRecurring, location, startTime, endTime</td></tr>
+<tr><td>25</td><td><code>academiccalendars</code></td><td>tenantId, title, description, eventType, startDate, endDate, isRecurring, recurringPattern, targetAudience, color, isActive</td></tr>
+<tr class="alt"><td>26</td><td><code>schoolcontacts</code></td><td>tenantId, department, name, designation, phone, email, isActive</td></tr>
+<tr><td>27</td><td><code>portalbrandings</code></td><td>key, logoUrl, showLogo, heading, subHeading, mobileLogoUrl, mobileHeading, mobileSubHeading, showMobileLogo, updatedBy</td></tr>
+<tr class="alt"><td>28</td><td><code>products</code></td><td>tenantId, name, description, sku, price, stockQuantity, category, metadata, createdBy, isActive, deletedAt</td></tr>
+</tbody></table>
+<h3 id="5-entity-relationship-overview">5. Entity Relationship Overview</h3>
+<pre><code>
+tenants (schools)
+   ├── classes ──────┬── users (students, classId)
+   │                 ├── timetables
+   │                 ├── homeworks ── embedded submissions
+   │                 ├── exams ── examschedules
+   │                 ├── classsubjects ── subjects
+   │                 └── classcirculars / weeklylessons / weeklylessonlogs
+   ├── users (teachers, admins)
+   ├── marks / reportcards (student + schoolId + term)
+   ├── news / circulars / announcements / albums / videos / calendar
+   └── schoolcontacts / portalbrandings
+</code></pre>
+<p><strong>Cardinality notes</strong></p>
+<ul>
+<li>One tenant → many classes, users, content documents (1:N via <code>tenantId</code>/<code>schoolId</code>)</li>
+<li>One class → many students, homeworks, exams, timetables (1:N via <code>classId</code>)</li>
+<li>One homework → embedded submissions array (1:1 embedded, 1:N alternative in <code>homeworksubmissions</code>)</li>
+<li>One student → many marks, report cards, homework submissions (1:N via <code>student</code>/<code>studentId</code>)</li>
+</ul>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="07-testing" class="section-title">07 Testing</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-testing-approach">1. Testing Approach</h3>
+<p>Testing in the current release is <strong>manual, script-driven API testing</strong> combined with lint checks. The repository does not yet include an automated unit-test framework (<code>npm test</code> is a placeholder that exits 0). Dedicated Node test scripts exercise real endpoints against a running server and report pass/fail in the console.</p>
+<h3 id="2-test-environment">2. Test Environment</h3>
+<table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody>
+<tr><td>Runtime</td><td>Node.js 18+ (tested on v22)</td></tr>
+<tr class="alt"><td>Server</td><td><code>node src/server.js</code> on <code>http://localhost:3000</code></td></tr>
+<tr><td>Database</td><td>MongoDB (local / Atlas) — <code>macvel_school</code></td></tr>
+<tr class="alt"><td>Test client</td><td>axios (Node scripts)</td></tr>
+<tr><td>Frontend lint</td><td>ESLint (<code>npm run lint</code> in <code>frontend/</code>)</td></tr>
+<tr class="alt"><td>API base URL</td><td><code>http://localhost:3000/api</code> (Android emulator: <code>http://10.0.2.2:3000/api</code>)</td></tr>
+</tbody></table>
+<h3 id="3-test-scripts">3. Test Scripts</h3>
+<table><thead><tr><th>#</th><th>Script</th><th>Purpose</th><th>Run</th></tr></thead><tbody>
+<tr><td>1</td><td><code>test-teacher-endpoint.js</code></td><td>Verifies teacher <code>GET /api/teacher/my-class</code> (404-fix regression) — login → authorised call → status assert</td><td><code>node test-teacher-endpoint.js</code></td></tr>
+<tr class="alt"><td>2</td><td><code>test-weekly-lessons.js</code></td><td>Full CRUD cycle for weekly lessons with TEACHER + STUDENT tokens</td><td><code>node test-weekly-lessons.js</code></td></tr>
+<tr><td>3</td><td><code>backend/scripts/test-cloudinary.js</code></td><td>Cloudinary credentials &amp; upload connectivity check</td><td><code>node scripts/test-cloudinary.js</code></td></tr>
+<tr class="alt"><td>4</td><td><code>backend/scripts/test-upload-pipeline.js</code></td><td>Spins a test Express app to verify <code>uploadSingle('file')</code> → URL resolution</td><td><code>node scripts/test-upload-pipeline.js</code></td></tr>
+<tr><td>5</td><td><code>backend/scripts/make-student-import-samples.js</code></td><td>Generates sample CSV/XLSX files for bulk-import testing</td><td><code>node scripts/make-student-import-samples.js</code></td></tr>
+<tr class="alt"><td>6</td><td><code>backend/tmp_verify.js</code>, <code>tmp_admin_timetable_check.js</code>, <code>tmp_exam_upload_check.js</code></td><td>Ad-hoc verification of timetable &amp; exam-upload fixes</td><td><code>node tmp_*.js</code></td></tr>
+<tr><td>7</td><td>Frontend ESLint</td><td>Static analysis of <code>src</code> JSX/JS</td><td><code>npm run lint</code></td></tr>
+</tbody></table>
+<h3 id="4-manual-test-cases">4. Manual Test Cases</h3>
+<h4 id="4-1-authentication">4.1 Authentication</h4>
+<table><thead><tr><th>ID</th><th>Test Case</th><th>Expected Result</th><th>Status</th></tr></thead><tbody>
+<tr><td>AUTH-01</td><td>Login with valid email + password</td><td>200, JWT + user object returned</td><td>Pass</td></tr>
+<tr class="alt"><td>AUTH-02</td><td>Login with student ID (e.g., <code>STU0001</code>)</td><td>200, student token issued</td><td>Pass</td></tr>
+<tr><td>AUTH-03</td><td>Login with wrong password</td><td>401, generic error message</td><td>Pass</td></tr>
+<tr class="alt"><td>AUTH-04</td><td>Class-code login (<code>classCode</code> + password)</td><td>200, class-scoped token</td><td>Pass</td></tr>
+<tr><td>AUTH-05</td><td>Access protected route without token</td><td>401 <code>Unauthorized</code></td><td>Pass</td></tr>
+<tr class="alt"><td>AUTH-06</td><td>Change password via <code>PUT /api/auth/password</code></td><td>200, new password usable next login</td><td>Pass</td></tr>
+<tr><td>AUTH-07</td><td>Tampered / expired JWT</td><td>401, token rejected</td><td>Pass</td></tr>
+</tbody></table>
+<h4 id="4-2-role-based-access-control">4.2 Role-Based Access Control</h4>
+<table><thead><tr><th>ID</th><th>Test Case</th><th>Expected Result</th><th>Status</th></tr></thead><tbody>
+<tr><td>RBAC-01</td><td>Student calls <code>/api/admin/classes</code></td><td>403 Forbidden</td><td>Pass</td></tr>
+<tr class="alt"><td>RBAC-02</td><td>Teacher accesses only assigned class data</td><td>Other classes excluded</td><td>Pass</td></tr>
+<tr><td>RBAC-03</td><td>School Admin of school A queries school B data</td><td>Empty/denied — tenant isolation holds</td><td>Pass</td></tr>
+<tr class="alt"><td>RBAC-04</td><td>Super Admin manages all tenants</td><td>Full access to <code>/api/super-admin/*</code></td><td>Pass</td></tr>
+</tbody></table>
+<h4 id="4-3-core-crud">4.3 Core CRUD</h4>
+<table><thead><tr><th>ID</th><th>Test Case</th><th>Expected Result</th><th>Status</th></tr></thead><tbody>
+<tr><td>CRUD-01</td><td>Create class → auto class code generated</td><td>Unique code (e.g., <code>GRE001</code>) returned</td><td>Pass</td></tr>
+<tr class="alt"><td>CRUD-02</td><td>Create student → next student ID auto-filled</td><td>Sequential ID returned by <code>/students/next-id</code></td><td>Pass</td></tr>
+<tr><td>CRUD-03</td><td>Edit / delete teacher</td><td>200, list reflects change</td><td>Pass</td></tr>
+<tr class="alt"><td>CRUD-04</td><td>Homework create → publish → student sees it</td><td>Published-only filter works</td><td>Pass</td></tr>
+<tr><td>CRUD-05</td><td>Student submits homework file</td><td>Submission status becomes <code>Submitted</code></td><td>Pass</td></tr>
+<tr class="alt"><td>CRUD-06</td><td>Teacher grades submission</td><td>Marks + feedback stored, status <code>Checked</code></td><td>Pass</td></tr>
+<tr><td>CRUD-07</td><td>Report card create → publish → student view</td><td>Visible only after publish</td><td>Pass</td></tr>
+</tbody></table>
+<h4 id="4-4-content-media">4.4 Content &amp; Media</h4>
+<table><thead><tr><th>ID</th><th>Test Case</th><th>Expected Result</th><th>Status</th></tr></thead><tbody>
+<tr><td>MEDIA-01</td><td>Upload news image (multer → Cloudinary)</td><td>Secure URL returned, news shows image</td><td>Pass</td></tr>
+<tr class="alt"><td>MEDIA-02</td><td>Upload exam PDF via <code>/api/admin-content/upload-exam</code></td><td>PDF stored and linked</td><td>Pass</td></tr>
+<tr><td>MEDIA-03</td><td>Cloudinary unset → local fallback</td><td>File written to <code>./uploads</code>, URL resolves</td><td>Pass</td></tr>
+<tr class="alt"><td>MEDIA-04</td><td>Delete uploaded file</td><td>File removed from storage</td><td>Pass</td></tr>
+</tbody></table>
+<h3 id="5-defects-found-fixed-regression-log">5. Defects Found &amp; Fixed (Regression Log)</h3>
+<table><thead><tr><th>Date</th><th>Defect</th><th>Fix</th></tr></thead><tbody>
+<tr><td>2026-08-09</td><td>Content routes failed role checks (case mismatch)</td><td>Title-Case role comparisons (<code>Student</code>, <code>Teacher</code>)</td></tr>
+<tr class="alt"><td>2026-08-09</td><td>Profile endpoint queried non-existent <code>tenantId</code></td><td>Switched to <code>schoolId</code></td></tr>
+<tr><td>2026-08-26</td><td>Deep links 404 on Vercel after refresh</td><td><code>vercel.json</code> SPA rewrites</td></tr>
+<tr class="alt"><td>2026-09-08</td><td>Admin delete/edit of unpublished albums/videos/homework → 404</td><td>Query filters corrected</td></tr>
+<tr><td>2026-09-08</td><td>Homework visible in admin side (business rule)</td><td>Homework feature removed from admin side</td></tr>
+<tr class="alt"><td>2026-09-30</td><td>Media storage dependency</td><td>Cloudinary pipeline with local fallback</td></tr>
+</tbody></table>
+<h3 id="6-future-testing-scope">6. Future Testing Scope</h3>
+<ol>
+<li>Unit tests — Jest + Supertest for controllers/middleware</li>
+<li>API integration suite — Newman collection exported from the endpoint tables</li>
+<li>E2E tests — Cypress for login → role dashboard journeys</li>
+<li>Load testing — k6 on login and list endpoints</li>
+<li>Mobile testing — Capacitor device tests on Android/iOS</li>
+</ol>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="08-deployment" class="section-title">08 Deployment</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-environments">1. Environments</h3>
+<table><thead><tr><th>Environment</th><th>Frontend</th><th>Backend</th><th>Database</th></tr></thead><tbody>
+<tr><td>Development</td><td>Vite dev server (<code>npm run dev</code>, port 5173)</td><td><code>npm run dev</code> (nodemon, port 3000)</td><td>Local MongoDB <code>macvel_school</code></td></tr>
+<tr class="alt"><td>Production</td><td><strong>Vercel</strong> (static build)</td><td>Node.js host (any Node 18+ server)</td><td>MongoDB Atlas</td></tr>
+</tbody></table>
+<h3 id="2-frontend-deployment-vercel">2. Frontend Deployment (Vercel)</h3>
+<table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>
+<tr><td>Project root</td><td><code>frontend/</code></td></tr>
+<tr class="alt"><td>Build command</td><td><code>npm run build</code></td></tr>
+<tr><td>Output directory</td><td><code>dist</code> (Vite)</td></tr>
+<tr class="alt"><td>SPA routing</td><td><code>frontend/vercel.json</code> rewrites all non-asset paths → <code>/index.html</code></td></tr>
+<tr><td>API URL</td><td><code>EXPO_PUBLIC_API_URL</code> / <code>.env</code> → production API base URL</td></tr>
+</tbody></table>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>Import the Git repository into Vercel (or <code>vercel</code> CLI)</li>
+<li>Set root directory to <code>frontend</code></li>
+<li>Add environment variables (<code>.env.example</code> as reference)</li>
+<li>Deploy — every push to <code>main</code> triggers an automatic redeploy</li>
+<li>Verify deep links (<code>/admin/students</code>, <code>/login</code>) do not 404 on refresh</li>
+</ol>
+<h3 id="3-backend-deployment">3. Backend Deployment</h3>
+<p><strong>Requirements:</strong> Node.js ≥ 18, MongoDB (local or Atlas), optional Cloudinary account</p>
+<pre><code>
+cd backend
+npm ci                # install dependencies
+cp .env.example .env  # then edit values (see §5)
+npm run seed:superadmin   # optional: create first Super Admin
+npm start             # node src/server.js → port 3000
+</code></pre>
+<p><strong>Post-deploy verification:</strong></p>
+<table><thead><tr><th>Check</th><th>Command / URL</th><th>Expected</th></tr></thead><tbody>
+<tr><td>Health</td><td><code>GET /health</code></td><td><code>{ status: "OK", version: "3.0.0" }</code></td></tr>
+<tr class="alt"><td>DB</td><td>Server log</td><td><code>[DB] MongoDB connected successfully</code></td></tr>
+<tr><td>CORS</td><td>Browser call from frontend origin</td><td><code>Access-Control-Allow-Origin</code> present</td></tr>
+<tr class="alt"><td>Uploads</td><td><code>POST /api/files/upload</code></td><td>Secure file URL returned</td></tr>
+</tbody></table>
+<p><strong>Operational notes:</strong></p>
+<ul>
+<li>Server binds <code>0.0.0.0</code> — put a reverse proxy/HTTPS terminator in front for production</li>
+<li>Failed DB connection at boot exits the process (<code>process.exit(1)</code>) — process managers (PM2/systemd) will restart it</li>
+<li>Uploaded files persist either in Cloudinary (recommended) or <code>backend/uploads/</code> (must be volume-mounted if local)</li>
+</ul>
+<h3 id="4-mobile-deployment-capacitor">4. Mobile Deployment (Capacitor)</h3>
+<p><strong>Project:</strong> <code>mobile/</code> (appId <code>com.school.app</code>, webDir <code>build</code>)</p>
+<pre><code>
+cd mobile
+npm install
+npm run build          # Vite production build → build/
+npx cap sync android   # copy web assets + plugins into android/
+npx cap sync ios       # copy web assets + plugins into ios/
+</code></pre>
+<table><thead><tr><th>Platform</th><th>Tool</th><th>Output</th></tr></thead><tbody>
+<tr><td>Android</td><td>Android Studio → *Build &gt; Build APK(s)* / <code>gradlew assembleRelease</code></td><td><code>app-release.apk</code> / AAB for Play Store</td></tr>
+<tr class="alt"><td>iOS</td><td>Xcode → *Product &gt; Archive* (Apple Developer account required)</td><td>IPA via Organizer</td></tr>
+</tbody></table>
+<p>Set the backend API URL in <code>mobile/.env</code> before building (point to production API, not <code>localhost</code>).</p>
+<h3 id="5-environment-variables">5. Environment Variables</h3>
+<table><thead><tr><th>Variable</th><th>Example</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>PORT</code></td><td><code>3000</code></td><td>API server port</td></tr>
+<tr class="alt"><td><code>NODE_ENV</code></td><td><code>development</code> / <code>production</code></td><td>Environment mode</td></tr>
+<tr><td><code>MONGODB_URI</code></td><td><code>mongodb+srv://user:pass@cluster/...</code></td><td>MongoDB connection string</td></tr>
+<tr class="alt"><td><code>JWT_SECRET</code></td><td><code>&lt;strong random&gt;</code></td><td>JWT signing key (<strong>change in production</strong>)</td></tr>
+<tr><td><code>JWT_EXPIRES_IN</code></td><td><code>7d</code></td><td>Token lifetime</td></tr>
+<tr class="alt"><td><code>BCRYPT_SALT_ROUNDS</code></td><td><code>10</code></td><td>Password hashing cost</td></tr>
+<tr><td><code>MAX_FILE_SIZE</code></td><td><code>10485760</code></td><td>Upload limit (10 MB)</td></tr>
+<tr class="alt"><td><code>UPLOAD_PATH</code></td><td><code>./uploads</code></td><td>Local upload folder</td></tr>
+<tr><td><code>CLOUDINARY_URL</code></td><td><code>cloudinary://key:secret@cloud</code></td><td>Cloudinary storage (empty → local fallback)</td></tr>
+<tr class="alt"><td><code>ALLOWED_ORIGINS</code></td><td><code>https://your-app.vercel.app</code></td><td>Frontend origins</td></tr>
+<tr><td><code>SMTP_HOST</code> / <code>SMTP_USER</code> / <code>SMTP_PASS</code></td><td>—</td><td>Optional mail notifications</td></tr>
+</tbody></table>
+<h3 id="6-production-checklist">6. Production Checklist</h3>
+<ul>
+<li>☐ <code>JWT_SECRET</code> replaced with a strong random value</li>
+<li>☐ <code>NODE_ENV=production</code></li>
+<li>☐ MongoDB Atlas IP allow-list configured; strong DB credentials</li>
+<li>☐ <code>CLOUDINARY_URL</code> set (avoids ephemeral-disk file loss on hosts like Vercel/Render)</li>
+<li>☐ CORS <code>ALLOWED_ORIGINS</code> restricted to the deployed frontend domain</li>
+<li>☐ HTTPS enabled at the proxy/platform level</li>
+<li>☐ Super Admin seeded and default passwords changed</li>
+<li>☐ <code>GET /health</code> monitored for uptime</li>
+<li>☐ Database backups enabled (Atlas snapshot schedule)</li>
+</ul>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="09-development-log" class="section-title">09 Development Log</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="1-project-timeline">1. Project Timeline</h3>
+<table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody>
+<tr><td>Repository</td><td><code>felix-fr7/school</code> (branch <code>main</code>)</td></tr>
+<tr class="alt"><td>First commit</td><td><strong>2026-06-28</strong> — "first commit"</td></tr>
+<tr><td>Latest commit</td><td><strong>2026-09-30</strong> — "finish" (<code>574dd4a</code>)</td></tr>
+<tr class="alt"><td>Total commits</td><td><strong>80</strong> commits over ~3 months</td></tr>
+<tr><td>Commit style</td><td>Short milestone messages (<code>finish</code>, <code>fix: ...</code>, <code>feat: ...</code>)</td></tr>
+</tbody></table>
+<h3 id="2-phase-wise-development-log">2. Phase-wise Development Log</h3>
+<h4 id="phase-1-foundation-multi-tenant-core-2026-06-28-2026-07-04-10-commits">Phase 1 — Foundation &amp; Multi-Tenant Core (2026-06-28 → 2026-07-04, 10 commits)</h4>
+<table><thead><tr><th>Date</th><th>Commit</th><th>Activity</th></tr></thead><tbody>
+<tr><td>2026-06-28</td><td><code>first commit</code></td><td>Repository initialisation</td></tr>
+<tr class="alt"><td>2026-06-28</td><td><code>Add complete multi-tenant school management system</code></td><td>Backend (Express + MongoDB), RBAC, tenant isolation, initial frontend</td></tr>
+<tr><td>2026-06-29</td><td><code>new dash</code></td><td>Admin dashboard</td></tr>
+<tr class="alt"><td>2026-06-30</td><td><code>new add student</code></td><td>Student creation flow</td></tr>
+<tr><td>2026-07-01</td><td><code>new one of student</code></td><td>Student module refinements</td></tr>
+<tr class="alt"><td>2026-07-03 → 07-04</td><td><code>new one</code>, <code>full project</code></td><td>End-to-end wiring of core modules</td></tr>
+</tbody></table>
+<h4 id="phase-2-classes-homework-ionic-move-2026-07-05-2026-07-17-14-commits">Phase 2 — Classes, Homework &amp; Ionic Move (2026-07-05 → 2026-07-17, 14 commits)</h4>
+<table><thead><tr><th>Date</th><th>Activity</th></tr></thead><tbody>
+<tr><td>2026-07-05 → 07-06</td><td>Class management, office-side screens</td></tr>
+<tr class="alt"><td>2026-07-08 → 07-10</td><td>New class flows, iteration on dashboards</td></tr>
+<tr><td>2026-07-12 → 07-13</td><td>Homework module built and finished</td></tr>
+<tr class="alt"><td>2026-07-16</td><td><strong>Ionic migration</strong> (<code>ionic</code> commit) — React + Ionic UI adopted</td></tr>
+<tr><td>2026-07-17</td><td>Iteration (<code>newone</code>)</td></tr>
+</tbody></table>
+<h4 id="phase-3-super-admin-admin-portal-2026-07-18-2026-08-02-17-commits">Phase 3 — Super Admin &amp; Admin Portal (2026-07-18 → 2026-08-02, 17 commits)</h4>
+<table><thead><tr><th>Date</th><th>Activity</th></tr></thead><tbody>
+<tr><td>2026-07-18 → 07-19</td><td>Super admin build + fixes</td></tr>
+<tr class="alt"><td>2026-07-21 → 07-23</td><td>New login flow; super admin finished</td></tr>
+<tr><td>2026-07-25</td><td>Admin portal finished</td></tr>
+<tr class="alt"><td>2026-07-30 → 07-31</td><td>Project restructuring; final super admin</td></tr>
+<tr><td>2026-08-01 → 08-02</td><td>Admin base/off iteration, new admin features</td></tr>
+</tbody></table>
+<h4 id="phase-4-student-app-mobile-2026-08-07-2026-08-19-11-commits">Phase 4 — Student App &amp; Mobile (2026-08-07 → 2026-08-19, 11 commits)</h4>
+<table><thead><tr><th>Date</th><th>Activity</th></tr></thead><tbody>
+<tr><td>2026-08-07 → 08-08</td><td>Student module, <strong>mobile (Capacitor)</strong> project</td></tr>
+<tr class="alt"><td>2026-08-09</td><td>Student app + 3 key fixes: Title-Case role comparisons, <code>decoded.userId</code> auth, profile <code>schoolId</code></td></tr>
+<tr><td>2026-08-10</td><td>New iteration</td></tr>
+<tr class="alt"><td>2026-08-17 → 08-19</td><td>Student entry flow, "student last stage"</td></tr>
+</tbody></table>
+<h4 id="phase-5-login-rework-first-deployment-2026-08-22-2026-08-26-9-commits">Phase 5 — Login Rework &amp; First Deployment (2026-08-22 → 2026-08-26, 9 commits)</h4>
+<table><thead><tr><th>Date</th><th>Activity</th></tr></thead><tbody>
+<tr><td>2026-08-22 → 08-24</td><td>New login, general finish passes</td></tr>
+<tr class="alt"><td>2026-08-26</td><td><strong>Vercel deployment</strong>: <code>vercel</code> commit, <code>vercel.json</code> added, SPA rewrites fixed, file moved to <code>frontend/</code>, redeploy triggered</td></tr>
+</tbody></table>
+<h4 id="phase-6-stabilisation-fixes-storage-2026-09-02-2026-09-30-19-commits">Phase 6 — Stabilisation, Fixes &amp; Storage (2026-09-02 → 2026-09-30, 19 commits)</h4>
+<table><thead><tr><th>Date</th><th>Activity</th></tr></thead><tbody>
+<tr><td>2026-09-02 → 09-05</td><td>Edit-flow fixes, finish pass</td></tr>
+<tr class="alt"><td>2026-09-08</td><td><strong>3 fixes</strong>: admin delete/edit unpublished albums/videos/homework (404s); homework feature removed from admin side; 2-bug fix</td></tr>
+<tr><td>2026-09-14 → 09-21</td><td>Final testing rounds (<code>finel test</code> ×2, <code>new finish</code>)</td></tr>
+<tr class="alt"><td>2026-09-24 → 09-25</td><td>Album fix, new method, verification pass</td></tr>
+<tr><td>2026-09-27 → 09-29</td><td>New login polish; esbuild install-script allowance for CI build</td></tr>
+<tr class="alt"><td>2026-09-30</td><td><strong><code>cloudinary add</code></strong> (media storage pipeline) + final <code>finish</code> → v1.0 release</td></tr>
+</tbody></table>
+<h3 id="3-milestone-summary">3. Milestone Summary</h3>
+<table><thead><tr><th>#</th><th>Milestone</th><th>Date Reached</th></tr></thead><tbody>
+<tr><td>1</td><td>Multi-tenant backend foundation</td><td>2026-06-28</td></tr>
+<tr class="alt"><td>2</td><td>Admin dashboard + student management</td><td>2026-06-30</td></tr>
+<tr><td>3</td><td>Homework module complete</td><td>2026-07-13</td></tr>
+<tr class="alt"><td>4</td><td>Ionic UI migration</td><td>2026-07-16</td></tr>
+<tr><td>5</td><td>Super Admin portal complete</td><td>2026-07-31</td></tr>
+<tr class="alt"><td>6</td><td>School Admin portal complete</td><td>2026-07-25</td></tr>
+<tr><td>7</td><td>Student app + mobile (Capacitor)</td><td>2026-08-08</td></tr>
+<tr class="alt"><td>8</td><td>Production web deployment (Vercel)</td><td>2026-08-26</td></tr>
+<tr><td>9</td><td>Admin content bug-fix batch</td><td>2026-09-08</td></tr>
+<tr class="alt"><td>10</td><td>Cloudinary storage integration</td><td>2026-09-30</td></tr>
+<tr><td>11</td><td><strong>v1.0.0 Release</strong></td><td>2026-09-30</td></tr>
+</tbody></table>
+<h3 id="4-repository-structure-evolved-as">4. Repository Structure Evolved As</h3>
+<pre><code>
+School/
+├── backend/     # Express + Mongoose API (src: config, controllers, routes, models, middleware)
+├── frontend/    # React + Ionic + Vite web app (screens: admin, teacher, superadmin, classcontroller)
+├── mobile/      # Capacitor wrapper + student screens (android/, ios/, student/)
+├── docs/        # This documentation set (01–10) + generated PDF
+└── *.js         # Standalone API test scripts
+</code></pre>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+<h1 id="10-release-notes" class="section-title">10 Release Notes</h1>
+<h2 id="macvel-school-management-system">MACVEL School Management System</h2>
+<h3 id="current-release-v1-0-0-2026-09-30">Current Release — v1.0.0 (2026-09-30)</h3>
+<table><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody>
+<tr><td>Release version</td><td><strong>1.0.0</strong> (first stable release)</td></tr>
+<tr class="alt"><td>Release date</td><td>2026-09-30</td></tr>
+<tr><td>Commit</td><td><code>574dd4a</code> — "finish" (on <code>main</code>)</td></tr>
+<tr class="alt"><td>Backend package</td><td><code>macvel-school-backend</code> v1.0.0 (health API reports <code>version: 3.0.0</code>)</td></tr>
+<tr><td>Frontend package</td><td><code>school-ionic-frontend</code> v2.0.0</td></tr>
+<tr class="alt"><td>Mobile package</td><td><code>school-ionic-mobile</code> v1.0.0 (Capacitor, <code>com.school.app</code>)</td></tr>
+<tr><td>Node.js</td><td>≥ 18 required</td></tr>
+</tbody></table>
+<h3 id="1-highlights">1. Highlights</h3>
+<ul>
+<li><strong>Multi-tenant SaaS</strong> — unlimited schools with complete data isolation</li>
+<li><strong>Five role portals</strong> — Super Admin, School Admin, Teacher, Student, Class Monitor</li>
+<li><strong>Triple login</strong> — email, student ID, or class code + password</li>
+<li><strong>Academics suite</strong> — homework (assign → submit → grade), exams + schedules, marks, term report cards (manual or uploaded PDF/image)</li>
+<li><strong>Weekly lesson diary</strong> — teacher plans and student by-date views</li>
+<li><strong>Timetable grid</strong> — subject × Mon–Sat classwork/homework with publish workflow</li>
+<li><strong>Content hub</strong> — news, circulars, gallery, albums (with external links), videos, messages, posts</li>
+<li><strong>Cloudinary media storage</strong> with automatic local-disk fallback</li>
+<li><strong>White-label branding</strong> — web + mobile logo and headings, public before login</li>
+</ul>
+<h3 id="2-added-in-v1-0-0">2. Added in v1.0.0</h3>
+<table><thead><tr><th>Area</th><th>Features</th></tr></thead><tbody>
+<tr><td>Auth</td><td>Register, login (email/ID), class login, JWT sessions, password change, logout</td></tr>
+<tr class="alt"><td>Super Admin</td><td>School CRUD, status/plan control, admin management, stats, cleanup tools</td></tr>
+<tr><td>Admin</td><td>Classes (auto codes, password reset), students (next-ID), teachers, subjects, contacts, exams, report cards, albums, calendar</td></tr>
+<tr class="alt"><td>Teacher</td><td>Dashboard, homework CRUD + grading, submissions view, circulars</td></tr>
+<tr><td>Student</td><td>Dashboard, homework submission, exams, marks, timetable, profile, report cards, news, weekly lessons</td></tr>
+<tr class="alt"><td>Class monitor</td><td>Student bulk import (CSV/XLSX template), homework, exams, subjects, timetable authoring</td></tr>
+<tr><td>Files</td><td>Multer uploads → Cloudinary (fallback <code>./uploads</code>), exam/report/homework upload endpoints</td></tr>
+<tr class="alt"><td>Deployment</td><td>Vercel SPA hosting (<code>vercel.json</code> rewrites), Capacitor Android/iOS shells</td></tr>
+</tbody></table>
+<h3 id="3-fixed-in-v1-0-0">3. Fixed in v1.0.0</h3>
+<table><thead><tr><th>Date</th><th>Fix</th></tr></thead><tbody>
+<tr><td>2026-08-09</td><td>Content controller role comparisons now Title-Case (<code>Student</code>, <code>Teacher</code>)</td></tr>
+<tr class="alt"><td>2026-08-09</td><td>Content routes use <code>decoded.userId</code> and correct Class field names</td></tr>
+<tr><td>2026-08-09</td><td>Profile endpoint uses <code>schoolId</code> instead of non-existent <code>tenantId</code></td></tr>
+<tr class="alt"><td>2026-08-26</td><td>Vercel deep-link 404s resolved via SPA rewrites in <code>frontend/vercel.json</code></td></tr>
+<tr><td>2026-09-08</td><td>Admin delete/edit of unpublished albums, videos and homework no longer 404s</td></tr>
+<tr class="alt"><td>2026-09-08</td><td>Homework feature removed from admin side (per business rule)</td></tr>
+<tr><td>2026-09-25</td><td>Album edit/delete behaviour for admins</td></tr>
+<tr class="alt"><td>2026-09-29</td><td><code>esbuild</code> install script allowed for CI builds</td></tr>
+</tbody></table>
+<h3 id="4-known-limitations">4. Known Limitations</h3>
+<ol>
+<li><strong>Automated tests</strong> — no unit/E2E framework yet; testing is via manual API scripts (see 07 Testing)</li>
+<li><strong>Homework on admin side</strong> — intentionally hidden; admins manage homework indirectly</li>
+<li><strong>Products module</strong> — legacy/demo, not part of the school workflow</li>
+<li><strong>Unmapped legacy route files</strong> — <code>backend/src/routes/superadmin.js</code> and <code>utils.js</code> exist but are not mounted in <code>server.js</code></li>
+<li><strong>Offline mode</strong> — no offline data caching in the mobile app yet</li>
+<li><strong>Email/SMTP</strong> — configuration present but notifications are not wired to a workflow</li>
+</ol>
+<h3 id="5-upgrade-installation-notes">5. Upgrade / Installation Notes</h3>
+<pre><code>
+# Fresh install
+git clone https://github.com/felix-fr7/school.git
+cd school/backend &amp;&amp; npm install &amp;&amp; cp .env.example .env   # set MONGODB_URI, JWT_SECRET
+npm run seed:superadmin &amp;&amp; npm start
+cd ../frontend &amp;&amp; npm install &amp;&amp; npm run dev              # local web app
+cd ../mobile &amp;&amp; npm install &amp;&amp; npm run build &amp;&amp; npx cap sync android
+</code></pre>
+<ul>
+<li>Setting <code>CLOUDINARY_URL</code> is recommended before handling real uploads in production</li>
+<li>Changing <code>JWT_SECRET</code> invalidates existing tokens — users must log in again</li>
+</ul>
+<h3 id="6-upcoming-planned-next">6. Upcoming (Planned Next)</h3>
+<ul>
+<li>Automated test suite (Jest + Supertest) and CI pipeline</li>
+<li>Attendance module end-to-end (screen exists; API to be added)</li>
+<li>Push notifications for news/circulars in the mobile app</li>
+<li>Parent role portal and fee management</li>
+<li>Analytics dashboards with trend charts</li>
+</ul>
+<hr/>
+<p><strong>Document Version:</strong> 1.0<br/><strong>Last Updated:</strong> 2026-10-06</p>
+</body>
+</html>

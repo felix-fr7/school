@@ -23,9 +23,9 @@ import {
   IonRefresherContent,
   IonAlert,
   IonToast,
-} from '@ionic/react';
+} from '@components/ui';
 import { useHistory } from 'react-router-dom';
-import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline, eyeOutline, sendOutline } from 'ionicons/icons';
+import { addCircleOutline, refreshOutline, createOutline, trashOutline, schoolOutline, eyeOutline, sendOutline } from '@components/icons';
 import { adminAPI } from '../../services/api';
 import './ClassesListScreen.css';
 import HomeLogoutButtons from '../../components/HomeLogoutButtons';

@@ -1,13 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
-import { IonPage, IonContent, IonButton, IonInput, IonSpinner } from '@ionic/react';
+import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../../../mobile/student/auth/StudentLoginScreen.css';
 import { portalBrandingAPI, resolveMediaUrl } from '../services/api';
+import './LoginScreen.css';
 
-// Fallback values - only used if the API is unreachable (DB la value illana)
-// NOTE: there is NO built-in default logo anymore. The login page shows a logo
-// ONLY if the Super Admin has uploaded one from the Portal Branding screen.
 const DEFAULT_HEADING = 'STAFF PORTAL';
 const DEFAULT_SUB_HEADING = 'Class, Admin and Super Admin login';
 
@@ -19,7 +15,6 @@ const LoginScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Login page branding (Super Admin edit pannathu, DB la irukura logo + heading + sub heading)
   const [branding, setBranding] = useState({
     logoUrl: null,
     showLogo: true,
@@ -42,7 +37,6 @@ const LoginScreen = () => {
           subHeading: data.subHeading || DEFAULT_SUB_HEADING,
         });
       } catch (e) {
-        // API fail ana default logo + text aathu use pannu - vera logic mathala
         console.warn('[Login] Failed to load portal branding, using defaults');
       }
     };
@@ -54,9 +48,14 @@ const LoginScreen = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!username.trim() || !password.trim()) { setError('Please enter your username and password'); return; }
-    setError(null); setIsLoading(true);
+    if (!username.trim() || !password.trim()) {
+      setError('Please enter your username and password');
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
     const identifier = username.trim();
+
     try {
       try {
         await classLogin(identifier.toUpperCase(), password);
@@ -75,9 +74,82 @@ const LoginScreen = () => {
       }
     } catch (err) {
       setError(err?.response?.data?.error?.message || err?.response?.data?.message || err?.message || 'Invalid username or password');
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  return <IonPage className="luxury-login-page"><IonContent className="luxury-login-content" scrollY><div className="bg-glow-top" /><div className="bg-glow-bottom" /><div className="luxury-login-wrapper"><div className="luxury-login-card"><div className="brand-header">{branding.showLogo && branding.logoUrl && <div className="brand-logo-image-wrapper"><img src={resolveMediaUrl(branding.logoUrl)} alt="Portal Logo" className="brand-logo-image" /></div>}<h1 className="brand-title">{branding.heading}</h1><p className="brand-subtitle">{branding.subHeading}</p></div>{error && <div className="luxury-error-box"><span className="error-icon">⚠️</span><p>{error}</p></div>}<form onSubmit={handleSubmit} className="luxury-form"><div className="input-field-group"><label className="field-label" htmlFor="staff-username">Username</label><div className="input-box-wrapper"><IonInput id="staff-username" value={username} onIonInput={(e) => setUsername(e.detail.value || '')} placeholder="Class code or email" disabled={isLoading} className="luxury-input" required /></div></div><div className="input-field-group"><label className="field-label" htmlFor="staff-password">Password</label><div className="input-box-wrapper"><IonInput id="staff-password" type="password" value={password} onIonInput={(e) => setPassword(e.detail.value || '')} placeholder="Enter your password" disabled={isLoading} className="luxury-input" required /></div></div><IonButton type="submit" expand="block" disabled={isLoading} className="luxury-gold-button">{isLoading ? <IonSpinner name="crescent" color="dark" /> : <span>ACCESS PORTAL</span>}</IonButton></form></div><div className="portal-footer-note">Staff Web Portal</div></div></IonContent></IonPage>;
+  return (
+    <div className="luxury-login-page">
+      <div className="luxury-login-content">
+        <div className="bg-glow-top" />
+        <div className="bg-glow-bottom" />
+        <div className="luxury-login-wrapper">
+          <div className="luxury-login-card">
+            <div className="brand-header">
+              {branding.showLogo && branding.logoUrl && (
+                <div className="brand-logo-image-wrapper">
+                  <img src={resolveMediaUrl(branding.logoUrl)} alt="Portal Logo" className="brand-logo-image" />
+                </div>
+              )}
+              <h1 className="brand-title">{branding.heading}</h1>
+              <p className="brand-subtitle">{branding.subHeading}</p>
+            </div>
+
+            {error && (
+              <div className="luxury-error-box">
+                <span className="error-icon">⚠️</span>
+                <p>{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="luxury-form">
+              <div className="input-field-group">
+                <label className="field-label" htmlFor="staff-username">Username</label>
+                <div className="input-box-wrapper">
+                  <input
+                    id="staff-username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Class code or email"
+                    disabled={isLoading}
+                    className="luxury-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="input-field-group">
+                <label className="field-label" htmlFor="staff-password">Password</label>
+                <div className="input-box-wrapper">
+                  <input
+                    id="staff-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    disabled={isLoading}
+                    className="luxury-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="luxury-gold-button"
+              >
+                {isLoading ? <div className="spinner-crescent" /> : <span>ACCESS PORTAL</span>}
+              </button>
+            </form>
+          </div>
+
+          <div className="portal-footer-note">Staff Web Portal</div>
+        </div>
+      </div>
+    </div>
+  );
 };
+
 export default LoginScreen;

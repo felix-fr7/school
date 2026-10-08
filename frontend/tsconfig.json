@@ -17,7 +17,12 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@ionic/react": ["src/components/ui.jsx"],
+      "@ionic/react-router": ["src/components/router.jsx"],
+      "ionicons/icons": ["src/components/icons.jsx"],
+      "ionicons": ["src/components/icons.jsx"]
     }
   },
   "include": ["src"],

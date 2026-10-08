@@ -7,15 +7,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      // Student screens live outside frontend/, so point their package imports
-      // back to the dependency set already installed by the frontend app.
-      '@ionic/react': fileURLToPath(new URL('./node_modules/@ionic/react', import.meta.url)),
-      'react-router-dom': fileURLToPath(new URL('./node_modules/react-router-dom', import.meta.url)),
-      'ionicons': fileURLToPath(new URL('./node_modules/ionicons', import.meta.url)),
-      'react-dom': fileURLToPath(new URL('./node_modules/react-dom', import.meta.url)),
-      'react': fileURLToPath(new URL('./node_modules/react', import.meta.url)),
-      'axios': fileURLToPath(new URL('./node_modules/axios', import.meta.url)),
-      '@ionic/react-router': fileURLToPath(new URL('./node_modules/@ionic/react-router', import.meta.url)),
+      '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
+      '@ionic/react': fileURLToPath(new URL('./src/components/ui.jsx', import.meta.url)),
+      '@ionic/react-router': fileURLToPath(new URL('./src/components/router.jsx', import.meta.url)),
+      'ionicons/icons': fileURLToPath(new URL('./src/components/icons.jsx', import.meta.url)),
+      'ionicons': fileURLToPath(new URL('./src/components/icons.jsx', import.meta.url)),
     },
   },
   server: {

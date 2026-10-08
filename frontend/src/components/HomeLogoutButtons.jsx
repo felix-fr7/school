@@ -1,12 +1,9 @@
 /**
- * Shared Header Navigation Buttons
- * Provides "Home" (role-aware dashboard) and "Logout" (back to Login page)
- * buttons on every screen's toolbar.
+ * Shared Header Navigation Buttons - Pure React Web
+ * Provides "Home" and "Logout" buttons on screen toolbars.
  */
 
 import React from 'react';
-import { IonButtons, IonButton, IonIcon } from '@ionic/react';
-import { homeOutline, logOutOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -37,14 +34,52 @@ const HomeLogoutButtons = () => {
   };
 
   return (
-    <IonButtons slot="end">
-      <IonButton onClick={handleHome} title="Home" className="app-nav-home">
-        <IonIcon slot="icon-only" icon={homeOutline} />
-      </IonButton>
-      <IonButton onClick={handleLogout} title="Logout" className="app-nav-signout">
-        <IonIcon slot="icon-only" icon={logOutOutline} />
-      </IonButton>
-    </IonButtons>
+    <div className="home-logout-buttons" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+      <button
+        type="button"
+        onClick={handleHome}
+        title="Home"
+        className="app-nav-home"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '6px 12px',
+          fontSize: '13px',
+          fontWeight: 600,
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+          backgroundColor: '#ffffff',
+          color: '#1e293b',
+          cursor: 'pointer',
+        }}
+      >
+        <span>🏠</span>
+        <span>Home</span>
+      </button>
+      <button
+        type="button"
+        onClick={handleLogout}
+        title="Logout"
+        className="app-nav-signout"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '6px 12px',
+          fontSize: '13px',
+          fontWeight: 600,
+          borderRadius: '8px',
+          border: '1px solid #fee2e2',
+          backgroundColor: '#fef2f2',
+          color: '#dc2626',
+          cursor: 'pointer',
+        }}
+      >
+        <span>🚪</span>
+        <span>Sign Out</span>
+      </button>
+    </div>
   );
 };
 

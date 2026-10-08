@@ -1,6 +1,6 @@
 import React from 'react';
-import { IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel, IonMenuToggle } from '@ionic/react';
-import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, filmOutline, settingsOutline, logOutOutline, paperPlaneOutline, searchOutline, imagesOutline, timeOutline } from 'ionicons/icons';
+import { IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel, IonMenuToggle } from './ui';
+import { homeOutline, peopleOutline, schoolOutline, bookOutline, newspaperOutline, documentTextOutline, calendarOutline, filmOutline, settingsOutline, logOutOutline, paperPlaneOutline, searchOutline, imagesOutline, timeOutline } from './icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 

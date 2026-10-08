@@ -17,9 +17,9 @@ import {
   IonCard,
   IonCardContent,
   IonIcon,
-} from '@ionic/react';
+} from '../components/ui';
 import { useHistory } from 'react-router-dom';
-import { arrowBack } from 'ionicons/icons';
+import { arrowBack } from '../components/icons';
 import { useAuth } from '../contexts/AuthContext';
 import './RegisterScreen.css';
 

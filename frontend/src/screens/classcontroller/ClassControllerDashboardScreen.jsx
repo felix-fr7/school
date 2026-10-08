@@ -22,7 +22,7 @@ import {
   IonRefresherContent,
   IonAlert,
   IonToast,
-} from '@ionic/react';
+} from '@components/ui';
 import {
   peopleOutline,
   bookOutline,
@@ -39,7 +39,7 @@ import {
   shieldCheckmarkOutline,
   albumsOutline,
   ribbonOutline,
-} from 'ionicons/icons';
+} from '@components/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { classControllerAPI, resolveMediaUrl } from '../../services/api';

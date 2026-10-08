@@ -1,7 +1,7 @@
 {
-  "name": "school-ionic-frontend",
+  "name": "school-web-frontend",
   "version": "2.0.0",
-  "description": "MACVEL School Management App - JavaScript/JSX Version",
+  "description": "MACVEL School Management App - Pure React Web Portal",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,20 +11,16 @@
     "seed": "node src/utils/seed.js"
   },
   "keywords": [
-    "ionic",
     "react",
     "school-management",
+    "web",
     "javascript",
     "jsx"
   ],
   "author": "MACVEL",
   "license": "MIT",
   "dependencies": {
-    "@capacitor/android": "^8.5.0",
-    "@ionic/react": "^7.6.0",
-    "@ionic/react-router": "^7.6.0",
     "axios": "^1.6.2",
-    "ionicons": "^7.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^5.3.4"

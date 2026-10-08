@@ -23,7 +23,7 @@ import {
   IonIcon,
   IonSpinner,
   IonToast,
-} from '@ionic/react';
+} from './ui';
 import {
   closeOutline,
   sendOutline,
@@ -33,7 +33,7 @@ import {
   checkmarkCircleOutline,
   alertCircleOutline,
   createOutline,
-} from 'ionicons/icons';
+} from './icons';
 import { classControllerAPI } from '../services/api';
 import SubjectManager from './SubjectManager';
 import './ClassCreateHomeworkModal.css';

@@ -19,7 +19,7 @@ import {
   IonSpinner,
   IonBadge,
   IonToast,
-} from '@ionic/react';
+} from '@components/ui';
 import {
   schoolOutline,
   peopleOutline,
@@ -29,7 +29,7 @@ import {
   flashOutline,
   chevronForwardOutline,
   colorPaletteOutline,
-} from 'ionicons/icons';
+} from '@components/icons';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { tenantsAPI } from '../../services/api';
